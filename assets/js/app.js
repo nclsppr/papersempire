@@ -101,7 +101,7 @@
   const BUILDING_DEFS = [
     {
       id: "reproOperator",
-      emoji: "👷",
+      icon: "OP",
       nameKey: "building.reproOperator.name",
       descKey: "building.reproOperator.desc",
       baseProduction: 0.5,
@@ -114,7 +114,7 @@
     },
     {
       id: "reproWorkshop",
-      emoji: "🛠️",
+      icon: "AT",
       nameKey: "building.reproWorkshop.name",
       descKey: "building.reproWorkshop.desc",
       baseProduction: 3,
@@ -127,7 +127,7 @@
     },
     {
       id: "digitalPress",
-      emoji: "🖨️",
+      icon: "DP",
       nameKey: "building.digitalPress.name",
       descKey: "building.digitalPress.desc",
       baseProduction: 20,
@@ -140,7 +140,7 @@
     },
     {
       id: "offsetPress",
-      emoji: "🗞️",
+      icon: "OF",
       nameKey: "building.offsetPress.name",
       descKey: "building.offsetPress.desc",
       baseProduction: 120,
@@ -153,7 +153,7 @@
     },
     {
       id: "finishingWorkshop",
-      emoji: "✂️",
+      icon: "FN",
       nameKey: "building.finishingWorkshop.name",
       descKey: "building.finishingWorkshop.desc",
       baseProduction: 0,
@@ -167,7 +167,7 @@
     },
     {
       id: "insertingLine",
-      emoji: "📬",
+      icon: "IN",
       nameKey: "building.insertingLine.name",
       descKey: "building.insertingLine.desc",
       baseProduction: 0,
@@ -182,7 +182,7 @@
     },
     {
       id: "logistics",
-      emoji: "🚚",
+      icon: "LG",
       nameKey: "building.logistics.name",
       descKey: "building.logistics.desc",
       baseProduction: 0,
@@ -197,7 +197,7 @@
     },
     {
       id: "vbsPortal",
-      emoji: "🌐",
+      icon: "VB",
       nameKey: "building.vbsPortal.name",
       descKey: "building.vbsPortal.desc",
       baseProduction: 5,
@@ -210,7 +210,7 @@
     },
     {
       id: "comBridge",
-      emoji: "📡",
+      icon: "CB",
       nameKey: "building.comBridge.name",
       descKey: "building.comBridge.desc",
       baseProduction: 0,
@@ -224,7 +224,7 @@
     },
     {
       id: "factory40",
-      emoji: "🤖",
+      icon: "F4",
       nameKey: "building.factory40.name",
       descKey: "building.factory40.desc",
       baseProduction: 0,
@@ -239,7 +239,7 @@
     },
     {
       id: "pampyAI",
-      emoji: "🧠",
+      icon: "AI",
       nameKey: "building.pampyAI.name",
       descKey: "building.pampyAI.desc",
       baseProduction: 0,
@@ -300,6 +300,7 @@
     DOM.culturePoints = document.getElementById("culturePoints");
     DOM.prestigeMult = document.getElementById("prestigeMult");
     DOM.clickButton = document.getElementById("clickButton");
+    DOM.heroStartBtn = document.getElementById("heroStartBtn");
     DOM.prestigeButton = document.getElementById("prestigeButton");
     DOM.prestigeInfo = document.getElementById("prestigeInfo");
     DOM.buildingsList = document.getElementById("buildingsList");
@@ -341,6 +342,12 @@
   function bindUIEvents() {
     if (DOM.clickButton) {
       DOM.clickButton.addEventListener("click", handleClick);
+    }
+    if (DOM.heroStartBtn) {
+      DOM.heroStartBtn.addEventListener("click", () => {
+        handleClick();
+        DOM.clickButton?.focus();
+      });
     }
     if (DOM.prestigeButton) {
       DOM.prestigeButton.addEventListener("click", () => {
@@ -1268,14 +1275,14 @@
       DOM.eventBannerText.textContent = text;
     }
     if (DOM.eventBannerEmoji) {
-      DOM.eventBannerEmoji.textContent = getBannerEmoji(tone);
+      DOM.eventBannerEmoji.textContent = getBannerIcon(tone);
     }
   }
 
-  function getBannerEmoji(tone) {
-    if (tone === "positive") return "✨";
-    if (tone === "negative") return "⚠️";
-    return "🔔";
+  function getBannerIcon(tone) {
+    if (tone === "positive") return "+";
+    if (tone === "negative") return "!";
+    return "i";
   }
 
   function areContractsUnlocked() {
@@ -1631,10 +1638,10 @@
       const nameButton = document.createElement("button");
       nameButton.type = "button";
       nameButton.className = "building-name-button";
-      const emoji = b.emoji || "🏗️";
+      const icon = b.icon || "BLD";
       const emojiSpan = document.createElement("span");
-      emojiSpan.className = "building-emoji";
-      emojiSpan.textContent = emoji;
+      emojiSpan.className = "building-icon-badge";
+      emojiSpan.textContent = icon;
       const labelSpan = document.createElement("span");
       labelSpan.className = "building-name-label";
       labelSpan.textContent = getBuildingName(b);

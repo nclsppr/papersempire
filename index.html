@@ -51,7 +51,9 @@
       <div class="header-title" data-game-title></div>
       <div class="header-actions">
         <button class="icon-button" type="button" data-open-settings id="settingsGearButton">
-          <span aria-hidden="true">⚙️</span>
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.14 12.94a7.43 7.43 0 0 0 .05-.94 7.43 7.43 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.08 7.08 0 0 0-1.62-.94l-.36-2.54A.49.49 0 0 0 13.9 2h-3.8a.49.49 0 0 0-.49.41l-.36 2.54c-.58.23-1.13.54-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.72 8.47a.5.5 0 0 0 .12.64l2.03 1.58a7.43 7.43 0 0 0-.05.94c0 .32.02.63.05.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.31.6.22l2.39-.96c.49.4 1.04.71 1.62.94l.36 2.54c.05.24.25.41.49.41h3.8c.24 0 .44-.17.49-.41l.36-2.54c.58-.23 1.13-.54 1.62-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"></path>
+          </svg>
           <span class="sr-only" data-i18n="actions.openSettings"></span>
         </button>
         <select id="langSelect" class="lang-select" aria-label="Langue">
@@ -66,7 +68,7 @@
 </header>
 
   <div class="event-banner hidden" id="eventBanner" aria-live="polite">
-    <div class="event-banner-icon" id="eventBannerEmoji" aria-hidden="true">🔔</div>
+    <div class="event-banner-icon" id="eventBannerEmoji" aria-hidden="true">i</div>
     <div class="event-banner-body">
       <div id="eventBannerText"></div>
     </div>
@@ -76,6 +78,16 @@
   </div>
 
 <main id="mainContent" class="app" role="main">
+  <section class="card hero-panel" aria-label="Présentation du jeu">
+    <div class="hero-copy">
+      <div class="hero-kicker" data-i18n="hero.kicker"></div>
+      <h1 class="hero-title" data-i18n="hero.title"></h1>
+      <p class="hero-subtitle" data-i18n="hero.subtitle"></p>
+      <button class="btn-slim hero-cta" id="heroStartBtn" data-i18n="hero.cta"></button>
+    </div>
+    <img class="hero-visual" src="assets/images/hero-press.svg" alt="" loading="eager" decoding="async">
+  </section>
+
   <!-- Colonne gauche: clic + stats -->
   <div class="layout-column" aria-label="Production et clics automatiques">
     <div class="card" role="region" aria-label="Stats principales">
@@ -99,7 +111,10 @@
       </div>
 
       <button class="click-button" id="clickButton">
-        <span data-i18n="actions.printDocument"></span> <span aria-hidden="true">🖨️</span>
+        <span data-i18n="actions.printDocument"></span>
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 7V3h10v4H7Zm10 9h2v5H5v-5h2v3h10v-3Zm2-8c1.1 0 2 .9 2 2v6h-4v-3H7v3H3v-6c0-1.1.9-2 2-2h14Zm-3 7v-4H8v4h8Z"></path>
+        </svg>
       </button>
 
       <div class="gauges">

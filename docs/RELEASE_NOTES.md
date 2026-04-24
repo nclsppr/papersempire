@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.9 – Visual refresh & responsive signature (2026-04-24)
+- Executed the website improvement plan with a new visual hero section in `index.html` (kicker/title/subtitle/CTA) plus a dedicated illustration asset (`assets/images/hero-press.svg`).
+- Replaced key emoji-heavy UI elements with a cleaner icon direction: SVG icons for settings/print actions, neutral event banner status glyphs, and badge-style building icons.
+- Updated core styling in `assets/css/style.css` to support a stronger art direction (hero gradients, icon system, improved card polish) while preserving mobile responsiveness.
+- Extended all i18n bundles (FR/EN/DE/LB) with hero copy and removed emojis from primary structural labels to keep the interface visually consistent.
+- Validated compatibility with existing unit test suites.
+
 ## 0.7 – UX polish & Accessibility
 - Added a full settings modal (Accessibility, Audio, Interface, Save tabs) with persisted toggles, gear shortcut, and Playwright coverage.
 - Implemented guided tutorial overlay (`tutorial.js`) that highlights print → buildings → journal → settings and records completion in preferences.

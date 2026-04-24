@@ -17,6 +17,8 @@ Track meaningful milestones in the project:
 - **0.5** – Split the UI into modular assets, cache DOM references for better performance, and add extensive inline documentation plus project-wide docs.
 - **0.6** – Externalise i18n, add German/Luxembourgish, refresh the mobile UI (sticky header, ripple, layout fixes), and add Playwright layout tests. See `RELEASE_NOTES.md` for details.
 - **0.7** – Persistence + achievements, SEO metadata, dual deployment (game root + docs sous `/docs/`), et grosse passe accessibilité (skip links, ARIA, panneau d’options). Voir `accessibility.md` pour le détail.
+- **0.8** – Ajout d'un plan structuré “site à succès” (DA, responsive, conversion, workflow images IA) dans `web-success-plan.md`.
+- **0.9** – Exécution du plan: nouveau hero visuel, direction UI plus “brand”, badges d’icônes à la place des emojis dans l’UI principale, amélioration responsive et nouvel asset illustré.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
@@ -38,3 +40,4 @@ When you make notable changes (new features, mechanics, UI improvements), append
 - Consulte [`events.md`](events.md) pour le catalogue d’événements et le mini-jeu de calibrage.
 - Pour la vision gameplay, continuer avec [`game-design.md`](game-design.md).
 - Le carnet de réflexions ouvert se trouve dans [`codex-is-thinking.md`](codex-is-thinking.md).
+- La feuille de route UX/branding/conversion se trouve dans [`web-success-plan.md`](web-success-plan.md).
