@@ -1,0 +1,5 @@
+{
+    "name": "Atlas",
+    "image": "artifacts.admin.victorbuckservices.com/loc-system-docker-registry/vbs/devcontainers/base",
+    "postCreateCommand": "bash -lc 'export NVM_DIR=\"$HOME/.nvm\"; [ -s \"$NVM_DIR/nvm.sh\" ] || (mkdir -p \"$NVM_DIR\" && curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash); . \"$NVM_DIR/nvm.sh\"; nvm install --lts; node -v; npm -v'"
+  }
