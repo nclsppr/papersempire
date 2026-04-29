@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 214 32% 97%;
+    --foreground: 215 25% 22%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 22%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 22%;
+
+    --primary: 158 64% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 100% 92%;
+    --secondary-foreground: 218 60% 30%;
+
+    --accent: 38 95% 56%;
+    --accent-foreground: 30 70% 18%;
+
+    --muted: 214 32% 94%;
+    --muted-foreground: 215 16% 47%;
+
+    --destructive: 0 78% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 24% 88%;
+    --input: 215 24% 88%;
+    --ring: 158 64% 40%;
+
+    --radius: 1rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-display antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    background-image:
+      radial-gradient(at 12% 0%, hsl(210 100% 95%) 0px, transparent 50%),
+      radial-gradient(at 88% 8%, hsl(40 100% 95%) 0px, transparent 45%),
+      radial-gradient(at 50% 100%, hsl(158 80% 92%) 0px, transparent 50%);
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .perspective-scene {
+    perspective: 900px;
+    perspective-origin: 50% 30%;
+  }
+
+  .iso-tilt {
+    transform: rotateX(48deg) rotateZ(-32deg);
+    transform-style: preserve-3d;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .text-shadow-soft {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .conveyor-stripes {
+    background-image: repeating-linear-gradient(
+      90deg,
+      hsl(215 24% 80%) 0 8px,
+      hsl(215 24% 90%) 8px 16px
+    );
+    background-size: 32px 100%;
+  }
+}
