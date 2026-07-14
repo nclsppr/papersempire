@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fix/docs-retype
   workflow_dispatch:
 
 permissions:
@@ -23,8 +24,31 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - name: "DEBUG: reproduce install with the stale committed lockfile"
+        run: |
+          npm install
+          echo "===== npm ls retypeapp ====="
+          npm ls retypeapp || true
+          echo "===== node_modules entries matching retype ====="
+          ls node_modules/ | grep -i retype || echo "(none)"
+          echo "===== installed retypeapp version ====="
+          grep '"version"' node_modules/retypeapp/package.json 2>/dev/null || echo "(no retypeapp dir)"
+          echo "===== node_modules/.bin ====="
+          ls -la node_modules/.bin/ 2>/dev/null || echo "(no .bin dir)"
+      - name: Regenerate a coherent lockfile from package.json
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+          echo "===== npm ls retypeapp ====="
+          npm ls retypeapp
+          echo "===== .bin retype ====="
+          ls -la node_modules/.bin/ | grep -i retype
       - run: npm run docs:build
+      - name: Upload regenerated lockfile as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-package-lock
+          path: package-lock.json
       - name: Prepare deployment directory
         run: |
           mkdir -p site/docs
@@ -40,6 +64,9 @@ jobs:
 
   deploy:
     needs: build
+    # Ne déploie que depuis master : les branches de debug/PR construisent
+    # sans toucher au site en production.
+    if: github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
