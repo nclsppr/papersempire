@@ -59,12 +59,82 @@
     return document.documentElement.dataset.sceneEnabled !== "0";
   }
 
-  /** Positions the ortho camera on the iso axis, looking at the origin. */
+  // --- Cadrage dynamique ---------------------------------------------------
+  // La caméra cadre la partie OCCUPÉE du campus : plein cadre sur le premier
+  // kiosque, puis dézoome à mesure que l'empire s'étend, jusqu'au monde
+  // entier. view.* = état courant (lissé), viewTarget.* = cible du cadrage.
+  const view = { x: 0, z: 0, zoom: 1 };
+  const viewTarget = { x: 0, z: 0, zoom: 1 };
+  const MAX_ZOOM = 2.6;
+
+  /** Positions the ortho camera on the iso axis, looking at the view center. */
   function placeCamera(azimuth) {
     const y = CAMERA_DISTANCE * Math.sin(ELEVATION);
     const r = CAMERA_DISTANCE * Math.cos(ELEVATION);
-    camera.position.set(r * Math.cos(azimuth), y, r * Math.sin(azimuth));
-    camera.lookAt(0, 0.6, 0);
+    camera.position.set(
+      view.x + r * Math.cos(azimuth),
+      y,
+      view.z + r * Math.sin(azimuth)
+    );
+    camera.lookAt(view.x, 0.6, view.z);
+    if (camera.zoom !== view.zoom) {
+      camera.zoom = view.zoom;
+      camera.updateProjectionMatrix();
+    }
+  }
+
+  /**
+   * Recomputes the framing target from the buildings currently visible:
+   * center of their footprint bounding box, zoom inversely proportional to
+   * its projected extent. No visible building -> whole world (zoom 1).
+   */
+  function updateViewTarget() {
+    const layout = window.CityLayout;
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    let any = false;
+    Object.keys(lotGroups).forEach(id => {
+      if (!lotGroups[id].visible) return;
+      const lot = layout.LOTS[id];
+      const bounds = [lotGroups[id]].concat(lotCopies[id]);
+      bounds.forEach(g => {
+        any = true;
+        minX = Math.min(minX, g.position.x - lot.w / 2);
+        maxX = Math.max(maxX, g.position.x + lot.w / 2);
+        minZ = Math.min(minZ, g.position.z - lot.d / 2);
+        maxZ = Math.max(maxZ, g.position.z + lot.d / 2);
+      });
+    });
+    if (!any) {
+      viewTarget.x = 0;
+      viewTarget.z = 0;
+      viewTarget.zoom = 1;
+      return;
+    }
+    viewTarget.x = (minX + maxX) / 2;
+    viewTarget.z = (minZ + maxZ) / 2;
+    // Étendue projetée en iso (azimut ~45°) : l'axe écran-x porte (dx+dz)/√2,
+    // + marge généreuse pour la dérive de caméra et les toits.
+    const spanX = (maxX - minX) + 3.5;
+    const spanZ = (maxZ - minZ) + 3.5;
+    const projected = (spanX + spanZ) / (2 * Math.SQRT2) + 2.2;
+    const halfWorld = 26 * 0.56;
+    viewTarget.zoom = Math.max(1, Math.min(MAX_ZOOM, halfWorld / Math.max(4, projected)));
+  }
+
+  /** Glisse la vue vers sa cible ; retourne true tant que ça bouge. */
+  function easeView(snap) {
+    const k = snap ? 1 : 0.06;
+    let moving = false;
+    ["x", "z", "zoom"].forEach(key => {
+      const delta = viewTarget[key] - view[key];
+      if (Math.abs(delta) > (key === "zoom" ? 0.001 : 0.01)) {
+        view[key] += delta * k;
+        moving = true;
+      } else {
+        view[key] = viewTarget[key];
+      }
+    });
+    return moving;
   }
 
   /** Recomputes the ortho frustum so the whole campus fits the canvas. */
@@ -244,6 +314,7 @@
     });
     if (changed) {
       recollectAnimated();
+      updateViewTarget();
     }
     lastQuantities = {};
     snapshot.buildings.forEach(b => {
@@ -276,10 +347,13 @@
 
     const still = reduceMotion();
     if (still) {
-      // On-demand rendering only: draw when the campus changed.
+      // On-demand rendering only: draw when the campus changed. The view
+      // snaps straight to its target (no travelling shot).
+      if (easeView(true)) needsRender = true;
       placeCamera(BASE_AZIMUTH);
       if (!needsRender) return;
     } else {
+      if (easeView(false)) needsRender = true;
       const t = (timeMs || 0) / 1000;
       placeCamera(BASE_AZIMUTH + Math.sin((t * 2 * Math.PI) / DRIFT_PERIOD_S) * DRIFT_AMPLITUDE);
       animated.armSegments.forEach((seg, i) => {
@@ -416,12 +490,23 @@
         animated: () => animated,
         lotGroup: id => lotGroups[id],
         lotCopies: id => lotCopies[id],
+        guards: () => ({
+          running,
+          stageInView,
+          documentHidden: document.hidden,
+          sceneEnabled: sceneEnabled(),
+          isMobile,
+          reduceMotion: reduceMotion(),
+          needsRender,
+          disposed
+        }),
         /** Syncs state and renders a single frame, bypassing pause guards. */
         renderOnce() {
           if (!renderer) return null;
           if (applySize) applySize();
           const bridge = window.__PE_SCENE__;
           if (bridge) syncBuildings(THREE, bridge.getSnapshot());
+          easeView(true);
           placeCamera(BASE_AZIMUTH);
           renderer.render(scene, camera);
           return renderer.info.render.triangles;
