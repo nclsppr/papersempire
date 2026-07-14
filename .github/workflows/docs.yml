@@ -23,7 +23,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - run: npm ci
+      # docs:build invoque le wrapper retype.js via node directement :
+      # npm 10.9.x (node 22) ne crée pas le lien node_modules/.bin/retype
+      # à l'installation (collision de noms de bin avec les paquets
+      # plateforme retypeapp-*), donc la commande nue `retype` échouerait.
       - run: npm run docs:build
       - name: Prepare deployment directory
         run: |
@@ -40,6 +44,9 @@ jobs:
 
   deploy:
     needs: build
+    # Ne déploie que depuis master : les branches de debug/PR construisent
+    # sans toucher au site en production.
+    if: github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
