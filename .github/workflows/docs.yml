@@ -24,21 +24,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Le lockfile commité était désynchronisé (retypeapp 3.11.0 vs ^4.6.0) ;
-      # on le régénère ici une fois pour l'exporter en artefact et le
-      # committer, puis ce step redeviendra un simple `npm ci`.
-      - name: Install dependencies (regenerate lockfile)
-        run: |
-          rm -f package-lock.json
-          npm install
-      - name: Upload regenerated lockfile as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: regenerated-package-lock
-          path: package-lock.json
+      - run: npm ci
       # docs:build invoque le wrapper retype.js via node directement :
-      # npm 10.9.x (node 22) a un bug où le lien node_modules/.bin/retype
-      # n'est pas créé à l'installation.
+      # npm 10.9.x (node 22) ne crée pas le lien node_modules/.bin/retype
+      # à l'installation (collision de noms de bin avec les paquets
+      # plateforme retypeapp-*), donc la commande nue `retype` échouerait.
       - run: npm run docs:build
       - name: Prepare deployment directory
         run: |
