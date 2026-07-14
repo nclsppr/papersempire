@@ -50,7 +50,7 @@
     "settings.tutorial": "Guided tutorial",
     "settings.events": "Allow story events",
     "settings.scene": "Show the 3D campus scene",
-    "scene.fallback": "Your campus takes shape here — the 3D view is coming soon.",
+    "scene.fallback": "Your campus takes shape here — the 3D view appears on supported browsers.",
     "settings.restartTutorial": "Restart tutorial",
     "settings.saveHint": "Manage, export or reset your save.",
     "label.costDoc": "Cost: {{amount}} DOC",

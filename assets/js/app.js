@@ -1919,4 +1919,28 @@
       handleEventSpawn(ev);
     }
   };
+
+  /**
+   * Read-only bridge for the 3D campus scene (assets/js/scene/).
+   * The scene polls this each frame instead of reaching into gameState:
+   * the snapshot is a fresh plain object, so the renderer can never
+   * mutate simulation state. Must stay cheap (called ~60x/s).
+   */
+  window.__PE_SCENE__ = {
+    getSnapshot() {
+      return {
+        buildings: gameState.buildings.map(b => ({
+          id: b.id,
+          quantity: b.quantity,
+          unlocked: !!b.isUnlocked
+        })),
+        stats: {
+          quality: gameState.stats.quality,
+          footprint: gameState.stats.footprint,
+          imageVbs: gameState.stats.imageVbs
+        },
+        culturePoints: gameState.resources.culturePoints
+      };
+    }
+  };
 })();

@@ -50,7 +50,7 @@
     "settings.tutorial": "Geführtes Tutorial",
     "settings.events": "Story-Ereignisse erlauben",
     "settings.scene": "3D-Campus-Szene anzeigen",
-    "scene.fallback": "Hier entsteht dein Campus – die 3D-Ansicht kommt bald.",
+    "scene.fallback": "Hier entsteht dein Campus – die 3D-Ansicht erscheint auf unterstützten Browsern.",
     "settings.restartTutorial": "Tutorial neu starten",
     "settings.saveHint": "Speicherstände exportieren, importieren oder löschen.",
     "label.costDoc": "Kosten: {{amount}} DOC",
