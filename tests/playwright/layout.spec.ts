@@ -25,4 +25,34 @@ test.describe("mobile layout", () => {
       expect(headerBox.width).toBeGreaterThanOrEqual(viewportWidth - 2);
     }
   });
+
+  test("scene stage is centered and does not overflow", async ({ page }) => {
+    await page.goto(fileUrl);
+    const viewportWidth = await page.evaluate(() => window.innerWidth);
+    const stage = page.locator("#sceneStage");
+    await expect(stage).toBeVisible();
+    const box = await stage.boundingBox();
+    expect(box).not.toBeNull();
+    if (box) {
+      const expectedLeft = (viewportWidth - box.width) / 2;
+      expect(Math.abs(box.x - expectedLeft)).toBeLessThanOrEqual(2);
+      expect(box.width).toBeLessThanOrEqual(viewportWidth);
+    }
+  });
+
+  test("click button is not covered by the sticky header after scroll", async ({ page }) => {
+    await page.goto(fileUrl);
+    const clickButton = page.locator("#clickButton");
+    await expect(clickButton).toBeVisible();
+    await clickButton.evaluate(el => el.scrollIntoView());
+    const buttonBox = await clickButton.boundingBox();
+    const headerBox = await page.locator(".app-header").boundingBox();
+    expect(buttonBox).not.toBeNull();
+    expect(headerBox).not.toBeNull();
+    if (buttonBox && headerBox) {
+      expect(buttonBox.y).toBeGreaterThanOrEqual(headerBox.y + headerBox.height - 1);
+    }
+    // The button must actually receive the click (nothing overlapping it).
+    await clickButton.click({ trial: true });
+  });
 });

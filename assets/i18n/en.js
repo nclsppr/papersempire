@@ -49,6 +49,8 @@
     "settings.particles": "Particles & highlights",
     "settings.tutorial": "Guided tutorial",
     "settings.events": "Allow story events",
+    "settings.scene": "Show the 3D campus scene",
+    "scene.fallback": "Your campus takes shape here — the 3D view is coming soon.",
     "settings.restartTutorial": "Restart tutorial",
     "settings.saveHint": "Manage, export or reset your save.",
     "label.costDoc": "Cost: {{amount}} DOC",

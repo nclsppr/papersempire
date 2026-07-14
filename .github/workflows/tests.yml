@@ -14,7 +14,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - name: Run modifier tests
-        run: node tests/modifiers.test.js
-      - name: Run god mode tests
-        run: node tests/godmode.test.js
+      - name: Run unit tests
+        run: npm run test:unit

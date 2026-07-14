@@ -8,7 +8,8 @@
     particlesEnabled: true,
     tutorialEnabled: true,
     tutorialCompleted: false,
-    eventsEnabled: true
+    eventsEnabled: true,
+    sceneEnabled: true
   };
 
   function loadPrefs() {
@@ -35,6 +36,7 @@
     root.classList.toggle("pref-reduce-motion", !!prefs.reduceMotion);
     root.dataset.soundsEnabled = prefs.soundsEnabled ? "1" : "0";
     root.dataset.particlesEnabled = prefs.particlesEnabled ? "1" : "0";
+    root.dataset.sceneEnabled = prefs.sceneEnabled ? "1" : "0";
   }
 
   const toggleWatchers = [];
@@ -64,6 +66,7 @@
     wireToggle("toggleParticles", "particlesEnabled", prefs);
     wireToggle("toggleTutorial", "tutorialEnabled", prefs);
     wireToggle("toggleEvents", "eventsEnabled", prefs);
+    wireToggle("toggleScene", "sceneEnabled", prefs);
     refreshToggles();
   }
 
