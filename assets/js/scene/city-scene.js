@@ -44,6 +44,29 @@
   let sizeCheckCountdown = 0;
   let resizeObserver = null;
   let onWindowResize = null;
+  let lights = null;
+  let lastStats = null;
+  let raycaster = null;
+  let pointerVec = null;
+  let lastHoverCheck = 0;
+  let sweepOffset = 0;
+  let sweepActive = false;
+  // Dernières valeurs d'ambiance effectivement rendues (mode still).
+  let renderedAmbiance = null;
+
+  // Quel bâtiment secouer pour chaque événement narratif (juice PR3).
+  const EVENT_TARGETS = {
+    machineBreakdown: "digitalPress",
+    auditQuality: "finishingWorkshop",
+    newContract: "logistics",
+    cyberAttack: "vbsPortal",
+    sabotage: "insertingLine",
+    calibrationChallenge: "offsetPress"
+  };
+
+  function particlesEnabled() {
+    return document.documentElement.dataset.particlesEnabled !== "0";
+  }
 
   const osReducedMotion = typeof window.matchMedia === "function"
     ? window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -169,6 +192,75 @@
     const rim = new THREE.DirectionalLight(0x7dd3fc, 0.35);
     rim.position.set(-10, 12, -14);
     scene.add(rim);
+    lights = {
+      hemi,
+      sun,
+      rim,
+      skyClear: new THREE.Color(0x9fc4e0),
+      skySmog: new THREE.Color(0x8a7f5e),
+      groundClear: new THREE.Color(0x14203a),
+      groundSmog: new THREE.Color(0x2b2417)
+    };
+  }
+
+  /**
+   * Ambiances pilotées par les jauges : l'empreinte papier assombrit et
+   * enfume le ciel (brouillard + teinte), la qualité éclaircit le soleil,
+   * l'image VBS fait briller le liseré cyan. Lerp doux par frame ; sous
+   * reduce-motion la cible est appliquée directement au changement.
+   */
+  function applyAmbiance(THREE, instant) {
+    if (!lights || !lastStats) return;
+    const k = instant ? 1 : 0.04;
+    const smog = Math.max(0, Math.min(1, lastStats.footprint));
+    if (!scene.fog) {
+      scene.fog = new THREE.Fog(0x0b1226, 30, 90);
+    }
+    if (!lights.skyTarget) {
+      // Instances réutilisées : pas d'allocation dans la boucle chaude.
+      lights.skyTarget = new THREE.Color();
+      lights.groundTarget = new THREE.Color();
+    }
+    const stepTo = (obj, prop, target) => {
+      const next = obj[prop] + (target - obj[prop]) * k;
+      obj[prop] = Math.abs(next - target) > 0.002 ? next : target;
+    };
+    // Brouillard : lointain et discret à 0, proche et dense à 1.
+    stepTo(scene.fog, "far", 90 - smog * 48);
+    stepTo(lights.sun, "intensity", 1.15 + Math.max(0, Math.min(1, lastStats.quality)) * 0.45);
+    stepTo(lights.rim, "intensity", 0.15 + Math.max(0, Math.min(1, lastStats.imageVbs)) * 0.55);
+    lights.skyTarget.lerpColors(lights.skyClear, lights.skySmog, smog);
+    lights.groundTarget.lerpColors(lights.groundClear, lights.groundSmog, smog);
+    if (instant) {
+      lights.hemi.color.copy(lights.skyTarget);
+      lights.hemi.groundColor.copy(lights.groundTarget);
+    } else {
+      lights.hemi.color.lerp(lights.skyTarget, k);
+      lights.hemi.groundColor.lerp(lights.groundTarget, k);
+    }
+  }
+
+  /**
+   * Mode still (reduce-motion, rendu à la demande) : détecte un changement
+   * d'ambiance suffisant pour mériter un repaint — sinon les jauges qui
+   * dérivent muteraient fog/lumières sans jamais redessiner (état figé
+   * puis saut visuel au prochain rendu).
+   */
+  function ambianceNeedsRender() {
+    if (!lastStats) return false;
+    if (!renderedAmbiance) return true;
+    return ["quality", "footprint", "imageVbs"].some(
+      key => Math.abs(lastStats[key] - renderedAmbiance[key]) > 0.03
+    );
+  }
+
+  function markAmbianceRendered() {
+    if (!lastStats) return;
+    renderedAmbiance = {
+      quality: lastStats.quality,
+      footprint: lastStats.footprint,
+      imageVbs: lastStats.imageVbs
+    };
   }
 
   /** Ground: grass base, two asphalt roads, sidewalk strip per row. */
@@ -269,6 +361,9 @@
   function syncBuildings(THREE, snapshot) {
     const layout = window.CityLayout;
     const recipes = window.BuildingRecipes;
+    // Premier sync (chargement d'une sauvegarde) : on matérialise l'état
+    // sans effets — le pop est réservé aux vrais achats en session.
+    const initialSync = lastQuantities === null;
     let changed = false;
     snapshot.buildings.forEach(b => {
       const group = lotGroups[b.id];
@@ -276,9 +371,13 @@
       const prev = lastQuantities ? lastQuantities[b.id] || 0 : 0;
       if (b.quantity === prev) return;
       changed = true;
+      const firstAppearance = prev === 0 && b.quantity > 0;
       group.visible = b.quantity > 0;
       if (b.quantity > 0) {
         recipes.applyQuantity(THREE, group, b.quantity);
+      }
+      if (firstAppearance && !initialSync && window.SceneEffects && !reduceMotion()) {
+        window.SceneEffects.popIn(group);
       }
       // Duplicate copies beyond the first, up to the lot's visual cap.
       const offsets = layout.duplicateOffsets(b.id, layout.copiesFor(b.id, b.quantity));
@@ -310,12 +409,16 @@
         clone.visible = true;
         scene.add(clone);
         copies.push(clone);
+        if (!initialSync && window.SceneEffects && !reduceMotion()) {
+          window.SceneEffects.popIn(clone);
+        }
       }
     });
     if (changed) {
       recollectAnimated();
       updateViewTarget();
     }
+    lastStats = snapshot.stats;
     lastQuantities = {};
     snapshot.buildings.forEach(b => {
       lastQuantities[b.id] = b.quantity;
@@ -326,7 +429,13 @@
   function animate(THREE, timeMs) {
     if (disposed) return;
     rafId = requestAnimationFrame(t => animate(THREE, t));
-    if (!running || !stageInView || document.hidden || !sceneEnabled()) return;
+    if (!running || !stageInView || document.hidden || !sceneEnabled()) {
+      // Personne ne regarde : les notifications de juice accumulées
+      // n'auront plus de sens au retour — on les jette au fil de l'eau.
+      const queue = window.__PE_SCENE_EVENTS__;
+      if (queue && queue.length) queue.length = 0;
+      return;
+    }
     // Mobile renders every other frame (~30fps).
     frameToggle = !frameToggle;
     if (isMobile && frameToggle) return;
@@ -340,12 +449,24 @@
     }
 
     const bridge = window.__PE_SCENE__;
-    if (bridge) {
-      const changed = syncBuildings(THREE, bridge.getSnapshot());
-      if (changed) needsRender = true;
+    if (bridge && syncBuildings(THREE, bridge.getSnapshot())) {
+      needsRender = true;
+    }
+    const still = reduceMotion();
+    drainSceneEvents(THREE);
+    if (window.SceneEffects) {
+      if (still) {
+        // reduce-motion activé en cours de vol : on amène les effets
+        // actifs à leur état final (avec nettoyage) au lieu de les
+        // laisser s'animer jusqu'au bout.
+        if (window.SceneEffects.finishAll()) needsRender = true;
+      } else if (window.SceneEffects.tick(timeMs || 0)) {
+        needsRender = true;
+      }
     }
 
-    const still = reduceMotion();
+    if (still && ambianceNeedsRender()) needsRender = true;
+    applyAmbiance(THREE, still);
     if (still) {
       // On-demand rendering only: draw when the campus changed. The view
       // snaps straight to its target (no travelling shot).
@@ -355,7 +476,7 @@
     } else {
       if (easeView(false)) needsRender = true;
       const t = (timeMs || 0) / 1000;
-      placeCamera(BASE_AZIMUTH + Math.sin((t * 2 * Math.PI) / DRIFT_PERIOD_S) * DRIFT_AMPLITUDE);
+      placeCamera(BASE_AZIMUTH + sweepOffset + Math.sin((t * 2 * Math.PI) / DRIFT_PERIOD_S) * DRIFT_AMPLITUDE);
       animated.armSegments.forEach((seg, i) => {
         seg.rotation.z = Math.sin(t * 0.8 + i * 0.9) * 0.35;
       });
@@ -364,7 +485,135 @@
       });
     }
     renderer.render(scene, camera);
+    markAmbianceRendered();
     needsRender = false;
+  }
+
+  /**
+   * Remonte du mesh touché vers le groupe de parcelle (buildingId).
+   * Le Raycaster de three ne filtre PAS sur visible : on écarte
+   * explicitement les bâtiments cachés (parcelles pas encore achetées).
+   */
+  function buildingFromIntersections(hits) {
+    for (let i = 0; i < hits.length; i++) {
+      let node = hits[i].object;
+      let id = null;
+      let hidden = false;
+      while (node) {
+        if (node.visible === false) hidden = true;
+        if (node.userData && node.userData.buildingId) {
+          id = node.userData.buildingId;
+          break;
+        }
+        node = node.parent;
+      }
+      if (id && !hidden) return id;
+    }
+    return null;
+  }
+
+  /** Cibles cliquables uniquement : parcelles + copies (pas le sol, pas
+   * les particules en vol qui avaleraient le clic). */
+  function raycastTargets() {
+    const targets = [];
+    Object.keys(lotGroups).forEach(id => {
+      targets.push(lotGroups[id]);
+      lotCopies[id].forEach(copy => targets.push(copy));
+    });
+    return targets;
+  }
+
+  function raycastBuilding(THREE, clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    pointerVec.set(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+    raycaster.setFromCamera(pointerVec, camera);
+    return buildingFromIntersections(raycaster.intersectObjects(raycastTargets(), true));
+  }
+
+  /**
+   * Clic sur un bâtiment 3D = clic sur son bouton « Acheter » du DOM :
+   * on réutilise 100 % de la logique existante (coûts, tutoriel, sons,
+   * log). La liste DOM reste le chemin accessible principal — le canvas
+   * est un raccourci pour souris/tactile.
+   */
+  function wirePointer(THREE) {
+    raycaster = new THREE.Raycaster();
+    pointerVec = new THREE.Vector2();
+    // "click" plutôt que pointerdown : clic gauche uniquement, et le
+    // navigateur l'annule si le geste devient un drag/scroll (tactile).
+    canvas.addEventListener("click", event => {
+      if (!running || !renderer) return;
+      const id = raycastBuilding(THREE, event.clientX, event.clientY);
+      if (!id) return;
+      const btn = document.querySelector('[data-building-btn="' + id + '"]');
+      // L'inabordabilité est signalée par la classe CSS "disabled"
+      // (app.js ne pose pas l'attribut disabled).
+      if (btn && !btn.classList.contains("disabled")) {
+        btn.click();
+      }
+    });
+    canvas.addEventListener("pointermove", event => {
+      if (!running || !renderer) return;
+      const now = performance.now();
+      if (now - lastHoverCheck < 120) return;
+      lastHoverCheck = now;
+      const id = raycastBuilding(THREE, event.clientX, event.clientY);
+      canvas.style.cursor = id ? "pointer" : "";
+    });
+  }
+
+  /** Vide la file d'événements poussée par app.js (juice uniquement). */
+  function drainSceneEvents(THREE) {
+    const queue = window.__PE_SCENE_EVENTS__;
+    const fx = window.SceneEffects;
+    if (!queue || !queue.length || !fx) {
+      if (queue) queue.length = 0;
+      return;
+    }
+    const still = reduceMotion();
+    while (queue.length) {
+      const ev = queue.shift();
+      if (ev.type === "purchase" && ev.id && lotGroups[ev.id]) {
+        const group = lotGroups[ev.id];
+        if (!still) {
+          fx.pulse(group);
+          // Contrat d'accessibilité (docs/accessibility.md) : les effets
+          // se coupent si reduce-motion OU particules désactivées.
+          if (particlesEnabled()) {
+            const origin = group.position.clone();
+            origin.y = 0.8;
+            fx.burst(THREE, scene, origin, 0x38bdf8, 12);
+          }
+        }
+        needsRender = true;
+      } else if (ev.type === "event" && EVENT_TARGETS[ev.id] && lotGroups[EVENT_TARGETS[ev.id]]) {
+        const target = lotGroups[EVENT_TARGETS[ev.id]];
+        if (target.visible && !still) {
+          fx.shake(target);
+          needsRender = true;
+        }
+      } else if (ev.type === "prestige") {
+        if (!still) {
+          if (particlesEnabled()) {
+            const center = new THREE.Vector3(viewTarget.x, 1.2, viewTarget.z);
+            fx.burst(THREE, scene, center, 0xfacc15, 22);
+          }
+          if (!sweepActive) {
+            sweepActive = true;
+            fx.sweep(angle => {
+              sweepOffset = angle;
+            }, 2400, () => {
+              sweepActive = false;
+            });
+          }
+        }
+        needsRender = true;
+      }
+    }
   }
 
   function watchVisibility() {
@@ -428,6 +677,9 @@
       onWindowResize = null;
     }
     applySize = null;
+    // Plus personne ne draine la file : on la retire pour que app.js
+    // redevienne no-op au lieu d'accumuler des notifications.
+    window.__PE_SCENE_EVENTS__ = null;
     if (renderer) {
       renderer.dispose();
       renderer = null;
@@ -464,6 +716,10 @@
       buildLots(THREE);
       watchResize(THREE);
       watchVisibility();
+      wirePointer(THREE);
+      // File des notifications de jeu (achats/événements/prestige) que
+      // app.js alimente ; absente = no-op côté jeu.
+      window.__PE_SCENE_EVENTS__ = [];
       canvas.addEventListener("webglcontextlost", event => {
         event.preventDefault();
         dispose();
@@ -506,9 +762,13 @@
           if (applySize) applySize();
           const bridge = window.__PE_SCENE__;
           if (bridge) syncBuildings(THREE, bridge.getSnapshot());
+          drainSceneEvents(THREE);
+          if (window.SceneEffects) window.SceneEffects.tick(performance.now());
+          applyAmbiance(THREE, true);
           easeView(true);
           placeCamera(BASE_AZIMUTH);
           renderer.render(scene, camera);
+          markAmbianceRendered();
           return renderer.info.render.triangles;
         }
       };

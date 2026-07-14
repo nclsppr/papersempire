@@ -18,6 +18,7 @@ Track meaningful milestones in the project:
 - **0.6** – Externalise i18n, add German/Luxembourgish, refresh the mobile UI (sticky header, ripple, layout fixes), and add Playwright layout tests. See `RELEASE_NOTES.md` for details.
 - **0.7** – Persistence + achievements, SEO metadata, dual deployment (game root + docs sous `/docs/`), et grosse passe accessibilité (skip links, ARIA, panneau d’options). Voir `accessibility.md` pour le détail.
 - **0.8** – Ajout d'un plan structuré “site à succès” (DA, responsive, conversion, workflow images IA) dans `web-success-plan.md`.
+- **0.9** – Le campus 3D lowpoly (three.js vendored, enrichissement progressif) : chaque bâtiment acheté apparaît sur la carte, caméra qui cadre l'empire et dézoome avec sa croissance, clic-achat directement sur les bâtiments, ambiances pilotées par les jauges (brouillard, lumières), secousses d'événements et fanfare de prestige. Voir `architecture.md` § Scène 3D.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
