@@ -22,8 +22,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - run: npm install
+          node-version: 22
+      - run: npm install --no-save retypeapp@latest
       - run: npm run docs:build
       - name: Prepare deployment directory
         run: |
