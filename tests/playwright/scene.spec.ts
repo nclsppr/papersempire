@@ -35,6 +35,34 @@ test.describe("3D scene progressive enhancement", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("scene notifications are a no-op when the 3D layer is absent", async ({ page }) => {
+    const pageErrors: Error[] = [];
+    page.on("pageerror", err => pageErrors.push(err));
+
+    // Under file:// the scene never boots, so __PE_SCENE_EVENTS__ stays
+    // undefined and app.js notifications must be silent no-ops: buying
+    // (purchase notify) and a story event (event notify) must not throw.
+    // The save is seeded via addInitScript (runs before the game scripts)
+    // so the debounced autosave cannot race and overwrite it.
+    await page.addInitScript(() => {
+      localStorage.setItem("papersEmpireSave", JSON.stringify({
+        version: 1,
+        resources: { docBank: 100, docTotal: 100, ccTotal: 0, culturePoints: 0 },
+        stats: { quality: 0.5, footprint: 0.5, imageVbs: 0.5 },
+        buildings: [],
+        upgrades: [],
+        achievements: {}
+      }));
+    });
+    await page.goto(fileUrl);
+    const buyButton = page.locator('[data-building-btn="reproOperator"]');
+    await buyButton.click();
+    await page.evaluate(() => (window as any).__PE_DEBUG.spawnEvent("machineBreakdown"));
+    await expect(page.locator("#eventModal")).toBeVisible();
+
+    expect(pageErrors).toEqual([]);
+  });
+
   test("scene bridge exposes a defensive snapshot", async ({ page }) => {
     await page.goto(fileUrl);
     const result = await page.evaluate(() => {

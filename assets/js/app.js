@@ -1093,6 +1093,7 @@
     const previousQuantity = b.quantity;
     b.quantity += 1;
     uiState.buildingsDirty = true;
+    notifyScene("purchase", b.id);
     logMessage("log.buyBuilding", { name: getBuildingName(b), total: b.quantity });
     refreshUpgradeUnlocks();
     checkAchievements();
@@ -1140,6 +1141,7 @@
     const gain = computePotentialCultureGain();
     if (gain <= 0) return;
 
+    notifyScene("prestige");
     gameState.resources.culturePoints += gain;
     gameState.resources.docBank = 0;
     gameState.resources.docTotal = 0;
@@ -1324,7 +1326,20 @@
     if (!eventState.eventsEnabled) return;
     eventState.active = eventDef;
     eventState.modalCanClose = false;
+    notifyScene("event", eventDef.id);
     showEventModal(eventDef);
+  }
+
+  /**
+   * Fire-and-forget notifications for the 3D campus (juice only — state
+   * truth still flows through the polled snapshot). The queue is created
+   * by the scene; when the 3D layer is absent this is a no-op.
+   */
+  function notifyScene(type, id) {
+    const queue = window.__PE_SCENE_EVENTS__;
+    if (queue && typeof queue.push === "function") {
+      queue.push({ type, id });
+    }
   }
 
   function showEventModal(eventDef) {
