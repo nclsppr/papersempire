@@ -24,7 +24,7 @@ When you make notable changes (new features, mechanics, UI improvements), append
 
 ## SEO & Deployment
 
-- `index.html` now embarques canonical/meta tags, Open Graph/Twitter cards, and JSON-LD schema data to help Google understand the app.
+- `index.html` now embeds canonical/meta tags, Open Graph/Twitter cards, and JSON-LD schema data to help Google understand the app.
 - `robots.txt` (root) allows crawling and points to `sitemap.xml`, which currently indexes the main game (`/`) and the Retype docs (`/docs/`).
 - A dedicated social card is stored at `assets/images/social-card.svg` and referenced in Open Graph/Twitter meta tags.
 - The GitHub Actions workflow (`.github/workflows/docs.yml`) builds the docs, bundles the game assets, copies `robots.txt`/`sitemap.xml`, and deploys everything via GitHub Pages (Pages source = GitHub Actions).
