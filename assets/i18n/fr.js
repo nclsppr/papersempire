@@ -50,7 +50,7 @@
     "settings.tutorial": "Tutoriel guidé",
     "settings.events": "Autoriser les événements narratifs",
     "settings.scene": "Afficher la scène 3D du campus",
-    "scene.fallback": "Ton campus prend forme ici — la vue 3D arrive bientôt.",
+    "scene.fallback": "Ton campus prend forme ici — la vue 3D s'affiche sur les navigateurs compatibles.",
     "settings.restartTutorial": "Relancer le tutoriel",
     "settings.saveHint": "Exporter, importer ou réinitialiser ta progression.",
     "label.costDoc": "Coût : {{amount}} DOC",

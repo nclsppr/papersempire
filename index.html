@@ -319,6 +319,13 @@
   <script src="assets/js/accessibility.js"></script>
   <script src="assets/js/ui-effects.js"></script>
   <script src="assets/js/tutorial.js"></script>
+  <!-- Scène 3D du campus : enrichissement progressif. scene-loader importe
+       dynamiquement three.js (assets/vendor/) ; en cas d'échec (file://,
+       WebGL absent, vieux navigateur) le jeu DOM fonctionne à l'identique. -->
+  <script src="assets/js/scene/city-layout.js"></script>
+  <script src="assets/js/scene/building-recipes.js"></script>
+  <script src="assets/js/scene/city-scene.js"></script>
+  <script src="assets/js/scene/scene-loader.js" defer></script>
   <script src="assets/js/app.js" defer></script>
 </body>
 </html>
