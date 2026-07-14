@@ -452,12 +452,19 @@
     if (bridge && syncBuildings(THREE, bridge.getSnapshot())) {
       needsRender = true;
     }
+    const still = reduceMotion();
     drainSceneEvents(THREE);
-    if (window.SceneEffects && window.SceneEffects.tick(timeMs || 0)) {
-      needsRender = true;
+    if (window.SceneEffects) {
+      if (still) {
+        // reduce-motion activé en cours de vol : on amène les effets
+        // actifs à leur état final (avec nettoyage) au lieu de les
+        // laisser s'animer jusqu'au bout.
+        if (window.SceneEffects.finishAll()) needsRender = true;
+      } else if (window.SceneEffects.tick(timeMs || 0)) {
+        needsRender = true;
+      }
     }
 
-    const still = reduceMotion();
     if (still && ambianceNeedsRender()) needsRender = true;
     applyAmbiance(THREE, still);
     if (still) {

@@ -28,6 +28,27 @@
     tweens.push({ start: 0, spec });
   }
 
+  /**
+   * Termine immédiatement tous les tweens actifs : chaque effet est amené
+   * à son état final (onUpdate(1)) puis nettoyé (onDone). Utilisé quand
+   * reduce-motion s'active en cours de session — le contrat
+   * d'accessibilité exige que les effets déjà en vol s'arrêtent aussi.
+   * Retourne true si au moins un tween a été terminé.
+   */
+  function finishAll() {
+    if (!tweens.length) return false;
+    const pending = tweens.splice(0, tweens.length);
+    pending.forEach(tw => {
+      try {
+        tw.spec.onUpdate(1);
+      } catch (err) { /* l'état final peut échouer, on nettoie quand même */ }
+      try {
+        if (tw.spec.onDone) tw.spec.onDone();
+      } catch (err) { /* rien de plus à faire */ }
+    });
+    return true;
+  }
+
   /** Advances every tween; returns true while effects are running. */
   function tick(nowMs) {
     for (let i = tweens.length - 1; i >= 0; i--) {
@@ -157,5 +178,5 @@
     });
   }
 
-  window.SceneEffects = { tick, add, popIn, pulse, shake, burst, sweep };
+  window.SceneEffects = { tick, finishAll, add, popIn, pulse, shake, burst, sweep };
 })();
