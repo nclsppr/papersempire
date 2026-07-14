@@ -9,7 +9,6 @@
   <meta name="author" content="Papers Empire">
   <meta name="theme-color" content="#0f172a">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <meta name="theme-color" content="#ffffff">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Papers Empire">
   <meta property="og:description" content="Automatise ton imprimerie, débloque des upgrades et domine la galaxie du document.">
@@ -74,6 +73,18 @@
       <span aria-hidden="true">×</span>
     </button>
   </div>
+
+  <!-- Scène 3D du campus (enrichissement progressif) : purement décorative,
+       toutes les données restent dans l'interface DOM ci-dessous. -->
+  <section class="stage" id="sceneStage" aria-hidden="true">
+    <canvas id="cityCanvas"></canvas>
+    <div class="stage-fallback" id="stageFallback">
+      <div class="stage-skyline" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <p class="stage-fallback-text" data-i18n="scene.fallback"></p>
+    </div>
+  </section>
 
 <main id="mainContent" class="app" role="main">
   <!-- Colonne gauche: clic + stats -->
@@ -266,6 +277,10 @@
       <label class="option-row">
         <input type="checkbox" id="toggleEvents">
         <span data-i18n="settings.events"></span>
+      </label>
+      <label class="option-row">
+        <input type="checkbox" id="toggleScene">
+        <span data-i18n="settings.scene"></span>
       </label>
       <button class="btn-slim" type="button" id="restartTutorialBtn" data-i18n="settings.restartTutorial"></button>
     </div>

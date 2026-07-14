@@ -49,6 +49,8 @@
     "settings.particles": "Partikel-Effekter",
     "settings.tutorial": "Geféiert Tutorial",
     "settings.events": "Narrativ Eventer erlaben",
+    "settings.scene": "3D-Campus-Szeen uweisen",
+    "scene.fallback": "Hei entsteet däi Campus – d'3D-Vue kënnt geschwënn.",
     "settings.restartTutorial": "Tutorial nei starten",
     "settings.saveHint": "Späicherdatei exportéieren, importéieren oder läschen.",
     "label.costDoc": "Käschten: {{amount}} DOC",

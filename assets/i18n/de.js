@@ -49,6 +49,8 @@
     "settings.particles": "Partikeleffekte",
     "settings.tutorial": "Geführtes Tutorial",
     "settings.events": "Story-Ereignisse erlauben",
+    "settings.scene": "3D-Campus-Szene anzeigen",
+    "scene.fallback": "Hier entsteht dein Campus – die 3D-Ansicht kommt bald.",
     "settings.restartTutorial": "Tutorial neu starten",
     "settings.saveHint": "Speicherstände exportieren, importieren oder löschen.",
     "label.costDoc": "Kosten: {{amount}} DOC",

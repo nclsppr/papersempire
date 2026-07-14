@@ -691,10 +691,12 @@
 
   /** Initialises the building deck, upgrades and kicks off the loop. */
   function initGame() {
-    gameState.buildings = BUILDING_DEFS.map(def => ({
+    gameState.buildings = BUILDING_DEFS.map((def, index) => ({
       ...def,
       quantity: 0,
-      isVisible: false
+      // The first tier is always visible so new players immediately see
+      // what to save up for; later tiers unlock via syncBuildingUnlocks().
+      isUnlocked: index === 0
     }));
 
     gameState.upgrades = [
@@ -774,6 +776,11 @@
         const target = gameState.buildings.find(b => b.id === entry.id);
         if (target && typeof entry.quantity === "number") {
           target.quantity = entry.quantity;
+          // isUnlocked is not persisted: keep owned buildings visible even
+          // when the current bank is below their (grown) next-unit cost.
+          if (target.quantity > 0) {
+            target.isUnlocked = true;
+          }
         }
       }
     }
@@ -1140,7 +1147,8 @@
 
     for (const b of gameState.buildings) {
       b.quantity = 0;
-      b.isUnlocked = false;
+      // Keep the first tier visible after a reset (same rule as initGame).
+      b.isUnlocked = b === gameState.buildings[0];
     }
 
     for (const upg of gameState.upgrades) {
