@@ -282,6 +282,78 @@
     initGame();
     initGodModeControls();
     initTutorialGuidance();
+    initFlavorTicker();
+    applyTimeOfDaySky();
+    setInterval(applyTimeOfDaySky, 10 * 60 * 1000);
+    greetConsoleVisitors();
+  }
+
+  /* Ticker d'ambiance : une ligne de vie d'atelier tourne en bas de
+     la scène 3D (décorative, la scène est aria-hidden). L'index de
+     départ est aléatoire pour que chaque session ouvre sur une
+     anecdote différente. */
+  const FLAVOR_KEYS = [
+    "flavor.paperJam",
+    "flavor.tonerLow",
+    "flavor.coffee",
+    "flavor.a4",
+    "flavor.recto",
+    "flavor.stapler"
+  ];
+  const FLAVOR_INTERVAL_MS = 22000;
+  let flavorIndex = 0;
+
+  function showFlavorLine(immediate = false) {
+    const el = DOM.flavorLine;
+    if (!el) return;
+    const key = FLAVOR_KEYS[flavorIndex % FLAVOR_KEYS.length];
+    el.dataset.i18nKey = key;
+    if (immediate) {
+      el.textContent = t(key);
+      return;
+    }
+    el.classList.add("flavor-fading");
+    setTimeout(() => {
+      el.textContent = t(key);
+      el.classList.remove("flavor-fading");
+    }, 300);
+  }
+
+  function initFlavorTicker() {
+    if (!DOM.flavorLine) return;
+    flavorIndex = Math.floor(Math.random() * FLAVOR_KEYS.length);
+    showFlavorLine(true);
+    setInterval(() => {
+      flavorIndex += 1;
+      showFlavorLine();
+    }, FLAVOR_INTERVAL_MS);
+  }
+
+  /* Ciel selon l'heure locale : ne décale que la teinte du dégradé
+     (classes sky-* dans style.css). 17 h - 22 h garde le crépuscule,
+     la teinte par défaut de la marque. */
+  function applyTimeOfDaySky() {
+    const root = document.documentElement;
+    root.classList.remove("sky-dawn", "sky-day", "sky-night");
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 10) {
+      root.classList.add("sky-dawn");
+    } else if (hour >= 10 && hour < 17) {
+      root.classList.add("sky-day");
+    } else if (hour >= 22 || hour < 6) {
+      root.classList.add("sky-night");
+    }
+  }
+
+  /* Clin d'œil aux curieux qui ouvrent la console. */
+  function greetConsoleVisitors() {
+    if (typeof console === "undefined" || typeof console.log !== "function") return;
+    console.log(
+      "%c🖨️ Papers Empire %c\nBourrage papier ? Jamais ici.\n%cTu fouilles sous le capot ? window.__PE_DEBUG t'ouvre l'atelier.",
+      "font-weight: bold; font-size: 14px; color: #fbbf24;",
+      "color: #cfc8e4;",
+      "color: #a79ec4; font-style: italic;"
+    );
   }
 
   /** Stores every frequently used DOM node locally for fast access. */
@@ -323,6 +395,7 @@
     DOM.settingsTriggers = document.querySelectorAll("[data-open-settings]");
     DOM.closeSettingsBtn = document.getElementById("closeSettingsBtn");
     DOM.restartTutorialBtn = document.getElementById("restartTutorialBtn");
+    DOM.flavorLine = document.getElementById("flavorLine");
     DOM.eventBanner = document.getElementById("eventBanner");
     DOM.eventBannerText = document.getElementById("eventBannerText");
     DOM.eventBannerEmoji = document.getElementById("eventBannerEmoji");
@@ -602,6 +675,9 @@
     }
     if (DOM.closeEventModal) {
       DOM.closeEventModal.setAttribute("aria-label", t("actions.close"));
+    }
+    if (DOM.flavorLine && DOM.flavorLine.dataset.i18nKey) {
+      DOM.flavorLine.textContent = t(DOM.flavorLine.dataset.i18nKey);
     }
     applyGameTitle();
     renderGodModePanel(true);
@@ -1167,7 +1243,7 @@
       TutorialEngine.markMilestone("building");
     }
     if (FINAL_BUILDING_ID && b.id === FINAL_BUILDING_ID && previousQuantity === 0) {
-      UIEffects.playCelebrationEffect();
+      UIEffects.playCelebrationEffect("finale");
       logMessage("log.finalBuilding", { name: getBuildingName(b) });
     }
   }
@@ -1227,6 +1303,7 @@
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
     logMessage("log.prestige", { amount: gain });
+    UIEffects.playCelebrationEffect("prestige");
     checkAchievements();
     queueSave(true);
     renderAll(true);
@@ -1649,6 +1726,7 @@
         logMessage("log.achievement", { name: t(def.nameKey) });
       }
     }
+    UIEffects.playCelebrationEffect("achievement");
     renderAchievementsPanel();
     queueSave(true);
   }

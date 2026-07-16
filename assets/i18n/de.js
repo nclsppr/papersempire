@@ -197,6 +197,12 @@
     "upgrade.upg_global_prod_1.name": "Flow-Organisation 📦",
     "upgrade.upg_global_prod_1.desc": "Globale Produktion +20 % für alle Gebäude.",
     "upgrade.upg_quality_boost_1.name": "Quality-Boost 🔍",
-    "upgrade.upg_quality_boost_1.desc": "Grundqualität +10 Prozentpunkte."
+    "upgrade.upg_quality_boost_1.desc": "Grundqualität +10 Prozentpunkte.",
+    "flavor.paperJam": "Kopierer 3 meldet einen Papierstau. Schon wieder.",
+    "flavor.tonerLow": "Magenta-Toner fast leer. Niemand druckt in Magenta.",
+    "flavor.coffee": "Kaffeepause in der Repro: die Produktion hält durch.",
+    "flavor.a4": "Gerücht: Donnerstag soll eine Palette Premium-A4 kommen.",
+    "flavor.recto": "Die Qualitätskontrolle zählt die Duplexdrucke nach. Zweimal.",
+    "flavor.stapler": "Jemand hat schon wieder den Tacker ausgeliehen. Die Ermittlungen laufen."
   };
 })();

@@ -50,6 +50,22 @@
       scroll-padding-top: calc(var(--header-h) + 8px);
     }
 
+    /* Ciel selon l'heure locale (classe posée par applyTimeOfDaySky,
+       app.js). Le crépuscule reste la teinte par défaut de la marque ;
+       aube, jour et nuit ne décalent que légèrement le ciel. */
+    :root.sky-dawn {
+      --bg-sky: #3c2749;
+    }
+
+    :root.sky-day {
+      --bg-sky: #2c2454;
+    }
+
+    :root.sky-night {
+      --bg-sky: #1b1332;
+      --bg-deep: #070312;
+    }
+
     :root.pref-large-text {
       --text-base: clamp(17px, 2vw, 20px);
       --text-small: clamp(15px, 1.8vw, 18px);
@@ -275,8 +291,18 @@
       font-size: var(--heading-size);
       font-weight: 400;
       color: var(--paper);
-      letter-spacing: 0.02em;
-      text-shadow: 0 2px 0 rgba(11, 6, 23, 0.9), 0 4px 14px rgba(251, 191, 36, 0.25);
+      letter-spacing: 0.03em;
+      /* Letterpress : extrusion en violets du décor (clair → sombre)
+         sous la crème, avec une lueur or discrète — le wordmark semble
+         embossé dans le ciel du crépuscule. */
+      text-shadow:
+        0 1px 0 #6b55a4,
+        0 2px 0 #53418a,
+        0 3px 0 #3d2f6b,
+        0 4px 0 #2a2050,
+        0 5px 0 #1b1438,
+        0 8px 16px rgba(11, 6, 23, 0.65),
+        0 4px 22px rgba(251, 191, 36, 0.2);
       user-select: none;
     }
 
@@ -390,6 +416,34 @@
       font-size: var(--text-small);
       color: var(--muted);
       text-align: center;
+    }
+
+    /* Ticker d'ambiance : la vie de l'atelier commente en bas de la
+       scène (rotation dans initFlavorTicker, app.js). Décoratif, la
+       scène entière est déjà aria-hidden. */
+    .stage-flavor {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      z-index: 2;
+      max-width: min(75%, 440px);
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(11, 6, 23, 0.72);
+      border: 1px solid var(--border-soft);
+      color: #cfc8e4;
+      font-size: var(--text-small);
+      line-height: 1.4;
+      pointer-events: none;
+      transition: opacity 300ms ease;
+    }
+
+    .stage-flavor.flavor-fading {
+      opacity: 0;
+    }
+
+    .stage-flavor:empty {
+      display: none;
     }
 
     .pref-high-contrast .stage {
@@ -1171,6 +1225,26 @@
       height: 14px;
       background: hsl(calc(var(--rand) * 360), 80%, 60%);
       animation: confetti-fall 2s linear forwards;
+    }
+
+    /* Variantes de célébration (voir CELEBRATION_VARIANTS dans
+       ui-effects.js) : or pour le prestige, or + violet pour les
+       succès, feuilles de papier qui tombent plus lentement. */
+    .confetti-gold {
+      background: hsl(calc(30 + var(--rand) * 30), 92%, 55%);
+    }
+
+    .confetti-violet {
+      background: hsl(calc(255 + var(--rand) * 40), 70%, 68%);
+    }
+
+    .confetti-paper {
+      width: 10px;
+      height: 14px;
+      background: var(--paper);
+      border-radius: 1px;
+      box-shadow: inset 0 -3px 0 rgba(11, 6, 23, 0.12);
+      animation-duration: 2.6s;
     }
 
     @keyframes confetti-fall {

@@ -197,6 +197,12 @@
     "upgrade.upg_global_prod_1.name": "Flux-Organisatioun 📦",
     "upgrade.upg_global_prod_1.desc": "Global Produktioun +20% fir all Gebai.",
     "upgrade.upg_quality_boost_1.name": "Qualitéit-Boost 🔍",
-    "upgrade.upg_quality_boost_1.desc": "Basisqualitéit +10 Prozentpunkten."
+    "upgrade.upg_quality_boost_1.desc": "Basisqualitéit +10 Prozentpunkten.",
+    "flavor.paperJam": "Kopéierer 3 mellt e Pabeierstau. Schonn erëm.",
+    "flavor.tonerLow": "Magenta-Toner bal eidel. Keen dréckt a Magenta.",
+    "flavor.coffee": "Kaffispaus an der Repro: d'Produktioun hält duerch.",
+    "flavor.a4": "Rumeur: en Donneschdeg soll eng Palett Premium-A4 kommen.",
+    "flavor.recto": "D'Qualitéitskontroll zielt d'Duplex-Dréck no. Zweemol.",
+    "flavor.stapler": "Een huet erëm den Tacker geléint. D'Enquête leeft."
   };
 })();

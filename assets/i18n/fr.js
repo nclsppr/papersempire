@@ -197,6 +197,12 @@
     "upgrade.upg_global_prod_1.name": "Organisation du flux 📦",
     "upgrade.upg_global_prod_1.desc": "Production globale de tous les bâtiments +20 %. ",
     "upgrade.upg_quality_boost_1.name": "Contrôle qualité renforcé 🔍",
-    "upgrade.upg_quality_boost_1.desc": "Qualité de base +10 points."
+    "upgrade.upg_quality_boost_1.desc": "Qualité de base +10 points.",
+    "flavor.paperJam": "La photocopieuse 3 signale un bourrage papier. Encore.",
+    "flavor.tonerLow": "Toner magenta presque vide. Personne n'imprime en magenta.",
+    "flavor.coffee": "Pause café à l'atelier repro : la production tient bon.",
+    "flavor.a4": "Rumeur : une palette de A4 premium arriverait jeudi.",
+    "flavor.recto": "Le service qualité recompte les recto-verso. Deux fois.",
+    "flavor.stapler": "Quelqu'un a encore emprunté l'agrafeuse. L'enquête continue."
   };
 })();
