@@ -328,6 +328,7 @@
     DOM.eventBannerEmoji = document.getElementById("eventBannerEmoji");
     DOM.closeEventBanner = document.getElementById("closeEventBanner");
     DOM.eventModal = document.getElementById("eventModal");
+    DOM.eventDialog = DOM.eventModal ? DOM.eventModal.querySelector(".event-dialog") : null;
     DOM.eventTitle = document.getElementById("eventTitle");
     DOM.eventDescription = document.getElementById("eventDescription");
     DOM.eventChoices = document.getElementById("eventChoices");
@@ -445,10 +446,49 @@
     hideAllTooltips();
   }
 
+  /* Motion des modales (pattern transitions-dev) : le voile cross-fade,
+     le dialog .t-modal scale ; .hidden ne revient qu'après la transition
+     de fermeture pour que la sortie reste visible. */
+  function modalCloseMs() {
+    const root = document.documentElement;
+    if (root.classList.contains("pref-reduce-motion")) return 0;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
+    const value = parseFloat(getComputedStyle(root).getPropertyValue("--modal-close-dur"));
+    return Number.isFinite(value) ? value : 150;
+  }
+
+  function openModalSurface(overlay, dialog) {
+    if (overlay.__peCloseTimer) {
+      clearTimeout(overlay.__peCloseTimer);
+      overlay.__peCloseTimer = null;
+    }
+    overlay.classList.remove("hidden", "is-closing");
+    if (dialog) dialog.classList.remove("is-closing");
+    // Reflow forcé pour que la transition d'entrée parte de l'état repos.
+    void overlay.offsetWidth;
+    overlay.classList.add("is-open");
+    if (dialog) dialog.classList.add("is-open");
+  }
+
+  function closeModalSurface(overlay, dialog) {
+    overlay.classList.remove("is-open");
+    overlay.classList.add("is-closing");
+    if (dialog) {
+      dialog.classList.remove("is-open");
+      dialog.classList.add("is-closing");
+    }
+    overlay.__peCloseTimer = setTimeout(() => {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("is-closing");
+      if (dialog) dialog.classList.remove("is-closing");
+      overlay.__peCloseTimer = null;
+    }, modalCloseMs());
+  }
+
   function openSettingsModal(section) {
     if (!DOM.settingsModal) return;
     const targetTab = section || settingsState.activeTab || "accessibility";
-    DOM.settingsModal.classList.remove("hidden");
+    openModalSurface(DOM.settingsModal, DOM.settingsDialog);
     DOM.settingsModal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
     activateSettingsTab(targetTab);
@@ -465,10 +505,14 @@
   }
 
   function closeSettingsModal(restoreFocus = true) {
-    if (!DOM.settingsModal || DOM.settingsModal.classList.contains("hidden")) {
+    if (
+      !DOM.settingsModal ||
+      DOM.settingsModal.classList.contains("hidden") ||
+      DOM.settingsModal.classList.contains("is-closing")
+    ) {
       return false;
     }
-    DOM.settingsModal.classList.add("hidden");
+    closeModalSurface(DOM.settingsModal, DOM.settingsDialog);
     DOM.settingsModal.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open");
     if (restoreFocus && settingsState.lastTrigger && typeof settingsState.lastTrigger.focus === "function") {
@@ -1344,7 +1388,7 @@
 
   function showEventModal(eventDef) {
     if (!DOM.eventModal) return;
-    DOM.eventModal.classList.remove("hidden");
+    openModalSurface(DOM.eventModal, DOM.eventDialog);
     DOM.eventModal.setAttribute("aria-hidden", "false");
     DOM.eventTitle.textContent = t(eventDef.titleKey);
     DOM.eventDescription.textContent = t(eventDef.descriptionKey);
@@ -1377,9 +1421,15 @@
   }
 
   function closeEventModal(force = false) {
-    if (!DOM.eventModal || DOM.eventModal.classList.contains("hidden")) return false;
+    if (
+      !DOM.eventModal ||
+      DOM.eventModal.classList.contains("hidden") ||
+      DOM.eventModal.classList.contains("is-closing")
+    ) {
+      return false;
+    }
     if (!eventState.modalCanClose && !force) return false;
-    DOM.eventModal.classList.add("hidden");
+    closeModalSurface(DOM.eventModal, DOM.eventDialog);
     DOM.eventModal.setAttribute("aria-hidden", "true");
     return true;
   }
