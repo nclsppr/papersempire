@@ -611,7 +611,26 @@
 
   function applyGameTitle() {
     document.querySelectorAll("[data-game-title]").forEach(el => {
-      el.textContent = GAME_TITLE;
+      el.textContent = "";
+      /* Une lettre par span pour l'animation logo-pop du wordmark ;
+         les spans sont aria-hidden, le titre complet reste lisible
+         par les lecteurs d'écran via le span sr-only. */
+      const srTitle = document.createElement("span");
+      srTitle.className = "sr-only";
+      srTitle.textContent = GAME_TITLE;
+      el.appendChild(srTitle);
+      Array.from(GAME_TITLE).forEach((char, index) => {
+        if (char === " ") {
+          el.appendChild(document.createTextNode(" "));
+          return;
+        }
+        const span = document.createElement("span");
+        span.className = "logo-char";
+        span.setAttribute("aria-hidden", "true");
+        span.style.setProperty("--i", String(index));
+        span.textContent = char;
+        el.appendChild(span);
+      });
     });
   }
 
