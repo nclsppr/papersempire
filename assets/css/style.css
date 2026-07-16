@@ -16,6 +16,12 @@
       --bad: #f87171;
       --border-soft: rgba(148, 163, 184, 0.2);
       --header-h: 64px;
+      /* Modal open/close motion (transitions-dev) */
+      --modal-open-dur: 250ms;
+      --modal-close-dur: 150ms;
+      --modal-scale: 0.96;
+      --modal-scale-close: 0.96;
+      --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
       font-size: var(--text-base);
       color-scheme: dark;
     }
@@ -905,6 +911,59 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+    }
+
+    /* Modal motion : le dialog (.t-modal) scale de --modal-scale à 1
+       pendant que le voile cross-fade. Ouverture : retirer .hidden,
+       forcer un reflow, ajouter .is-open. Fermeture : échanger .is-open
+       pour .is-closing, puis remettre .hidden après --modal-close-dur
+       (voir open/closeModalSurface dans app.js). */
+    .t-modal {
+      transform-origin: center;
+      transform: scale(var(--modal-scale));
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform var(--modal-open-dur) var(--modal-ease),
+        opacity   var(--modal-open-dur) var(--modal-ease);
+      will-change: transform, opacity;
+    }
+    .t-modal.is-open {
+      transform: scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .t-modal.is-closing {
+      transform: scale(var(--modal-scale-close));
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform var(--modal-close-dur) var(--modal-ease),
+        opacity   var(--modal-close-dur) var(--modal-ease);
+    }
+
+    .settings-modal,
+    .event-modal {
+      opacity: 0;
+      transition: opacity var(--modal-open-dur) var(--modal-ease);
+    }
+
+    .settings-modal.is-open,
+    .event-modal.is-open {
+      opacity: 1;
+    }
+
+    .settings-modal.is-closing,
+    .event-modal.is-closing {
+      transition-duration: var(--modal-close-dur);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .t-modal,
+      .settings-modal,
+      .event-modal {
+        transition: none !important;
+      }
     }
 
     .settings-modal {
