@@ -6,8 +6,14 @@ const fileUrl = "file://" + htmlPath.replace(/\\/g, "/");
 
 test.describe("tutorial & settings", () => {
   test.beforeEach(async ({ page }) => {
+    // addInitScript re-runs on every navigation, including page.reload(),
+    // so an unconditional clear() would wipe preferences a test just saved.
+    // Guard with a marker so the wipe only happens on the first document.
     await page.addInitScript(() => {
-      window.localStorage.clear();
+      if (!window.localStorage.getItem("__pe_test_cleared")) {
+        window.localStorage.clear();
+        window.localStorage.setItem("__pe_test_cleared", "1");
+      }
     });
   });
 
