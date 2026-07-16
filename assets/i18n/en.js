@@ -197,6 +197,12 @@
     "upgrade.upg_global_prod_1.name": "Flow organisation 📦",
     "upgrade.upg_global_prod_1.desc": "Global production +20% for every building.",
     "upgrade.upg_quality_boost_1.name": "Boosted quality control 🔍",
-    "upgrade.upg_quality_boost_1.desc": "Base quality +10 percentage points."
+    "upgrade.upg_quality_boost_1.desc": "Base quality +10 percentage points.",
+    "flavor.paperJam": "Copier 3 reports a paper jam. Again.",
+    "flavor.tonerLow": "Magenta toner almost empty. Nobody prints in magenta.",
+    "flavor.coffee": "Coffee break in the repro shop: production holds steady.",
+    "flavor.a4": "Rumor has it a pallet of premium A4 lands on Thursday.",
+    "flavor.recto": "Quality control is recounting the double-sided prints. Twice.",
+    "flavor.stapler": "Someone borrowed the stapler again. The investigation continues."
   };
 })();

@@ -3,7 +3,28 @@
   const SOUND_PRESETS = {
     click: { freq: 360, duration: 0.08 },
     purchase: { freq: 520, duration: 0.12 },
-    celebration: { freq: 640, duration: 0.3 }
+    celebration: { freq: 640, duration: 0.3 },
+    achievement: { freq: 780, duration: 0.18 }
+  };
+
+  /* Chaque grand moment a sa pluie : multicolore pour le bâtiment
+     final, or et feuilles de papier pour le prestige, salve courte
+     or/violet pour un succès (les classes confetti-* sont stylées
+     dans style.css). */
+  const CELEBRATION_VARIANTS = {
+    finale: { count: 40, classes: ["confetti"], sound: "celebration", lifetime: 2000 },
+    prestige: {
+      count: 48,
+      classes: ["confetti confetti-gold", "confetti confetti-paper"],
+      sound: "celebration",
+      lifetime: 2700
+    },
+    achievement: {
+      count: 18,
+      classes: ["confetti confetti-gold", "confetti confetti-violet"],
+      sound: "achievement",
+      lifetime: 2000
+    }
   };
 
   function ensureAudio() {
@@ -64,20 +85,22 @@
     playSound("click");
   }
 
-  function playCelebrationEffect() {
+  function playCelebrationEffect(variant) {
+    const cfg = CELEBRATION_VARIANTS[variant] || CELEBRATION_VARIANTS.finale;
     if (document.documentElement.dataset.particlesEnabled !== "0") {
       const container = document.createElement("div");
       container.className = "celebration";
-      for (let i = 0; i < 40; i++) {
+      container.style.animationDuration = cfg.lifetime + "ms";
+      for (let i = 0; i < cfg.count; i++) {
         const piece = document.createElement("span");
-        piece.className = "confetti";
+        piece.className = cfg.classes[i % cfg.classes.length];
         piece.style.setProperty("--rand", Math.random().toString());
         container.appendChild(piece);
       }
       document.body.appendChild(container);
-      setTimeout(() => container.remove(), 2000);
+      setTimeout(() => container.remove(), cfg.lifetime);
     }
-    playSound("celebration");
+    playSound(cfg.sound);
   }
 
   window.UIEffects = {
