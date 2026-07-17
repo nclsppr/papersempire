@@ -2513,3 +2513,72 @@
         transition: none !important;
       }
     }
+
+    /* ====================================================================
+       Rapport d'activité hors-ligne (0.13) — formulaire tamponné.
+       ==================================================================== */
+
+    .offline-dialog {
+      position: relative;
+    }
+
+    /* Visa rouge apposé en biais sur le formulaire, i18n via data-stamp. */
+    .offline-dialog[data-stamp]:not([data-stamp=""])::after {
+      content: attr(data-stamp);
+      position: absolute;
+      top: 14px;
+      right: 44px;
+      transform: rotate(7deg);
+      font-family: var(--font-display);
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      color: var(--stamp-red);
+      border: 2px solid currentColor;
+      border-radius: 4px;
+      padding: 2px 8px;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .offline-rows {
+      margin: 14px 0 6px;
+      border-top: 1px solid var(--card-edge);
+    }
+
+    .offline-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 8px 2px;
+      border-bottom: 1px dashed var(--card-edge);
+    }
+
+    .offline-row dt {
+      font-size: var(--text-small);
+      color: var(--muted-foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-family: var(--font-mono);
+    }
+
+    .offline-row dd {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: var(--heading-sub);
+      color: var(--card-foreground);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .offline-hint {
+      font-size: var(--text-small);
+      color: var(--muted-foreground);
+      margin: 10px 0 4px;
+    }
+
+    .pref-high-contrast .offline-dialog[data-stamp]::after {
+      color: var(--hc-accent);
+      transform: none;
+      opacity: 1;
+    }

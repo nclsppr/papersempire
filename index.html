@@ -382,6 +382,30 @@
 </div>
 </div>
 
+<!-- Rapport d'activité hors-ligne (roadmap 0.13) : rempli par app.js à la
+     réouverture quand l'atelier a produit pendant l'absence du joueur. -->
+<div class="event-modal hidden" id="offlineModal" role="dialog" aria-modal="true" aria-labelledby="offlineTitle">
+  <div class="event-dialog t-modal offline-dialog" data-stamp="">
+    <button class="modal-close" id="closeOfflineModal" aria-label="Fermer">×</button>
+    <div class="event-header">
+      <h3 id="offlineTitle" data-i18n="offline.title">Rapport d'activité 🗂️</h3>
+      <p data-i18n="offline.subtitle">Pendant ton absence, l'équipe de nuit a fait tourner l'atelier.</p>
+    </div>
+    <dl class="offline-rows">
+      <div class="offline-row">
+        <dt data-i18n="offline.duration">Absence constatée</dt>
+        <dd id="offlineDuration">–</dd>
+      </div>
+      <div class="offline-row">
+        <dt data-i18n="offline.produced">Documents produits</dt>
+        <dd id="offlineDocs">–</dd>
+      </div>
+    </dl>
+    <p class="offline-hint" data-i18n="offline.hint">L'équipe de nuit tourne à 50 % du rendement, plafonné à 8 heures.</p>
+    <button class="click-button" id="offlineResume" data-i18n="offline.resume">Reprendre le travail 🖨️</button>
+  </div>
+</div>
+
 <div class="settings-modal hidden" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" aria-hidden="true">
   <div class="settings-dialog t-modal" tabindex="-1">
     <div class="settings-dialog-header">

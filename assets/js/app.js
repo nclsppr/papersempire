@@ -76,7 +76,12 @@
       imageRecoveryRate: 0.01,
       footprintDriftBase: 0.00001,
       prestigeCcDivisor: 1000,
-      prestigeRequirement: 10000
+      prestigeRequirement: 10000,
+      // Gains hors-ligne (roadmap 0.13) : rendement réduit et plafonné.
+      offlineRate: 0.5,
+      offlineCapHours: 8,
+      offlineMinSeconds: 60,
+      offlineModalMinSeconds: 300
     },
     time: {
       lastUpdate: performance.now()
@@ -903,7 +908,9 @@
       }
     ];
 
-    applyPersistedState(Persistence.load ? Persistence.load() : null);
+    const savedState = Persistence.load ? Persistence.load() : null;
+    applyPersistedState(savedState);
+    offlineReport = settleOfflineProgress(savedState);
 
     if (window.EndgameModule) {
       window.EndgameModule.loadData(gameState).then(() => {
@@ -916,6 +923,7 @@
     refreshUpgradeUnlocks(true);
     logMessage("log.welcome");
     renderAll(true);
+    showOfflineReport();
     gameState.time.lastUpdate = performance.now();
     requestAnimationFrame(gameLoop);
   }
@@ -927,7 +935,8 @@
       stats: { ...gameState.stats },
       buildings: gameState.buildings.map(b => ({ id: b.id, quantity: b.quantity })),
       upgrades: gameState.upgrades.map(u => ({ id: u.id, purchased: !!u.purchased })),
-      achievements: achievementsState.unlocked
+      achievements: achievementsState.unlocked,
+      lastSeen: Date.now()
     };
   }
 
@@ -978,6 +987,96 @@
     if (saved.achievements) {
       achievementsState.unlocked = { ...saved.achievements };
     }
+  }
+
+  /** Rapport d'activité hors-ligne : crédite la production accumulée
+      pendant l'absence (rendement réduit, plafonné) et décrit le résultat. */
+  let offlineReport = null;
+
+  /** Barème d'absence, partagé entre sauvegarde rechargée et onglet masqué :
+      rendement réduit, plafonné, sans confiance ni dérive de jauges. */
+  function applyAwayGain(elapsedSeconds) {
+    const cfg = gameState.config;
+    if (!Number.isFinite(elapsedSeconds) || elapsedSeconds < cfg.offlineMinSeconds) {
+      return null;
+    }
+    const cappedSeconds = Math.min(elapsedSeconds, cfg.offlineCapHours * 3600);
+    const gain = computeDocPerSecond() * cappedSeconds * cfg.offlineRate;
+    if (gain < 1) return null;
+    gameState.resources.docBank += gain;
+    gameState.resources.docTotal += gain;
+    return { elapsedSeconds, cappedSeconds, gain };
+  }
+
+  function settleOfflineProgress(saved) {
+    if (!saved || typeof saved.lastSeen !== "number") return null;
+    return applyAwayGain((Date.now() - saved.lastSeen) / 1000);
+  }
+
+  function formatOfflineDuration(seconds) {
+    const totalMinutes = Math.max(1, Math.floor(seconds / 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) {
+      return t("offline.durationHours", { hours, minutes });
+    }
+    return t("offline.durationMinutes", { minutes });
+  }
+
+  function showOfflineReport() {
+    if (!offlineReport) return;
+    // Sous ~5 min d'absence : crédit silencieux, pas de modale plein écran
+    // à chaque pause café (fatigue de modale).
+    if (offlineReport.elapsedSeconds < gameState.config.offlineModalMinSeconds) {
+      offlineReport = null;
+      queueSave(true);
+      return;
+    }
+    // Ne pas concurrencer le tutoriel : le rapport attendra la prochaine
+    // visite (les documents sont crédités dans tous les cas).
+    if (window.Settings && Settings.getPreference("tutorialEnabled") &&
+        !Settings.getPreference("tutorialCompleted")) {
+      offlineReport = null;
+      queueSave(true);
+      return;
+    }
+    const modal = document.getElementById("offlineModal");
+    if (!modal) return;
+    const dialog = modal.querySelector(".offline-dialog");
+    if (dialog) {
+      dialog.setAttribute("data-stamp", t("offline.stampVisa"));
+    }
+    const duration = document.getElementById("offlineDuration");
+    const docs = document.getElementById("offlineDocs");
+    if (duration) {
+      let text = formatOfflineDuration(offlineReport.elapsedSeconds);
+      if (offlineReport.cappedSeconds < offlineReport.elapsedSeconds - 1) {
+        text = t("offline.durationCapped", {
+          real: text,
+          kept: formatOfflineDuration(offlineReport.cappedSeconds)
+        });
+      }
+      duration.textContent = text;
+    }
+    if (docs) docs.textContent = "+" + formatNumber(offlineReport.gain) + " DOC";
+    const close = () => {
+      closeModalSurface(modal, dialog);
+      document.removeEventListener("keydown", onKey);
+    };
+    const onKey = event => {
+      if (event.key === "Escape") close();
+    };
+    openModalSurface(modal, dialog);
+    document.addEventListener("keydown", onKey);
+    const closeBtn = document.getElementById("closeOfflineModal");
+    const resumeBtn = document.getElementById("offlineResume");
+    if (closeBtn) closeBtn.addEventListener("click", close, { once: true });
+    if (resumeBtn) {
+      resumeBtn.addEventListener("click", close, { once: true });
+      resumeBtn.focus();
+    }
+    offlineReport = null;
+    queueSave(true);
   }
 
   function queueSave(force = false) {
@@ -1178,7 +1277,21 @@
       return;
     }
 
-    const scaledDt = dt * currentTimeScale();
+    // Onglet resté masqué (rAF suspendu) : la longue absence passe par le
+    // barème hors-ligne (rendement réduit, plafond, sans confiance) au lieu
+    // d'être rejouée à 100 % dans update() — sinon « ne jamais fermer
+    // l'onglet » dominerait strictement le jeu. Et dt reste borné en jeu
+    // normal : aucune frame ne rejoue plus de quelques secondes.
+    if (dt > gameState.config.offlineMinSeconds) {
+      offlineReport = applyAwayGain(dt);
+      gameState.time.lastUpdate = timestamp;
+      showOfflineReport();
+      queueSave(true);
+      requestAnimationFrame(gameLoop);
+      return;
+    }
+
+    const scaledDt = Math.min(dt, 5) * currentTimeScale();
     update(scaledDt);
     renderAll();
     gameState.time.lastUpdate = timestamp;

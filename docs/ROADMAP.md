@@ -22,12 +22,9 @@ mots, et gratifiant quand on revient.
 
 ## Prochaines versions (ordre de priorité)
 
-- **0.12 — Re-skin « Atelier tamponné »** (en cours) : le design system
-  parodique-papeterie sur tout le jeu + dashboard. Voir `design-system.md`.
-- **0.13 — Gains hors-ligne** : à la réouverture, un « rapport d'activité »
-  tamponné résume ce que l'atelier a produit en ton absence (plafonné, à
-  équilibrer). Levier de rétention n°1 des idle games ; très raccord avec le
-  thème bureaucratique.
+- **0.12 — Re-skin « Atelier tamponné »** : ✅ livré. Voir `design-system.md`.
+- **0.13 — Gains hors-ligne** : ✅ livré. « Rapport d'activité » tamponné à la
+  réouverture ; l'équipe de nuit produit à 50 %, plafonné à 8 h.
 - **0.14 — Le dashboard déménage sur sa page** : `/dashboard/` (multi-pages
   désormais permis), navigation d'en-tête, la page du jeu respire ; le
   dashboard y gagne la place pour plus de graphiques (historique long,
