@@ -30,7 +30,21 @@
 
   const SUPPORTED_LANGS = ["fr", "en", "de", "lb"];
   const DEFAULT_LANG = "fr";
-  let currentLang = (navigator.language || DEFAULT_LANG).slice(0, 2).toLowerCase();
+  const LOCALE_BY_LANG = { fr: "fr-FR", en: "en-US", de: "de-DE", lb: "lb-LU" };
+  // Langue initiale, par priorité : ?lang=xx (bascule client partageable),
+  // puis le préfixe de chemin des pages construites par langue (/en/, /de/,
+  // /lb/), puis le français. PAS de navigator.language : la langue rendue
+  // doit être déterministe par URL (Googlebot rend en en-US, ce qui ferait
+  // de / un duplicat anglais de /en/ alors qu'elle est déclarée hreflang fr).
+  const urlLang = (() => {
+    try {
+      return new URLSearchParams(window.location.search).get("lang");
+    } catch {
+      return null;
+    }
+  })();
+  const pathLang = (window.location.pathname.match(/^\/(en|de|lb)\//) || [])[1] || null;
+  let currentLang = (urlLang || pathLang || DEFAULT_LANG).slice(0, 2).toLowerCase();
   if (!SUPPORTED_LANGS.includes(currentLang)) {
     currentLang = DEFAULT_LANG;
   }
@@ -661,7 +675,9 @@
 
   /** Applies text labels to every DOM node declaring data-i18n. */
   function applyStaticTranslations() {
-    document.title = GAME_TITLE;
+    // Titre SEO localisé (mots-clés) plutôt que le seul nom du jeu : Google
+    // indexe le title rendu, qui doit rester aligné avec le <head> statique.
+    document.title = t("app.metaTitle");
     document.documentElement.lang = currentLang;
     document.querySelectorAll("[data-i18n]").forEach(el => {
       const key = el.getAttribute("data-i18n");
@@ -768,8 +784,21 @@
     }
     applyStaticTranslations();
     renderContractsPanel();
-    if (navigator.language && navigator.language.slice(0, 2).toLowerCase() !== lang) {
-      document.documentElement.setAttribute("lang", lang);
+    document.documentElement.setAttribute("lang", lang);
+    try {
+      // La langue de base de l'URL est celle du chemin (/en/…) ou le français
+      // sur / : on ne garde ?lang que quand il s'en écarte, pour des URLs
+      // propres qui survivent au rechargement et au partage.
+      const url = new URL(window.location.href);
+      const baseLang = pathLang || DEFAULT_LANG;
+      if (lang === baseLang) {
+        url.searchParams.delete("lang");
+      } else {
+        url.searchParams.set("lang", lang);
+      }
+      window.history.replaceState(null, "", url);
+    } catch {
+      // environnements sans History API (file://) : on garde l'URL telle quelle
     }
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
@@ -1338,7 +1367,7 @@
     if (!DOM.prestigeButton || !DOM.prestigeInfo) return;
     const can = canPrestige();
     const gain = computePotentialCultureGain();
-    const locale = currentLang === "en" ? "en-US" : "fr-FR";
+    const locale = LOCALE_BY_LANG[currentLang] || "fr-FR";
     const minValue = gameState.config.prestigeRequirement.toLocaleString(locale);
 
     if (!can || gain <= 0) {
@@ -1356,7 +1385,7 @@
   function renderLog() {
     if (!DOM.logPanel) return;
     DOM.logPanel.innerHTML = "";
-    const locale = currentLang === "en" ? "en-US" : "fr-FR";
+    const locale = LOCALE_BY_LANG[currentLang] || "fr-FR";
     for (const entry of gameState.log) {
       const div = document.createElement("div");
       div.className = "log-entry";

@@ -2,9 +2,14 @@ input: docs
 output: docs-site
 # Requis par Retype 4.x (erreur bloquante sans lui) ; sert de base au sitemap.
 url: https://papersempire.com/docs/
+exclude:
+  - "AGENTS.md"
+  - "DOCUMENTATION.md"
+  - "balance.md"
+  - "web-success-plan.md"
 branding:
   title: Papers Empire Docs
-  label: v0.6
+  label: v0.10
 navigation:
   - Overview: README.md
   - Architecture: architecture.md
@@ -15,4 +20,4 @@ navigation:
   - Codex is thinking: codex-is-thinking.md
 links:
   - text: Game Repo
-    link: https://github.com/nclsppr/paper-empire
+    link: https://github.com/nclsppr/papersempire

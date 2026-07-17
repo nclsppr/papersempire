@@ -1,0 +1,22 @@
+{
+  "name": "Papers Empire",
+  "short_name": "Papers Empire",
+  "description": "Jeu idle gratuit dans le navigateur : transforme ton imprimerie en usine 4.0.",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1230",
+  "theme_color": "#1a1230",
+  "icons": [
+    {
+      "src": "/assets/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

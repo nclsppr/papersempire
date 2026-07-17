@@ -3,6 +3,7 @@
   window.I18N.en = {
     "app.browserTitle": "Papers Empire",
     "app.title": "Papers Empire",
+    "app.metaTitle": "Papers Empire, a free idle game: print shop to Factory 4.0",
     "app.tagline": "Turn your print shop into a 4.0 omnichannel factory.",
     "stats.docBank": "Documents available 📄",
     "stats.docTotal": "Documents total 📈",

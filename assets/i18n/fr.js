@@ -3,6 +3,7 @@
   window.I18N.fr = {
     "app.browserTitle": "Papers Empire",
     "app.title": "Papers Empire",
+    "app.metaTitle": "Papers Empire, jeu idle : de l'imprimerie à l'usine 4.0",
     "app.tagline": "Transforme ton imprimerie en usine 4.0 omnicanale.",
     "stats.docBank": "Documents disponibles 📄",
     "stats.docTotal": "Total documents 📈",

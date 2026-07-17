@@ -35,9 +35,13 @@ jobs:
           cp index.html site/index.html
           cp favicon.svg site/favicon.svg
           cp robots.txt site/robots.txt
+          cp 404.html site/404.html
+          cp site.webmanifest site/site.webmanifest
           cp sitemap.xml site/sitemap.xml
           cp -R assets site/assets
           cp -R docs-site/. site/docs/
+      - name: Build per-language pages + cache-busting
+        run: node scripts/build-lang-pages.mjs site "${GITHUB_SHA::8}"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

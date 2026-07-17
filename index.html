@@ -2,52 +2,130 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Papers Empire</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Papers Empire est un idle game web où vous transformez une imprimerie en usine 4.0: automatisez la production, gagnez de la culture d’entreprise et grimpez dans la hiérarchie.">
-  <meta name="keywords" content="idle game, clicker, printing factory, papers empire, web game, incremental">
-  <meta name="author" content="Papers Empire">
+  <title>Papers Empire, jeu idle : de l'imprimerie à l'usine 4.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Transforme ta petite imprimerie en usine 4.0 : bâtiments, contrats premium, réorgs stratégiques et bourrages papier. Jeu idle gratuit dans ton navigateur.">
+  <meta name="author" content="Nicolas Pieper">
+  <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="theme-color" content="#1a1230">
+  <link rel="canonical" href="https://papersempire.com/">
+  <link rel="alternate" hreflang="fr" href="https://papersempire.com/">
+  <link rel="alternate" hreflang="en" href="https://papersempire.com/en/">
+  <link rel="alternate" hreflang="de" href="https://papersempire.com/de/">
+  <link rel="alternate" hreflang="lb" href="https://papersempire.com/lb/">
+  <link rel="alternate" hreflang="x-default" href="https://papersempire.com/">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/css/style.css">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Papers Empire">
-  <meta property="og:description" content="Automatise ton imprimerie, débloque des upgrades et domine la galaxie du document.">
+  <meta property="og:site_name" content="Papers Empire">
+  <meta property="og:title" content="Papers Empire : de l'imprimerie à l'usine 4.0">
+  <meta property="og:description" content="Clique, imprime, automatise : bâtis ton empire du document dans ce jeu idle gratuit.">
   <meta property="og:url" content="https://papersempire.com/">
-  <meta property="og:image" content="/assets/icons/apple-icon-180x180.png">
+  <meta property="og:image" content="https://papersempire.com/assets/images/social-card.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Diorama 3D du campus Papers Empire au crépuscule, avec le titre du jeu">
   <meta property="og:locale" content="fr_FR">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale:alternate" content="de_DE">
+  <meta property="og:locale:alternate" content="lb_LU">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Papers Empire">
-  <meta name="twitter:description" content="Idle game de gestion d’imprimerie: upgrades, prestige, événements et plus encore.">
-  <meta name="twitter:image" content="/assets/icons/apple-icon-180x180.png">
-  <link rel="stylesheet" href="assets/css/style.css">
+  <meta name="twitter:image" content="https://papersempire.com/assets/images/social-card.jpg">
+  <meta name="twitter:image:alt" content="Diorama 3D du campus Papers Empire au crépuscule, avec le titre du jeu">
+  <script>
+  // Confort humain des liens ?lang=xx : ajuste très tôt la langue du
+  // document et le title/description pour éviter tout flash en français.
+  // L'indexation multilingue passe par les vraies pages /en/ /de/ /lb/
+  // (générées au déploiement) ; le canonical statique n'est jamais touché.
+  (function () {
+    var COPY = {
+      en: {
+        title: "Papers Empire, a free idle game: print shop to Factory 4.0",
+        description: "Grow a tiny print shop into a 4.0 omnichannel factory: buildings, premium contracts, strategic reorgs and paper jams. Free idle game in your browser."
+      },
+      de: {
+        title: "Papers Empire: Idle Game von der Druckerei zur Fabrik 4.0",
+        description: "Verwandle eine kleine Druckerei in eine 4.0-Omnichannel-Fabrik: Gebäude, Premium-Verträge, strategische Reorgs und Papierstaus. Gratis Idle Game im Browser."
+      },
+      lb: {
+        title: "Papers Empire: Idle Game vun der Dréckerei bis d'Fabrick 4.0",
+        description: "Maach deng kleng Dréckerei zu enger 4.0 Omnichannel-Fabrick: Gebaier, Premium-Kontrakter, strategesch Reorgen a Pabeierstau. Gratis Idle Game am Browser."
+      }
+    };
+    var lang = null;
+    try { lang = new URLSearchParams(location.search).get("lang"); } catch (e) { return; }
+    if (["fr", "en", "de", "lb"].indexOf(lang) === -1) return;
+    document.documentElement.setAttribute("lang", lang);
+    var copy = COPY[lang];
+    if (!copy) return;
+    document.title = copy.title;
+    var desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute("content", copy.description);
+  })();
+  </script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "VideoGame",
-    "name": "Papers Empire",
-    "url": "https://papersempire.com/",
-    "image": "https://papersempire.com/assets/images/social-card.svg",
-    "description": "Idle game web où vous modernisez une imprimerie, débloquez des bâtiments et optimisez votre production de documents.",
-    "operatingSystem": "Any",
-    "applicationCategory": "GameApplication",
-    "author": {
-      "@type": "Person",
-      "name": "Papers Empire Team"
-    },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "EUR"
-    }
+    "@graph": [
+      {
+        "@type": ["VideoGame", "WebApplication"],
+        "@id": "https://papersempire.com/#game",
+        "name": "Papers Empire",
+        "url": "https://papersempire.com/",
+        "image": {
+          "@type": "ImageObject",
+          "url": "https://papersempire.com/assets/images/social-card.jpg",
+          "width": 1200,
+          "height": 630
+        },
+        "description": "Papers Empire est un jeu idle (incremental) gratuit jouable dans le navigateur : transformez une imprimerie en usine 4.0, automatisez la production de documents, gagnez de la culture d'entreprise et grimpez dans la hiérarchie.",
+        "inLanguage": ["fr", "en", "de", "lb"],
+        "genre": ["Idle", "Incremental"],
+        "gamePlatform": "Web browser",
+        "playMode": "https://schema.org/SinglePlayer",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://papersempire.com/"
+        },
+        "author": { "@id": "https://papersempire.com/#author" }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://papersempire.com/#website",
+        "url": "https://papersempire.com/",
+        "name": "Papers Empire",
+        "inLanguage": ["fr", "en", "de", "lb"],
+        "publisher": { "@id": "https://papersempire.com/#author" },
+        "about": { "@id": "https://papersempire.com/#game" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://papersempire.com/#author",
+        "name": "Nicolas Pieper",
+        "url": "https://nicolaspieper.com/"
+      }
+    ]
   }
   </script>
 </head>
 <body>
-<a class="skip-link" href="#mainContent" data-i18n="actions.skipToContent"></a>
+<a class="skip-link" href="#mainContent" data-i18n="actions.skipToContent">Aller au contenu principal</a>
 <header class="app-header" role="banner">
   <div class="header-inner">
     <div class="header-top">
-      <div class="header-title" data-game-title></div>
+      <h1 class="header-title" data-game-title>Papers Empire</h1>
       <div class="header-actions">
         <button class="icon-button" type="button" data-open-settings id="settingsGearButton">
           <span aria-hidden="true">⚙️</span>
@@ -111,7 +189,7 @@
       </div>
 
       <button class="click-button" id="clickButton">
-        <span data-i18n="actions.printDocument"></span> <span aria-hidden="true">🖨️</span>
+        <span data-i18n="actions.printDocument">Imprimer un document</span> <span aria-hidden="true">🖨️</span>
       </button>
 
       <div class="gauges">
@@ -153,21 +231,21 @@
 
   <!-- Colonne centre: bâtiments -->
   <div class="card" role="region" aria-label="Bâtiments">
-    <h2 data-i18n="sections.buildingsTitle"></h2>
-    <div class="small" data-i18n="sections.buildingsHint"></div>
+    <h2 data-i18n="sections.buildingsTitle">Bâtiments de production 🏭</h2>
+    <div class="small" data-i18n="sections.buildingsHint">Achète des paliers pour automatiser tes documents traités.</div>
     <div class="buildings-list" id="buildingsList"></div>
   </div>
 
   <!-- Colonne droite: upgrades, prestige, log -->
   <div class="layout-column" aria-label="Améliorations et progression">
     <div class="card" role="region" aria-label="Améliorations">
-      <h2 data-i18n="sections.upgradesTitle"></h2>
+      <h2 data-i18n="sections.upgradesTitle">Améliorations et prestige 🚀</h2>
       <div class="section">
-        <div class="small" data-i18n="sections.upgradesHint"></div>
+        <div class="small" data-i18n="sections.upgradesHint">Upgrades globales de base (MVP). Tu pourras en rajouter.</div>
         <div class="upgrades-list" id="upgradesList"></div>
       </div>
       <div class="prestige-card">
-        <div><strong data-i18n="sections.prestigeTitle"></strong></div>
+        <div><strong data-i18n="sections.prestigeTitle">Réorg stratégique 🔁</strong></div>
         <div id="prestigeInfo"></div>
         <button class="btn-prestige disabled" id="prestigeButton"></button>
       </div>
@@ -189,7 +267,7 @@
     </div>
 
     <div class="card progress-card" role="region" aria-label="Progression, sauvegarde et accessibilité">
-      <h2 data-i18n="sections.progressTitle"></h2>
+      <h2 data-i18n="sections.progressTitle">Progression 🧠</h2>
       <div class="achievements-list" id="achievementsList" aria-live="polite"></div>
     </div>
 
@@ -204,7 +282,6 @@
         <button class="btn-god-mode" data-god-scale="1000">x1000</button>
       </div>
     </div>
-  </div>
   </div>
 </main>
 
@@ -307,27 +384,27 @@
   </div>
 </div>
 
-  <script src="assets/i18n/fr.js"></script>
-  <script src="assets/i18n/en.js"></script>
-  <script src="assets/i18n/de.js"></script>
-  <script src="assets/i18n/lb.js"></script>
-  <script src="assets/js/persistence.js"></script>
-  <script src="assets/js/achievements.js"></script>
-  <script src="assets/js/endgame.js"></script>
-  <script src="assets/js/events.js"></script>
-  <script src="assets/js/modifier-utils.js"></script>
-  <script src="assets/js/godmode-utils.js"></script>
-  <script src="assets/js/accessibility.js"></script>
-  <script src="assets/js/ui-effects.js"></script>
-  <script src="assets/js/tutorial.js"></script>
+  <script src="/assets/i18n/fr.js" defer></script>
+  <script src="/assets/i18n/en.js" defer></script>
+  <script src="/assets/i18n/de.js" defer></script>
+  <script src="/assets/i18n/lb.js" defer></script>
+  <script src="/assets/js/persistence.js" defer></script>
+  <script src="/assets/js/achievements.js" defer></script>
+  <script src="/assets/js/endgame.js" defer></script>
+  <script src="/assets/js/events.js" defer></script>
+  <script src="/assets/js/modifier-utils.js" defer></script>
+  <script src="/assets/js/godmode-utils.js" defer></script>
+  <script src="/assets/js/accessibility.js" defer></script>
+  <script src="/assets/js/ui-effects.js" defer></script>
+  <script src="/assets/js/tutorial.js" defer></script>
   <!-- Scène 3D du campus : enrichissement progressif. scene-loader importe
        dynamiquement three.js (assets/vendor/) ; en cas d'échec (file://,
        WebGL absent, vieux navigateur) le jeu DOM fonctionne à l'identique. -->
-  <script src="assets/js/scene/city-layout.js"></script>
-  <script src="assets/js/scene/building-recipes.js"></script>
-  <script src="assets/js/scene/scene-effects.js"></script>
-  <script src="assets/js/scene/city-scene.js"></script>
-  <script src="assets/js/scene/scene-loader.js" defer></script>
-  <script src="assets/js/app.js" defer></script>
+  <script src="/assets/js/scene/city-layout.js" defer></script>
+  <script src="/assets/js/scene/building-recipes.js" defer></script>
+  <script src="/assets/js/scene/scene-effects.js" defer></script>
+  <script src="/assets/js/scene/city-scene.js" defer></script>
+  <script src="/assets/js/scene/scene-loader.js" defer></script>
+  <script src="/assets/js/app.js" defer></script>
 </body>
 </html>

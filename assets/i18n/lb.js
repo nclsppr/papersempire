@@ -3,6 +3,7 @@
   window.I18N.lb = {
     "app.browserTitle": "Papers Empire",
     "app.title": "Papers Empire",
+    "app.metaTitle": "Papers Empire: Idle Game vun der Dréckerei bis d'Fabrick 4.0",
     "app.tagline": "Maach deng Dréckerei zu enger 4.0 Omnichannel-Fabrick.",
     "stats.docBank": "Disponibel Dokumenter 📄",
     "stats.docTotal": "Total Dokumenter 📈",

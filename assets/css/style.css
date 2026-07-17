@@ -287,6 +287,7 @@
        des caractères de presse qu'on replace (délai par lettre via --i,
        posé par applyGameTitle dans app.js). */
     .header-title {
+      margin: 0;
       font-family: var(--font-display);
       font-size: var(--heading-size);
       font-weight: 400;
