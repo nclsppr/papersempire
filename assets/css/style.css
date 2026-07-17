@@ -130,6 +130,104 @@
       color-scheme: dark;
     }
 
+    :root {
+      /* ==================================================================
+         ATELIER TAMPONNÉ v2 : surcharges de la couche « dusk print-works »
+         (:root v1 ci-dessus). Principe : le DÉCOR reste crépusculaire,
+         les OBJETS deviennent papier.
+         SURVIVANTS, non redéclarés : --bg-deep, --bg-sky, --bg-panel,
+         --paper, --accent, --accent-warm, --accent-ink, --good, --bad,
+         --primary(-bright/-hot), --warning, --success(-bright/-foreground),
+         les 4 voiles --overlay et --scrim-header (ils restent nuit), --radius-*,
+         --header-h, --shadow-primary(-pressed), les vars modales
+         (sauf --modal-scale, abaissé sciemment, cf. motion), les .sky-*.
+         ================================================================== */
+
+      /* --- Nouvelles primitives papeterie --- */
+      --paper-bright: #fdf8ec;   /* bristol : face des fiches et formulaires */
+      --paper-shade:  #eee3c9;   /* pli, coin corné, zones tramées */
+      --kraft:        #d9c29a;   /* étiquettes, onglets intercalaires */
+      --kraft-deep:   #b8985f;   /* tranche et socle kraft */
+      --card-edge:    #cbb98f;   /* liseré des fiches : remplace la lavande SUR papier */
+      --ink-strong:   #33261a;   /* encre sépia, texte principal sur papier (13,8:1) */
+      --ink-soft:     #6b5b45;   /* encre diluée, texte secondaire (6,2:1) */
+      --stamp-red:      #b3251e; /* rouge tampon administratif (6,2:1 sur bristol) */
+      --stamp-red-deep: #7f1a15;
+      --postit:       #fef3b8;   /* tooltips post-it */
+
+      /* --- Typo : la machine à écrire de l'atelier (zéro fichier ajouté) --- */
+      --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+      --num-hero: clamp(24px, 2.8vw, 34px); /* .big-number, .dash-kpi-value */
+
+      /* --- Surfaces : LE flip. Cartes opaques => le backdrop-filter de
+             .card est supprimé plus bas, gain perf net. --- */
+      --card: var(--paper-bright);
+      --card-foreground: var(--ink-strong);
+      --popover: var(--paper-bright);          /* dialogs = formulaires */
+      --popover-foreground: var(--ink-strong);
+      --control: #f3ead4;                      /* selects, event-choice : papier teinté */
+      --control-soft: var(--kraft);            /* onglets au repos, panneaux annexes */
+      --control-ghost: var(--paper-bright);    /* icon-button sticker */
+      --muted-foreground: var(--ink-soft);     /* l'ex-lavande devient encre diluée */
+      --subtle-foreground: #7a6a52;            /* gris CHAUD (remplace #9ca3af froid) */
+
+      /* --- Actions --- */
+      --secondary: #5b5ee9;            /* encre violette de tampon. Corrige au passage
+                                          le 4,47:1 limite de #6366f1 + blanc (v1) */
+      --secondary-deep: #3a3cb0;       /* socle du tampon violet */
+      --success-deep: #15803d;         /* socle du tampon vert */
+      --destructive: var(--stamp-red); /* le saumon #f87171 est illisible sur crème */
+      --destructive-strong: var(--stamp-red-deep);
+      --destructive-foreground: #8a1d15;
+      --disabled: #b9ad96;             /* caoutchouc sec (tampon sans encrier) */
+      --disabled-foreground: #3f382c;
+
+      /* --- Bordures : kraft. Sur le header sombre le même token donne
+             un hairline chaud : voulu, l'atelier est cohérent. --- */
+      --border: #d6c8a4;
+      --border-strong: #a8946a;
+      --border-ink: rgba(51, 38, 26, 0.5);  /* l'ex-slate devient encre 50 % */
+      --input: var(--border-strong);
+
+      /* --- Pistes --- */
+      --gauge-track: #efe5cc;   /* réglette papier ; l'ancien FIGÉ #0b0617 n'a
+                                   plus de raison d'être (plus de fond sombre) */
+
+      /* --- Relief : le langage d'ombres de l'atelier.
+             Toujours 2 couches : TRANCHE dure sans flou (l'objet a une
+             épaisseur) + PORTÉE douce (il est posé sur l'établi). --- */
+      --shadow-card:  0 3px 0 rgba(11, 6, 23, 0.28), 0 12px 26px rgba(11, 6, 23, 0.5);
+      --shadow-pop:   0 2px 0 rgba(11, 6, 23, 0.25), 0 6px 12px rgba(11, 6, 23, 0.45);
+      --shadow-modal: 0 6px 0 rgba(11, 6, 23, 0.3),  0 30px 60px rgba(11, 6, 23, 0.65);
+
+      /* --- Motion --- */
+      --dur-tap: 70ms;                                /* presser un tampon */
+      --dur-pop: 180ms;                               /* apparition d'un objet */
+      --dur-settle: 260ms;                            /* retombée, slam */
+      --ease-press: cubic-bezier(0.2, 0, 0.4, 1);     /* enfoncement sec */
+      --ease-stamp: cubic-bezier(0.34, 1.56, 0.64, 1);/* relâche avec rebond */
+      --modal-scale: 0.94;                            /* 0.96 → 0.94 : un poil
+                                                         plus de théâtre (spec motion) */
+    }
+
+    /* Focus : l'anneau OR survit sur les surfaces sombres (header, page),
+       mais serait invisible sur papier : encre brûlée sur toute surface
+       papier (6,7:1 vs bristol, largement > 3:1 exigé en non-texte).
+       color-scheme light : les widgets natifs (cases à cocher, selects)
+       suivent le papier, pas la nuit du :root. Thème unique, pas de
+       prefers-color-scheme. */
+    .card, .t-modal, .tutorial-card, .event-banner {
+      --ring: #92400e;
+      color-scheme: light;
+    }
+
+    .pref-high-contrast .card,
+    .pref-high-contrast .t-modal,
+    .pref-high-contrast .tutorial-card,
+    .pref-high-contrast .event-banner {
+      color-scheme: dark;
+    }
+
     html {
       /* Gradient lives on html with a fixed attachment so over-scroll and
          short pages never expose a mismatched band above/below the content. */
@@ -216,6 +314,109 @@
       color: var(--hc-accent);
     }
 
+    /* --- Extensions high-contrast « Atelier tamponné » (spec a11y) : le
+       flip papier impose de re-river les primitives papeterie sur la nuit
+       HC, sinon le mode afficherait de l'encre sombre sur bristol. La
+       spécificité :root.pref-high-contrast (0,2,0) bat le :root v2. --- */
+    :root.pref-high-contrast {
+      --paper-bright: #1a1230;
+      --paper-shade: #1a1230;
+      --control: #000;
+      --control-soft: #000;
+      --control-ghost: #000;
+      --kraft: #000;
+      --kraft-deep: var(--hc-accent);
+      --card-edge: var(--hc-accent);
+      --ink-strong: #ffffff;
+      --ink-soft: #e5e7eb;
+      --subtle-foreground: #d1d5db;
+      --postit: #1a1230;
+      --gauge-track: #000;
+      --border-ink: rgba(255, 255, 255, 0.6);
+      --destructive-foreground: #fecaca;
+    }
+
+    .pref-high-contrast .card,
+    .pref-high-contrast .t-modal,
+    .pref-high-contrast .tutorial-card,
+    .pref-high-contrast .event-banner {
+      background: #1a1230;
+      color: #fff;
+      --ring: var(--hc-accent);
+    }
+
+    /* Coins cornés et perforations n'ont pas de sens en HC. */
+    .pref-high-contrast .card::after,
+    .pref-high-contrast .event-banner::before,
+    .pref-high-contrast .event-banner::after {
+      display: none;
+    }
+
+    /* Tampons à plat : le relief 3D disparaît, le contour prend le relais. */
+    .pref-high-contrast .click-button,
+    .pref-high-contrast .btn-buy,
+    .pref-high-contrast .btn-upgrade,
+    .pref-high-contrast .btn-prestige,
+    .pref-high-contrast .icon-button,
+    .pref-high-contrast .btn-god-mode {
+      box-shadow: none;
+    }
+
+    .pref-high-contrast .click-button,
+    .pref-high-contrast .btn-buy,
+    .pref-high-contrast .btn-upgrade {
+      border: 2px solid var(--hc-accent);
+    }
+
+    .pref-high-contrast .settings-tab,
+    .pref-high-contrast .tab-btn {
+      color: #fff;
+    }
+
+    .pref-high-contrast .settings-tab.active,
+    .pref-high-contrast .tab-btn.active {
+      background: #1a1230;
+      color: var(--hc-accent);
+    }
+
+    .pref-high-contrast .prestige-card {
+      background: #1a1230;
+      border-color: var(--hc-accent);
+    }
+
+    .pref-high-contrast .achievement-item.unlocked::after {
+      color: var(--hc-accent);
+      mix-blend-mode: normal;
+    }
+
+    .pref-high-contrast .event-result {
+      color: var(--hc-accent);
+    }
+
+    .pref-high-contrast .dash-line,
+    .pref-high-contrast .dash-gauge-line {
+      stroke: var(--hc-accent);
+    }
+
+    .pref-high-contrast .dash-area {
+      fill: rgba(254, 240, 138, 0.15);
+    }
+
+    .pref-high-contrast .dash-dot {
+      fill: var(--hc-accent);
+      stroke: #1a1230;
+    }
+
+    .pref-high-contrast .dash-grid {
+      stroke: rgba(255, 255, 255, 0.25);
+    }
+
+    .pref-high-contrast .dash-bar-fill {
+      background: var(--hc-accent);
+      border-color: var(--hc-accent);
+      box-shadow: none;
+    }
+
     .pref-reduce-motion *,
     .pref-reduce-motion *::before,
     .pref-reduce-motion *::after {
@@ -280,21 +481,48 @@
       box-sizing: border-box;
     }
 
+    /* Bannière d'événement = LISTING PERFORÉ : papier d'imprimante à
+       picots, bandes d'entraînement en pseudo-éléments. */
     .event-banner {
       width: min(100%, 1200px);
       margin: 12px auto 0;
-      padding: 12px 16px;
+      padding: 12px 34px;
       display: flex;
       align-items: center;
       gap: 12px;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      background: var(--card);
+      position: relative;
+      border-radius: 4px; /* un listing n'est pas un coussin */
+      border: 1px solid var(--card-edge);
+      background: var(--paper-bright);
       box-shadow: var(--shadow-card);
       transition: transform 260ms ease, opacity 260ms ease;
       opacity: 0;
       transform: translateY(-12px);
-      color: var(--card-foreground);
+      color: var(--ink-strong);
+    }
+
+    .event-banner::before,
+    .event-banner::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 22px;
+      background-image: radial-gradient(circle 3px at 11px 10px, var(--bg-deep) 98%, transparent);
+      background-size: 22px 20px;
+      background-repeat: repeat-y;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .event-banner::before {
+      left: 0;
+      border-right: 1px dashed var(--card-edge);
+    }
+
+    .event-banner::after {
+      right: 0;
+      border-left: 1px dashed var(--card-edge);
     }
 
     .event-banner.banner-visible {
@@ -319,7 +547,7 @@
 
     .event-banner-close {
       border: none;
-      background: rgba(255, 255, 255, 0.08); /* voile blanc unique — hors tokens */
+      background: rgba(51, 38, 26, 0.08); /* lavis d'encre sur listing */
       color: inherit;
       width: 28px;
       height: 28px;
@@ -330,22 +558,20 @@
     }
 
     .event-banner-close:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(51, 38, 26, 0.16);
     }
 
+    /* Liserés d'état opaques : les alphas v1 étaient calibrés fond sombre. */
     .banner-positive {
-      border-color: rgba(34, 197, 94, 0.5);
-      box-shadow: 0 16px 30px rgba(34, 197, 94, 0.2);
+      border-color: #178a3d;
     }
 
     .banner-mixed {
-      border-color: rgba(251, 191, 36, 0.45);
-      box-shadow: 0 16px 30px rgba(251, 191, 36, 0.2);
+      border-color: #b45309;
     }
 
     .banner-negative {
-      border-color: rgba(248, 113, 113, 0.45);
-      box-shadow: 0 16px 30px rgba(248, 113, 113, 0.2);
+      border-color: var(--stamp-red);
     }
 
     .header-inner {
@@ -422,7 +648,8 @@
 
     .header-tagline {
       font-size: var(--heading-sub);
-      color: var(--muted-foreground);
+      color: #a79ec4; /* zone sombre du header : la lavande v1 reste (l'encre
+                         diluée du flip y serait illisible) */
     }
 
     @supports (padding: max(0px)) {
@@ -507,7 +734,7 @@
     .stage-fallback-text {
       margin: 0 0 6px;
       font-size: var(--text-small);
-      color: var(--muted-foreground);
+      color: #a79ec4; /* scène sombre intouchable : lavande v1 conservée */
       text-align: center;
     }
 
@@ -557,13 +784,30 @@
       gap: clamp(12px, 3vw, 20px);
     }
 
+    /* Carte = FICHE BRISTOL à coin corné. Opaque : le backdrop-filter v1
+       est supprimé (gain perf net). */
     .card {
       background: var(--card);
+      color: var(--card-foreground);
       border-radius: var(--radius-lg);
       padding: 12px 14px;
       box-shadow: var(--shadow-card);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-edge);
+      position: relative;
+    }
+
+    /* Coin corné en pur CSS, aucun asset. */
+    .card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(225deg, transparent 0 49%, var(--paper-shade) 50% 100%);
+      border-bottom-left-radius: 4px;
+      box-shadow: -2px 2px 3px rgba(11, 6, 23, 0.12);
+      pointer-events: none;
     }
 
     h1, h2, h3 {
@@ -577,8 +821,16 @@
       gap: 8px;
     }
 
+    /* h2 = titre IMPRIMÉ : la voix display (Alfa Slab) sort du wordmark ;
+       le double filet typographique remplace le hairline lavande. */
     h2 {
-      border-bottom: 1px solid var(--border);
+      font-family: var(--font-display);
+      font-weight: 400; /* Alfa n'a qu'une graisse */
+      font-size: var(--heading-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-strong);
+      border-bottom: 3px double var(--ink-strong);
       padding-bottom: 4px;
       margin-bottom: 6px;
     }
@@ -589,11 +841,13 @@
       line-height: 1.3;
     }
 
+    /* Étiquette papier sur le header sombre. OBLIGATOIRE : couleur encre
+       (v1 héritait --foreground blanc, illisible après le flip du --control). */
     .lang-select {
       background: var(--control);
       border: 1px solid var(--input);
       border-radius: var(--radius-md);
-      color: var(--foreground);
+      color: var(--ink-strong);
       padding: 4px 8px;
       font-size: var(--text-base);
       min-width: 72px;
@@ -613,49 +867,162 @@
     }
 
     .stat-label {
-      color: #e5e7eb; /* nuance unique, hors système — candidat v2 */
+      color: var(--ink-soft); /* l'intitulé pré-imprimé du formulaire */
     }
 
+    /* Les chiffres sont TAPÉS, pas affichés : machine à écrire. */
     .stat-value {
       font-variant-numeric: tabular-nums;
+      font-family: var(--font-mono);
       font-weight: 600;
       font-size: var(--text-base);
     }
 
     .big-number {
+      font-family: var(--font-mono);
       font-weight: 700;
+      font-size: var(--num-hero);
+      letter-spacing: -0.01em;
+      line-height: 1.1;
     }
 
-.click-button {
+/* ==================================================================
+   BOUTONS-TAMPONS : le cœur du système.
+   Un bouton est un OBJET : une FACE (dégradé vertical, lumière du
+   plafonnier), un LISERÉ (--rim, la jupe du tampon), un SOCLE
+   (ombre dure 0 Npx 0 SANS flou = épaisseur physique), une OMBRE
+   PORTÉE douce (contact avec l'établi).
+   Presser = translateY(var(--depth)) + le socle passe à ~0 :
+   la face descend RÉELLEMENT sur son ombre. On n'anime que
+   transform / box-shadow / filter (compositable, 60 fps).
+   4 variables par variante : --face-hi, --face-lo, --socle, --rim,
+   plus --label et --depth.
+   ================================================================== */
+
+    /* ---------- Recette commune des 4 tampons pleins ---------- */
+    .click-button, .btn-buy, .btn-upgrade, .btn-prestige {
+      --depth: 4px;
+      position: relative;
+      border: 2px solid var(--rim);
+      border-radius: var(--radius-md);   /* un tampon n'est PAS une pilule */
+      background: linear-gradient(180deg, var(--face-hi), var(--face-lo));
+      color: var(--label);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      min-height: 44px;                  /* GROS boutons : cible tactile 44px */
+      padding: 0.6em 1.1em;              /* en em : suit .pref-large-text */
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),   /* 1. reflet haut du caoutchouc */
+        inset 0 -3px 0 rgba(11, 6, 23, 0.22),     /* 2. biseau bas de la face */
+        0 var(--depth) 0 var(--socle),            /* 3. SOCLE dur, sans flou */
+        0 calc(var(--depth) + 2px) 0 rgba(11, 6, 23, 0.35), /* 4. liseré de contact */
+        0 calc(var(--depth) * 2) 14px rgba(11, 6, 23, 0.45);/* 5. portée douce */
+      transition:
+        transform var(--dur-tap) var(--ease-press),
+        box-shadow var(--dur-tap) var(--ease-press),
+        filter 120ms ease;
+    }
+
+    /* HOVER : le tampon se soulève d'1px, prêt à frapper */
+    .click-button:hover:not(:disabled):not(.disabled),
+    .btn-buy:hover:not(.disabled),
+    .btn-upgrade:hover:not(.disabled),
+    .btn-prestige:hover:not(.disabled) {
+      filter: brightness(1.06) saturate(1.05);
+      transform: translateY(-1px);
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.45),
+        inset 0 -3px 0 rgba(11, 6, 23, 0.22),
+        0 calc(var(--depth) + 1px) 0 var(--socle),
+        0 calc(var(--depth) + 3px) 0 rgba(11, 6, 23, 0.35),
+        0 calc(var(--depth) * 2 + 4px) 18px rgba(11, 6, 23, 0.5);
+    }
+
+    /* ACTIVE : l'ÉCRASEMENT. La face descend de toute l'épaisseur,
+       le socle disparaît, la face passe légèrement en creux, squash.
+       v1 mélangeait :active et :focus-visible sur .click-button :
+       SÉPARÉS, le focus ne doit plus « enfoncer ». */
+    .click-button:active:not(:disabled),
+    .btn-buy:active:not(.disabled),
+    .btn-upgrade:active:not(.disabled),
+    .btn-prestige:active:not(.disabled) {
+      transform: translateY(var(--depth)) scale(0.98, 0.95);  /* squash */
+      filter: brightness(0.96);
+      box-shadow:
+        inset 0 2px 5px rgba(11, 6, 23, 0.3),   /* la face devient concave */
+        inset 0 -1px 0 rgba(255, 255, 255, 0.15),
+        0 1px 0 var(--socle),
+        0 2px 5px rgba(11, 6, 23, 0.4);
+    }
+
+    /* DISABLED : tampon sans encrier. Caoutchouc sec + hachures
+       « hors service ». Jamais l'opacité seule (illisible sur papier). */
+    .click-button:disabled,
+    .btn-buy.disabled,
+    .btn-upgrade.disabled,
+    .btn-prestige.disabled {
+      --depth: 2px;
+      background:
+        repeating-linear-gradient(45deg,
+          transparent 0 6px, rgba(11, 6, 23, 0.06) 6px 12px),
+        var(--disabled);
+      border-color: #8f8471;
+      color: var(--disabled-foreground);   /* #3f382c : 5,2:1, reste lisible */
+      cursor: not-allowed;
+      filter: none;
+      transform: none;
+      opacity: 1;                          /* remplace les opacity .6/.7 v1 */
+      box-shadow: 0 2px 0 #8f8471, 0 4px 8px rgba(11, 6, 23, 0.3);
+    }
+
+    /* ---------- VARIANTE 1 : CTA OR (.click-button) ----------
+       LE tampon-machine du jeu. Le plus gros objet cliquable. */
+    .click-button {
+      --face-hi: #fcd34d;        /* = --primary-bright, survit */
+      --face-lo: #f59e0b;        /* = --accent-warm, survit */
+      --socle:  #92400e;
+      --rim:    #b45309;
+      --label:  var(--accent-ink);  /* #2a1a03, contraste 7,8:1 mini, survit */
+      --depth: 6px;              /* le plus épais de tous */
       width: 100%;
       margin-top: 10px;
-      padding: 10px;
-      border-radius: var(--radius-full);
-      border: none;
-      background: linear-gradient(135deg, var(--primary-bright), var(--accent-warm));
-      color: var(--primary-foreground);
-      font-size: var(--text-base);
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: var(--shadow-primary);
+      padding: 0.9em 1.2em;
+      font-family: var(--font-display);   /* Alfa Slab One */
+      font-weight: 400;                   /* Alfa n'a qu'une graisse */
+      font-size: var(--heading-sub);
+      letter-spacing: 0.04em;
+      border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.1s ease;
-      position: relative;
-      overflow: hidden;
+      overflow: hidden;                   /* conserve le ripple .pulse::after */
     }
 
-    .click-button:active,
+    /* Focus du CTA : plus d'exception crème (le bouton vit désormais sur
+       une carte crème). Il hérite du ring encre brûlée de .card. */
     .click-button:focus-visible {
-      transform: translateY(1px) scale(0.99);
-      box-shadow: var(--shadow-primary-pressed);
-      opacity: 0.95;
-      /* Exception au ring or unifié : anneau crème sur surface or,
-         offset 3px — un anneau or y serait invisible. */
-      outline: var(--ring-width) solid var(--ring-contrast);
+      outline: var(--ring-width) solid var(--ring);
       outline-offset: 3px;
+      transform: none;                    /* le focus n'enfonce plus */
+    }
+
+    /* Shine d'affordance : seule boucle infinie de la page (budget ≤ 5). */
+    .click-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.35) 50%, transparent 58%);
+      transform: translateX(-130%);
+      animation: shine 7s ease-in-out infinite 3s;
+      pointer-events: none;
+    }
+
+    @keyframes shine {
+      0%, 84% { transform: translateX(-130%); }
+      94%, 100% { transform: translateX(130%); }
     }
 
     .click-button.pulse::after {
@@ -665,7 +1032,7 @@
       top: 50%;
       width: 10px;
       height: 10px;
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(42, 26, 3, 0.35); /* l'encre s'écrase sur l'or */
       border-radius: 50%;
       transform: translate(-50%, -50%) scale(1);
       animation: ripple 0.4s ease-out forwards;
@@ -697,19 +1064,26 @@
       gap: 2px;
     }
 
+    /* Jauges = RÉGLETTES TYPOGRAPHIQUES : relevé dactylographié,
+       graduations tous les 10 % (les ticks de la règle). */
     .gauge-label-row {
       display: flex;
       justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: var(--text-small);
+      font-variant-numeric: tabular-nums;
     }
 
     .gauge-bar {
       position: relative;
       width: 100%;
-      height: 6px;
-      border-radius: var(--radius-full);
-      background: var(--gauge-track);
+      height: 14px; /* 6px v1 : une réglette se voit */
+      border-radius: 3px;
+      background:
+        repeating-linear-gradient(90deg, rgba(51, 38, 26, 0.22) 0 1px, transparent 1px 10%),
+        var(--gauge-track);
       overflow: hidden;
-      border: 1px solid var(--border-strong);
+      border: 1px solid var(--card-edge);
     }
 
     .gauge-fill {
@@ -717,14 +1091,15 @@
       height: 100%;
       left: 0;
       top: 0;
-      border-radius: var(--radius-full);
-      background: linear-gradient(90deg, var(--success), var(--success-bright));
+      border-radius: 2px;
+      background: linear-gradient(180deg, #2fbf62, #178a3d);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
       width: 0;
       transition: width 0.15s linear;
     }
 
     .gauge-fill.bad {
-      background: linear-gradient(90deg, var(--destructive-strong), var(--warning));
+      background: linear-gradient(180deg, #c53a2b, var(--stamp-red));
     }
 
     .layout-column {
@@ -767,21 +1142,35 @@
       flex-wrap: wrap;
     }
 
-.btn-god-mode {
-      padding: 6px 10px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-strong);
-      background: var(--control);
-      color: var(--foreground);
+    /* Mini-tampons kraft ; l'état .active reste physiquement ENFONCÉ
+       (inset), pas juste recoloré. */
+    .btn-god-mode {
+      background: var(--kraft);
+      border: 1.5px solid var(--kraft-deep);
+      color: var(--ink-strong);
+      border-radius: var(--radius-sm);
+      min-height: 36px;
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-weight: 700;
       cursor: pointer;
-      font-weight: 600;
-      transition: background 0.1s ease, color 0.1s ease;
+      box-shadow: 0 2px 0 var(--kraft-deep), 0 4px 6px rgba(11, 6, 23, 0.35);
+      transition: transform var(--dur-tap) var(--ease-press),
+                  box-shadow var(--dur-tap) var(--ease-press),
+                  background 0.1s ease, color 0.1s ease;
+    }
+
+    .btn-god-mode:active {
+      transform: translateY(2px);
+      box-shadow: none;
     }
 
     .btn-god-mode.active {
-      background: linear-gradient(135deg, var(--warning), #fb923c);
-      border-color: transparent;
-      color: #1a1230; /* encre sombre sur orange (valeur de --popover utilisée en encre) — hors tokens */
+      background: linear-gradient(180deg, #fb923c, var(--warning));
+      border-color: #9a3412;
+      color: var(--accent-ink);
+      transform: translateY(2px);
+      box-shadow: inset 0 2px 4px rgba(11, 6, 23, 0.3);  /* resté pressé */
     }
 
     .building-name-button {
@@ -821,15 +1210,17 @@
       letter-spacing: 0.01em;
     }
 
+    /* Tooltip bâtiment = POST-IT (bande de colle en haut, léger biais). */
     .building-tooltip {
       margin-top: 6px;
       padding: 6px 8px;
-      border-radius: var(--radius-md);
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--card-foreground);
+      border-radius: 2px;
+      background: var(--postit);
+      border: none;
+      color: var(--ink-strong);
       font-size: var(--text-base);
-      box-shadow: var(--shadow-pop);
+      transform: rotate(-0.8deg);
+      box-shadow: var(--shadow-pop), inset 0 18px 12px -14px rgba(11, 6, 23, 0.06);
       animation: fadeIn 0.15s ease;
     }
 
@@ -851,32 +1242,18 @@
       justify-content: center;
     }
 
+    /* ---------- VARIANTE 2 : ACHAT (.btn-buy) ----------
+       Étiquette-prix verte, même mécanique tampon, plus petite.
+       Les états hover/active/disabled viennent de la recette commune. */
     .btn-buy {
-      border-radius: var(--radius-full);
-      border: none;
-      padding: 4px 8px;
+      --face-hi: #4ade80;
+      --face-lo: var(--success);      /* #22c55e, survit */
+      --socle:  var(--success-deep);  /* #15803d */
+      --rim:    #16a34a;
+      --label:  var(--success-foreground);  /* #022c22, 6,7:1 mini, survit */
+      min-height: 40px;               /* v1 : ~26px, trop petit pour le brief */
       font-size: var(--text-base);
-      cursor: pointer;
-      background: var(--success);
-      color: var(--success-foreground);
-      font-weight: 600;
-      transition: filter 0.1s ease, transform 0.05s ease, opacity 0.15s ease;
       white-space: nowrap;
-    }
-
-    /* État désactivé partagé (fusion des trois .disabled). Le prestige
-       conserve son opacité historique 0.7 via la règle dédiée dessous. */
-    .btn-buy.disabled,
-    .btn-upgrade.disabled,
-    .btn-prestige.disabled {
-      background: var(--disabled);
-      color: var(--disabled-foreground);
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    .btn-prestige.disabled {
-      opacity: 0.7;
     }
 
     .building-placeholder {
@@ -897,10 +1274,7 @@
       }
     }
 
-    .btn-buy:active:not(.disabled) {
-      transform: translateY(1px) scale(0.99);
-      filter: brightness(0.97);
-    }
+    /* :active du .btn-buy : voir l'ÉCRASEMENT commun des boutons-tampons. */
 
     .small {
       font-size: var(--text-small);
@@ -942,44 +1316,55 @@
       margin-bottom: 2px;
     }
 
+    /* ---------- VARIANTE 3 : UPGRADE (.btn-upgrade) ----------
+       Tampon à encre violette administrative (la vraie couleur des
+       tampons de préfecture : la parodie est dans le pigment). */
     .btn-upgrade {
-      border-radius: var(--radius-full);
-      border: none;
-      padding: 4px 10px;
+      --face-hi: #5b5ee9;             /* = --secondary v2 */
+      --face-lo: #4b44dd;
+      --socle:  var(--secondary-deep);
+      --rim:    #4640c4;
+      --label:  #ffffff;              /* 5,0:1 mini sur la face, poids 800 */
+      min-height: 40px;
       font-size: var(--text-base);
-      cursor: pointer;
-      background: var(--secondary);
-      color: var(--secondary-foreground);
-      font-weight: 600;
       white-space: nowrap;
     }
 
+    /* Le DOSSIER ROUGE de la réorg. */
     .prestige-card {
       margin-top: 6px;
       border-radius: var(--radius-md);
-      /* Or ambré brûlé propre à la carte prestige — hors tokens */
-      border: 1px dashed rgba(252, 211, 77, 0.8);
+      border: 2px dashed var(--stamp-red);
       padding: 6px;
       font-size: var(--text-base);
-      background: rgba(120, 53, 15, 0.35);
+      background: #f7e8d6;
     }
 
     .prestige-card strong {
+      font-family: var(--font-display);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       font-size: var(--heading-sub);
       line-height: 1.2;
     }
 
+    /* ---------- VARIANTE 4 : PRESTIGE (.btn-prestige) ----------
+       LE tampon rouge « RÉORG STRATÉGIQUE ». Le geste le plus grave
+       de la bureaucratie mérite l'encre rouge. */
     .btn-prestige {
-      margin-top: 4px;
+      --face-hi: #c53a2b;
+      --face-lo: #a02015;
+      --socle:  #6e1510;
+      --rim:    #8a1d15;
+      --label:  #fff4e8;              /* crème : 4,8:1 mini sur toute la face */
+      --depth: 5px;
       width: 100%;
-      padding: 5px;
-      border-radius: var(--radius-full);
-      border: none;
-      background: linear-gradient(135deg, var(--primary-hot), var(--warning));
-      color: #111827; /* contraste calibré sur le dégradé, distinct de --primary-foreground */
-      font-weight: 700;
-      cursor: pointer;
+      margin-top: 8px;
+      font-family: var(--font-display);
+      font-weight: 400;
       font-size: var(--text-base);
+      letter-spacing: 0.06em;
     }
 
     .btn-slim,
@@ -1010,8 +1395,10 @@
       outline-offset: var(--ring-offset);
     }
 
+    /* Journal = listing tapé à la machine. */
     .log-panel {
       font-size: var(--text-small);
+      font-family: var(--font-mono);
       line-height: 1.4;
       max-height: 130px;
       overflow-y: auto;
@@ -1023,15 +1410,37 @@
       margin-bottom: 2px;
     }
 
+    /* Le journal est reconstruit à chaque message : seule la NOUVELLE
+       ligne (en tête) se pose, pas les 50 autres. */
+    .log-entry:first-child {
+      animation: paper-pop var(--dur-pop) var(--ease-stamp);
+    }
+
+    /* Tags = STICKERS à bord de découpe blanc, posés de travers. */
     .tag {
       display: inline-flex;
       align-items: center;
       gap: 3px;
-      padding: 1px 6px;
+      padding: 3px 10px;
       border-radius: var(--radius-full);
       font-size: var(--text-small);
-      border: 1px solid var(--border-strong);
-      background: var(--card);
+      font-weight: 700;
+      border: 2px solid #fff; /* bord de découpe du sticker */
+      background: var(--paper-bright);
+      color: var(--ink-strong);
+      box-shadow: 0 1px 0 rgba(11, 6, 23, 0.25), 0 3px 6px rgba(11, 6, 23, 0.18);
+      transform: rotate(-1deg);
+      animation: paper-pop var(--dur-pop) var(--ease-stamp);
+    }
+
+    .chips-row .tag:nth-child(even) {
+      transform: rotate(1.2deg);
+    }
+
+    /* Le compteur du sticker est tapé à la machine. */
+    .tag span:last-child {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
     }
 
     .progress-card,
@@ -1053,33 +1462,42 @@
       flex-wrap: wrap;
     }
 
-    /* Famille « outline button » : base commune, variantes slate
-       (.btn-slim, .minigame-buttons button) et lavande (.event-choice-btn)
-       déclarées à leur emplacement respectif. Le focus ring vient de la
-       règle :focus-visible unifiée. */
+    /* ---------- VARIANTE 5 : OUTLINE ----------
+       Cases de formulaire à l'encre (.btn-slim, .minigame-buttons button,
+       .event-choice-btn). Plates, discrètes : ce sont les actions
+       administratives, pas les jouets. Focus ring : règle unifiée. */
     .btn-slim,
-    .event-choice-btn,
     .minigame-buttons button {
-      cursor: pointer;
-      transition: background 0.1s ease;
-    }
-
-    .btn-slim {
-      border: 1px solid var(--border-ink);
       background: transparent;
-      color: var(--card-foreground);
-      padding: 4px 8px;
+      border: 1.5px solid var(--border-ink);   /* encre 50 % */
+      color: var(--ink-strong);
       border-radius: var(--radius-sm);
+      padding: 0.45em 0.9em;
+      min-height: 36px;
       font-size: var(--text-small);
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 0 rgba(51, 38, 26, 0.18);   /* micro-tranche */
+      transition: background var(--dur-tap) ease,
+                  transform var(--dur-tap) var(--ease-press),
+                  box-shadow var(--dur-tap) var(--ease-press);
     }
 
-    .btn-slim:hover {
-      background: rgba(248, 250, 252, 0.1);
+    .btn-slim:hover,
+    .minigame-buttons button:hover {
+      background: rgba(51, 38, 26, 0.08);   /* lavis d'encre : remplace le
+                                               voile blanc v1, invisible sur papier */
+    }
+
+    .btn-slim:active,
+    .minigame-buttons button:active {
+      transform: translateY(2px);
+      box-shadow: none;
     }
 
     .btn-slim.danger {
-      border-color: rgba(248, 113, 113, 0.8); /* alpha spécifique — hors tokens */
-      color: var(--destructive-foreground);
+      border-color: rgba(179, 37, 30, 0.65);
+      color: var(--destructive-foreground);   /* #8a1d15, 8,7:1 */
     }
 
 .achievements-list {
@@ -1092,20 +1510,52 @@
       padding-right: 4px;
     }
 
+    /* Succès = VISAS : fiche pâle au repos, coup de tampon au déblocage. */
     .achievement-item {
       border-radius: var(--radius-md);
-      border: 1px solid var(--border);
+      border: 1px solid var(--card-edge);
       padding: 6px 8px;
       font-size: var(--text-small);
       display: flex;
       flex-direction: column;
       gap: 2px;
+      animation: paper-pop var(--dur-pop) var(--ease-stamp);
     }
 
     .achievement-item.unlocked {
-      /* Verts d'état spécifiques (green-400/600) — hors tokens en v1 */
-      border-color: rgba(74, 222, 128, 0.7);
-      background: rgba(22, 163, 74, 0.1);
+      border: 2px solid #178a3d;
+      background: rgba(34, 197, 94, 0.08);
+      position: relative;
+      padding-right: 112px; /* réserve du visa : GUTTGEHEESCHT (13 lettres)
+                               doit tenir à 390px sans raturer le texte */
+    }
+
+    /* Le visa « APPROUVÉ » : i18n via data-stamp (posé traduit par
+       renderAchievementsPanel, 4 langues), jamais de texte en dur en CSS. */
+    .achievement-item.unlocked::after {
+      content: attr(data-stamp);
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-8deg);
+      font-family: var(--font-display);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: #14753a; /* 5,1:1 sur la fiche verte teintée : AA */
+      border: 2px solid currentColor;
+      border-radius: 4px;
+      padding: 1px 6px;
+      mix-blend-mode: multiply; /* l'encre prend sur le papier */
+      animation: stamp-slam var(--dur-settle) cubic-bezier(0.5, 0, 0.6, 1.4) both;
+      pointer-events: none;
+    }
+
+    /* Le tampon tombe de haut, écrase, se pose. Sans motion : états
+       finaux encodés hors animation, le visa apparaît déjà apposé. */
+    @keyframes stamp-slam {
+      0% { transform: translateY(-50%) rotate(-8deg) scale(2.4); opacity: 0; }
+      55% { transform: translateY(-50%) rotate(-8deg) scale(0.92); opacity: 1; }
+      100% { transform: translateY(-50%) rotate(-8deg) scale(1); }
     }
 
     .achievement-title {
@@ -1120,18 +1570,32 @@
       color: var(--muted-foreground);
     }
 
+    /* ---------- VARIANTE 7 : ICON = STICKER (.icon-button) ----------
+       Pastille autocollante à liseré blanc découpé. Vit sur le header
+       SOMBRE qui survit : le sticker clair y claque. */
     .icon-button {
-      border: 1px solid var(--border-strong);
+      border: 2px solid #ffffff;              /* bord de découpe du sticker */
       background: var(--control-ghost);
-      color: var(--card-foreground);
-      /* 50% ≡ radius-full sur ce carré 32×32 */
+      color: var(--ink-strong);
       border-radius: var(--radius-full);
-      width: 32px;
-      height: 32px;
+      width: 40px;                            /* 32 → 40 : cible tactile */
+      height: 40px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      box-shadow: 0 2px 0 rgba(11, 6, 23, 0.35), 0 5px 10px rgba(11, 6, 23, 0.35);
+      transition: transform 140ms var(--ease-stamp),
+                  box-shadow var(--dur-tap) var(--ease-press);
+    }
+
+    .icon-button:hover {
+      transform: rotate(-6deg) scale(1.06);
+    }
+
+    .icon-button:active {
+      transform: scale(0.92);
+      box-shadow: 0 1px 0 rgba(11, 6, 23, 0.35), 0 2px 4px rgba(11, 6, 23, 0.3);
     }
 
     /* Modal motion : le dialog (.t-modal) scale de --modal-scale à 1
@@ -1201,13 +1665,29 @@
       display: none;
     }
 
+    /* Modale = FORMULAIRE ADMINISTRATIF : bristol au-dessus de l'atelier
+       assombri (les voiles violets survivent). */
     .settings-dialog {
       width: min(95vw, 520px);
       background: var(--popover);
-      border: 1px solid var(--border-strong);
+      color: var(--popover-foreground);
+      border: 1px solid var(--card-edge);
       border-radius: var(--radius-xl);
       padding: 16px;
       box-shadow: var(--shadow-modal);
+    }
+
+    /* En-têtes de formulaires : voix display + double filet. */
+    .settings-dialog-header h3,
+    .event-dialog h3,
+    .tutorial-card h3 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-strong);
+      border-bottom: 3px double var(--ink-strong);
+      padding-bottom: 4px;
     }
 
     .settings-dialog-header {
@@ -1226,27 +1706,59 @@
     .settings-tabs {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
     }
 
-    /* Onglet pilule partagé : .settings-tab (dialog réglages) et .tab-btn
-       (carte à onglets) avaient la même recette dupliquée — fusion. */
+    /* ---------- VARIANTE 6 : ONGLETS = INTERCALAIRES ----------
+       Les onglets de classeur qui dépassent des fiches. L'actif est
+       dans le MÊME papier que le panneau : continuité physique.
+       (Recette .settings-tab/.tab-btn déjà fusionnée en v1.) */
     .settings-tab,
     .tab-btn {
       flex: 1;
-      border-radius: var(--radius-full);
-      border: 1px solid var(--border-strong);
-      padding: 6px;
-      background: var(--control-soft);
-      color: var(--card-foreground);
-      cursor: pointer;
+      border: 1px solid var(--card-edge);
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+      background: var(--control-soft);        /* kraft en retrait */
+      color: rgba(51, 38, 26, 0.78);          /* 5,1:1 sur kraft */
+      padding: 8px 10px 10px;
+      min-height: 40px;
+      margin-bottom: -2px;                    /* recouvre la ligne de pliure */
       font-size: var(--text-small);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transform: translateY(2px);             /* glissé derrière la fiche */
+      transition: transform var(--dur-tap) var(--ease-press),
+                  background var(--dur-tap) ease;
+    }
+
+    .settings-tab:hover:not(.active),
+    .tab-btn:hover:not(.active) {
+      transform: translateY(1px);
+      background: #e2cfa8;
     }
 
     .settings-tab.active,
     .tab-btn.active {
-      background: var(--primary-muted);
-      border-color: var(--primary);
+      background: var(--card);                /* même bristol que le panneau */
+      color: var(--ink-strong);
+      font-weight: 800;
+      transform: translateY(0);
+      box-shadow: 0 -2px 4px rgba(11, 6, 23, 0.12);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Le rail des onglets porte la ligne de pliure. */
+    .tabs-header,
+    .settings-tabs {
+      margin-bottom: 0;
+      padding: 0 6px;
+      border-bottom: 2px solid var(--card-edge);
+    }
+
+    .settings-section {
+      margin-top: 12px;
     }
 
     .settings-section {
@@ -1281,15 +1793,19 @@
 
     .tutorial-card {
       background: var(--popover);
-      border: 1px solid var(--border-ink);
+      color: var(--popover-foreground);
+      border: 1px solid var(--card-edge);
       border-radius: var(--radius-lg);
       padding: 16px;
       width: min(90vw, 400px);
       pointer-events: auto;
+      box-shadow: var(--shadow-modal);
     }
 
+    /* « ÉTAPE 2/7 » tapé à la machine. */
     .tutorial-step-label {
       font-size: var(--text-small);
+      font-family: var(--font-mono);
       letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--muted-foreground);
@@ -1396,13 +1912,17 @@
 
     .event-dialog {
       background: var(--popover);
-      border: 1px solid var(--border-strong);
+      color: var(--popover-foreground);
+      border: 1px solid var(--card-edge);
       border-radius: var(--radius-lg);
       width: min(90vw, 420px);
       padding: 16px;
       position: relative;
-      /* Ombre propre à ce dialog, plus courte que --shadow-modal — v1 littéral */
-      box-shadow: 0 20px 45px rgba(11, 6, 23, 0.7);
+      box-shadow: var(--shadow-modal);
+      /* Greffe convergente (juges 2 & 3) : les ÉVÉNEMENTS atterrissent
+         théâtralement (back-out) ; les réglages restent sobres à 0.94. */
+      --modal-scale: 0.92;
+      --modal-ease: var(--ease-stamp);
     }
 
     .modal-close {
@@ -1411,9 +1931,13 @@
       right: 8px;
       border: none;
       background: transparent;
-      color: var(--muted-foreground);
+      color: var(--ink-soft);
       font-size: 20px;
       cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: var(--stamp-red); /* on rature */
     }
 
     .event-choices {
@@ -1423,34 +1947,43 @@
       margin-top: 12px;
     }
 
-    /* Variante lavande de la famille outline (base commune avec .btn-slim). */
+    /* Choix d'événement : même famille outline, pleine largeur, hover
+       encre violette (remplace le seul bleu littéral du fichier v1). */
     .event-choice-btn {
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      padding: 10px;
-      text-align: left;
       background: var(--control);
-      color: var(--card-foreground);
+      border: 1.5px solid var(--border-ink);
+      border-radius: var(--radius-md);
+      color: var(--ink-strong);
+      text-align: left;
+      padding: 10px 12px;
       font-size: var(--text-small);
+      cursor: pointer;
+      box-shadow: 0 2px 0 rgba(51, 38, 26, 0.18);
+      transition: background var(--dur-tap) ease,
+                  transform var(--dur-tap) var(--ease-press),
+                  box-shadow var(--dur-tap) var(--ease-press);
     }
 
     .event-choice-btn:hover,
     .event-choice-btn:focus-visible {
-      /* Seul bleu du fichier — v1 littéral, candidat --secondary alpha en v2.
-         Le focus clavier reçoit désormais aussi le ring or unifié. */
-      background: rgba(59, 130, 246, 0.2);
+      background: rgba(91, 94, 233, 0.14);
+    }
+
+    .event-choice-btn:active {
+      transform: translateY(2px);
+      box-shadow: none;
     }
 
     .event-result {
       margin-top: 12px;
       font-size: var(--text-small);
-      color: #fef08a;
+      color: #92400e; /* encre brûlée : le jaune v1 est illisible sur papier */
       min-height: 24px;
     }
 
     .event-minigame {
       margin-top: 12px;
-      border: 1px dashed rgba(248, 250, 252, 0.2);
+      border: 1px dashed var(--border-ink);
       border-radius: 10px;
       padding: 10px;
     }
@@ -1461,14 +1994,10 @@
       margin-top: 8px;
     }
 
-    /* Variante slate de la famille outline (base commune avec .btn-slim). */
+    /* Le reste de la recette vient de la variante outline commune. */
     .minigame-buttons button {
       flex: 1;
-      border: 1px solid var(--border-ink);
-      border-radius: var(--radius-md);
       padding: 8px 0;
-      background: var(--control);
-      color: var(--card-foreground);
     }
 
     .accessibility-panel {
@@ -1498,13 +2027,24 @@
       font-size: var(--text-small);
     }
 
+    /* Cases à cocher de formulaire, encre brûlée. */
+    .option-row input[type="checkbox"] {
+      accent-color: #92400e;
+      width: 18px;
+      height: 18px;
+    }
+
     .tabs-header {
       display: flex;
       gap: 6px;
-      margin-bottom: 8px;
+      /* margin-bottom : porté à 0 par la règle « rail des onglets ». */
     }
 
-    /* .tab-btn : voir la règle « onglet pilule » partagée avec .settings-tab. */
+    /* .tab-btn : voir la variante 6 « intercalaires », partagée avec .settings-tab. */
+
+    .tab-panel {
+      padding-top: 10px;
+    }
 
     .tab-panel.hidden {
       display: none;
@@ -1519,25 +2059,34 @@
       padding-right: 4px;
     }
 
+    /* Contrats = BONS DE COMMANDE. */
     .contract-card {
-      border: 1px solid var(--border);
+      border: 1px solid var(--card-edge);
       border-radius: 10px; /* rayon intermédiaire conservé (10→8 serait visible) */
       padding: 8px;
-      background: var(--control-soft);
+      background: var(--control);
       display: flex;
       flex-direction: column;
       gap: 6px;
+      /* Pas de paper-pop ici : renderContractsPanel reconstruit la liste
+         à CHAQUE frame (renderAll), l'animation redémarrerait en boucle. */
     }
 
+    /* L'en-tête chiffré du bon est tapé à la machine. */
     .contract-requirements,
     .active-contract {
       font-size: var(--text-small);
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
       color: var(--muted-foreground);
     }
 
+    /* Ligne « détachez ici ». */
     .contract-actions {
       display: flex;
       justify-content: flex-end;
+      border-top: 1.5px dashed var(--border-ink);
+      padding-top: 6px;
     }
 
     @media (max-width: 960px) {
@@ -1583,7 +2132,7 @@
       }
       .click-button {
         font-size: var(--heading-sub);
-        padding: 12px;
+        /* padding : reste en em (recette tampon), suit .pref-large-text */
       }
       .tag {
         padding: 3px 8px;
@@ -1627,41 +2176,51 @@
       margin: 12px 0;
     }
 
+    /* Tuile KPI = FICHE DACTYLOGRAPHIÉE : intitulé pré-imprimé du
+       formulaire, valeur tapée dessus en chasse fixe. */
     .dash-kpi {
       display: flex;
       flex-direction: column;
       gap: 2px;
       padding: 10px 12px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--card-edge);
       border-radius: var(--radius-md);
-      background: var(--control-soft);
+      background: var(--paper-bright);
+      box-shadow: 0 2px 0 rgba(11, 6, 23, 0.22), 0 6px 12px rgba(11, 6, 23, 0.25);
     }
 
     .dash-kpi-label {
-      font-size: var(--text-small);
-      color: var(--muted-foreground);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
     }
 
     .dash-kpi-value {
-      font-size: var(--heading-sub);
+      font-size: var(--num-hero);
+      font-family: var(--font-mono);
       font-weight: 700;
+      letter-spacing: -0.01em;
       font-variant-numeric: tabular-nums;
-      color: var(--card-foreground);
+      color: var(--ink-strong);
     }
 
+    /* Tendance : triangle + signe portent l'info, jamais la couleur seule. */
     .dash-kpi-trend {
       font-size: var(--text-small);
+      font-family: var(--font-mono);
       color: var(--subtle-foreground);
       font-variant-numeric: tabular-nums;
       min-height: 1.2em;
     }
 
     .dash-kpi-trend.is-up {
-      color: var(--success);
+      color: #15803d; /* 4,7:1 sur bristol (le --success v1 tombait à 1,9) */
     }
 
     .dash-kpi-trend.is-down {
-      color: var(--destructive);
+      color: var(--destructive); /* rouge tampon, 6,2:1 */
     }
 
     .dash-charts {
@@ -1674,9 +2233,9 @@
     .dash-chart-block {
       margin: 0;
       padding: 10px 12px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--card-edge);
       border-radius: var(--radius-md);
-      background: var(--control-soft);
+      background: var(--control); /* papier teinté : l'encre y reste ≥ 3:1 */
       min-width: 0;
     }
 
@@ -1704,70 +2263,80 @@
       height: 90px;
     }
 
+    /* Encre sur papier : filets pré-imprimés, série à l'encre violette
+       (l'or v1 tombe à 1,6:1 sur bristol, hors jeu). Textes en encres,
+       jamais en couleur de série. */
     .dash-grid {
-      stroke: var(--border);
+      stroke: #e7dcbe; /* filets pré-imprimés du formulaire */
       stroke-width: 1;
     }
 
     .dash-axis {
-      fill: var(--subtle-foreground);
+      fill: var(--ink-soft);
+      font-family: var(--font-mono);
       font-size: 10px;
       font-variant-numeric: tabular-nums;
     }
 
     .dash-line {
       fill: none;
-      stroke: var(--primary);
+      stroke: #4338ca; /* encre violette : 6,6:1 sur le papier teinté */
       stroke-width: 2;
       stroke-linejoin: round;
       stroke-linecap: round;
     }
 
     .dash-area {
-      fill: rgba(251, 191, 36, 0.12);
+      fill: rgba(91, 94, 233, 0.14);
       stroke: none;
     }
 
     .dash-crosshair {
-      stroke: var(--border-strong);
+      stroke: rgba(51, 38, 26, 0.5);
       stroke-width: 1;
     }
 
     .dash-dot {
-      fill: var(--primary);
+      fill: #312a52;
       /* Anneau de surface 2px : le point reste lisible sur la ligne. */
-      stroke: var(--popover);
+      stroke: var(--paper-bright);
       stroke-width: 2;
     }
 
+    /* Séries des baromètres : encres foncées, toutes ≥ 3:1 sur le papier. */
     .dash-gauge-line.is-quality {
-      stroke: var(--success);
+      stroke: #15803d; /* 4,0:1 */
     }
 
     .dash-gauge-line.is-footprint {
-      stroke: var(--warning);
+      stroke: #b45309; /* 4,2:1 */
     }
 
     .dash-gauge-line.is-image {
-      stroke: var(--primary);
+      stroke: #4338ca; /* 6,6:1 */
     }
 
     .dash-gauge-value {
       font-size: 11px;
-      font-weight: 600;
-      fill: var(--card-foreground);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      fill: var(--ink-strong);
       font-variant-numeric: tabular-nums;
     }
 
+    /* Tooltip du graphique = POST-IT. */
     .dash-tip {
       position: absolute;
       z-index: 5;
       padding: 4px 8px;
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      background: var(--popover);
-      color: var(--popover-foreground);
+      border: none;
+      border-radius: 2px;
+      background: var(--postit);
+      color: var(--ink-strong);
+      transform: rotate(-0.8deg);
+      box-shadow: var(--shadow-pop), inset 0 18px 12px -14px rgba(11, 6, 23, 0.06);
       font-size: var(--text-small);
+      font-family: var(--font-mono);
       font-variant-numeric: tabular-nums;
       pointer-events: none;
       white-space: nowrap;
@@ -1818,16 +2387,28 @@
       background: var(--gauge-track);
     }
 
+    /* Barres = rectangles kraft. #9c7a45 : kraft encré, 3,3:1 sur le
+       papier teinté (le --kraft nu tombait sous 3:1). */
     .dash-bar-fill {
       display: block;
       height: 100%;
-      background: var(--secondary);
+      background: #9c7a45;
+      border: 1px solid #8a6f3f;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
       /* Extrémité de donnée arrondie, base carrée (spec des marques). */
       border-radius: 0 4px 4px 0;
     }
 
+    /* La barre max (1re ligne, tri décroissant) : liseré or, le bâtiment
+       vedette. Décoratif : la valeur chiffrée porte l'info. */
+    .dash-bars .dash-bar-row:first-child .dash-bar-fill {
+      box-shadow: inset 0 0 0 2px var(--accent), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      border-color: var(--kraft-deep);
+    }
+
     .dash-bar-value {
       color: var(--subtle-foreground);
+      font-family: var(--font-mono);
       font-variant-numeric: tabular-nums;
     }
 
@@ -1858,18 +2439,31 @@
       color: var(--muted-foreground);
     }
 
+    /* Table = relevé dactylographié : filets horizontaux seuls, zébrures. */
     .dash-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 8px;
+      font-family: var(--font-mono);
     }
 
     .dash-table th,
     .dash-table td {
       text-align: left;
       padding: 4px 8px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--card-edge);
       font-variant-numeric: tabular-nums;
+    }
+
+    .dash-table thead th {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+    }
+
+    .dash-table tbody tr:nth-child(even) {
+      background: rgba(51, 38, 26, 0.03);
     }
 
     .dash-table th[scope="row"] {
@@ -1884,5 +2478,38 @@
 
       .dash-gauges {
         grid-template-columns: 1fr;
+      }
+    }
+
+    /* ====================================================================
+       MOTION « Atelier tamponné » — BUDGET FERME (greffe convergente des
+       juges 2 & 3) : maximum 5 animations infinies simultanées sur la
+       page. État actuel : 1 seule (le shine du CTA, toutes les 7 s).
+       Les boucles n'animent que transform/opacity/filter ; box-shadow
+       n'apparaît que dans les transitions courtes :hover/:active.
+       Tous les états finaux (enfoncé, actif, désactivé, visa apposé)
+       sont encodés hors animation : sans motion, tout reste lisible.
+       ==================================================================== */
+
+    /* Un nouvel objet papier se pose sur l'établi. */
+    @keyframes paper-pop {
+      from {
+        opacity: 0;
+        transform: translateY(6px) rotate(-1deg);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Miroir système du verrou .pref-reduce-motion (spec a11y) : même
+       neutralisation pour les utilisateurs qui l'expriment via l'OS. */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
       }
     }
