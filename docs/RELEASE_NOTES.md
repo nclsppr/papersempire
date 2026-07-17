@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.12 – « Atelier tamponné » : le re-skin parodique
+- Nouveau design system complet : le décor crépusculaire et le diorama three.js restent la nuit de l'atelier, tout ce qui se manipule devient papeterie physique (fiches bristol à coin corné, boutons-tampons avec socle 3D et écrasement au clic, étiquettes kraft, réglettes, post-its).
+- Visas « APPROUVÉ » tamponnés sur les succès débloqués, traduits en 4 langues (GUTTGEHEESCHT inclus).
+- Dashboard façon rapport dactylographié : tuiles KPI en chasse fixe, courbe encre, barres kraft, baromètres.
+- Accessibilité vérifiée par calcul : contrastes AA partout (encre/bristol 13,8:1), focus ring brun sur papier, prefers-reduced-motion, mode high-contrast re-testé ; budget motion : 1 seule animation infinie.
+- Toute référence VBS / Victor Buck Services / VPlatform retirée du jeu et des docs ; identifiants renommés (`brandImage`, `clientPortal`) avec migration automatique des sauvegardes.
+- Nouveaux documents : `design-system.md` (règles + prompt-maître de génération d'images), `images-todo.md` (backlog d'assets), `ROADMAP.md` (mandat produit, multi-pages désormais permis).
+
 ## 0.7 – UX polish & Accessibility
 - Added a full settings modal (Accessibility, Audio, Interface, Save tabs) with persisted toggles, gear shortcut, and Playwright coverage.
 - Implemented guided tutorial overlay (`tutorial.js`) that highlights print → buildings → journal → settings and records completion in preferences.

@@ -1,6 +1,6 @@
 # Papers Empire
 
-Papers Empire is a browser-based incremental game that runs entirely on the client side. The experience is intentionally light-hearted: you're modernising an industrial print shop a la Victor Buck Services while channeling the vibe of workplace sitcoms.
+Papers Empire is a browser-based incremental game that runs entirely on the client side. The experience is intentionally light-hearted: you're modernising an industrial print shop while channeling the vibe of workplace sitcoms.
 
 The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier maintenance. Additional helper modules power the modifier builder math and god-mode utilities so they can be unit-tested in isolation.
 
@@ -21,6 +21,7 @@ Track meaningful milestones in the project:
 - **0.9** – Le campus 3D lowpoly (three.js vendored, enrichissement progressif) : chaque bâtiment acheté apparaît sur la carte, caméra qui cadre l'empire et dézoome avec sa croissance, clic-achat directement sur les bâtiments, ambiances pilotées par les jauges (brouillard, lumières), secousses d'événements et fanfare de prestige. Voir `architecture.md` § Scène 3D.
 - **0.10** – Passe SEO pro (canonical papersempire.com, hreflang `?lang=`, carte sociale JPEG 1200x630, JSON-LD @graph, icônes PNG + manifest, robots/sitemap réparés, 404) ; suppression des tests automatisés et du job CI (workflow direct-to-master).
 - **0.11** – Couche de tokens sémantiques façon shadcn (zéro changement visuel, fondation du re-skin) + Tableau de bord temps réel : 6 KPIs avec tendance, courbe de production (crosshair + tooltip), répartition par bâtiment, baromètres en petits multiples, vue table accessible — i18n 4 langues, pont lecture seule `window.__PE_DASH__`.
+- **0.12** – Design system « Atelier tamponné » (choisi par jury multi-agents) : fiches bristol opaques sur la nuit de l'atelier, boutons-tampons 3D qui s'écrasent, intercalaires kraft, visas APPROUVÉ traduits, dashboard dactylographié — contrastes AA calculés, budget motion (1 boucle infinie), high-contrast préservé. Suppression de toute mention VBS/Victor Buck/VPlatform (identifiants `brandImage`/`clientPortal` + migration de sauvegarde). Nouveaux docs : `design-system.md` (prompt-maître images), `images-todo.md`, `ROADMAP.md` (mandat produit).
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
