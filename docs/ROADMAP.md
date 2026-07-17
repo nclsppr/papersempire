@@ -28,12 +28,14 @@ mots, et gratifiant quand on revient.
 - **0.14 — Le dashboard déménage sur sa page** : ✅ livré. `/dashboard/` avec
   synchro live inter-onglets ; l'historique long et les records restent à
   ajouter (rejoint 0.16).
-- **0.15 — Matière graphique** : intégration des assets générés
-  (`images-todo.md`) — stickers de bâtiments, tampons de hauts faits,
-  key art pour la carte sociale.
-- **0.16 — Contenu mid-game** : nouveaux contrats, événements illustrés,
-  hauts faits supplémentaires (il n'y en a que 5), équilibrage de la courbe
-  entre la presse numérique et le prestige.
+- **0.15 — Contenu mid-game, tranche 1** : ✅ livré. 11 nouveaux hauts faits
+  (16 au total), 4 langues.
+- **0.16 — Matière graphique** : intégration des assets générés
+  (`images-todo.md`) — EN ATTENTE d'une clé OpenAI valide (l'actuelle est
+  rejetée par l'API).
+- **0.17 — Contenu mid-game, tranche 2** : nouveaux contrats, événements
+  illustrés, équilibrage de la courbe entre la presse numérique et le
+  prestige.
 - **Plus tard** : arbre de compétences (« formations internes »), records et
   fins de partie partageables, mode sombre/clair de l'atelier (jour/nuit déjà
   amorcé par `.sky-*`).
