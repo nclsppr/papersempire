@@ -2117,6 +2117,39 @@
    * the snapshot is a fresh plain object, so the renderer can never
    * mutate simulation state. Must stay cheap (called ~60x/s).
    */
+  /**
+   * Read-only bridge for the dashboard (assets/js/dashboard.js). Same
+   * philosophy as __PE_SCENE__: a fresh plain snapshot per call, so the
+   * dashboard can never mutate the simulation.
+   */
+  window.__PE_DASH__ = {
+    format: formatNumber,
+    getSnapshot() {
+      const mults = computeMultipliers();
+      const prestige = prestigeMultiplier();
+      return {
+        docPerSecond: computeDocPerSecond(),
+        docBank: gameState.resources.docBank,
+        docTotal: gameState.resources.docTotal,
+        ccTotal: gameState.resources.ccTotal,
+        culturePoints: gameState.resources.culturePoints,
+        prestigeMult: prestige,
+        buildingCount: gameState.buildings.reduce((sum, b) => sum + b.quantity, 0),
+        stats: {
+          quality: gameState.stats.quality,
+          footprint: gameState.stats.footprint,
+          imageVbs: gameState.stats.imageVbs
+        },
+        buildings: gameState.buildings.map(b => ({
+          id: b.id,
+          nameKey: b.nameKey,
+          quantity: b.quantity,
+          production: (b.baseProduction || 0) * b.quantity * mults.docMult * prestige
+        }))
+      };
+    }
+  };
+
   window.__PE_SCENE__ = {
     getSnapshot() {
       return {

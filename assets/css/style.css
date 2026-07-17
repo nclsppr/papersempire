@@ -1608,3 +1608,281 @@
     }
 
   
+
+    /* ====================================================================
+       Tableau de bord (assets/js/dashboard.js) — construit sur les tokens.
+       Graphiques SVG maison : traits 2px, extrémités de barres arrondies
+       côté donnée, grille discrète, textes en tokens texte (jamais la
+       couleur de série), tooltip au survol, vue table en repli.
+       ==================================================================== */
+
+    .dashboard-card {
+      grid-column: 1 / -1;
+    }
+
+    .dash-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .dash-kpi {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--control-soft);
+    }
+
+    .dash-kpi-label {
+      font-size: var(--text-small);
+      color: var(--muted-foreground);
+    }
+
+    .dash-kpi-value {
+      font-size: var(--heading-sub);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--card-foreground);
+    }
+
+    .dash-kpi-trend {
+      font-size: var(--text-small);
+      color: var(--subtle-foreground);
+      font-variant-numeric: tabular-nums;
+      min-height: 1.2em;
+    }
+
+    .dash-kpi-trend.is-up {
+      color: var(--success);
+    }
+
+    .dash-kpi-trend.is-down {
+      color: var(--destructive);
+    }
+
+    .dash-charts {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .dash-chart-block {
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--control-soft);
+      min-width: 0;
+    }
+
+    .dash-chart-wide {
+      grid-column: 1 / -1;
+    }
+
+    .dash-chart-title {
+      font-size: var(--text-small);
+      color: var(--muted-foreground);
+      margin-bottom: 8px;
+    }
+
+    .dash-chart-holder {
+      position: relative;
+    }
+
+    .dash-svg {
+      display: block;
+      width: 100%;
+      height: 150px;
+    }
+
+    .dash-gauge .dash-svg {
+      height: 90px;
+    }
+
+    .dash-grid {
+      stroke: var(--border);
+      stroke-width: 1;
+    }
+
+    .dash-axis {
+      fill: var(--subtle-foreground);
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dash-line {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .dash-area {
+      fill: rgba(251, 191, 36, 0.12);
+      stroke: none;
+    }
+
+    .dash-crosshair {
+      stroke: var(--border-strong);
+      stroke-width: 1;
+    }
+
+    .dash-dot {
+      fill: var(--primary);
+      /* Anneau de surface 2px : le point reste lisible sur la ligne. */
+      stroke: var(--popover);
+      stroke-width: 2;
+    }
+
+    .dash-gauge-line.is-quality {
+      stroke: var(--success);
+    }
+
+    .dash-gauge-line.is-footprint {
+      stroke: var(--warning);
+    }
+
+    .dash-gauge-line.is-image {
+      stroke: var(--primary);
+    }
+
+    .dash-gauge-value {
+      font-size: 11px;
+      font-weight: 600;
+      fill: var(--card-foreground);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dash-tip {
+      position: absolute;
+      z-index: 5;
+      padding: 4px 8px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--popover);
+      color: var(--popover-foreground);
+      font-size: var(--text-small);
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .dash-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      color: var(--muted-foreground);
+      font-size: var(--text-small);
+    }
+
+    /* display:flex battrait l'attribut hidden (display:none UA) : l'overlay
+       invisible continuerait d'avaler les pointermove du graphique. */
+    .dash-empty[hidden] {
+      display: none;
+    }
+
+    .dash-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dash-bar-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 40%) 1fr auto;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--text-small);
+    }
+
+    .dash-bar-label {
+      color: var(--card-foreground);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dash-bar-track {
+      position: relative;
+      height: 10px;
+      border-radius: 2px;
+      background: var(--gauge-track);
+    }
+
+    .dash-bar-fill {
+      display: block;
+      height: 100%;
+      background: var(--secondary);
+      /* Extrémité de donnée arrondie, base carrée (spec des marques). */
+      border-radius: 0 4px 4px 0;
+    }
+
+    .dash-bar-value {
+      color: var(--subtle-foreground);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dash-gauges {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .dash-gauge {
+      min-width: 0;
+    }
+
+    .dash-gauge-label {
+      display: block;
+      font-size: var(--text-small);
+      color: var(--muted-foreground);
+      margin-bottom: 4px;
+    }
+
+    .dash-table-details {
+      margin-top: 12px;
+      font-size: var(--text-small);
+    }
+
+    .dash-table-details summary {
+      cursor: pointer;
+      color: var(--muted-foreground);
+    }
+
+    .dash-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .dash-table th,
+    .dash-table td {
+      text-align: left;
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dash-table th[scope="row"] {
+      font-weight: 400;
+      color: var(--muted-foreground);
+    }
+
+    @media (max-width: 900px) {
+      .dash-charts {
+        grid-template-columns: 1fr;
+      }
+
+      .dash-gauges {
+        grid-template-columns: 1fr;
+      }
+    }

@@ -20,6 +20,7 @@ Track meaningful milestones in the project:
 - **0.8** – Ajout d'un plan structuré “site à succès” (DA, responsive, conversion, workflow images IA) dans `web-success-plan.md`.
 - **0.9** – Le campus 3D lowpoly (three.js vendored, enrichissement progressif) : chaque bâtiment acheté apparaît sur la carte, caméra qui cadre l'empire et dézoome avec sa croissance, clic-achat directement sur les bâtiments, ambiances pilotées par les jauges (brouillard, lumières), secousses d'événements et fanfare de prestige. Voir `architecture.md` § Scène 3D.
 - **0.10** – Passe SEO pro (canonical papersempire.com, hreflang `?lang=`, carte sociale JPEG 1200x630, JSON-LD @graph, icônes PNG + manifest, robots/sitemap réparés, 404) ; suppression des tests automatisés et du job CI (workflow direct-to-master).
+- **0.11** – Couche de tokens sémantiques façon shadcn (zéro changement visuel, fondation du re-skin) + Tableau de bord temps réel : 6 KPIs avec tendance, courbe de production (crosshair + tooltip), répartition par bâtiment, baromètres en petits multiples, vue table accessible — i18n 4 langues, pont lecture seule `window.__PE_DASH__`.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
