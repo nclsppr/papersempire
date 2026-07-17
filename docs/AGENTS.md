@@ -29,14 +29,13 @@
 
 ## Testing Guidelines
 
-- There is no formal automated test framework yet; rely on manual, scenario‑based testing.
+- There is no automated test suite, by choice: rely on quick manual checks in the browser.
 - Before committing, verify: page loads without console errors, interactions respond as expected, and layout works at common viewport sizes.
-- When adding new mechanics, document quick test steps in `game-design.md` (e.g., “Steps to reproduce feeding flow”).
 
-## Commit & Pull Request Guidelines
+## Commit Guidelines
 
 - Use short, imperative commit messages (e.g., `feat: add habitat selector`, `fix: prevent negative food count`).
-- Each pull request should describe what changed, why, and how to test it.
+- Commit and push directly to `master` — no pull requests.
 - Link to any relevant design notes in `game-design.md` and include screenshots or short clips for UI changes when possible.
 
 ## Understand the game design

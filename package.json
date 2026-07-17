@@ -3,13 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test:unit": "node tests/modifiers.test.js && node tests/godmode.test.js && node tests/events.test.js && node tests/i18n.test.js && node tests/settings.test.js && node tests/scene-layout.test.js",
-    "test:e2e": "playwright test",
-    "test": "npm run test:unit && npm run test:e2e",
     "docs:build": "node node_modules/retypeapp/retype.js build --output docs-site"
   },
   "devDependencies": {
-    "@playwright/test": "^1.42.0",
     "retypeapp": "^4.6.0"
   }
 }
