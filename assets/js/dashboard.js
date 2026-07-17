@@ -28,8 +28,73 @@
   let els = null;
   let lastBarsSignature = "";
 
+  /* Source de données : le pont app.js sur la page du jeu, sinon le mode
+     autonome de la page /dashboard/ — dernier snapshot persisté par le jeu
+     (clé pe-dash-snapshot), rafraîchi en direct par les événements storage
+     quand un onglet de jeu est ouvert à côté. */
+  let standaloneSource = null;
+
   function bridge() {
-    return window.__PE_DASH__ || null;
+    return window.__PE_DASH__ || standaloneSource;
+  }
+
+  function standaloneFormat(n) {
+    if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + " Md";
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + " M";
+    if (n >= 10_000) return (n / 1_000).toFixed(1) + " k";
+    if (n >= 1000) return (n / 1_000).toFixed(2) + " k";
+    if (n === 0) return "0";
+    if (n < 1) return n.toFixed(3);
+    return n.toFixed(1);
+  }
+
+  function detectStandaloneLang() {
+    const supported = ["fr", "en", "de", "lb"];
+    let lang = null;
+    try {
+      lang = new URLSearchParams(window.location.search).get("lang");
+    } catch {
+      lang = null;
+    }
+    if (supported.includes(lang)) return lang;
+    return "fr";
+  }
+
+  function setupStandalone() {
+    const lang = detectStandaloneLang();
+    document.documentElement.lang = lang;
+    const all = window.I18N || {};
+    const d = all[lang] || {};
+    const fr = all.fr || {};
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      const value = d[key] || fr[key];
+      if (value) el.textContent = value;
+    });
+    const back = document.getElementById("backToGameLink");
+    if (back) back.setAttribute("href", lang === "fr" ? "/" : "/?lang=" + lang);
+
+    let lastSnapshot = null;
+    try {
+      lastSnapshot = JSON.parse(window.localStorage.getItem("pe-dash-snapshot"));
+    } catch {
+      lastSnapshot = null;
+    }
+    window.addEventListener("storage", event => {
+      if (event.key !== "pe-dash-snapshot" || !event.newValue) return;
+      try {
+        lastSnapshot = JSON.parse(event.newValue);
+      } catch {
+        return;
+      }
+      sample();
+    });
+    standaloneSource = {
+      format: standaloneFormat,
+      getSnapshot() {
+        return lastSnapshot;
+      }
+    };
   }
 
   function dict() {
@@ -56,6 +121,7 @@
     const b = bridge();
     if (!b) return;
     const snap = b.getSnapshot();
+    if (!snap) return;
     samples.push({
       t: Date.now(),
       dps: snap.docPerSecond,
@@ -336,8 +402,12 @@
       const b = bridge();
       if (b && els.tableDetails.open) renderTable(b.getSnapshot());
     });
+    // Page /dashboard/ (pas de jeu, pas de pont) : mode autonome.
+    if (!window.__PE_DASH__ && document.body.classList.contains("dash-standalone")) {
+      setupStandalone();
+    }
     // Le pont n'existe qu'une fois app.js initialisé (defer garantit l'ordre,
-    // mais on reste défensif : premier échantillon dès que le pont répond).
+    // mais on reste défensif : premier échantillon dès que la source répond).
     const waiter = setInterval(() => {
       if (bridge()) {
         clearInterval(waiter);

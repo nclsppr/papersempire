@@ -39,6 +39,7 @@ jobs:
           cp site.webmanifest site/site.webmanifest
           cp sitemap.xml site/sitemap.xml
           cp -R assets site/assets
+          cp -R dashboard site/dashboard
           cp -R docs-site/. site/docs/
       - name: Build per-language pages + cache-busting
         run: node scripts/build-lang-pages.mjs site "${GITHUB_SHA::8}"

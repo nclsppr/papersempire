@@ -25,10 +25,9 @@ mots, et gratifiant quand on revient.
 - **0.12 — Re-skin « Atelier tamponné »** : ✅ livré. Voir `design-system.md`.
 - **0.13 — Gains hors-ligne** : ✅ livré. « Rapport d'activité » tamponné à la
   réouverture ; l'équipe de nuit produit à 50 %, plafonné à 8 h.
-- **0.14 — Le dashboard déménage sur sa page** : `/dashboard/` (multi-pages
-  désormais permis), navigation d'en-tête, la page du jeu respire ; le
-  dashboard y gagne la place pour plus de graphiques (historique long,
-  records, stats de session).
+- **0.14 — Le dashboard déménage sur sa page** : ✅ livré. `/dashboard/` avec
+  synchro live inter-onglets ; l'historique long et les records restent à
+  ajouter (rejoint 0.16).
 - **0.15 — Matière graphique** : intégration des assets générés
   (`images-todo.md`) — stickers de bâtiments, tampons de hauts faits,
   key art pour la carte sociale.

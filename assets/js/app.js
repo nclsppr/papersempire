@@ -691,6 +691,13 @@
     if (DOM.langSelect) {
       DOM.langSelect.setAttribute("aria-label", t("actions.languageLabel"));
     }
+    const dashLink = document.getElementById("dashboardLink");
+    if (dashLink) {
+      dashLink.setAttribute(
+        "href",
+        currentLang === DEFAULT_LANG ? "/dashboard/" : "/dashboard/?lang=" + currentLang
+      );
+    }
     if (DOM.closeEventBanner) {
       DOM.closeEventBanner.setAttribute("aria-label", t("actions.closeBanner"));
     }
@@ -926,6 +933,8 @@
     showOfflineReport();
     gameState.time.lastUpdate = performance.now();
     requestAnimationFrame(gameLoop);
+    // Autosave périodique (débouncé) : alimente aussi la page /dashboard/.
+    setInterval(() => queueSave(), 5000);
   }
 
   function buildPersistedState() {
@@ -1079,18 +1088,29 @@
     queueSave(true);
   }
 
+  /** Écrit la sauvegarde ET le snapshot du dashboard : la page /dashboard/
+      lit ce dernier via localStorage + événements storage (live inter-onglets). */
+  function persistNow() {
+    Persistence.save(buildPersistedState());
+    try {
+      window.localStorage.setItem("pe-dash-snapshot", JSON.stringify(window.__PE_DASH__.getSnapshot()));
+    } catch {
+      // quota plein : le jeu reste prioritaire, le dashboard vivra sans live
+    }
+  }
+
   function queueSave(force = false) {
     if (persistenceDisabled) return;
     if (!Persistence.isAvailable || !Persistence.isAvailable()) return;
     if (force) {
       if (saveTimer) clearTimeout(saveTimer);
       saveTimer = null;
-      Persistence.save(buildPersistedState());
+      persistNow();
       return;
     }
     if (saveTimer) return;
     saveTimer = setTimeout(() => {
-      Persistence.save(buildPersistedState());
+      persistNow();
       saveTimer = null;
     }, 500);
   }

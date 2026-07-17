@@ -36,6 +36,8 @@
     "sections.contractsTitle": "Premium-Kontrakter",
     "sections.progressTitle": "Progressioun 🧠",
     "dashboard.title": "Dashboard 📊",
+    "nav.dashboard": "Dashboard 📊",
+    "nav.backToGame": "← Zréck an den Atelier",
     "dashboard.hint": "D'Direktioun huet KPIe gär. Däin Empire a Zuelen, live.",
     "dashboard.kpi.production": "Produktioun",
     "dashboard.kpi.trend": "Trend (1 Min)",

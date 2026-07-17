@@ -36,6 +36,8 @@
     "sections.contractsTitle": "Premium contracts",
     "sections.progressTitle": "Progress 🧠",
     "dashboard.title": "Dashboard 📊",
+    "nav.dashboard": "Dashboard 📊",
+    "nav.backToGame": "← Back to the workshop",
     "dashboard.hint": "Management loves KPIs. Your whole empire in numbers, live.",
     "dashboard.kpi.production": "Production",
     "dashboard.kpi.trend": "Trend (1 min)",

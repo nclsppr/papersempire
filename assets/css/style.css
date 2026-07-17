@@ -2582,3 +2582,48 @@
       transform: none;
       opacity: 1;
     }
+
+    /* ====================================================================
+       Navigation inter-pages (0.14) : lien Dashboard sur le jeu,
+       page /dashboard/ autonome avec retour atelier.
+       ==================================================================== */
+
+    .nav-dash-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 14px;
+      border: 1px solid var(--border-strong);
+      border-bottom-width: 3px;
+      border-radius: var(--radius-md) var(--radius-md) var(--radius-sm) var(--radius-sm);
+      background: var(--kraft);
+      color: var(--ink-strong);
+      text-decoration: none;
+      font-size: var(--text-small);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .nav-dash-link:hover {
+      filter: brightness(1.04);
+    }
+
+    .nav-dash-link:focus-visible {
+      outline: var(--ring-width) solid var(--ring);
+      outline-offset: var(--ring-offset);
+    }
+
+    .header-home-link {
+      text-decoration: none;
+    }
+
+    .dash-standalone .dashboard-card {
+      margin-top: calc(var(--header-h) + 16px);
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .nav-dash-link {
+        padding: 6px 10px;
+      }
+    }

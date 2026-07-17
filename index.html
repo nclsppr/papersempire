@@ -127,6 +127,7 @@
     <div class="header-top">
       <h1 class="header-title" data-game-title>Papers Empire</h1>
       <div class="header-actions">
+        <a class="nav-dash-link" id="dashboardLink" href="/dashboard/" data-i18n="nav.dashboard">Dashboard 📊</a>
         <button class="icon-button" type="button" data-open-settings id="settingsGearButton">
           <span aria-hidden="true">⚙️</span>
           <span class="sr-only" data-i18n="actions.openSettings"></span>
@@ -284,82 +285,6 @@
     </div>
   </div>
 
-  <!-- Tableau de bord : KPIs et graphiques temps réel. Lecture seule via le
-       pont window.__PE_DASH__ (app.js) ; rendu par assets/js/dashboard.js. -->
-  <section class="card dashboard-card" id="dashboardCard" role="region" aria-label="Tableau de bord">
-    <h2 data-i18n="dashboard.title">Tableau de bord 📊</h2>
-    <div class="small" data-i18n="dashboard.hint">La direction adore les KPIs. Tout ton empire en chiffres, en direct.</div>
-    <div class="dash-kpis">
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.production">Production</span>
-        <span class="dash-kpi-value" data-dash-kpi="production">–</span>
-        <span class="dash-kpi-trend" data-dash-kpi="trend"></span>
-      </div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.docBank">Documents en banque</span>
-        <span class="dash-kpi-value" data-dash-kpi="bank">–</span>
-      </div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.docTotal">Documents cumulés</span>
-        <span class="dash-kpi-value" data-dash-kpi="total">–</span>
-      </div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.trust">Confiance cumulée</span>
-        <span class="dash-kpi-value" data-dash-kpi="trust">–</span>
-      </div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.culture">Culture · Prestige</span>
-        <span class="dash-kpi-value" data-dash-kpi="culture">–</span>
-      </div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.buildings">Bâtiments actifs</span>
-        <span class="dash-kpi-value" data-dash-kpi="buildings">–</span>
-      </div>
-    </div>
-    <div class="dash-charts">
-      <figure class="dash-chart-block">
-        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.production">Production (DOC/s) · 5 dernières minutes</figcaption>
-        <div class="dash-chart-holder">
-          <svg id="dashProdChart" class="dash-svg" role="img" aria-hidden="true"></svg>
-          <div id="dashProdTip" class="dash-tip" hidden></div>
-          <p id="dashProdEmpty" class="dash-empty" data-i18n="dashboard.empty">Collecte des données en cours…</p>
-        </div>
-      </figure>
-      <figure class="dash-chart-block">
-        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.buildings">Production par bâtiment (DOC/s)</figcaption>
-        <div id="dashBars" class="dash-bars"></div>
-      </figure>
-      <figure class="dash-chart-block dash-chart-wide">
-        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.gauges">Baromètres d'entreprise (%)</figcaption>
-        <div class="dash-gauges">
-          <div class="dash-gauge">
-            <span class="dash-gauge-label" data-i18n="gauges.quality"></span>
-            <svg id="dashGaugeQuality" class="dash-svg" aria-hidden="true"></svg>
-          </div>
-          <div class="dash-gauge">
-            <span class="dash-gauge-label" data-i18n="gauges.footprint"></span>
-            <svg id="dashGaugeFootprint" class="dash-svg" aria-hidden="true"></svg>
-          </div>
-          <div class="dash-gauge">
-            <span class="dash-gauge-label" data-i18n="gauges.image"></span>
-            <svg id="dashGaugeImage" class="dash-svg" aria-hidden="true"></svg>
-          </div>
-        </div>
-      </figure>
-    </div>
-    <details id="dashTableDetails" class="dash-table-details">
-      <summary data-i18n="dashboard.table.toggle">Données brutes (table)</summary>
-      <table class="dash-table">
-        <thead>
-          <tr>
-            <th scope="col" data-i18n="dashboard.table.metric">Indicateur</th>
-            <th scope="col" data-i18n="dashboard.table.value">Valeur</th>
-          </tr>
-        </thead>
-        <tbody id="dashTableBody"></tbody>
-      </table>
-    </details>
-  </section>
 </main>
 
 <div class="event-modal hidden" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventTitle">
@@ -498,7 +423,6 @@
   <script src="/assets/js/accessibility.js" defer></script>
   <script src="/assets/js/ui-effects.js" defer></script>
   <script src="/assets/js/tutorial.js" defer></script>
-  <script src="/assets/js/dashboard.js" defer></script>
   <!-- Scène 3D du campus : enrichissement progressif. scene-loader importe
        dynamiquement three.js (assets/vendor/) ; en cas d'échec (file://,
        WebGL absent, vieux navigateur) le jeu DOM fonctionne à l'identique. -->
