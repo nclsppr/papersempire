@@ -833,7 +833,9 @@
     }
 
     .upgrade-title {
+      font-size: var(--heading-sub);
       font-weight: 600;
+      line-height: 1.2;
       margin-bottom: 2px;
     }
 
@@ -863,6 +865,11 @@
       padding: 6px;
       font-size: var(--text-base);
       background: rgba(120, 53, 15, 0.35);
+    }
+
+    .prestige-card strong {
+      font-size: var(--heading-sub);
+      line-height: 1.2;
     }
 
     .btn-prestige {
@@ -948,7 +955,7 @@
       color: #f8fafc;
       padding: 4px 8px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: var(--text-small);
       cursor: pointer;
       transition: background 0.1s ease;
     }
@@ -976,7 +983,7 @@
       border-radius: 8px;
       border: 1px solid rgba(167, 158, 196, 0.3);
       padding: 6px 8px;
-      font-size: 12px;
+      font-size: var(--text-small);
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -995,7 +1002,7 @@
 }
 
 .achievement-status {
-      font-size: 11px;
+      font-size: var(--text-small);
       color: var(--muted);
     }
 
@@ -1098,7 +1105,7 @@
 
     .settings-dialog-header h3 {
       margin: 0;
-      font-size: 18px;
+      font-size: var(--heading-sub);
     }
 
     .settings-tabs {
@@ -1115,6 +1122,7 @@
       background: rgba(26, 18, 48, 0.7);
       color: #f8fafc;
       cursor: pointer;
+      font-size: var(--text-small);
     }
 
     .settings-tab.active {
@@ -1123,7 +1131,7 @@
     }
 
     .settings-section {
-      font-size: 13px;
+      font-size: var(--text-small);
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -1162,7 +1170,7 @@
     }
 
     .tutorial-step-label {
-      font-size: 12px;
+      font-size: var(--text-small);
       letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--muted);
@@ -1303,7 +1311,7 @@
       background: rgba(26, 18, 48, 0.8);
       color: #e2e8f0;
       cursor: pointer;
-      font-size: 13px;
+      font-size: var(--text-small);
     }
 
     .event-choice-btn:hover,
@@ -1314,7 +1322,7 @@
 
     .event-result {
       margin-top: 12px;
-      font-size: 13px;
+      font-size: var(--text-small);
       color: #fef08a;
       min-height: 24px;
     }
@@ -1366,7 +1374,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
+      font-size: var(--text-small);
     }
 
     .tabs-header {
@@ -1383,7 +1391,7 @@
       background: rgba(26, 18, 48, 0.7);
       color: #f8fafc;
       cursor: pointer;
-      font-size: 13px;
+      font-size: var(--text-small);
     }
 
     .tab-btn.active {
