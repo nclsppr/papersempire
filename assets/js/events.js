@@ -125,7 +125,7 @@
           resultKey: "events.sabotage.result.investigate",
           tone: "positive",
           effect(gameState) {
-            gameState.stats.imageVbs = Math.min(1, gameState.stats.imageVbs + 0.06);
+            gameState.stats.brandImage = Math.min(1, gameState.stats.brandImage + 0.06);
           }
         },
         {
@@ -134,7 +134,7 @@
           resultKey: "events.sabotage.result.ignore",
           tone: "negative",
           effect(gameState) {
-            gameState.stats.imageVbs = Math.max(0, gameState.stats.imageVbs - 0.07);
+            gameState.stats.brandImage = Math.max(0, gameState.stats.brandImage - 0.07);
           }
         }
       ]

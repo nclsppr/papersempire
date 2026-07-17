@@ -1,5 +1,5 @@
 /**
- * building-recipes.js — procedural lowpoly buildings for the VBS industrial
+ * building-recipes.js — procedural lowpoly buildings for the industrial
  * campus diorama (Papers Empire). Browser-only IIFE attaching
  * window.BuildingRecipes. three.js is NEVER imported here: every public
  * function receives the THREE namespace as its first parameter.
@@ -361,7 +361,7 @@
     },
 
     // 8. Glass office tower: stacked glass storeys, antenna ring, billboard.
-    vbsPortal: {
+    clientPortal: {
       w: 1.0, d: 1.0,
       build: function (THREE, group) {
         addBox(THREE, group, PALETTE.dark, 0.3, 0.4, 0.06, 0, 0.2, 0.41); // entrance

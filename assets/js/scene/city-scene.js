@@ -1,5 +1,5 @@
 /**
- * CityScene — lowpoly "VBS campus" diorama rendered with three.js.
+ * CityScene — lowpoly industrial-campus diorama rendered with three.js.
  *
  * Progressive enhancement layer: scene-loader.js dynamically imports the
  * vendored three.js module and calls CityScene.init(THREE, canvas). If that
@@ -59,7 +59,7 @@
     machineBreakdown: "digitalPress",
     auditQuality: "finishingWorkshop",
     newContract: "logistics",
-    cyberAttack: "vbsPortal",
+    cyberAttack: "clientPortal",
     sabotage: "insertingLine",
     calibrationChallenge: "offsetPress"
   };
@@ -206,7 +206,7 @@
   /**
    * Ambiances pilotées par les jauges : l'empreinte papier assombrit et
    * enfume le ciel (brouillard + teinte), la qualité éclaircit le soleil,
-   * l'image VBS fait briller le liseré cyan. Lerp doux par frame ; sous
+   * l'image de marque fait briller le liseré cyan. Lerp doux par frame ; sous
    * reduce-motion la cible est appliquée directement au changement.
    */
   function applyAmbiance(THREE, instant) {
@@ -228,7 +228,7 @@
     // Brouillard : lointain et discret à 0, proche et dense à 1.
     stepTo(scene.fog, "far", 90 - smog * 48);
     stepTo(lights.sun, "intensity", 1.15 + Math.max(0, Math.min(1, lastStats.quality)) * 0.45);
-    stepTo(lights.rim, "intensity", 0.15 + Math.max(0, Math.min(1, lastStats.imageVbs)) * 0.55);
+    stepTo(lights.rim, "intensity", 0.15 + Math.max(0, Math.min(1, lastStats.brandImage)) * 0.55);
     lights.skyTarget.lerpColors(lights.skyClear, lights.skySmog, smog);
     lights.groundTarget.lerpColors(lights.groundClear, lights.groundSmog, smog);
     if (instant) {
@@ -249,7 +249,7 @@
   function ambianceNeedsRender() {
     if (!lastStats) return false;
     if (!renderedAmbiance) return true;
-    return ["quality", "footprint", "imageVbs"].some(
+    return ["quality", "footprint", "brandImage"].some(
       key => Math.abs(lastStats[key] - renderedAmbiance[key]) > 0.03
     );
   }
@@ -259,7 +259,7 @@
     renderedAmbiance = {
       quality: lastStats.quality,
       footprint: lastStats.footprint,
-      imageVbs: lastStats.imageVbs
+      brandImage: lastStats.brandImage
     };
   }
 

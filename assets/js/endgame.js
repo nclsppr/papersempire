@@ -214,7 +214,7 @@
     const stats = (gameState && gameState.stats) || {};
     const resources = (gameState && gameState.resources) || {};
     const quality = stats.quality || 0;
-    const image = stats.imageVbs || 0;
+    const image = stats.brandImage || 0;
     const volume = resources.docTotal || 0;
     return (
       quality >= (contract.requirements.quality || 0) &&

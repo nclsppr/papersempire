@@ -8,12 +8,12 @@ Game Design Document (GDD) – version développeur
 
 ### 1.1 Pitch
 
-Idle / incremental game centré sur la transformation d'une imprimerie industrielle en acteur omnicanal type Victor Buck Services.
+Idle / incremental game centré sur la transformation d'une imprimerie industrielle en acteur omnicanal de la gestion documentaire.
 
 Tu passes de:
 - une petite imprimante de bureau et un opérateur repro  
 à  
-- une usine d'impression industrielle 4.0 pilotée par IA, VBS Portal, VPlatform et ComBridge.
+- une usine d'impression industrielle 4.0 pilotée par IA, portail client sécurisé et ComBridge.
 
 ### 1.2 Plateforme cible
 
@@ -45,7 +45,7 @@ Valeurs normalisées entre 0 et 1 (0 % à 100 %).
 type GlobalStats = {
   quality: number;        // 0 à 1 – impacte CC par DOC
   footprint: number;      // 0 à 1 – 1 = empreinte énorme, 0 = très vert
-  imageVbs: number;       // 0 à 1 – réputation, impacte events et multiplicateurs
+  brandImage: number;       // 0 à 1 – réputation, impacte events et multiplicateurs
 };
 ```
 
@@ -53,7 +53,7 @@ Convention:
 
 * Plus `quality` est haut, mieux c'est.
 * Plus `footprint` est bas, mieux c'est.
-* Plus `imageVbs` est haut, mieux c'est.
+* Plus `brandImage` est haut, mieux c'est.
 
 ### 2.3 Bâtiments (paliers)
 
@@ -67,7 +67,7 @@ type BuildingId =
   | "finishingWorkshop"
   | "insertingLine"
   | "logistics"
-  | "vbsPortal"
+  | "clientPortal"
   | "comBridge"
   | "factory40"
   | "pampyAI";
@@ -127,8 +127,8 @@ type UpgradeEffect =
   | { type: "multQuality"; multiplier: number }
   | { type: "addFootprint"; value: number }          // valeur négative pour amélioration
   | { type: "multFootprint"; multiplier: number }
-  | { type: "addImageVbs"; value: number }
-  | { type: "multImageVbs"; multiplier: number }
+  | { type: "addBrandImage"; value: number }
+  | { type: "multBrandImage"; multiplier: number }
   | { type: "special"; key: string; value?: any };   // pour règles custom
 ```
 
@@ -154,7 +154,7 @@ type AchievementCondition =
 
 type AchievementReward =
   | { type: "culturePoints"; value: number }
-  | { type: "imageVbs"; value: number }
+  | { type: "brandImage"; value: number }
   | { type: "flatMultiplier"; multiplier: number };
 ```
 
@@ -218,7 +218,7 @@ Formule simple:
 ccGainPerSec =
   DOCps
   * (0.1 + quality * 0.9)        // qualité influence fortement
-  * (0.5 + imageVbs * 0.5);      // image impacte aussi
+  * (0.5 + brandImage * 0.5);      // image impacte aussi
 
 ccTotal += ccGainPerSec * deltaTimeSeconds;
 ```
@@ -246,11 +246,11 @@ footprint += footprintFromNewProduction;            // fonction de DOCps et upgr
 footprint = clamp(footprint, 0, 1);
 ```
 
-Image VBS:
+Image de marque:
 
 ```ts
-imageVbs += (imageTarget - imageVbs) * imageRecoveryRate * deltaTimeSeconds;
-imageVbs = clamp(imageVbs, 0, 1);
+brandImage += (imageTarget - brandImage) * imageRecoveryRate * deltaTimeSeconds;
+brandImage = clamp(brandImage, 0, 1);
 ```
 
 Les upgrades changent `qualityTarget`, `footprintDrift`, `imageTarget`, etc.
@@ -271,9 +271,9 @@ Les upgrades changent `qualityTarget`, `footprintDrift`, `imageTarget`, etc.
 | finishingWorkshop | Atelier de finition         | 0 (modificateur)       | 1_500         | 1.15      | Capacité finition     |
 | insertingLine     | Ligne de mise sous pli      | 0 (modificateur CC)    | 3_000         | 1.15      | Transformation envoi  |
 | logistics         | Logistique et tri postal    | 0 (global mult)        | 5_000         | 1.15      | Mult global envois    |
-| vbsPortal         | VPlatform / VBS Portal      | 5                      | 8_000         | 1.15      | Prod propre + qualité |
+| clientPortal      | Portail client sécurisé     | 5                      | 8_000         | 1.15      | Prod propre + qualité |
 | comBridge         | ComBridge omnicanal         | 0 (CC focus)           | 20_000        | 1.20      | Multiplicateur CC     |
-| factory40         | Usine Victor Buck 4.0       | 0 (global mult)        | 50_000        | 1.20      | Mult global           |
+| factory40         | Usine 4.0                   | 0 (global mult)        | 50_000        | 1.20      | Mult global           |
 | pampyAI           | IA Pampy Print              | 0 (global + footprint) | 100_000       | 1.25      | Optimisation globale  |
 
 Remarque:
@@ -445,7 +445,7 @@ const achievements: Achievement[] = [
     description: "Consommer l'équivalent d'une palette de papier.",
     unlocked: false,
     condition: { type: "docTotal", value: 50_000 },
-    reward: { type: "imageVbs", value: 0.05 }
+    reward: { type: "brandImage", value: 0.05 }
   },
   {
     id: "ach_full_omnichannel",
@@ -552,7 +552,7 @@ Petit récap côté dev front:
 
   * Qualité (barre de 0 à 100 %)
   * Empreinte papier (inversée visuellement: plus c'est vert, mieux c'est)
-  * Image VBS (étoiles, par exemple)
+  * Image de marque (étoiles, par exemple)
 
 * Panneau d'événements:
 

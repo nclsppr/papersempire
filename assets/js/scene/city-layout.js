@@ -33,7 +33,7 @@
     reproWorkshop: { x: -6.5, z: 5, w: 1.6, d: 1.4, cap: 4 },
     digitalPress: { x: -2.5, z: 5, w: 2.2, d: 1.2, cap: 4 },
     offsetPress: { x: 2.5, z: 5, w: 2.6, d: 1.4, cap: 3 },
-    vbsPortal: { x: 7, z: 5, w: 1.0, d: 1.0, cap: 4 },
+    clientPortal: { x: 7, z: 5, w: 1.0, d: 1.0, cap: 4 },
     finishingWorkshop: { x: -9, z: 0, w: 1.6, d: 1.2, cap: 2 },
     insertingLine: { x: -4.5, z: 0, w: 2.0, d: 1.2, cap: 2 },
     logistics: { x: 0.5, z: 0, w: 2.4, d: 1.6, cap: 2 },
@@ -50,7 +50,7 @@
   //   reproOperator  -> reproWorkshop : -8.15 vs -7.30 (gap 0.85)
   //   reproWorkshop  -> digitalPress  : -4.05 vs -3.60 (gap 0.45)
   //   digitalPress   -> offsetPress   :  0.85 vs  1.20 (gap 0.35)
-  //   offsetPress    -> vbsPortal     :  6.45 vs  6.50 (gap 0.05)
+  //   offsetPress    -> clientPortal     :  6.45 vs  6.50 (gap 0.05)
   //   logistics      -> comBridge     :  4.15 vs  4.80 (gap 0.65)
   //   factory40      -> pampyAI       :  0.55 vs  2.00 (gap 1.45)
   // Second front row (z + d + 0.25) worst z-edge: reproWorkshop 7.35 < 8.

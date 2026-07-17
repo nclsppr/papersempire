@@ -67,7 +67,7 @@
     stats: {
       quality: 0.5,
       footprint: 0.5,
-      imageVbs: 0.5
+      brandImage: 0.5
     },
     config: {
       docPerClickBase: 1,
@@ -210,10 +210,10 @@
       imageBonusPerUnit: 0.02
     },
     {
-      id: "vbsPortal",
+      id: "clientPortal",
       emoji: "🌐",
-      nameKey: "building.vbsPortal.name",
-      descKey: "building.vbsPortal.desc",
+      nameKey: "building.clientPortal.name",
+      descKey: "building.clientPortal.desc",
       baseProduction: 5,
       baseCost: 8000,
       costMultiplier: 1.15,
@@ -933,6 +933,21 @@
 
   function applyPersistedState(saved) {
     if (!saved) return;
+    // Migration des sauvegardes d'avant le renommage des identifiants
+    // (imageVbs -> brandImage, vbsPortal -> clientPortal).
+    if (saved.stats && "imageVbs" in saved.stats) {
+      if (!("brandImage" in saved.stats)) {
+        saved.stats.brandImage = saved.stats.imageVbs;
+      }
+      delete saved.stats.imageVbs;
+    }
+    if (Array.isArray(saved.buildings)) {
+      for (const entry of saved.buildings) {
+        if (entry && entry.id === "vbsPortal") {
+          entry.id = "clientPortal";
+        }
+      }
+    }
     if (saved.resources) {
       Object.assign(gameState.resources, saved.resources);
     }
@@ -1115,7 +1130,7 @@
     // Passive stat nudge from infrastructure.
     gameState.stats.quality += buildingEffects.qualityBonus * 0.0001;
     gameState.stats.footprint -= buildingEffects.footprintBonus * 0.0001;
-    gameState.stats.imageVbs += buildingEffects.imageBonus * 0.0001;
+    gameState.stats.brandImage += buildingEffects.imageBonus * 0.0001;
 
     for (const upg of gameState.upgrades) {
       if (!upg.purchased) continue;
@@ -1183,7 +1198,7 @@
     const ccGainPerSec =
       DOCps *
       (0.1 + clamp01(gameState.stats.quality) * 0.9) *
-      (0.5 + clamp01(gameState.stats.imageVbs) * 0.5) *
+      (0.5 + clamp01(gameState.stats.brandImage) * 0.5) *
       mults.ccMult;
 
     const ccGain = ccGainPerSec * dt;
@@ -1194,7 +1209,7 @@
     gameState.stats.quality += (targetQuality - gameState.stats.quality) * gameState.config.qualityRecoveryRate * dt;
 
     const targetImage = clamp01(0.4 + gameState.resources.culturePoints * 0.03);
-    gameState.stats.imageVbs += (targetImage - gameState.stats.imageVbs) * gameState.config.imageRecoveryRate * dt;
+    gameState.stats.brandImage += (targetImage - gameState.stats.brandImage) * gameState.config.imageRecoveryRate * dt;
 
     gameState.stats.footprint += gameState.config.footprintDriftBase * DOCps * dt;
     gameState.stats.footprint = clamp01(gameState.stats.footprint);
@@ -1220,12 +1235,12 @@
         logMessage("log.incident");
       } else {
         gameState.stats.footprint -= 0.03;
-        gameState.stats.imageVbs += 0.01;
+        gameState.stats.brandImage += 0.01;
         logMessage("log.optimization");
       }
       gameState.stats.quality = clamp01(gameState.stats.quality);
       gameState.stats.footprint = clamp01(gameState.stats.footprint);
-      gameState.stats.imageVbs = clamp01(gameState.stats.imageVbs);
+      gameState.stats.brandImage = clamp01(gameState.stats.brandImage);
     }
   }
 
@@ -1327,7 +1342,7 @@
 
     gameState.stats.quality = 0.5;
     gameState.stats.footprint = 0.5;
-    gameState.stats.imageVbs = 0.5;
+    gameState.stats.brandImage = 0.5;
 
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
@@ -1348,7 +1363,7 @@
 
     const q = clamp01(gameState.stats.quality);
     const f = clamp01(gameState.stats.footprint);
-    const img = clamp01(gameState.stats.imageVbs);
+    const img = clamp01(gameState.stats.brandImage);
 
     if (DOM.qualityLabel) DOM.qualityLabel.textContent = Math.round(q * 100) + " %";
     if (DOM.footprintLabel) DOM.footprintLabel.textContent = Math.round(f * 100) + " %";
@@ -1722,6 +1737,15 @@
   function renderAchievementsPanel() {
     const container = DOM.achievementsList;
     if (!container || !window.Achievements) return;
+    // Garde de vue (aucun effet de jeu) : renderAll() repasse ici à chaque
+    // frame ; sans mémo, le innerHTML serait reconstruit 60 fois/s, les
+    // animations d'apparition (paper-pop, visa stamp-slam) redémarreraient
+    // en boucle et la zone aria-live pourrait ré-annoncer du contenu
+    // identique. On ne reconstruit que si succès ou langue changent.
+    const signature = document.documentElement.lang + "|" +
+      Achievements.definitions.map(def => def.id + ":" + (achievementsState.unlocked[def.id] ? 1 : 0)).join(",");
+    if (signature === achievementsState.renderSignature) return;
+    achievementsState.renderSignature = signature;
     container.innerHTML = "";
     if (!Achievements.definitions.length) {
       container.innerHTML = `<div class="small">${t("achievements.empty")}</div>`;
@@ -1731,6 +1755,11 @@
       const unlockedAt = achievementsState.unlocked[def.id];
       const item = document.createElement("div");
       item.className = "achievement-item" + (unlockedAt ? " unlocked" : "");
+      if (unlockedAt) {
+        // Visa tamponné (style.css ::after content: attr(data-stamp)) :
+        // texte traduit, jamais en dur dans le CSS.
+        item.setAttribute("data-stamp", t("achievements.stampVisa"));
+      }
       const title = document.createElement("div");
       title.className = "achievement-title";
       title.innerHTML = `<span>${t(def.nameKey)}</span><span class="achievement-status">${t(unlockedAt ? "achievements.statusUnlocked" : "achievements.statusLocked")}</span>`;
@@ -2138,7 +2167,7 @@
         stats: {
           quality: gameState.stats.quality,
           footprint: gameState.stats.footprint,
-          imageVbs: gameState.stats.imageVbs
+          brandImage: gameState.stats.brandImage
         },
         buildings: gameState.buildings.map(b => ({
           id: b.id,
@@ -2161,7 +2190,7 @@
         stats: {
           quality: gameState.stats.quality,
           footprint: gameState.stats.footprint,
-          imageVbs: gameState.stats.imageVbs
+          brandImage: gameState.stats.brandImage
         },
         culturePoints: gameState.resources.culturePoints
       };

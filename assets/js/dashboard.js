@@ -61,7 +61,7 @@
       dps: snap.docPerSecond,
       quality: snap.stats.quality,
       footprint: snap.stats.footprint,
-      image: snap.stats.imageVbs
+      image: snap.stats.brandImage
     });
     if (samples.length > WINDOW_SIZE) samples.shift();
     render(snap);
@@ -279,7 +279,7 @@
       ["dashboard.kpi.culture", fmt(snap.culturePoints)],
       ["gauges.quality", Math.round(snap.stats.quality * 100) + " %"],
       ["gauges.footprint", Math.round(snap.stats.footprint * 100) + " %"],
-      ["gauges.image", Math.round(snap.stats.imageVbs * 100) + " %"]
+      ["gauges.image", Math.round(snap.stats.brandImage * 100) + " %"]
     ].concat(
       snap.buildings
         .filter(b => b.quantity > 0)
