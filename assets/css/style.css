@@ -7,36 +7,125 @@
     }
 
     :root {
+      /* ====================================================================
+         TOKENS SÉMANTIQUES « dusk print-works » — méthodologie shadcn/ui.
+         Règle d'or : chaque valeur est reprise TELLE QUELLE de la palette
+         existante (pas de conversion HSL arrondie : pixel-perfect garanti).
+         Architecture en 2 couches : primitives historiques (surchargées par
+         .sky-* et .pref-*) puis couche sémantique qui les référence — les
+         overrides sur :root continuent donc de fonctionner sans changement.
+         ==================================================================== */
+
+      /* --- Typo & rythme (existant, conservé tel quel) --- */
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --font-display: "Alfa Slab One", "Rockwell", "Courier New", serif;
       --text-base: clamp(14px, 1.4vw, 16px);
       --text-small: clamp(12px, 1.1vw, 14px);
       --heading-size: clamp(20px, 2.2vw, 26px);
       --heading-sub: clamp(16px, 1.7vw, 20px);
-      /* Design tokens — palette "usine au crépuscule" : neutres ardoise
-         teintés vers le violet du soir, or ambré en accent unique
-         (lumière du couchant = monnaie du jeu), crème papier pour les
-         moments de marque. Le violet des upgrades et le vert/rouge
-         sémantiques complètent sans concurrencer l'or. */
-      --bg-deep: #0b0617;
-      --bg-sky: #271c40;
-      --bg-panel: rgba(26, 18, 48, 0.92);
+
+      /* --- Primitives historiques (cibles des overrides .sky-dawn/.sky-day/.sky-night) --- */
+      --bg-deep: #0b0617;                 /* violet nuit profond */
+      --bg-sky: #271c40;                  /* haut du dégradé ciel */
+      --bg-panel: rgba(26, 18, 48, 0.92); /* utilisé par le gradient du .stage */
       --ink: #f9fafb;
-      --muted: #a79ec4;
-      --paper: #f6efe0;
-      --accent: #fbbf24;
-      --accent-ink: #2a1a03;
+      --paper: #f6efe0;                   /* crème papier — moments de marque */
+      --accent: #fbbf24;                  /* or ambré — monnaie du jeu */
       --accent-warm: #f59e0b;
+      --accent-ink: #2a1a03;
       --good: #22c55e;
       --bad: #f87171;
-      --border-soft: rgba(167, 158, 196, 0.2);
+
+      /* --- Surfaces --- */
+      --background: var(--bg-deep);            /* fond de page ; suit .sky-night */
+      --foreground: var(--ink);                /* texte par défaut (body) */
+      --card: rgba(26, 18, 48, 0.95);          /* panneau translucide : .card, .event-banner, .tag */
+      --card-foreground: #f8fafc;              /* slate-50, le texte-sur-carte dominant */
+      --popover: #1a1230;                      /* surfaces OPAQUES : dialogs, tutorial-card */
+      --popover-foreground: #f8fafc;
+      --control: rgba(26, 18, 48, 0.8);        /* fond de contrôle : god-mode, event-choice, select */
+      --control-soft: rgba(26, 18, 48, 0.7);   /* tabs, accessibility-panel, contract-card */
+      --control-ghost: rgba(26, 18, 48, 0.5);  /* icon-button */
+      --muted-foreground: #a79ec4;             /* lavande texte — reprend l'ex --muted */
+      --muted: var(--muted-foreground);        /* DEPRECATED (rôle texte). Après sweep complet de
+                                                  var(--muted), repointer sur var(--control-soft)
+                                                  pour retrouver le rôle « surface » de shadcn. */
+      --subtle-foreground: #9ca3af;            /* gris neutre : .subtitle, .building-meta/-qty.
+                                                  NE PAS fusionner avec --muted-foreground (lavande). */
+
+      /* --- Voiles & scrims — FIGÉS en littéraux : ne JAMAIS les dériver de
+             --bg-deep, sinon .sky-night (#070312) les décalerait. --- */
+      --overlay: rgba(11, 6, 23, 0.8);         /* .event-modal */
+      --overlay-strong: rgba(11, 6, 23, 0.85); /* .settings-modal */
+      --overlay-soft: rgba(11, 6, 23, 0.7);    /* .tutorial-overlay */
+      --scrim-header: rgba(11, 6, 23, 0.9);    /* .app-header */
+
+      /* --- Marque / actions --- */
+      --primary: var(--accent);                /* l'or = action premium */
+      --primary-bright: #fcd34d;               /* départ du dégradé CTA (.click-button) */
+      --primary-hot: #facc15;                  /* départ du dégradé prestige */
+      --primary-foreground: var(--accent-ink);
+      --primary-muted: rgba(251, 191, 36, 0.2);/* fond des tabs actives */
+      --secondary: #6366f1;                    /* indigo des boutons d'achat d'upgrades */
+      --secondary-foreground: #ffffff;
+      --warning: #f97316;                      /* orange partagé : fin dégradés prestige,
+                                                  god-mode actif, jauge .bad */
+
+      /* --- États sémantiques --- */
+      --success: var(--good);
+      --success-bright: #a3e635;               /* fin du dégradé de jauge */
+      --success-foreground: #022c22;           /* texte sur .btn-buy */
+      --destructive: var(--bad);
+      --destructive-strong: #ef4444;           /* départ jauge .bad */
+      --destructive-foreground: #fecaca;       /* texte .btn-slim.danger */
+      --disabled: #4b5563;
+      --disabled-foreground: #9ca3af;
+
+      /* --- Bordures : lavande, UNE référence + UNE forte.
+             Consolidation : 0.2 / 0.25 / 0.3 / 0.35 → 0.25 (référence)
+                             0.4 / 0.5 / 0.6        → 0.5  (forte)
+             Hairlines 1px sur fonds sombres : delta quasi invisible,
+             à valider par screenshot-diff (cf. risques). --- */
+      --border: rgba(167, 158, 196, 0.25);
+      --border-strong: rgba(167, 158, 196, 0.5);
+      --border-ink: rgba(248, 250, 252, 0.4);  /* variante slate : .btn-slim, minigame, tutorial */
+      --input: var(--border-strong);           /* alias shadcn pour selects/champs */
+      --border-soft: var(--border);            /* alias legacy (ex 0.2) — à balayer puis supprimer */
+
+      /* --- Focus ring unifié --- */
+      --ring: var(--accent);                   /* anneau or, 2px / offset 2px partout */
+      --ring-width: 2px;
+      --ring-offset: 2px;
+      --ring-contrast: var(--paper);           /* exception : surfaces or (.click-button),
+                                                  un anneau or y serait invisible */
+
+      /* --- Rayons --- */
+      --radius-sm: 6px;                        /* upgrade-item, .btn-slim */
+      --radius-md: 8px;                        /* contrôles standards, tooltips, panneaux */
+      --radius-lg: 12px;                       /* cartes, stage, dialogs d'événement */
+      --radius-xl: 16px;                       /* settings-dialog (évite la fusion 16→12) */
+      --radius-full: 999px;                    /* pills et cercles (remplace aussi 50% sur carrés) */
+
+      /* --- Ombres --- */
+      --shadow-card: 0 10px 30px rgba(26, 18, 48, 0.7);       /* .card, .stage, .event-banner */
+      --shadow-pop: 0 6px 12px rgba(11, 6, 23, 0.6);          /* .building-tooltip */
+      --shadow-modal: 0 25px 55px rgba(11, 6, 23, 0.8);       /* settings-dialog (event-dialog :
+                                                                 0 20px 45px, cf. risques) */
+      --shadow-primary: 0 10px 25px rgba(251, 191, 36, 0.35); /* CTA or au repos */
+      --shadow-primary-pressed: 0 5px 15px rgba(251, 191, 36, 0.25);
+
+      /* --- Pistes & cas figés --- */
+      --gauge-track: #0b0617;                  /* FIGÉ : ne pas mapper sur --background,
+                                                  sinon la piste suivrait .sky-night */
+
+      /* --- Layout & motion (existant, conservé) --- */
       --header-h: 64px;
-      /* Modal open/close motion (transitions-dev) */
       --modal-open-dur: 250ms;
       --modal-close-dur: 150ms;
       --modal-scale: 0.96;
       --modal-scale-close: 0.96;
       --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
       font-size: var(--text-base);
       color-scheme: dark;
     }
@@ -95,23 +184,26 @@
       overflow: hidden;
     }
 
+    /* Mode contraste élevé : zone GELÉE hors système de tokens (v1) —
+       seule factorisation : le jaune pâle en --hc-accent locale. */
     .pref-high-contrast,
     .pref-high-contrast body {
+      --hc-accent: #fef08a;
       background: #000;
       color: #fff;
     }
 
     .pref-high-contrast .card {
       background: #1a1230;
-      border-color: #fef08a;
+      border-color: var(--hc-accent);
       box-shadow: 0 0 0 2px rgba(254, 240, 138, 0.4);
     }
 
     .pref-high-contrast .btn-slim,
     .pref-high-contrast .btn-god-mode,
     .pref-high-contrast .btn-prestige {
-      border-color: #fef08a;
-      color: #fef08a;
+      border-color: var(--hc-accent);
+      color: var(--hc-accent);
     }
 
     .pref-high-contrast .btn-prestige {
@@ -120,8 +212,8 @@
     }
 
     .pref-high-contrast .tag {
-      border-color: #fef08a;
-      color: #fef08a;
+      border-color: var(--hc-accent);
+      color: var(--hc-accent);
     }
 
     .pref-reduce-motion *,
@@ -151,10 +243,10 @@
       position: absolute;
       left: -999px;
       top: -999px;
-      background: var(--accent);
-      color: #1a1230;
+      background: var(--primary);
+      color: #1a1230; /* encre sombre sur or, calibrée — hors tokens */
       padding: 8px 12px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       z-index: 999;
       font-weight: 600;
     }
@@ -181,8 +273,8 @@
       top: 0;
       width: 100%;
       z-index: 10;
-      background: rgba(11, 6, 23, 0.9);
-      border-bottom: 1px solid var(--border-soft);
+      background: var(--scrim-header);
+      border-bottom: 1px solid var(--border);
       backdrop-filter: blur(8px);
       padding: clamp(8px, 2vw, 14px) clamp(12px, 4vw, 24px);
       box-sizing: border-box;
@@ -195,14 +287,14 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(167, 158, 196, 0.25);
-      background: rgba(26, 18, 48, 0.95);
-      box-shadow: 0 10px 30px rgba(26, 18, 48, 0.7);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow-card);
       transition: transform 260ms ease, opacity 260ms ease;
       opacity: 0;
       transform: translateY(-12px);
-      color: #f8fafc;
+      color: var(--card-foreground);
     }
 
     .event-banner.banner-visible {
@@ -227,11 +319,11 @@
 
     .event-banner-close {
       border: none;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.08); /* voile blanc unique — hors tokens */
       color: inherit;
       width: 28px;
       height: 28px;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       display: grid;
       place-items: center;
       cursor: pointer;
@@ -330,7 +422,7 @@
 
     .header-tagline {
       font-size: var(--heading-sub);
-      color: var(--muted);
+      color: var(--muted-foreground);
     }
 
     @supports (padding: max(0px)) {
@@ -352,11 +444,11 @@
       margin: 16px auto 0;
       padding: 0;
       aspect-ratio: 21 / 9;
-      border-radius: 12px;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       background: linear-gradient(180deg, rgba(39, 28, 64, 0.6), var(--bg-panel));
-      border: 1px solid var(--border-soft);
-      box-shadow: 0 10px 30px rgba(26, 18, 48, 0.7);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
     }
 
     .stage canvas {
@@ -415,7 +507,7 @@
     .stage-fallback-text {
       margin: 0 0 6px;
       font-size: var(--text-small);
-      color: var(--muted);
+      color: var(--muted-foreground);
       text-align: center;
     }
 
@@ -429,10 +521,10 @@
       z-index: 2;
       max-width: min(75%, 440px);
       padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(11, 6, 23, 0.72);
-      border: 1px solid var(--border-soft);
-      color: #cfc8e4;
+      border-radius: var(--radius-full);
+      background: rgba(11, 6, 23, 0.72); /* scrim du ticker, opacité unique — hors tokens */
+      border: 1px solid var(--border);
+      color: #cfc8e4; /* lavande claire unique en son genre — hors tokens */
       font-size: var(--text-small);
       line-height: 1.4;
       pointer-events: none;
@@ -449,7 +541,7 @@
 
     .pref-high-contrast .stage {
       background: #000;
-      border-color: #fef08a;
+      border-color: var(--hc-accent);
     }
 
     :root[data-scene-enabled="0"] .stage {
@@ -466,11 +558,11 @@
     }
 
     .card {
-      background: rgba(26, 18, 48, 0.95);
-      border-radius: 12px;
+      background: var(--card);
+      border-radius: var(--radius-lg);
       padding: 12px 14px;
-      box-shadow: 0 10px 30px rgba(26, 18, 48, 0.7);
-      border: 1px solid rgba(167, 158, 196, 0.25);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
       backdrop-filter: blur(10px);
     }
 
@@ -486,22 +578,22 @@
     }
 
     h2 {
-      border-bottom: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border);
       padding-bottom: 4px;
       margin-bottom: 6px;
     }
 
     .subtitle {
       font-size: var(--heading-sub);
-      color: #9ca3af;
+      color: var(--subtle-foreground);
       line-height: 1.3;
     }
 
     .lang-select {
-      background: rgba(26, 18, 48, 0.85);
-      border: 1px solid rgba(167, 158, 196, 0.4);
-      border-radius: 8px;
-      color: var(--ink);
+      background: var(--control);
+      border: 1px solid var(--input);
+      border-radius: var(--radius-md);
+      color: var(--foreground);
       padding: 4px 8px;
       font-size: var(--text-base);
       min-width: 72px;
@@ -521,7 +613,7 @@
     }
 
     .stat-label {
-      color: #e5e7eb;
+      color: #e5e7eb; /* nuance unique, hors système — candidat v2 */
     }
 
     .stat-value {
@@ -538,14 +630,14 @@
       width: 100%;
       margin-top: 10px;
       padding: 10px;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       border: none;
-      background: linear-gradient(135deg, #fcd34d, var(--accent-warm));
-      color: var(--accent-ink);
+      background: linear-gradient(135deg, var(--primary-bright), var(--accent-warm));
+      color: var(--primary-foreground);
       font-size: var(--text-base);
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 10px 25px rgba(251, 191, 36, 0.35);
+      box-shadow: var(--shadow-primary);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -558,9 +650,11 @@
     .click-button:active,
     .click-button:focus-visible {
       transform: translateY(1px) scale(0.99);
-      box-shadow: 0 5px 15px rgba(251, 191, 36, 0.25);
+      box-shadow: var(--shadow-primary-pressed);
       opacity: 0.95;
-      outline: 2px solid var(--paper);
+      /* Exception au ring or unifié : anneau crème sur surface or,
+         offset 3px — un anneau or y serait invisible. */
+      outline: var(--ring-width) solid var(--ring-contrast);
       outline-offset: 3px;
     }
 
@@ -612,10 +706,10 @@
       position: relative;
       width: 100%;
       height: 6px;
-      border-radius: 999px;
-      background: #0b0617;
+      border-radius: var(--radius-full);
+      background: var(--gauge-track);
       overflow: hidden;
-      border: 1px solid rgba(167, 158, 196, 0.5);
+      border: 1px solid var(--border-strong);
     }
 
     .gauge-fill {
@@ -623,14 +717,14 @@
       height: 100%;
       left: 0;
       top: 0;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #22c55e, #a3e635);
+      border-radius: var(--radius-full);
+      background: linear-gradient(90deg, var(--success), var(--success-bright));
       width: 0;
       transition: width 0.15s linear;
     }
 
     .gauge-fill.bad {
-      background: linear-gradient(90deg, #ef4444, #f97316);
+      background: linear-gradient(90deg, var(--destructive-strong), var(--warning));
     }
 
     .layout-column {
@@ -675,19 +769,19 @@
 
 .btn-god-mode {
       padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(167, 158, 196, 0.5);
-      background: rgba(26, 18, 48, 0.8);
-      color: var(--ink);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-strong);
+      background: var(--control);
+      color: var(--foreground);
       cursor: pointer;
       font-weight: 600;
       transition: background 0.1s ease, color 0.1s ease;
     }
 
     .btn-god-mode.active {
-      background: linear-gradient(135deg, #f97316, #fb923c);
+      background: linear-gradient(135deg, var(--warning), #fb923c);
       border-color: transparent;
-      color: #1a1230;
+      color: #1a1230; /* encre sombre sur orange (valeur de --popover utilisée en encre) — hors tokens */
     }
 
     .building-name-button {
@@ -695,7 +789,7 @@
       font-size: var(--text-base);
       background: none;
       border: none;
-      color: #f8fafc;
+      color: var(--card-foreground);
       padding: 0;
       cursor: pointer;
       text-align: left;
@@ -704,10 +798,10 @@
       align-items: flex-start;
     }
 
+    /* L'anneau vient de la règle :focus-visible unifiée ; on ne garde ici
+       que l'arrondi pour que l'outline épouse le bouton. */
     .building-name-button:focus-visible {
-      outline: 2px solid rgba(251, 191, 36, 0.9);
-      outline-offset: 2px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
     }
 
     .building-emoji {
@@ -730,23 +824,23 @@
     .building-tooltip {
       margin-top: 6px;
       padding: 6px 8px;
-      border-radius: 8px;
-      background: rgba(26, 18, 48, 0.9);
-      border: 1px solid rgba(167, 158, 196, 0.35);
-      color: #f8fafc;
+      border-radius: var(--radius-md);
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--card-foreground);
       font-size: var(--text-base);
-      box-shadow: 0 6px 12px rgba(11, 6, 23, 0.6);
+      box-shadow: var(--shadow-pop);
       animation: fadeIn 0.15s ease;
     }
 
     .building-qty {
       font-size: var(--text-base);
-      color: #9ca3af;
+      color: var(--subtle-foreground);
     }
 
     .building-meta {
       font-size: var(--text-base);
-      color: #9ca3af;
+      color: var(--subtle-foreground);
     }
 
     .building-buy {
@@ -758,28 +852,36 @@
     }
 
     .btn-buy {
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       border: none;
       padding: 4px 8px;
       font-size: var(--text-base);
       cursor: pointer;
-      background: #22c55e;
-      color: #022c22;
+      background: var(--success);
+      color: var(--success-foreground);
       font-weight: 600;
       transition: filter 0.1s ease, transform 0.05s ease, opacity 0.15s ease;
       white-space: nowrap;
     }
 
-    .btn-buy.disabled {
-      background: #4b5563;
-      color: #9ca3af;
+    /* État désactivé partagé (fusion des trois .disabled). Le prestige
+       conserve son opacité historique 0.7 via la règle dédiée dessous. */
+    .btn-buy.disabled,
+    .btn-upgrade.disabled,
+    .btn-prestige.disabled {
+      background: var(--disabled);
+      color: var(--disabled-foreground);
       cursor: not-allowed;
       opacity: 0.6;
     }
 
+    .btn-prestige.disabled {
+      opacity: 0.7;
+    }
+
     .building-placeholder {
       font-size: var(--text-base);
-      color: var(--muted);
+      color: var(--muted-foreground);
       text-align: center;
       padding: 8px 0;
     }
@@ -803,7 +905,7 @@
     .small {
       font-size: var(--text-small);
       line-height: 1.4;
-      color: var(--muted);
+      color: var(--muted-foreground);
     }
 
     .section {
@@ -825,8 +927,8 @@
 
     .upgrade-item {
       font-size: var(--text-base);
-      border-radius: 6px;
-      border: 1px solid rgba(167, 158, 196, 0.35);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
       padding: 4px 6px;
       display: flex;
       justify-content: space-between;
@@ -841,27 +943,21 @@
     }
 
     .btn-upgrade {
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       border: none;
       padding: 4px 10px;
       font-size: var(--text-base);
       cursor: pointer;
-      background: #6366f1;
-      color: white;
+      background: var(--secondary);
+      color: var(--secondary-foreground);
       font-weight: 600;
       white-space: nowrap;
     }
 
-    .btn-upgrade.disabled {
-      background: #4b5563;
-      color: #9ca3af;
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
     .prestige-card {
       margin-top: 6px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
+      /* Or ambré brûlé propre à la carte prestige — hors tokens */
       border: 1px dashed rgba(252, 211, 77, 0.8);
       padding: 6px;
       font-size: var(--text-base);
@@ -877,10 +973,10 @@
       margin-top: 4px;
       width: 100%;
       padding: 5px;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       border: none;
-      background: linear-gradient(135deg, #facc15, #f97316);
-      color: #111827;
+      background: linear-gradient(135deg, var(--primary-hot), var(--warning));
+      color: #111827; /* contraste calibré sur le dégradé, distinct de --primary-foreground */
       font-weight: 700;
       cursor: pointer;
       font-size: var(--text-base);
@@ -892,19 +988,26 @@
       position: relative;
     }
 
+    /* Focus ring unifié : anneau or identique pour tous les contrôles.
+       Exception : .click-button (surface or) garde son anneau crème
+       --ring-contrast offset 3px, défini avec ses états plus haut. */
     .btn-slim:focus-visible,
     .btn-god-mode:focus-visible,
     .btn-prestige:focus-visible,
-    .lang-select:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .btn-prestige.disabled {
-      background: #4b5563;
-      color: #9ca3af;
-      cursor: not-allowed;
-      opacity: 0.7;
+    .btn-buy:focus-visible,
+    .btn-upgrade:focus-visible,
+    .tab-btn:focus-visible,
+    .settings-tab:focus-visible,
+    .event-choice-btn:focus-visible,
+    .minigame-buttons button:focus-visible,
+    .icon-button:focus-visible,
+    .event-banner-close:focus-visible,
+    .modal-close:focus-visible,
+    .lang-select:focus-visible,
+    .building-name-button:focus-visible,
+    .accessibility-panel summary:focus-visible {
+      outline: var(--ring-width) solid var(--ring);
+      outline-offset: var(--ring-offset);
     }
 
     .log-panel {
@@ -925,10 +1028,10 @@
       align-items: center;
       gap: 3px;
       padding: 1px 6px;
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       font-size: var(--text-small);
-      border: 1px solid rgba(167, 158, 196, 0.6);
-      background: rgba(26, 18, 48, 0.95);
+      border: 1px solid var(--border-strong);
+      background: var(--card);
     }
 
     .progress-card,
@@ -950,15 +1053,24 @@
       flex-wrap: wrap;
     }
 
-    .btn-slim {
-      border: 1px solid rgba(248, 250, 252, 0.4);
-      background: transparent;
-      color: #f8fafc;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: var(--text-small);
+    /* Famille « outline button » : base commune, variantes slate
+       (.btn-slim, .minigame-buttons button) et lavande (.event-choice-btn)
+       déclarées à leur emplacement respectif. Le focus ring vient de la
+       règle :focus-visible unifiée. */
+    .btn-slim,
+    .event-choice-btn,
+    .minigame-buttons button {
       cursor: pointer;
       transition: background 0.1s ease;
+    }
+
+    .btn-slim {
+      border: 1px solid var(--border-ink);
+      background: transparent;
+      color: var(--card-foreground);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-small);
     }
 
     .btn-slim:hover {
@@ -966,8 +1078,8 @@
     }
 
     .btn-slim.danger {
-      border-color: rgba(248, 113, 113, 0.8);
-      color: #fecaca;
+      border-color: rgba(248, 113, 113, 0.8); /* alpha spécifique — hors tokens */
+      color: var(--destructive-foreground);
     }
 
 .achievements-list {
@@ -981,8 +1093,8 @@
     }
 
     .achievement-item {
-      border-radius: 8px;
-      border: 1px solid rgba(167, 158, 196, 0.3);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
       padding: 6px 8px;
       font-size: var(--text-small);
       display: flex;
@@ -991,6 +1103,7 @@
     }
 
     .achievement-item.unlocked {
+      /* Verts d'état spécifiques (green-400/600) — hors tokens en v1 */
       border-color: rgba(74, 222, 128, 0.7);
       background: rgba(22, 163, 74, 0.1);
     }
@@ -1004,14 +1117,15 @@
 
 .achievement-status {
       font-size: var(--text-small);
-      color: var(--muted);
+      color: var(--muted-foreground);
     }
 
     .icon-button {
-      border: 1px solid rgba(167, 158, 196, 0.4);
-      background: rgba(26, 18, 48, 0.5);
-      color: #f8fafc;
-      border-radius: 50%;
+      border: 1px solid var(--border-strong);
+      background: var(--control-ghost);
+      color: var(--card-foreground);
+      /* 50% ≡ radius-full sur ce carré 32×32 */
+      border-radius: var(--radius-full);
       width: 32px;
       height: 32px;
       display: inline-flex;
@@ -1076,7 +1190,7 @@
     .settings-modal {
       position: fixed;
       inset: 0;
-      background: rgba(11, 6, 23, 0.85);
+      background: var(--overlay-strong);
       z-index: 60;
       display: flex;
       align-items: center;
@@ -1089,11 +1203,11 @@
 
     .settings-dialog {
       width: min(95vw, 520px);
-      background: #1a1230;
-      border: 1px solid rgba(167, 158, 196, 0.5);
-      border-radius: 16px;
+      background: var(--popover);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
       padding: 16px;
-      box-shadow: 0 25px 55px rgba(11, 6, 23, 0.8);
+      box-shadow: var(--shadow-modal);
     }
 
     .settings-dialog-header {
@@ -1115,20 +1229,24 @@
       margin-bottom: 12px;
     }
 
-    .settings-tab {
+    /* Onglet pilule partagé : .settings-tab (dialog réglages) et .tab-btn
+       (carte à onglets) avaient la même recette dupliquée — fusion. */
+    .settings-tab,
+    .tab-btn {
       flex: 1;
-      border-radius: 999px;
-      border: 1px solid rgba(167, 158, 196, 0.4);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-strong);
       padding: 6px;
-      background: rgba(26, 18, 48, 0.7);
-      color: #f8fafc;
+      background: var(--control-soft);
+      color: var(--card-foreground);
       cursor: pointer;
       font-size: var(--text-small);
     }
 
-    .settings-tab.active {
-      background: rgba(251, 191, 36, 0.2);
-      border-color: var(--accent);
+    .settings-tab.active,
+    .tab-btn.active {
+      background: var(--primary-muted);
+      border-color: var(--primary);
     }
 
     .settings-section {
@@ -1145,7 +1263,7 @@
     .tutorial-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(11, 6, 23, 0.7);
+      background: var(--overlay-soft);
       z-index: 70;
       display: flex;
       /* Carte ancrée en bas : le tutoriel scrolle chaque cible au centre du
@@ -1162,9 +1280,9 @@
     }
 
     .tutorial-card {
-      background: #1a1230;
-      border: 1px solid rgba(248, 250, 252, 0.3);
-      border-radius: 12px;
+      background: var(--popover);
+      border: 1px solid var(--border-ink);
+      border-radius: var(--radius-lg);
       padding: 16px;
       width: min(90vw, 400px);
       pointer-events: auto;
@@ -1174,7 +1292,7 @@
       font-size: var(--text-small);
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--muted-foreground);
       margin-bottom: 6px;
     }
 
@@ -1265,7 +1383,7 @@
     .event-modal {
       position: fixed;
       inset: 0;
-      background: rgba(11, 6, 23, 0.8);
+      background: var(--overlay);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1277,12 +1395,13 @@
     }
 
     .event-dialog {
-      background: #1a1230;
-      border: 1px solid rgba(167, 158, 196, 0.5);
-      border-radius: 12px;
+      background: var(--popover);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
       width: min(90vw, 420px);
       padding: 16px;
       position: relative;
+      /* Ombre propre à ce dialog, plus courte que --shadow-modal — v1 littéral */
       box-shadow: 0 20px 45px rgba(11, 6, 23, 0.7);
     }
 
@@ -1292,7 +1411,7 @@
       right: 8px;
       border: none;
       background: transparent;
-      color: var(--muted);
+      color: var(--muted-foreground);
       font-size: 20px;
       cursor: pointer;
     }
@@ -1304,21 +1423,22 @@
       margin-top: 12px;
     }
 
+    /* Variante lavande de la famille outline (base commune avec .btn-slim). */
     .event-choice-btn {
-      border: 1px solid rgba(167, 158, 196, 0.4);
-      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
       padding: 10px;
       text-align: left;
-      background: rgba(26, 18, 48, 0.8);
-      color: #e2e8f0;
-      cursor: pointer;
+      background: var(--control);
+      color: var(--card-foreground);
       font-size: var(--text-small);
     }
 
     .event-choice-btn:hover,
     .event-choice-btn:focus-visible {
+      /* Seul bleu du fichier — v1 littéral, candidat --secondary alpha en v2.
+         Le focus clavier reçoit désormais aussi le ring or unifié. */
       background: rgba(59, 130, 246, 0.2);
-      outline: none;
     }
 
     .event-result {
@@ -1341,27 +1461,27 @@
       margin-top: 8px;
     }
 
+    /* Variante slate de la famille outline (base commune avec .btn-slim). */
     .minigame-buttons button {
       flex: 1;
-      border: 1px solid rgba(248, 250, 252, 0.4);
-      border-radius: 8px;
+      border: 1px solid var(--border-ink);
+      border-radius: var(--radius-md);
       padding: 8px 0;
-      background: rgba(26, 18, 48, 0.9);
-      color: #f8fafc;
-      cursor: pointer;
+      background: var(--control);
+      color: var(--card-foreground);
     }
 
     .accessibility-panel {
-      border: 1px solid rgba(167, 158, 196, 0.3);
-      border-radius: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       padding: 4px 8px;
-      background: rgba(26, 18, 48, 0.7);
+      background: var(--control-soft);
     }
 
+    /* Le focus clavier est signalé par la règle :focus-visible unifiée. */
     .accessibility-panel summary {
       font-weight: 600;
       cursor: pointer;
-      outline: none;
     }
 
     .accessibility-options {
@@ -1384,21 +1504,7 @@
       margin-bottom: 8px;
     }
 
-    .tab-btn {
-      flex: 1;
-      border: 1px solid rgba(167, 158, 196, 0.4);
-      border-radius: 999px;
-      padding: 6px;
-      background: rgba(26, 18, 48, 0.7);
-      color: #f8fafc;
-      cursor: pointer;
-      font-size: var(--text-small);
-    }
-
-    .tab-btn.active {
-      background: rgba(251, 191, 36, 0.2);
-      border-color: var(--accent);
-    }
+    /* .tab-btn : voir la règle « onglet pilule » partagée avec .settings-tab. */
 
     .tab-panel.hidden {
       display: none;
@@ -1414,10 +1520,10 @@
     }
 
     .contract-card {
-      border: 1px solid rgba(167, 158, 196, 0.35);
-      border-radius: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px; /* rayon intermédiaire conservé (10→8 serait visible) */
       padding: 8px;
-      background: rgba(26, 18, 48, 0.7);
+      background: var(--control-soft);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -1426,7 +1532,7 @@
     .contract-requirements,
     .active-contract {
       font-size: var(--text-small);
-      color: var(--muted);
+      color: var(--muted-foreground);
     }
 
     .contract-actions {
