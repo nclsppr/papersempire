@@ -31,10 +31,13 @@ Palette de référence :
 | Nuit de l'atelier | `--bg-sky` / `--bg-deep` | `#271c40` / `#0b0617` |
 
 Règles clés :
-- **Aucun emoji dans le chrome** (titres, boutons, jauges, footer, libellés) :
-  l'iconographie passe par les stickers, tampons et SVG encrés générés
-  (`images-todo.md`). Les emojis dynamiques du système d'événements sont
-  tolérés en attendant leurs illustrations dédiées.
+- **Pas d'emoji dans le chrome d'action et de structure** (boutons, footer,
+  navigation, titres de colonnes, jauges, hauts faits) : l'iconographie y
+  passe par les stickers, tampons et SVG encrés générés (`images-todo.md`).
+  **Exception : les surfaces de données** — les compteurs du panneau de stats
+  et le tableau de bord (titre + tuiles KPI) gardent leurs emojis, qui y
+  apportent de la lisibilité ludique sans casser la hiérarchie. Les emojis
+  dynamiques des événements sont tolérés en attendant leurs illustrations.
 - **Le kraft est un accent, jamais un fond de contrôle** : liserés
   (`--kraft-deep`), bordures, étiquettes. Les contrôles secondaires (onglets,
   navigation) vivent en `--paper-shade` ; seuls les boutons d'ACTION portent
