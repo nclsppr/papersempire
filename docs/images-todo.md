@@ -45,18 +45,19 @@ blason) sont générés sur blanc pur puis passés au chroma-key PIL.
 Style commun : `small round rubber stamp badge, distressed sepia ink #33261a on
 transparent background, simple pictogram in the center, thin double border,
 flat 2D, slightly uneven ink coverage`. Le visa rouge « débloqué » reste en CSS.
+Étendu aux 16 hauts faits (les 11 de la 0.15 inclus) — tous générés et installés.
 
-- [ ] `achievement-firstDoc.png` — pictogramme : a single sheet of paper
-- [ ] `achievement-hundredDocs.png` — pictogramme : a small stack of paper sheets
-- [ ] `achievement-thousandDocs.png` — pictogramme : a tall pile of paper reaching upward
-- [ ] `achievement-firstBuilding.png` — pictogramme : a tiny factory silhouette
-- [ ] `achievement-firstPrestige.png` — pictogramme : a crown over a swirling arrow
+- [x] `achievement-firstDoc.png` — pictogramme : a single sheet of paper
+- [x] `achievement-hundredDocs.png` — pictogramme : a small stack of paper sheets
+- [x] `achievement-thousandDocs.png` — pictogramme : a tall pile of paper reaching upward
+- [x] `achievement-firstBuilding.png` — pictogramme : a tiny factory silhouette
+- [x] `achievement-firstPrestige.png` — pictogramme : a crown over a swirling arrow
 
 ## Priorité 4 — headers et key art
 
-- [ ] `key-art.webp` (1200×630 — future carte sociale illustrée, remplacera la capture)
+- [x] `key-art` — livré : recadré en 1200×630 et installé comme `social-card.jpg` (les balises og/JSON-LD pointaient déjà dessus)
       Wide key art: the lowpoly printing campus diorama at dusk seen from above, purple night sky #271c40 fading to #0b0617, warm golden windows, in the foreground a giant cream paper sheet and a red rubber stamp mid-air about to stamp, dramatic but playful, no characters' faces, flat lowpoly 3D style matching a three.js diorama
-- [ ] `docs-header.webp` (1600×400 — bandeau du site de docs)
+- [x] `docs-header.webp` (1600×400, stocké dans assets/images/ — intégration au site docs à faire)
       Wide banner: a flat lay of cream and kraft paper sheets, a rubber stamp, paper clips and a golden coin scattered on a dusk-purple desk surface #271c40, top-down scan aesthetic, calm composition with empty space in the middle for overlaid text
 
 ## Plus tard (si la feature arrive)
