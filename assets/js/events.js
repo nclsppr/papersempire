@@ -3,6 +3,94 @@
   const MIN_COOLDOWN = 45;
   const definitions = [
     {
+      id: "paperShortage",
+      type: "choice",
+      titleKey: "events.paperShortage.title",
+      descriptionKey: "events.paperShortage.desc",
+      choices: [
+        {
+          id: "premium",
+          labelKey: "events.paperShortage.choice.premium",
+          resultKey: "events.paperShortage.result.premium",
+          tone: "positive",
+          effect(gameState) {
+            const cost = gameState.resources.docBank * 0.15;
+            gameState.resources.docBank = Math.max(0, gameState.resources.docBank - cost);
+            gameState.stats.quality = Math.min(1, gameState.stats.quality + 0.06);
+            gameState.stats.footprint = Math.min(1, gameState.stats.footprint + 0.05);
+          }
+        },
+        {
+          id: "recycled",
+          labelKey: "events.paperShortage.choice.recycled",
+          resultKey: "events.paperShortage.result.recycled",
+          tone: "neutral",
+          effect(gameState) {
+            gameState.stats.footprint = Math.max(0, gameState.stats.footprint - 0.08);
+            gameState.stats.quality = Math.max(0, gameState.stats.quality - 0.04);
+          }
+        }
+      ]
+    },
+    {
+      id: "influencerVisit",
+      type: "choice",
+      titleKey: "events.influencerVisit.title",
+      descriptionKey: "events.influencerVisit.desc",
+      choices: [
+        {
+          id: "redCarpet",
+          labelKey: "events.influencerVisit.choice.redCarpet",
+          resultKey: "events.influencerVisit.result.redCarpet",
+          tone: "positive",
+          effect(gameState) {
+            const cost = gameState.resources.docBank * 0.15;
+            gameState.resources.docBank = Math.max(0, gameState.resources.docBank - cost);
+            gameState.stats.brandImage = Math.min(1, gameState.stats.brandImage + 0.08);
+          }
+        },
+        {
+          id: "decline",
+          labelKey: "events.influencerVisit.choice.decline",
+          resultKey: "events.influencerVisit.result.decline",
+          tone: "neutral",
+          effect(gameState) {
+            gameState.stats.brandImage = Math.max(0, gameState.stats.brandImage - 0.03);
+            gameState.stats.quality = Math.min(1, gameState.stats.quality + 0.02);
+          }
+        }
+      ]
+    },
+    {
+      id: "greenAudit",
+      type: "choice",
+      titleKey: "events.greenAudit.title",
+      descriptionKey: "events.greenAudit.desc",
+      choices: [
+        {
+          id: "invest",
+          labelKey: "events.greenAudit.choice.invest",
+          resultKey: "events.greenAudit.result.invest",
+          tone: "positive",
+          effect(gameState) {
+            const cost = gameState.resources.docBank * 0.2;
+            gameState.resources.docBank = Math.max(0, gameState.resources.docBank - cost);
+            gameState.stats.footprint = Math.max(0, gameState.stats.footprint - 0.1);
+          }
+        },
+        {
+          id: "postpone",
+          labelKey: "events.greenAudit.choice.postpone",
+          resultKey: "events.greenAudit.result.postpone",
+          tone: "negative",
+          effect(gameState) {
+            gameState.stats.footprint = Math.min(1, gameState.stats.footprint + 0.06);
+            gameState.stats.brandImage = Math.max(0, gameState.stats.brandImage - 0.03);
+          }
+        }
+      ]
+    },
+    {
       id: "machineBreakdown",
       type: "choice",
       titleKey: "events.machineBreakdown.title",

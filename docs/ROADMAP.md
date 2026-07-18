@@ -33,9 +33,9 @@ mots, et gratifiant quand on revient.
 - **0.16 — Matière graphique** : intégration des assets générés
   (`images-todo.md`) — EN ATTENTE d'une clé OpenAI valide (l'actuelle est
   rejetée par l'API).
-- **0.17 — Contenu mid-game, tranche 2** : nouveaux contrats, événements
-  illustrés, équilibrage de la courbe entre la presse numérique et le
-  prestige.
+- **0.17 — Contenu mid-game, tranche 2** : ✅ livré. Contrats t5-t8 jusqu'au
+  Recensement national (1M), 3 événements, chiffres arbitrés ; l'équilibrage
+  fin de la courbe reste à observer en jeu réel.
 - **0.18 — La scène 3D rejoint l'atelier** (demande du 2026-07-18) : refonte
   visuelle du diorama three.js pour qu'il aille avec « Atelier tamponné »,
   plus joli et plus fun :

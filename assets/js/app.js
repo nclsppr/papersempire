@@ -401,6 +401,8 @@
     DOM.contractsPanel = document.getElementById("contractsPanel");
     DOM.journalPanel = document.getElementById("journalPanel");
     DOM.rerollContractsBtn = document.getElementById("rerollContractsBtn");
+    DOM.contractsList = document.getElementById("contractsList");
+    DOM.activeContractPanel = document.getElementById("activeContractPanel");
     DOM.godModeCard = document.getElementById("godModeCard");
     DOM.godModeStatus = document.getElementById("godModeStatus");
     DOM.achievementsList = document.getElementById("achievementsList");
@@ -2193,6 +2195,10 @@
     contractsState.unlocked = unlocked;
     updateContractsTabVisibility(unlocked);
     switchDetailTab(unlocked ? "contracts" : "journal");
+    // Le déblocage peut arriver APRÈS le premier rendu (sauvegarde chargée
+    // au-dessus du seuil) : sans repaint ici, la liste restait vide jusqu'à
+    // un changement de langue ou un reroll manuel.
+    renderContractsPanel();
   }
 
   function updateContractsTabVisibility(unlocked) {

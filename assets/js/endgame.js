@@ -12,7 +12,15 @@
       "contracts.crossMedia.name": "Cross-media campaign",
       "contracts.crossMedia.desc": "Sync print, email and SMS waves for a premium banking launch.",
       "contracts.governancePack.name": "Governance report pack",
-      "contracts.governancePack.desc": "Print, bind and personalise board reports with audit-proof tracking."
+      "contracts.governancePack.desc": "Print, bind and personalise board reports with audit-proof tracking.",
+      "contracts.tradeFair.name": "Trade fair kit",
+      "contracts.tradeFair.desc": "Brochures, roll-up banners and branded pens: everything ends up in a tote bag, then in a drawer.",
+      "contracts.electionPack.name": "Election pack",
+      "contracts.electionPack.desc": "Candidate leaflets and ballot papers for a local election: the deadline is set by law, not by the client.",
+      "contracts.annualReports.name": "Annual report season",
+      "contracts.annualReports.desc": "The whole stock index orders its annual reports: glossy paper, cautious optimism, guaranteed tonnage.",
+      "contracts.nationalCensus.name": "National census",
+      "contracts.nationalCensus.desc": "Millions of official forms, each printed in triplicate, one copy going straight to the archives."
     },
     fr: {
       "contracts.requirementsNotMet": "Tu ne respectes pas encore les exigences de ce contrat premium.",
@@ -24,7 +32,15 @@
       "contracts.crossMedia.name": "Campagne cross-média",
       "contracts.crossMedia.desc": "Synchroniser print, e-mail et SMS pour un lancement bancaire premium.",
       "contracts.governancePack.name": "Pack rapport de gouvernance",
-      "contracts.governancePack.desc": "Imprimer, relier et personnaliser les rapports CA avec traçabilité audit."
+      "contracts.governancePack.desc": "Imprimer, relier et personnaliser les rapports CA avec traçabilité audit.",
+      "contracts.tradeFair.name": "Kit salon B2B",
+      "contracts.tradeFair.desc": "Brochures, roll-ups et stylos floqués : tout finira dans un tote bag, puis dans un tiroir.",
+      "contracts.electionPack.name": "Pack électoral",
+      "contracts.electionPack.desc": "Professions de foi et bulletins pour les municipales : la date limite est fixée par la loi, pas par le client.",
+      "contracts.annualReports.name": "Saison des rapports",
+      "contracts.annualReports.desc": "Tout l'indice boursier commande ses rapports annuels : papier glacé, optimisme prudent, tonnage garanti.",
+      "contracts.nationalCensus.name": "Recensement national",
+      "contracts.nationalCensus.desc": "Des millions de formulaires officiels, chacun en trois exemplaires, dont un directement pour les archives."
     },
     de: {
       "contracts.requirementsNotMet": "Die Anforderungen für diesen Premium-Vertrag sind noch nicht erfüllt.",
@@ -36,7 +52,15 @@
       "contracts.crossMedia.name": "Cross-Media-Kampagne",
       "contracts.crossMedia.desc": "Print-, Mail- und SMS-Wellen für einen Premium-Bankenlaunch synchronisieren.",
       "contracts.governancePack.name": "Governance-Report-Paket",
-      "contracts.governancePack.desc": "Vorstandsberichte drucken, binden und personalisieren – revisionssicher."
+      "contracts.governancePack.desc": "Vorstandsberichte drucken, binden und personalisieren – revisionssicher.",
+      "contracts.tradeFair.name": "B2B-Messepaket",
+      "contracts.tradeFair.desc": "Broschüren, Roll-ups und bedruckte Kulis: alles landet erst im Jutebeutel und dann in der Schublade.",
+      "contracts.electionPack.name": "Wahlpaket",
+      "contracts.electionPack.desc": "Wahlprospekte und Stimmzettel für die Kommunalwahl: die Frist steht im Gesetz, nicht im Vertrag.",
+      "contracts.annualReports.name": "Geschäftsberichts-Saison",
+      "contracts.annualReports.desc": "Der ganze Aktienindex bestellt Geschäftsberichte: Hochglanzpapier, vorsichtiger Optimismus, garantierte Tonnage.",
+      "contracts.nationalCensus.name": "Volkszählung",
+      "contracts.nationalCensus.desc": "Millionen amtliche Formulare, jedes in dreifacher Ausfertigung, eines davon direkt fürs Archiv."
     },
     lb: {
       "contracts.requirementsNotMet": "D'Ufuerderunge fir dëse Premium-Kontrakt sinn nach net erfëllt.",
@@ -48,7 +72,15 @@
       "contracts.crossMedia.name": "Cross-Media-Campagne",
       "contracts.crossMedia.desc": "Dréck, E-Mail an SMS fir e Premium-Bankenlaunch ofstëmmen.",
       "contracts.governancePack.name": "Governance-Report-Paket",
-      "contracts.governancePack.desc": "Berichter drécken, bënnen a personaliséieren mat Audit-Tracking."
+      "contracts.governancePack.desc": "Berichter drécken, bënnen a personaliséieren mat Audit-Tracking.",
+      "contracts.tradeFair.name": "B2B-Foire-Pak",
+      "contracts.tradeFair.desc": "Brochuren, Roll-ups a Bice mam Logo: alles geet fir d'éischt an de Stoffbeidel an duerno an den Tirang.",
+      "contracts.electionPack.name": "Gemengewalen-Pak",
+      "contracts.electionPack.desc": "Walprogrammer a Stëmmziedele fir d'Gemengewalen: den Delai steet am Gesetz, net am Kontrakt.",
+      "contracts.annualReports.name": "Joresrapport-Saison",
+      "contracts.annualReports.desc": "De ganzen Index bestellt seng Joresrapporten: Glanzpabeier, virsiichtegen Optimismus a garantéiert Tonnen.",
+      "contracts.nationalCensus.name": "Nationale Recensement",
+      "contracts.nationalCensus.desc": "Milliounen offiziell Formulairen, all an dräi Exemplairen, een dovun direkt fir d'Archiv."
     }
   };
 
@@ -120,6 +152,43 @@
         cc: 1800,
         cards: 5
       }
+    }
+,
+    {
+      id: "tradeFair",
+      nameKey: "contracts.tradeFair.name",
+      descKey: "contracts.tradeFair.desc",
+      minDocTotal: 40000,
+      duration: 180,
+      requirements: { quality: 0.78, image: 0.72, volume: 45000 },
+      reward: { doc: 40000, cc: 6000, cards: 7 }
+    },
+    {
+      id: "electionPack",
+      nameKey: "contracts.electionPack.name",
+      descKey: "contracts.electionPack.desc",
+      minDocTotal: 120000,
+      duration: 220,
+      requirements: { quality: 0.8, image: 0.74, volume: 140000 },
+      reward: { doc: 120000, cc: 18000, cards: 9 }
+    },
+    {
+      id: "annualReports",
+      nameKey: "contracts.annualReports.name",
+      descKey: "contracts.annualReports.desc",
+      minDocTotal: 400000,
+      duration: 260,
+      requirements: { quality: 0.82, image: 0.77, volume: 450000 },
+      reward: { doc: 400000, cc: 55000, cards: 12 }
+    },
+    {
+      id: "nationalCensus",
+      nameKey: "contracts.nationalCensus.name",
+      descKey: "contracts.nationalCensus.desc",
+      minDocTotal: 1000000,
+      duration: 300,
+      requirements: { quality: 0.85, image: 0.8, volume: 1100000 },
+      reward: { doc: 1000000, cc: 130000, cards: 15 }
     }
   ];
 
