@@ -80,6 +80,15 @@ Contraintes non négociables :
 
 La liste des assets à générer vit dans [images-todo.md](images-todo.md).
 
+## Stickers de bâtiments vs 3D (décision 2026-07-18)
+
+Les 11 stickers de bâtiments restent les **illustrations dessinées** à la main
+(caractère, personnalité) : décision de Nicolas. La cohérence avec le diorama
+three.js passe par la **palette partagée** (crème/sépia/or, cf. 0.18.2), pas
+par une identité pixel-à-pixel. Un pipeline de régénération existe (rendu
+isométrique par bâtiment → API OpenAI edits) et fonctionne, mais n'est PAS
+utilisé — ne pas remplacer les stickers dessinés sans nouvelle décision.
+
 ## Zones gelées
 
 - Wordmark letterpress `.header-title` (pile de text-shadows violets).

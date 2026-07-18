@@ -46,7 +46,9 @@ mots, et gratifiant quand on revient.
     qui s'envolent, klaxon à la complétion d'un contrat, tampon géant qui
     s'abat sur le campus au moment du prestige (réutilise `seal-crest`) ;
   - ciel synchronisé avec les classes `.sky-*` existantes.
-  Reste à faire : palette raccordée, vie ambiante, ciel synchronisé, et
+  Décision 2026-07-18 : les stickers de bâtiments restent dessinés (pas de
+  régénération depuis l'iso) ; la cohérence passe par la palette.
+  Reste à faire : vie ambiante, ciel synchronisé, et
   surtout l'optimisation draw calls (le campus procédural est à ~210 calls,
   cible < 50 par fusion/instanciation des géométries de bâtiments).
   Budget perf mobile NON NÉGOCIABLE : pixelRatio plafonné (≤ 2, 1.5 mobile),
