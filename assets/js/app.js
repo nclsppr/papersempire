@@ -1995,7 +1995,18 @@
       const emoji = b.emoji || "🏗️";
       const emojiSpan = document.createElement("span");
       emojiSpan.className = "building-emoji";
-      emojiSpan.textContent = emoji;
+      // Sticker illustré (images-todo P2) avec repli emoji si absent/404.
+      const sticker = document.createElement("img");
+      sticker.className = "building-sticker";
+      sticker.src = "/assets/images/building-" + b.id + ".webp";
+      sticker.alt = "";
+      sticker.decoding = "async";
+      sticker.loading = "lazy";
+      sticker.addEventListener("error", () => {
+        sticker.remove();
+        emojiSpan.textContent = emoji;
+      }, { once: true });
+      emojiSpan.appendChild(sticker);
       const labelSpan = document.createElement("span");
       labelSpan.className = "building-name-label";
       labelSpan.textContent = getBuildingName(b);

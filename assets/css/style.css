@@ -2627,3 +2627,71 @@
         padding: 6px 10px;
       }
     }
+
+    /* ====================================================================
+       Matière (0.16) : grain papier et kraft générés (images-todo P1),
+       posés en multiply très léger — le système reste complet sans eux.
+       ==================================================================== */
+
+    .card,
+    .t-modal,
+    .tutorial-card,
+    .event-banner {
+      background-image: url("/assets/images/paper-grain-tile.webp");
+      background-size: 256px 256px;
+      background-blend-mode: multiply;
+    }
+
+    .settings-tab,
+    .tab-btn,
+    .nav-dash-link {
+      background-image: url("/assets/images/kraft-tile.webp");
+      background-size: 192px 192px;
+      background-blend-mode: multiply;
+    }
+
+    /* Mode high-contrast : surfaces sombres, aucune texture papier. */
+    .pref-high-contrast .card,
+    .pref-high-contrast .t-modal,
+    .pref-high-contrast .tutorial-card,
+    .pref-high-contrast .event-banner,
+    .pref-high-contrast .settings-tab,
+    .pref-high-contrast .tab-btn,
+    .pref-high-contrast .nav-dash-link {
+      background-image: none;
+    }
+
+    /* États des onglets : l'actif est bristol (grain papier), le hover garde
+       sa texture kraft — ces sélecteurs plus spécifiques écrasaient l'image. */
+    .settings-tab.active,
+    .tab-btn.active {
+      background-image: url("/assets/images/paper-grain-tile.webp");
+      background-size: 256px 256px;
+      background-blend-mode: multiply;
+    }
+
+    .settings-tab:hover:not(.active),
+    .tab-btn:hover:not(.active) {
+      background-image: url("/assets/images/kraft-tile.webp");
+      background-size: 192px 192px;
+      background-blend-mode: multiply;
+    }
+
+    .pref-high-contrast .settings-tab.active,
+    .pref-high-contrast .tab-btn.active,
+    .pref-high-contrast .settings-tab:hover:not(.active),
+    .pref-high-contrast .tab-btn:hover:not(.active) {
+      background-image: none;
+    }
+
+    /* Stickers de bâtiments (images-todo P2) : vignette bristol encadrée
+       kraft dans l'emplacement emoji ; repli emoji géré par app.js. */
+    .building-sticker {
+      display: block;
+      width: clamp(38px, 5vw, 54px);
+      height: clamp(38px, 5vw, 54px);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-edge);
+      object-fit: cover;
+      background: var(--paper-bright);
+    }
