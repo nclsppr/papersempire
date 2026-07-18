@@ -54,6 +54,11 @@
   // Dernières valeurs d'ambiance effectivement rendues (mode still).
   let renderedAmbiance = null;
 
+  // Camions de livraison (roadmap 0.18) : InstancedMesh plafonnés, animés
+  // seulement hors reduce-motion, nombre croissant avec l'empire.
+  let trucks = null;
+  let lastTruckMs = 0;
+
   // Quel bâtiment secouer pour chaque événement narratif (juice PR3).
   const EVENT_TARGETS = {
     machineBreakdown: "digitalPress",
@@ -300,6 +305,90 @@
     scene.add(ground);
   }
 
+  /**
+   * Camions de livraison qui circulent sur les deux routes (z = +/-2.4).
+   * Deux InstancedMesh (caisse + cabine) partagent géométrie et matériau :
+   * tout le parc tient en 2 draw calls, quel que soit le nombre affiché.
+   * Palette atelier : caisse crème, cabine kraft. Cap dur = 8.
+   */
+  const TRUCK_CAP = 8;
+
+  function buildTrucks(THREE) {
+    const bodyGeo = new THREE.BoxGeometry(0.5, 0.26, 0.28);
+    const cabGeo = new THREE.BoxGeometry(0.16, 0.2, 0.26);
+    const bodyMat = new THREE.MeshLambertMaterial({ color: 0xf4ead2, flatShading: true });
+    const cabMat = new THREE.MeshLambertMaterial({ color: 0xbf9d5f, flatShading: true });
+    const body = new THREE.InstancedMesh(bodyGeo, bodyMat, TRUCK_CAP);
+    const cab = new THREE.InstancedMesh(cabGeo, cabMat, TRUCK_CAP);
+    body.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    cab.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    // Hors du champ tant qu'aucun camion n'est actif (matrice à l'échelle 0).
+    body.count = TRUCK_CAP;
+    cab.count = TRUCK_CAP;
+    scene.add(body, cab);
+
+    // État par camion : route (z de base), sens (+/-x), voie (à droite),
+    // position x et vitesse. Répartis sur les deux routes et deux sens.
+    const states = [];
+    for (let i = 0; i < TRUCK_CAP; i++) {
+      const roadZ = i % 2 === 0 ? 2.4 : -2.4;
+      const dir = i % 4 < 2 ? 1 : -1;
+      states.push({
+        roadZ,
+        dir,
+        lane: roadZ - dir * 0.3,
+        x: -13.5 + (i / TRUCK_CAP) * 27,
+        speed: 0.9 + ((i * 37) % 70) / 100
+      });
+    }
+    trucks = { body, cab, states, dummy: new THREE.Object3D(), active: -1 };
+  }
+
+  function truckCountFor(totalBuildings) {
+    if (!totalBuildings) return 0;
+    return Math.max(1, Math.min(TRUCK_CAP, 1 + Math.floor(totalBuildings / 3)));
+  }
+
+  /** Retourne true si une frame doit être rendue (apparition/mouvement). */
+  function updateTrucks(THREE, dtSec, still, totalBuildings) {
+    if (!trucks) return false;
+    const active = truckCountFor(totalBuildings);
+    const countChanged = active !== trucks.active;
+    trucks.active = active;
+    // En reduce-motion, on ne bouge pas : on (re)pose seulement les caisses
+    // à un état stationnaire quand leur nombre change.
+    if (still && !countChanged) return false;
+
+    const d = trucks.dummy;
+    for (let i = 0; i < TRUCK_CAP; i++) {
+      const st = trucks.states[i];
+      if (i >= active) {
+        d.position.set(0, -50, 0);
+        d.scale.set(0.0001, 0.0001, 0.0001);
+        d.updateMatrix();
+        trucks.body.setMatrixAt(i, d.matrix);
+        trucks.cab.setMatrixAt(i, d.matrix);
+        continue;
+      }
+      if (!still) {
+        st.x += st.dir * st.speed * dtSec;
+        if (st.x > 14) st.x = -14;
+        else if (st.x < -14) st.x = 14;
+      }
+      d.scale.set(1, 1, 1);
+      d.rotation.set(0, 0, 0);
+      d.position.set(st.x, 0.17, st.lane);
+      d.updateMatrix();
+      trucks.body.setMatrixAt(i, d.matrix);
+      d.position.set(st.x + st.dir * 0.29, 0.14, st.lane);
+      d.updateMatrix();
+      trucks.cab.setMatrixAt(i, d.matrix);
+    }
+    trucks.body.instanceMatrix.needsUpdate = true;
+    trucks.cab.instanceMatrix.needsUpdate = true;
+    return true;
+  }
+
   /** Creates (once) the group for each building lot, initially hidden. */
   function buildLots(THREE) {
     const layout = window.CityLayout;
@@ -449,10 +538,22 @@
     }
 
     const bridge = window.__PE_SCENE__;
-    if (bridge && syncBuildings(THREE, bridge.getSnapshot())) {
+    const snapshot = bridge ? bridge.getSnapshot() : null;
+    if (snapshot && syncBuildings(THREE, snapshot)) {
       needsRender = true;
     }
     const still = reduceMotion();
+
+    // Camions : dt borné (l'onglet a pu être masqué), nombre lié à l'empire.
+    const nowMs = timeMs || 0;
+    const dtSec = Math.min(0.1, Math.max(0, (nowMs - lastTruckMs) / 1000));
+    lastTruckMs = nowMs;
+    const truckTotal = snapshot
+      ? snapshot.buildings.reduce((sum, b) => sum + (b.quantity || 0), 0)
+      : 0;
+    if (updateTrucks(THREE, dtSec, still, truckTotal) && still) {
+      needsRender = true;
+    }
     drainSceneEvents(THREE);
     if (window.SceneEffects) {
       if (still) {
@@ -680,6 +781,13 @@
     // Plus personne ne draine la file : on la retire pour que app.js
     // redevienne no-op au lieu d'accumuler des notifications.
     window.__PE_SCENE_EVENTS__ = null;
+    if (trucks) {
+      trucks.body.geometry.dispose();
+      trucks.body.material.dispose();
+      trucks.cab.geometry.dispose();
+      trucks.cab.material.dispose();
+      trucks = null;
+    }
     if (renderer) {
       renderer.dispose();
       renderer = null;
@@ -713,6 +821,7 @@
       placeCamera(BASE_AZIMUTH);
       buildLights(THREE);
       buildGround(THREE);
+      buildTrucks(THREE);
       buildLots(THREE);
       watchResize(THREE);
       watchVisibility();
@@ -741,6 +850,10 @@
           return out;
         },
         camera: () => camera,
+        trucks: () => trucks ? { active: trucks.active, cap: TRUCK_CAP } : null,
+        truckSample: () => trucks && trucks.active > 0
+          ? trucks.states.slice(0, trucks.active).map(t => +t.x.toFixed(2))
+          : [],
         scene: () => scene,
         sceneChildren: () => scene.children.length,
         animated: () => animated,
@@ -763,6 +876,10 @@
           const bridge = window.__PE_SCENE__;
           if (bridge) syncBuildings(THREE, bridge.getSnapshot());
           drainSceneEvents(THREE);
+          if (bridge) {
+            const total = bridge.getSnapshot().buildings.reduce((a, b) => a + (b.quantity || 0), 0);
+            updateTrucks(THREE, 0, true, total);
+          }
           if (window.SceneEffects) window.SceneEffects.tick(performance.now());
           applyAmbiance(THREE, true);
           easeView(true);

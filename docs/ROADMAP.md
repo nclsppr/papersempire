@@ -41,11 +41,14 @@ mots, et gratifiant quand on revient.
   plus joli et plus fun :
   - palette raccordée (crème/kraft/encre sépia, fenêtres or ambré) ;
   - **camions de livraison qui circulent sur les routes** entre les bâtiments,
-    en nombre croissant avec l'empire (plafonnés, `InstancedMesh`) ;
+    en nombre croissant avec l'empire (plafonnés, `InstancedMesh`) — ✅ livré ;
   - vie ambiante discrète : fumées lowpoly des cheminées, feuilles de papier
     qui s'envolent, klaxon à la complétion d'un contrat, tampon géant qui
     s'abat sur le campus au moment du prestige (réutilise `seal-crest`) ;
   - ciel synchronisé avec les classes `.sky-*` existantes.
+  Reste à faire : palette raccordée, vie ambiante, ciel synchronisé, et
+  surtout l'optimisation draw calls (le campus procédural est à ~210 calls,
+  cible < 50 par fusion/instanciation des géométries de bâtiments).
   Budget perf mobile NON NÉGOCIABLE : pixelRatio plafonné (≤ 2, 1.5 mobile),
   aucun éclairage dynamique coûteux ni ombre temps réel (blob shadows),
   matériaux partagés, < 50 draw calls, rendu suspendu quand le stage sort du
