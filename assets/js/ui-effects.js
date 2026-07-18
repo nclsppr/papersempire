@@ -57,6 +57,12 @@
     playTone(preset.freq, preset.duration);
   }
 
+  /** Klaxon de camion deux tons (contrat livré) : honk descendant. */
+  function playHorn() {
+    playTone(233, 0.16);
+    setTimeout(function () { playTone(196, 0.24); }, 150);
+  }
+
   function createParticle(target) {
     const particle = document.createElement("span");
     particle.className = "particle";
@@ -107,6 +113,7 @@
     playPurchaseEffect,
     playCelebrationEffect,
     playClickEffect,
-    playSound
+    playSound,
+    playHorn
   };
 })();

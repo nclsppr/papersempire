@@ -1812,6 +1812,7 @@
     if (result) {
       logMessage("log.contractComplete", { name: t(result.nameKey) });
       showEventBanner("contracts.banner.completed", "positive", { name: t(result.nameKey) });
+      if (UIEffects && typeof UIEffects.playHorn === "function") UIEffects.playHorn();
       renderActiveContract();
       queueSave(true);
       renderContractsPanel();

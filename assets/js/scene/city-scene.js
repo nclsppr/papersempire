@@ -59,6 +59,7 @@
   let trucks = null;
   let lastTruckMs = 0;
   let smoke = null;      // fumées de cheminées (InstancedMesh)
+  let papers = null;     // feuilles de papier volantes (InstancedMesh)
   let prestigeStamp = null; // plane texturé du tampon de prestige
 
   // Quel bâtiment secouer pour chaque événement narratif (juice PR3).
@@ -289,21 +290,26 @@
     mkBox(27, 0.06, 1.4, 0x33291a, 0, 0.005, -2.4);
     // Central plaza connector.
     mkBox(1.6, 0.06, 10, 0x4a3f2c, 10.8, 0.006, 0);
-    // Low-poly border trees along the back edge (merged look, cheap).
+    // Arbres de bordure : instanciés (9 troncs + 9 couronnes en 2 draw calls
+    // au lieu de 18 meshes) — gain perf sûr, ces arbres sont décoratifs et
+    // immobiles.
+    const trunkMesh = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(0.07, 0.09, 0.5, 5),
+      new THREE.MeshLambertMaterial({ color: 0x6b4a28, flatShading: true }),
+      9
+    );
+    const crownMesh = new THREE.InstancedMesh(
+      new THREE.ConeGeometry(0.45, 1.0, 6),
+      new THREE.MeshLambertMaterial({ color: 0x4a5a2c, flatShading: true }),
+      9
+    );
+    const td = new THREE.Object3D();
     for (let i = 0; i < 9; i++) {
       const x = -12 + i * 3;
-      const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.09, 0.5, 5),
-        new THREE.MeshLambertMaterial({ color: 0x6b4a28, flatShading: true })
-      );
-      trunk.position.set(x, 0.25, -7.4);
-      const crown = new THREE.Mesh(
-        new THREE.ConeGeometry(0.45, 1.0, 6),
-        new THREE.MeshLambertMaterial({ color: 0x4a5a2c, flatShading: true })
-      );
-      crown.position.set(x, 1.0, -7.4);
-      ground.add(trunk, crown);
+      td.position.set(x, 0.25, -7.4); td.updateMatrix(); trunkMesh.setMatrixAt(i, td.matrix);
+      td.position.set(x, 1.0, -7.4); td.updateMatrix(); crownMesh.setMatrixAt(i, td.matrix);
     }
+    ground.add(trunkMesh, crownMesh);
     scene.add(ground);
   }
 
@@ -413,6 +419,59 @@
       smoke.mesh.setMatrixAt(i, d.matrix);
     }
     smoke.mesh.instanceMatrix.needsUpdate = true;
+    return true;
+  }
+
+  /**
+   * Feuilles de papier qui s'envolent au-dessus du campus : un InstancedMesh
+   * de plans crème dérivant en arc et voletant, respawn continu. 1 draw call,
+   * animé hors reduce-motion et si particules activées.
+   */
+  const PAPER_COUNT = 5;
+
+  function buildPapers(THREE) {
+    const geo = new THREE.PlaneGeometry(0.26, 0.34);
+    const matPaper = new THREE.MeshLambertMaterial({
+      color: 0xf6ecd6, side: THREE.DoubleSide, flatShading: true
+    });
+    const mesh = new THREE.InstancedMesh(geo, matPaper, PAPER_COUNT);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(mesh);
+    const sheets = [];
+    for (let i = 0; i < PAPER_COUNT; i++) {
+      sheets.push({
+        phase: i / PAPER_COUNT,
+        speed: 0.05 + (i % 3) * 0.02,
+        z: -6 + i * 2.6,
+        spin: 0.6 + (i % 4) * 0.3
+      });
+    }
+    papers = { mesh, sheets, dummy: new THREE.Object3D() };
+  }
+
+  function updatePapers(THREE, dtSec, still, timeMs) {
+    if (!papers) return false;
+    if (still || !particlesEnabled()) {
+      papers.mesh.visible = false;
+      return false;
+    }
+    papers.mesh.visible = true;
+    const t = (timeMs || 0) / 1000;
+    const d = papers.dummy;
+    for (let i = 0; i < papers.sheets.length; i++) {
+      const p = papers.sheets[i];
+      p.phase += p.speed * dtSec;
+      if (p.phase >= 1) p.phase -= 1;
+      const x = -13 + p.phase * 26;
+      // Arc doux + flottement vertical.
+      const y = 2.2 + Math.sin(p.phase * Math.PI) * 1.6 + Math.sin(t * 1.5 + i) * 0.2;
+      d.position.set(x, y, p.z + Math.sin(t * 0.7 + i) * 0.4);
+      d.rotation.set(t * p.spin, t * p.spin * 0.7, t * p.spin * 0.4);
+      d.scale.set(1, 1, 1);
+      d.updateMatrix();
+      papers.mesh.setMatrixAt(i, d.matrix);
+    }
+    papers.mesh.instanceMatrix.needsUpdate = true;
     return true;
   }
 
@@ -676,6 +735,9 @@
     if (updateSmoke(THREE, dtSec, still)) {
       needsRender = true;
     }
+    if (updatePapers(THREE, dtSec, still, nowMs)) {
+      needsRender = true;
+    }
     drainSceneEvents(THREE);
     if (window.SceneEffects) {
       if (still) {
@@ -840,6 +902,35 @@
     }
   }
 
+  /**
+   * Fond du ciel synchronisé avec l'heure locale : suit les classes
+   * .sky-dawn / .sky-day / .sky-night posées par app.js (la teinte pilotée
+   * par les jauges reste sur la lumière hémisphérique, indépendante).
+   */
+  var skyObserver = null;
+
+  function applySkyBackground() {
+    if (!scene) return;
+    var cl = document.documentElement.classList;
+    var color = 0x120b22; // crépuscule par défaut
+    if (cl.contains("sky-night")) color = 0x0a0616;
+    else if (cl.contains("sky-dawn")) color = 0x1e1230;
+    else if (cl.contains("sky-day")) color = 0x2a2444;
+    if (!scene.background) scene.background = new THREE.Color(color);
+    else scene.background.setHex(color);
+    needsRender = true;
+  }
+
+  function watchSky(THREE) {
+    applySkyBackground();
+    if (!("MutationObserver" in window)) return;
+    skyObserver = new MutationObserver(applySkyBackground);
+    skyObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"]
+    });
+  }
+
   function watchVisibility() {
     if ("IntersectionObserver" in window) {
       const io = new IntersectionObserver(entries => {
@@ -904,6 +995,15 @@
     // Plus personne ne draine la file : on la retire pour que app.js
     // redevienne no-op au lieu d'accumuler des notifications.
     window.__PE_SCENE_EVENTS__ = null;
+    if (skyObserver) {
+      skyObserver.disconnect();
+      skyObserver = null;
+    }
+    if (papers) {
+      papers.mesh.geometry.dispose();
+      papers.mesh.material.dispose();
+      papers = null;
+    }
     if (smoke) {
       smoke.mesh.geometry.dispose();
       smoke.mesh.material.dispose();
@@ -957,8 +1057,10 @@
       buildGround(THREE);
       buildTrucks(THREE);
       buildSmoke(THREE);
+      buildPapers(THREE);
       buildLots(THREE);
       watchResize(THREE);
+      watchSky(THREE);
       watchVisibility();
       wirePointer(THREE);
       // File des notifications de jeu (achats/événements/prestige) que
