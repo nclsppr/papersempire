@@ -7,13 +7,13 @@ Destination : `assets/images/` avec le nom de fichier indiqué.
 
 ## Priorité 1 — matière du design system
 
-- [ ] `paper-grain-tile.webp` (512×512, tuile parfaitement raccordable)
+- [x] `paper-grain-tile.webp` (512×512, tuile parfaitement raccordable)
       Seamless tileable paper texture, cream ivory cardstock #fdf8ec, subtle cotton fiber grain, very low contrast, flat top-down scan look, no creases, no stains, the texture must tile perfectly on all four edges
-- [ ] `kraft-tile.webp` (512×512, tuile raccordable)
+- [x] `kraft-tile.webp` (512×512, tuile raccordable)
       Seamless tileable kraft paper texture, warm tan #d9c29a, fine recycled paper fibers with tiny darker specks, matte, low contrast, flat scan, no folds, perfectly tileable edges
-- [ ] `ink-splat-sprites.png` (planche 2×2, cellules 128×128, alpha)
+- [x] `ink-splat-sprites.png` (généré sur blanc puis détouré — gpt-image-2 ne fait pas de fond transparent) (planche 2×2, cellules 128×128, alpha)
       Sprite sheet of 4 different ink stamp splats on a fully transparent background, dark sepia brown ink #2a1a03, flat vector style, slightly distressed rubber stamp texture with tiny uneven edges and small satellite droplets, no gradients, no shadows, 4 splats arranged in a 2x2 grid
-- [ ] `seal-crest.webp` (256×256, alpha — célébration de prestige)
+- [x] `seal-crest.png` (PNG alpha, détouré ; câblage prestige à faire en 0.18) (256×256, alpha — célébration de prestige)
       Round rubber stamp seal, distressed red ink #b3251e on fully transparent background, ornate double circle border with small typographic stars, in the center a minimalist paper stack icon with a crown, vintage bureaucratic office stamp style, slightly uneven ink coverage, flat 2D
 
 ## Priorité 2 — illustrations des bâtiments (stickers 128×128, alpha)
@@ -22,17 +22,23 @@ Style commun : `flat stationery sticker illustration of [SUJET], sepia ink
 linework on a small cream cardstock die-cut sticker shape with a thin kraft
 border, subtle paper grain, one gold accent maximum, transparent background`.
 
-- [ ] `building-reproOperator.png` — SUJET : a friendly print-shop worker beside a small photocopier
-- [ ] `building-reproWorkshop.png` — SUJET : a row of three aligned photocopiers with a binding machine
-- [ ] `building-digitalPress.png` — SUJET : a large industrial digital printing press
-- [ ] `building-offsetPress.png` — SUJET : a massive offset printing press with big paper rolls
-- [ ] `building-finishingWorkshop.png` — SUJET : an industrial paper cutter and folding machine
-- [ ] `building-insertingLine.png` — SUJET : an automated envelope inserting line conveyor
-- [ ] `building-logistics.png` — SUJET : a delivery van loaded with parcel boxes
-- [ ] `building-clientPortal.png` — SUJET : a secure server rack with a glowing document slot
-- [ ] `building-comBridge.png` — SUJET : a communication hub with antennas linking two paper documents
-- [ ] `building-factory40.png` — SUJET : a smart factory building with a subtle robotic arm holding a sheet of paper
-- [ ] `building-pampyAI.png` — SUJET : a cute round robot assistant holding a stamped document
+- [x] `building-reproOperator.webp` — SUJET : a friendly print-shop worker beside a small photocopier
+- [x] `building-reproWorkshop.webp` — SUJET : a row of three aligned photocopiers with a binding machine
+- [x] `building-digitalPress.webp` — SUJET : a large industrial digital printing press
+- [x] `building-offsetPress.webp` — SUJET : a massive offset printing press with big paper rolls
+- [x] `building-finishingWorkshop.webp` — SUJET : an industrial paper cutter and folding machine
+- [x] `building-insertingLine.webp` — SUJET : an automated envelope inserting line conveyor
+- [x] `building-logistics.webp` — SUJET : a delivery van loaded with parcel boxes
+- [x] `building-clientPortal.webp` — SUJET : a secure server rack with a glowing document slot
+- [x] `building-comBridge.webp` — SUJET : a communication hub with antennas linking two paper documents
+- [x] `building-factory40.webp` — SUJET : a smart factory building with a subtle robotic arm holding a sheet of paper
+- [x] `building-pampyAI.webp` — SUJET : a cute round robot assistant holding a stamped document
+
+
+Note de production (2026-07-18) : lots P1 et P2 générés via gpt-image-2. Le
+modèle ne supporte pas le fond transparent : les stickers embarquent le fond
+bristol (affichés en vignettes bordées kraft), les éléments détourés (taches,
+blason) sont générés sur blanc pur puis passés au chroma-key PIL.
 
 ## Priorité 3 — hauts faits (tampons-badges 96×96, alpha)
 
