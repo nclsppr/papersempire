@@ -31,6 +31,14 @@ Palette de référence :
 | Nuit de l'atelier | `--bg-sky` / `--bg-deep` | `#271c40` / `#0b0617` |
 
 Règles clés :
+- **Aucun emoji dans le chrome** (titres, boutons, jauges, footer, libellés) :
+  l'iconographie passe par les stickers, tampons et SVG encrés générés
+  (`images-todo.md`). Les emojis dynamiques du système d'événements sont
+  tolérés en attendant leurs illustrations dédiées.
+- **Le kraft est un accent, jamais un fond de contrôle** : liserés
+  (`--kraft-deep`), bordures, étiquettes. Les contrôles secondaires (onglets,
+  navigation) vivent en `--paper-shade` ; seuls les boutons d'ACTION portent
+  les couleurs fortes (or, vert, indigo, rouge).
 - Les boutons sont GROS et assumés : socle 3D en `box-shadow` dur, écrasement
   au `:active` par `translateY` qui consomme la tranche. Jamais de bouton plat.
 - Ombres toujours en 2 couches : tranche dure sans flou + portée douce.

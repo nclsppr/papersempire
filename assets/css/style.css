@@ -2644,12 +2644,19 @@
       background-blend-mode: multiply;
     }
 
+    /* Hiérarchie harmonisée (feedback 2026-07-18) : l'or et les encres
+       signent les ACTIONS ; le chrome secondaire (onglets, navigation)
+       reste dans la famille bristol/paper-shade avec un liseré kraft —
+       la tuile kraft texturée ne s'applique plus aux contrôles. */
     .settings-tab,
-    .tab-btn,
+    .tab-btn {
+      background: var(--paper-shade);
+      border-color: var(--kraft-deep);
+    }
+
     .nav-dash-link {
-      background-image: url("/assets/images/kraft-tile.webp");
-      background-size: 192px 192px;
-      background-blend-mode: multiply;
+      background: var(--paper-shade);
+      border-color: var(--kraft-deep);
     }
 
     /* Mode high-contrast : surfaces sombres, aucune texture papier. */
@@ -2674,15 +2681,11 @@
 
     .settings-tab:hover:not(.active),
     .tab-btn:hover:not(.active) {
-      background-image: url("/assets/images/kraft-tile.webp");
-      background-size: 192px 192px;
-      background-blend-mode: multiply;
+      background: var(--kraft);
     }
 
     .pref-high-contrast .settings-tab.active,
-    .pref-high-contrast .tab-btn.active,
-    .pref-high-contrast .settings-tab:hover:not(.active),
-    .pref-high-contrast .tab-btn:hover:not(.active) {
+    .pref-high-contrast .tab-btn.active {
       background-image: none;
     }
 
@@ -2763,11 +2766,10 @@
 
     .app-footer {
       margin-top: 28px;
-      border-top: 3px solid var(--kraft-deep);
-      background: var(--kraft);
-      background-image: url("/assets/images/kraft-tile.webp");
-      background-size: 192px 192px;
-      background-blend-mode: multiply;
+      /* Pied de page façon papier à en-tête : double filet encré sur
+         bristol ombré — le kraft ne sert plus que de liseré. */
+      border-top: 3px double var(--ink-strong);
+      background: var(--paper-shade);
       color: var(--ink-strong);
     }
 
@@ -2803,11 +2805,19 @@
 
     .pref-high-contrast .app-footer {
       background: #000;
-      background-image: none;
       color: #fff;
       border-top-color: var(--hc-accent);
     }
 
     .pref-high-contrast .app-footer a {
+      color: var(--hc-accent);
+    }
+
+    .icon-gear {
+      display: block;
+      color: var(--ink-strong);
+    }
+
+    .pref-high-contrast .icon-gear {
       color: var(--hc-accent);
     }

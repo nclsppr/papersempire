@@ -20,75 +20,75 @@
       <a class="header-home-link" href="/"><span class="header-title">Papers Empire</span></a>
       <div class="header-actions">
         <a class="nav-dash-link" id="backToGameLink" href="/" data-i18n="nav.backToGame">← Retour à l'atelier</a>
-      </div>
-    </div>
-  </div>
+</div>
+</div>
+</div>
 </header>
 
 <main id="mainContent" class="app" role="main">
   <!-- Tableau de bord : KPIs et graphiques temps réel. Lecture seule via le
        pont window.__PE_DASH__ (app.js) ; rendu par assets/js/dashboard.js. -->
   <section class="card dashboard-card" id="dashboardCard" role="region" aria-label="Tableau de bord">
-    <h2 data-i18n="dashboard.title">Tableau de bord 📊</h2>
+    <h2 data-i18n="dashboard.title">Tableau de bord</h2>
     <div class="small" data-i18n="dashboard.hint">La direction adore les KPIs. Tout ton empire en chiffres, en direct.</div>
     <div class="dash-kpis">
       <div class="dash-kpi">
         <span class="dash-kpi-label" data-i18n="dashboard.kpi.production">Production</span>
         <span class="dash-kpi-value" data-dash-kpi="production">–</span>
         <span class="dash-kpi-trend" data-dash-kpi="trend"></span>
-      </div>
+</div>
       <div class="dash-kpi">
         <span class="dash-kpi-label" data-i18n="dashboard.kpi.docBank">Documents en banque</span>
         <span class="dash-kpi-value" data-dash-kpi="bank">–</span>
-      </div>
+</div>
       <div class="dash-kpi">
         <span class="dash-kpi-label" data-i18n="dashboard.kpi.docTotal">Documents cumulés</span>
         <span class="dash-kpi-value" data-dash-kpi="total">–</span>
-      </div>
+</div>
       <div class="dash-kpi">
         <span class="dash-kpi-label" data-i18n="dashboard.kpi.trust">Confiance cumulée</span>
         <span class="dash-kpi-value" data-dash-kpi="trust">–</span>
-      </div>
+</div>
       <div class="dash-kpi">
         <span class="dash-kpi-label" data-i18n="dashboard.kpi.culture">Culture · Prestige</span>
         <span class="dash-kpi-value" data-dash-kpi="culture">–</span>
-      </div>
+</div>
       <div class="dash-kpi">
         <span class="dash-kpi-label" data-i18n="dashboard.kpi.buildings">Bâtiments actifs</span>
         <span class="dash-kpi-value" data-dash-kpi="buildings">–</span>
-      </div>
-    </div>
+</div>
+</div>
     <div class="dash-charts">
       <figure class="dash-chart-block">
         <figcaption class="dash-chart-title" data-i18n="dashboard.chart.buildings">Production par bâtiment (DOC/s)</figcaption>
         <div id="dashBars" class="dash-bars"></div>
-      </figure>
+</figure>
       <figure class="dash-chart-block dash-chart-wide">
         <figcaption class="dash-chart-title" data-i18n="dashboard.chart.gauges">Baromètres d'entreprise (%)</figcaption>
         <div class="dash-gauges">
           <div class="dash-gauge">
             <span class="dash-gauge-label" data-i18n="gauges.quality"></span>
             <svg id="dashGaugeQuality" class="dash-svg" aria-hidden="true"></svg>
-          </div>
+</div>
           <div class="dash-gauge">
             <span class="dash-gauge-label" data-i18n="gauges.footprint"></span>
             <svg id="dashGaugeFootprint" class="dash-svg" aria-hidden="true"></svg>
-          </div>
+</div>
           <div class="dash-gauge">
             <span class="dash-gauge-label" data-i18n="gauges.image"></span>
             <svg id="dashGaugeImage" class="dash-svg" aria-hidden="true"></svg>
-          </div>
-        </div>
-      </figure>
+</div>
+</div>
+</figure>
       <figure class="dash-chart-block dash-chart-wide">
         <figcaption class="dash-chart-title" data-i18n="dashboard.chart.docTotal">Documents cumulés · session en cours</figcaption>
         <div class="dash-chart-holder">
           <svg id="dashProdChart" class="dash-svg" role="img" aria-hidden="true"></svg>
           <div id="dashProdTip" class="dash-tip" hidden></div>
           <p id="dashProdEmpty" class="dash-empty" data-i18n="dashboard.empty">Collecte des données en cours…</p>
-        </div>
-      </figure>
-    </div>
+</div>
+</figure>
+</div>
     <details id="dashTableDetails" class="dash-table-details">
       <summary data-i18n="dashboard.table.toggle">Données brutes (table)</summary>
       <table class="dash-table">
@@ -96,12 +96,12 @@
           <tr>
             <th scope="col" data-i18n="dashboard.table.metric">Indicateur</th>
             <th scope="col" data-i18n="dashboard.table.value">Valeur</th>
-          </tr>
-        </thead>
+</tr>
+</thead>
         <tbody id="dashTableBody"></tbody>
-      </table>
-    </details>
-  </section>
+</table>
+</details>
+</section>
 </main>
 
 
@@ -110,13 +110,13 @@
     <span class="footer-madeby">
       <span data-i18n="footer.madeBy">Créé par</span>
       <a href="https://nicolaspieper.com" rel="author">Nicolas Pieper</a>
-    </span>
+</span>
     <nav class="footer-links" aria-label="Liens">
-      <a href="/dashboard/" data-i18n="nav.dashboard">Dashboard 📊</a>
+      <a href="/dashboard/" data-i18n="nav.dashboard">Dashboard</a>
       <a href="/docs/" data-i18n="footer.docs">Documentation</a>
       <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Code source</a>
-    </nav>
-  </div>
+</nav>
+</div>
 </footer>
 
   <script src="/assets/i18n/fr.js" defer></script>
