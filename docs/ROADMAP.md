@@ -42,13 +42,13 @@ mots, et gratifiant quand on revient.
   - palette raccordée (crème/kraft/encre sépia, fenêtres or ambré) — ✅ livré ;
   - **camions de livraison qui circulent sur les routes** entre les bâtiments,
     en nombre croissant avec l'empire (plafonnés, `InstancedMesh`) — ✅ livré ;
-  - vie ambiante discrète : fumées lowpoly des cheminées, feuilles de papier
-    qui s'envolent, klaxon à la complétion d'un contrat, tampon géant qui
-    s'abat sur le campus au moment du prestige (réutilise `seal-crest`) ;
+  - vie ambiante discrète : fumées lowpoly des cheminées ✅ + tampon géant au
+    prestige (seal-crest) ✅ ; reste feuilles de papier qui s'envolent et
+    klaxon à la complétion d'un contrat ;
   - ciel synchronisé avec les classes `.sky-*` existantes.
   Décision 2026-07-18 : les stickers de bâtiments restent dessinés (pas de
   régénération depuis l'iso) ; la cohérence passe par la palette.
-  Reste à faire : vie ambiante, ciel synchronisé, et
+  Reste à faire : feuilles volantes + klaxon, ciel synchronisé, et
   surtout l'optimisation draw calls (le campus procédural est à ~210 calls,
   cible < 50 par fusion/instanciation des géométries de bâtiments).
   Budget perf mobile NON NÉGOCIABLE : pixelRatio plafonné (≤ 2, 1.5 mobile),

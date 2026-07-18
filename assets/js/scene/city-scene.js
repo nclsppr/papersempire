@@ -58,6 +58,8 @@
   // seulement hors reduce-motion, nombre croissant avec l'empire.
   let trucks = null;
   let lastTruckMs = 0;
+  let smoke = null;      // fumées de cheminées (InstancedMesh)
+  let prestigeStamp = null; // plane texturé du tampon de prestige
 
   // Quel bâtiment secouer pour chaque événement narratif (juice PR3).
   const EVENT_TARGETS = {
@@ -344,6 +346,123 @@
     trucks = { body, cab, states, dummy: new THREE.Object3D(), active: -1 };
   }
 
+  /**
+   * Fumées de cheminées (roadmap 0.18) : un InstancedMesh de bouffées qui
+   * montent et se dissipent au-dessus des bâtiments industriels possédés.
+   * Une seule surface transparente = 1 draw call ; animées hors reduce-motion.
+   */
+  const SMOKE_SOURCES = [
+    { id: "factory40", x: -4, y: 1.7, z: -5 },
+    { id: "offsetPress", x: 2.5, y: 1.15, z: 5 }
+  ];
+  const SMOKE_PER_SOURCE = 5;
+
+  function buildSmoke(THREE) {
+    const total = SMOKE_SOURCES.length * SMOKE_PER_SOURCE;
+    const geo = new THREE.BoxGeometry(0.22, 0.22, 0.22);
+    const matSmoke = new THREE.MeshLambertMaterial({
+      color: 0xcfc6b4, transparent: true, opacity: 0.42,
+      depthWrite: false, flatShading: true
+    });
+    const mesh = new THREE.InstancedMesh(geo, matSmoke, total);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.renderOrder = 2;
+    scene.add(mesh);
+    const puffs = [];
+    for (let src = 0; src < SMOKE_SOURCES.length; src++) {
+      for (let k = 0; k < SMOKE_PER_SOURCE; k++) {
+        puffs.push({ src, phase: k / SMOKE_PER_SOURCE, speed: 0.22 + (k % 3) * 0.05, jx: 0 });
+      }
+    }
+    smoke = { mesh, puffs, dummy: new THREE.Object3D() };
+  }
+
+  function updateSmoke(THREE, dtSec, still) {
+    if (!smoke) return false;
+    // Reduce-motion : fumées figées (aucune animation ambiante).
+    if (still || !particlesEnabled()) {
+      smoke.mesh.visible = false;
+      return false;
+    }
+    smoke.mesh.visible = true;
+    const d = smoke.dummy;
+    for (let i = 0; i < smoke.puffs.length; i++) {
+      const p = smoke.puffs[i];
+      const source = SMOKE_SOURCES[p.src];
+      const owned = lotGroups[source.id] && lotGroups[source.id].visible;
+      if (!owned) {
+        d.position.set(0, -50, 0);
+        d.scale.set(0.0001, 0.0001, 0.0001);
+        d.updateMatrix();
+        smoke.mesh.setMatrixAt(i, d.matrix);
+        continue;
+      }
+      p.phase += p.speed * dtSec;
+      if (p.phase >= 1) {
+        p.phase -= 1;
+        p.jx = (((i * 53) % 20) - 10) / 100;
+      }
+      const rise = p.phase * 1.4;
+      // Bouffée : grossit puis s'efface (échelle en cloche).
+      const grow = Math.sin(Math.min(1, p.phase) * Math.PI);
+      const sc = 0.4 + grow * 0.8;
+      d.position.set(source.x + p.jx + p.phase * 0.25, source.y + rise, source.z);
+      d.scale.set(sc, sc, sc);
+      d.rotation.set(0, p.phase * 1.5, 0);
+      d.updateMatrix();
+      smoke.mesh.setMatrixAt(i, d.matrix);
+    }
+    smoke.mesh.instanceMatrix.needsUpdate = true;
+    return true;
+  }
+
+  /**
+   * Tampon géant « APPROUVÉ » qui s'abat sur le campus au prestige : plane
+   * texturé (seal-crest.png) qui descend avec un rebond, marque, puis
+   * s'efface. Effet ponctuel via SceneEffects (respecte reduce-motion : le
+   * prestige n'appelle cette fonction que hors mode still).
+   */
+  function spawnPrestigeStamp(THREE) {
+    if (!window.SceneEffects) return;
+    if (!prestigeStamp) {
+      const tex = new THREE.TextureLoader().load("/assets/images/seal-crest.png");
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const geo = new THREE.PlaneGeometry(5.5, 5.5);
+      const matStamp = new THREE.MeshBasicMaterial({
+        map: tex, transparent: true, opacity: 0, depthWrite: false, depthTest: false
+      });
+      const mesh = new THREE.Mesh(geo, matStamp);
+      mesh.rotation.x = -Math.PI / 2; // à plat sur le sol
+      mesh.renderOrder = 10;
+      mesh.visible = false;
+      scene.add(mesh);
+      prestigeStamp = mesh;
+    }
+    const mesh = prestigeStamp;
+    const cx = viewTarget.x;
+    const cz = viewTarget.z;
+    mesh.visible = true;
+    window.SceneEffects.add({
+      duration: 1500,
+      onUpdate(t) {
+        // Descente rebondie (0 -> 0.55), maintien, disparition (0.75 -> 1).
+        const drop = Math.min(1, t / 0.55);
+        const eased = 1 - Math.pow(1 - drop, 3);
+        mesh.position.set(cx, 6.5 - eased * 6.4, cz);
+        const appear = Math.min(1, t / 0.4);
+        const fade = t > 0.75 ? 1 - (t - 0.75) / 0.25 : 1;
+        mesh.material.opacity = 0.92 * appear * fade;
+        const s = 0.7 + eased * 0.35;
+        mesh.scale.set(s, s, s);
+        needsRender = true;
+      },
+      onDone() {
+        mesh.visible = false;
+        mesh.material.opacity = 0;
+      }
+    });
+  }
+
   function truckCountFor(totalBuildings) {
     if (!totalBuildings) return 0;
     return Math.max(1, Math.min(TRUCK_CAP, 1 + Math.floor(totalBuildings / 3)));
@@ -554,6 +673,9 @@
     if (updateTrucks(THREE, dtSec, still, truckTotal) && still) {
       needsRender = true;
     }
+    if (updateSmoke(THREE, dtSec, still)) {
+      needsRender = true;
+    }
     drainSceneEvents(THREE);
     if (window.SceneEffects) {
       if (still) {
@@ -687,7 +809,7 @@
           if (particlesEnabled()) {
             const origin = group.position.clone();
             origin.y = 0.8;
-            fx.burst(THREE, scene, origin, 0x38bdf8, 12);
+            fx.burst(THREE, scene, origin, 0xfbbf24, 12);
           }
         }
         needsRender = true;
@@ -702,6 +824,7 @@
           if (particlesEnabled()) {
             const center = new THREE.Vector3(viewTarget.x, 1.2, viewTarget.z);
             fx.burst(THREE, scene, center, 0xfacc15, 22);
+            spawnPrestigeStamp(THREE);
           }
           if (!sweepActive) {
             sweepActive = true;
@@ -781,6 +904,17 @@
     // Plus personne ne draine la file : on la retire pour que app.js
     // redevienne no-op au lieu d'accumuler des notifications.
     window.__PE_SCENE_EVENTS__ = null;
+    if (smoke) {
+      smoke.mesh.geometry.dispose();
+      smoke.mesh.material.dispose();
+      smoke = null;
+    }
+    if (prestigeStamp) {
+      prestigeStamp.geometry.dispose();
+      if (prestigeStamp.material.map) prestigeStamp.material.map.dispose();
+      prestigeStamp.material.dispose();
+      prestigeStamp = null;
+    }
     if (trucks) {
       trucks.body.geometry.dispose();
       trucks.body.material.dispose();
@@ -822,6 +956,7 @@
       buildLights(THREE);
       buildGround(THREE);
       buildTrucks(THREE);
+      buildSmoke(THREE);
       buildLots(THREE);
       watchResize(THREE);
       watchVisibility();
