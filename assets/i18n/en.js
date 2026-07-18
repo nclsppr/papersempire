@@ -46,7 +46,7 @@
     "dashboard.kpi.trust": "Total trust",
     "dashboard.kpi.culture": "Culture · Prestige",
     "dashboard.kpi.buildings": "Active buildings",
-    "dashboard.chart.production": "Production (DOC/s) · last 5 minutes",
+    "dashboard.chart.docTotal": "Total documents · current session",
     "dashboard.chart.buildings": "Production by building (DOC/s)",
     "dashboard.chart.gauges": "Company barometers (%)",
     "dashboard.other": "Other",

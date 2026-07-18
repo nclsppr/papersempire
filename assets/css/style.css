@@ -2695,3 +2695,29 @@
       object-fit: cover;
       background: var(--paper-bright);
     }
+
+    /* Tampons-badges des hauts faits (images-todo P3) : petit sceau sépia
+       à gauche, la fiche s'organise autour ; disparaît si l'image manque. */
+    .achievement-item {
+      position: relative;
+    }
+
+    .achievement-badge {
+      float: left;
+      width: 34px;
+      height: 34px;
+      margin: 2px 8px 2px 0;
+      opacity: 0.9;
+    }
+
+    .achievement-item:not(.unlocked) .achievement-badge {
+      opacity: 0.35;
+      filter: grayscale(0.6);
+    }
+
+    .pref-high-contrast .achievement-badge {
+      filter: none;
+      opacity: 1;
+      background: #fff;
+      border-radius: 50%;
+    }

@@ -46,7 +46,7 @@
     "dashboard.kpi.trust": "Confiance cumulée",
     "dashboard.kpi.culture": "Culture · Prestige",
     "dashboard.kpi.buildings": "Bâtiments actifs",
-    "dashboard.chart.production": "Production (DOC/s) · 5 dernières minutes",
+    "dashboard.chart.docTotal": "Documents cumulés · session en cours",
     "dashboard.chart.buildings": "Production par bâtiment (DOC/s)",
     "dashboard.chart.gauges": "Baromètres d'entreprise (%)",
     "dashboard.other": "Autres",

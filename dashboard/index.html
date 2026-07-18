@@ -60,14 +60,6 @@
     </div>
     <div class="dash-charts">
       <figure class="dash-chart-block">
-        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.production">Production (DOC/s) · 5 dernières minutes</figcaption>
-        <div class="dash-chart-holder">
-          <svg id="dashProdChart" class="dash-svg" role="img" aria-hidden="true"></svg>
-          <div id="dashProdTip" class="dash-tip" hidden></div>
-          <p id="dashProdEmpty" class="dash-empty" data-i18n="dashboard.empty">Collecte des données en cours…</p>
-        </div>
-      </figure>
-      <figure class="dash-chart-block">
         <figcaption class="dash-chart-title" data-i18n="dashboard.chart.buildings">Production par bâtiment (DOC/s)</figcaption>
         <div id="dashBars" class="dash-bars"></div>
       </figure>
@@ -86,6 +78,14 @@
             <span class="dash-gauge-label" data-i18n="gauges.image"></span>
             <svg id="dashGaugeImage" class="dash-svg" aria-hidden="true"></svg>
           </div>
+        </div>
+      </figure>
+      <figure class="dash-chart-block dash-chart-wide">
+        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.docTotal">Documents cumulés · session en cours</figcaption>
+        <div class="dash-chart-holder">
+          <svg id="dashProdChart" class="dash-svg" role="img" aria-hidden="true"></svg>
+          <div id="dashProdTip" class="dash-tip" hidden></div>
+          <p id="dashProdEmpty" class="dash-empty" data-i18n="dashboard.empty">Collecte des données en cours…</p>
         </div>
       </figure>
     </div>

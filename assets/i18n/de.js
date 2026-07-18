@@ -46,7 +46,7 @@
     "dashboard.kpi.trust": "Vertrauen gesamt",
     "dashboard.kpi.culture": "Kultur · Prestige",
     "dashboard.kpi.buildings": "Aktive Gebäude",
-    "dashboard.chart.production": "Produktion (DOC/s) · letzte 5 Minuten",
+    "dashboard.chart.docTotal": "Dokumente gesamt · laufende Sitzung",
     "dashboard.chart.buildings": "Produktion pro Gebäude (DOC/s)",
     "dashboard.chart.gauges": "Firmen-Barometer (%)",
     "dashboard.other": "Andere",

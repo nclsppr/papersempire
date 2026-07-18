@@ -125,11 +125,18 @@
     samples.push({
       t: Date.now(),
       dps: snap.docPerSecond,
+      total: snap.docTotal,
       quality: snap.stats.quality,
       footprint: snap.stats.footprint,
       image: snap.stats.brandImage
     });
-    if (samples.length > WINDOW_SIZE) samples.shift();
+    // Couverture de TOUTE la session : au-delà de la fenêtre, on décime
+    // (1 point sur 2) au lieu de faire glisser — la courbe garde le début.
+    if (samples.length > WINDOW_SIZE * 2) {
+      const thinned = samples.filter((_, i) => i % 2 === 0 || i === samples.length - 1);
+      samples.length = 0;
+      Array.prototype.push.apply(samples, thinned);
+    }
     render(snap);
   }
 
@@ -201,24 +208,38 @@
     }
     els.prodEmpty.hidden = true;
 
-    const values = samples.map(s => s.dps);
-    const max = niceMax(Math.max.apply(null, values));
-    const g = lineGeometry(width, height, values, max);
-    const line = g.pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
-    const area = line + " L" + g.x1.toFixed(1) + "," + g.y0 + " L" + g.pts[0][0].toFixed(1) + "," + g.y0 + " Z";
+    // Documents cumulés depuis le début de la session : normalisation
+    // min-max avec marge, pour une courbe qui monte au lieu d'une ligne
+    // collée au plafond (la production instantanée reste dans les tuiles).
+    const values = samples.map(s => s.total);
+    const vmin = Math.min.apply(null, values);
+    const vmax = Math.max.apply(null, values);
+    const span = Math.max(vmax - vmin, 1);
+    const x0 = CHART.padLeft;
+    const x1 = width - CHART.padRight;
+    const y0 = height - CHART.padY;
+    const y1 = CHART.padY;
+    const n = values.length;
+    const pts = values.map((v, i) => {
+      const x = x0 + ((x1 - x0) * i) / (n - 1);
+      const y = y0 - ((y0 - y1) * 0.92 * (v - vmin)) / span;
+      return [x, y];
+    });
+    const g = { pts, x0, x1, y0, y1 };
+    const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+    const area = line + " L" + x1.toFixed(1) + "," + y0 + " L" + pts[0][0].toFixed(1) + "," + y0 + " Z";
 
-    const ticks = [0, max / 2, max];
     let out = "";
-    for (const tick of ticks) {
-      const y = g.y0 - ((g.y0 - g.y1) * tick) / max;
-      out += '<line class="dash-grid" x1="' + g.x0 + '" y1="' + y + '" x2="' + g.x1 + '" y2="' + y + '"></line>';
-      out += '<text class="dash-axis" x="' + (g.x0 - 6) + '" y="' + (y + 3) + '" text-anchor="end">' + fmt(tick) + "</text>";
+    for (const tickValue of [vmin, vmin + span / 2, vmax]) {
+      const y = y0 - ((y0 - y1) * 0.92 * (tickValue - vmin)) / span;
+      out += '<line class="dash-grid" x1="' + x0 + '" y1="' + y + '" x2="' + x1 + '" y2="' + y + '"></line>';
+      out += '<text class="dash-axis" x="' + (x0 - 6) + '" y="' + (y + 3) + '" text-anchor="end">' + fmt(tickValue) + "</text>";
     }
     out += '<path class="dash-area" d="' + area + '"></path>';
     out += '<path class="dash-line" d="' + line + '"></path>';
-    out += '<g class="dash-hover" hidden><line class="dash-crosshair" y1="' + g.y1 + '" y2="' + g.y0 + '"></line><circle class="dash-dot" r="4"></circle></g>';
+    out += '<g class="dash-hover" hidden><line class="dash-crosshair" y1="' + y1 + '" y2="' + y0 + '"></line><circle class="dash-dot" r="4"></circle></g>';
     svg.innerHTML = out;
-    svg.__geometry = { g, values, max };
+    svg.__geometry = { g, values };
   }
 
   function attachProductionHover() {
@@ -241,9 +262,10 @@
       const dot = hover.querySelector(".dash-dot");
       dot.setAttribute("cx", px);
       dot.setAttribute("cy", py);
-      const ago = Math.round((samples.length - 1 - idx) * (SAMPLE_MS / 1000));
+      const agoSec = Math.max(0, Math.round((Date.now() - samples[idx].t) / 1000));
+      const ago = agoSec >= 120 ? "-" + Math.round(agoSec / 60) + " min" : "-" + agoSec + " s";
       tip.hidden = false;
-      tip.textContent = fmt(values[idx]) + " DOC/s · -" + ago + " s";
+      tip.textContent = fmt(values[idx]) + " DOC · " + ago;
       tip.style.left = Math.min(px + 10, (svg.clientWidth || 600) - 120) + "px";
       tip.style.top = Math.max(py - 30, 0) + "px";
     });

@@ -46,7 +46,7 @@
     "dashboard.kpi.trust": "Vertrauen am Ganzen",
     "dashboard.kpi.culture": "Kultur · Prestige",
     "dashboard.kpi.buildings": "Aktiv Gebaier",
-    "dashboard.chart.production": "Produktioun (DOC/s) · lescht 5 Minutten",
+    "dashboard.chart.docTotal": "Dokumenter am Ganzen · aktuell Sessioun",
     "dashboard.chart.buildings": "Produktioun pro Gebai (DOC/s)",
     "dashboard.chart.gauges": "Firmen-Barometer (%)",
     "dashboard.other": "Anerer",

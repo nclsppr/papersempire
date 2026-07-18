@@ -1893,9 +1893,18 @@
         // texte traduit, jamais en dur dans le CSS.
         item.setAttribute("data-stamp", t("achievements.stampVisa"));
       }
+      // Tampon-badge illustré (images-todo P3), retiré silencieusement si absent.
+      const badge = document.createElement("img");
+      badge.className = "achievement-badge";
+      badge.src = "/assets/images/achievement-" + def.id + ".png";
+      badge.alt = "";
+      badge.decoding = "async";
+      badge.loading = "lazy";
+      badge.addEventListener("error", () => badge.remove(), { once: true });
       const title = document.createElement("div");
       title.className = "achievement-title";
       title.innerHTML = `<span>${t(def.nameKey)}</span><span class="achievement-status">${t(unlockedAt ? "achievements.statusUnlocked" : "achievements.statusLocked")}</span>`;
+      item.appendChild(badge);
       const desc = document.createElement("div");
       desc.textContent = t(def.descKey);
       item.appendChild(title);
