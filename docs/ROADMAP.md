@@ -39,7 +39,7 @@ mots, et gratifiant quand on revient.
 - **0.18 — La scène 3D rejoint l'atelier** (demande du 2026-07-18) : refonte
   visuelle du diorama three.js pour qu'il aille avec « Atelier tamponné »,
   plus joli et plus fun :
-  - palette raccordée (crème/kraft/encre sépia, fenêtres or ambré) ;
+  - palette raccordée (crème/kraft/encre sépia, fenêtres or ambré) — ✅ livré ;
   - **camions de livraison qui circulent sur les routes** entre les bâtiments,
     en nombre croissant avec l'empire (plafonnés, `InstancedMesh`) — ✅ livré ;
   - vie ambiante discrète : fumées lowpoly des cheminées, feuilles de papier

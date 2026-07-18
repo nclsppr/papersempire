@@ -15,18 +15,22 @@
 (function () {
   "use strict";
 
-  /** Named hex constants tuned for the dark "dusk" scene. */
+  /**
+   * Palette « Atelier tamponné » (0.18) : tons chauds papeterie pour que le
+   * diorama 3D s'accorde aux stickers plats. Les fenêtres passent en or
+   * ambré émissif (fini les bleus tech froids), toits sépia, murs cardstock.
+   */
   var PALETTE = {
-    paper: 0xf4f1e8,
-    accent: 0x38bdf8,
-    glass: 0x7dd3fc,
-    amber: 0xf59e0b,
-    hivis: 0xf97316,
-    good: 0x22c55e,
-    slate: 0x334155,
-    roof: 0x1e293b,
-    metal: 0x94a3b8,
-    dark: 0x0f172a
+    paper: 0xf6ecd6,  // mur cardstock crème
+    accent: 0xfbbf24, // signalétique / glow -> or ambré (ex bleu ciel)
+    glass: 0xfcd34d,  // fenêtres -> or clair (ex bleu clair)
+    amber: 0xf59e0b,  // or profond (inchangé)
+    hivis: 0xf97316,  // orange sécurité (inchangé)
+    good: 0x9a7b3f,   // ex vert : accent laiton chaud
+    slate: 0x6b5b45,  // structure sombre -> encre diluée chaude
+    roof: 0x5b4736,   // toits -> sépia (ex navy)
+    metal: 0xb3a488,  // métal -> taupe chaud (ex gris bleuté)
+    dark: 0x2a2016    // base sombre + fond des glows -> sépia profond
   };
 
   // --------------------------------------------------------------------------
@@ -63,7 +67,7 @@
   function getShadowMaterial(THREE) {
     if (!shadowMaterial) {
       shadowMaterial = new THREE.MeshBasicMaterial({
-        color: 0x020617,
+        color: 0x241b0f,
         transparent: true,
         opacity: 0.35,
         depthWrite: false

@@ -188,13 +188,13 @@
   }
 
   function buildLights(THREE) {
-    const hemi = new THREE.HemisphereLight(0x9fc4e0, 0x14203a, 1.15);
+    const hemi = new THREE.HemisphereLight(0xf3ddb0, 0x2a2016, 1.1);
     scene.add(hemi);
     // Warm sun on the camera side so the facades facing the player are lit.
     const sun = new THREE.DirectionalLight(0xffe1b3, 1.35);
     sun.position.set(12, 20, 14);
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0x7dd3fc, 0.35);
+    const rim = new THREE.DirectionalLight(0xfcd34d, 0.3);
     rim.position.set(-10, 12, -14);
     scene.add(rim);
     lights = {
@@ -281,23 +281,23 @@
       return m;
     };
     // Base slab (grass, slightly darker at dusk).
-    mkBox(27, 0.5, 17, 0x14532d, 0, -0.25, 0);
+    mkBox(27, 0.5, 17, 0x33421f, 0, -0.25, 0);
     // Roads between the rows.
-    mkBox(27, 0.06, 1.4, 0x1e293b, 0, 0.005, 2.4);
-    mkBox(27, 0.06, 1.4, 0x1e293b, 0, 0.005, -2.4);
+    mkBox(27, 0.06, 1.4, 0x33291a, 0, 0.005, 2.4);
+    mkBox(27, 0.06, 1.4, 0x33291a, 0, 0.005, -2.4);
     // Central plaza connector.
-    mkBox(1.6, 0.06, 10, 0x334155, 10.8, 0.006, 0);
+    mkBox(1.6, 0.06, 10, 0x4a3f2c, 10.8, 0.006, 0);
     // Low-poly border trees along the back edge (merged look, cheap).
     for (let i = 0; i < 9; i++) {
       const x = -12 + i * 3;
       const trunk = new THREE.Mesh(
         new THREE.CylinderGeometry(0.07, 0.09, 0.5, 5),
-        new THREE.MeshLambertMaterial({ color: 0x7c4a1e, flatShading: true })
+        new THREE.MeshLambertMaterial({ color: 0x6b4a28, flatShading: true })
       );
       trunk.position.set(x, 0.25, -7.4);
       const crown = new THREE.Mesh(
         new THREE.ConeGeometry(0.45, 1.0, 6),
-        new THREE.MeshLambertMaterial({ color: 0x166534, flatShading: true })
+        new THREE.MeshLambertMaterial({ color: 0x4a5a2c, flatShading: true })
       );
       crown.position.set(x, 1.0, -7.4);
       ground.add(trunk, crown);
@@ -816,7 +816,7 @@
       }
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0b1226);
+      scene.background = new THREE.Color(0x120b22);
       camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 120);
       placeCamera(BASE_AZIMUTH);
       buildLights(THREE);
