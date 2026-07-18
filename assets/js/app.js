@@ -2051,30 +2051,21 @@
       });
 
       info.appendChild(nameButton);
-      const qty = document.createElement("div");
-      qty.className = "building-qty";
-      qty.textContent = t("label.quantity", { count: b.quantity });
-      info.appendChild(qty);
-
-      const metaDesc = document.createElement("div");
-      metaDesc.className = "building-meta";
-      metaDesc.textContent = getBuildingDesc(b);
-      info.appendChild(metaDesc);
+      // Compactage (feedback 2026-07-18) : la quantité devient une pastille
+      // dans la ligne du nom, la description vit dans le tooltip (clic sur
+      // le nom), et la production tient en une ligne arithmétique
+      // universelle « 0,5 ×6 = 3,0 DOC/s ».
+      const qtyChip = document.createElement("span");
+      qtyChip.className = "building-qty-chip";
+      qtyChip.textContent = "×" + b.quantity;
+      nameButton.appendChild(qtyChip);
 
       const productionMeta = document.createElement("div");
       productionMeta.className = "building-meta";
-      const prodLines = [];
-      prodLines.push(
-        b.baseProduction
-          ? t("label.productionPerUnit", { amount: formatNumber(b.baseProduction) })
-          : t("label.modifierOnly")
-      );
-      prodLines.push(
-        b.baseProduction && totalProd
-          ? t("label.totalProduction", { amount: formatNumber(totalProd) })
-          : t("label.totalProductionNA")
-      );
-      productionMeta.innerHTML = prodLines.join("<br>");
+      productionMeta.textContent = b.baseProduction
+        ? formatNumber(b.baseProduction) + " ×" + b.quantity + " = " +
+          formatNumber(totalProd || 0) + " DOC/s"
+        : t("label.modifierOnly");
       info.appendChild(productionMeta);
       info.appendChild(tooltip);
 

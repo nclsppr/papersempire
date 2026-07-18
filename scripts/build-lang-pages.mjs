@@ -55,10 +55,13 @@ const PREFILLED_KEYS = [
   "sections.buildingsTitle",
   "sections.buildingsHint",
   "sections.upgradesTitle",
-  "sections.upgradesHint",
   "sections.prestigeTitle",
   "sections.progressTitle",
   "actions.printDocument",
+  "app.tagline",
+  "footer.madeBy",
+  "footer.docs",
+  "footer.source",
 ];
 
 /** Charge un dictionnaire i18n du jeu dans Node (fichiers window.I18N.xx). */

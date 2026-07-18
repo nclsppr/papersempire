@@ -125,7 +125,10 @@
 <header class="app-header" role="banner">
   <div class="header-inner">
     <div class="header-top">
-      <h1 class="header-title" data-game-title>Papers Empire</h1>
+      <div class="header-brand">
+        <h1 class="header-title" data-game-title>Papers Empire</h1>
+        <span class="header-tagline" data-i18n="app.tagline">Transforme ton imprimerie en usine 4.0 omnicanale.</span>
+      </div>
       <div class="header-actions">
         <a class="nav-dash-link" id="dashboardLink" href="/dashboard/" data-i18n="nav.dashboard">Dashboard 📊</a>
         <button class="icon-button" type="button" data-open-settings id="settingsGearButton">
@@ -242,8 +245,7 @@
     <div class="card" role="region" aria-label="Améliorations">
       <h2 data-i18n="sections.upgradesTitle">Améliorations et prestige 🚀</h2>
       <div class="section">
-        <div class="small" data-i18n="sections.upgradesHint">Upgrades globales de base (MVP). Tu pourras en rajouter.</div>
-        <div class="upgrades-list" id="upgradesList"></div>
+          <div class="upgrades-list" id="upgradesList"></div>
       </div>
       <div class="prestige-card">
         <div><strong data-i18n="sections.prestigeTitle">Réorg stratégique 🔁</strong></div>
@@ -267,11 +269,6 @@
       </div>
     </div>
 
-    <div class="card progress-card" role="region" aria-label="Progression, sauvegarde et accessibilité">
-      <h2 data-i18n="sections.progressTitle">Progression 🧠</h2>
-      <div class="achievements-list" id="achievementsList" aria-live="polite"></div>
-    </div>
-
     <div class="card god-mode-card hidden" id="godModeCard" aria-hidden="true">
       <h2 data-i18n="sections.godModeTitle"></h2>
       <div class="small" data-i18n="godMode.hint"></div>
@@ -283,6 +280,11 @@
         <button class="btn-god-mode" data-god-scale="1000">x1000</button>
       </div>
     </div>
+  </div>
+
+  <div class="card progress-card" role="region" aria-label="Progression, sauvegarde et accessibilité">
+    <h2 data-i18n="sections.progressTitle">Progression 🧠</h2>
+    <div class="achievements-list" id="achievementsList" aria-live="polite"></div>
   </div>
 
 </main>
@@ -409,6 +411,21 @@
     </div>
   </div>
 </div>
+
+
+<footer class="app-footer" role="contentinfo">
+  <div class="footer-inner">
+    <span class="footer-madeby">
+      <span data-i18n="footer.madeBy">Créé par</span>
+      <a href="https://nicolaspieper.com" rel="author">Nicolas Pieper</a>
+    </span>
+    <nav class="footer-links" aria-label="Liens">
+      <a href="/dashboard/" data-i18n="nav.dashboard">Dashboard 📊</a>
+      <a href="/docs/" data-i18n="footer.docs">Documentation</a>
+      <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Code source</a>
+    </nav>
+  </div>
+</footer>
 
   <script src="/assets/i18n/fr.js" defer></script>
   <script src="/assets/i18n/en.js" defer></script>
