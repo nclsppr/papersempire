@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -17,9 +20,60 @@ env:
   ORAS_IMAGE: ghcr.io/oras-project/oras:v1.3.0@sha256:6ce045ce069a89934d6666b8b49f9c4c0145201bd6de6dbe2aee267814c55468
 
 jobs:
+  validate:
+    name: Validate VPS release
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configure Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build the canonical site tree
+        run: |
+          npm run docs:build
+          ./scripts/build-site.sh "${RUNNER_TEMP}/site" "${GITHUB_SHA}"
+
+      - name: Build deterministic VPS artifacts
+        run: |
+          ./scripts/build-vps-release.sh \
+            "${RUNNER_TEMP}/site" \
+            "${RUNNER_TEMP}/vps-release" \
+            "${GITHUB_SHA}"
+
+      - name: Validate the local release outputs
+        env:
+          RELEASE_DIRECTORY: ${{ runner.temp }}/vps-release
+        run: |
+          set -Eeuo pipefail
+          test -s "${RELEASE_DIRECTORY}/site.tar.gz"
+          test -s "${RELEASE_DIRECTORY}/routes.json"
+          tar -tzf "${RELEASE_DIRECTORY}/site.tar.gz" >/dev/null
+          jq -e \
+            --arg revision "${GITHUB_SHA}" \
+            '.contract == "vps-infra.route-inventory.v1"
+              and .schema == 1
+              and .source.repository == "nclsppr/papersempire"
+              and .source.revision == $revision
+              and (.routes | length > 0)' \
+            "${RELEASE_DIRECTORY}/routes.json" >/dev/null
+
   release:
     name: Publish immutable VPS artifacts
-    if: github.ref == 'refs/heads/master'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
