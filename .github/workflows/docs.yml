@@ -17,10 +17,10 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: 22
       - run: npm ci
@@ -30,20 +30,8 @@ jobs:
       # plateforme retypeapp-*), donc la commande nue `retype` échouerait.
       - run: npm run docs:build
       - name: Prepare deployment directory
-        run: |
-          mkdir -p site/docs
-          cp index.html site/index.html
-          cp favicon.svg site/favicon.svg
-          cp robots.txt site/robots.txt
-          cp 404.html site/404.html
-          cp site.webmanifest site/site.webmanifest
-          cp sitemap.xml site/sitemap.xml
-          cp -R assets site/assets
-          cp -R dashboard site/dashboard
-          cp -R docs-site/. site/docs/
-      - name: Build per-language pages + cache-busting
-        run: node scripts/build-lang-pages.mjs site "${GITHUB_SHA::8}"
-      - uses: actions/upload-pages-artifact@v3
+        run: ./scripts/build-site.sh site "${GITHUB_SHA}"
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
         with:
           path: site
 
@@ -55,7 +43,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

@@ -33,6 +33,7 @@ Track meaningful milestones in the project:
 - **0.18.1** – Palette de la scène 3D raccordée à « Atelier tamponné » : murs cardstock crème, toits sépia, fenêtres en or ambré émissif (fini les bleus tech froids), métal taupe, éclairage réchauffé (hémisphérique + rim), pelouse mutée, asphalte et arbres sépia, ciel crépuscule. Le diorama lit désormais comme le monde des stickers ; prochaine étape : régénérer les stickers depuis les rendus isométriques pour verrouiller la cohérence.
 - **0.18.3** – Vie ambiante de la scène : fumées lowpoly qui montent des cheminées des bâtiments industriels possédés (un `InstancedMesh`, 1 draw call, animées hors reduce-motion et si particules activées), et tampon géant `seal-crest` qui s'abat sur le campus au prestige (plane texturé, descente rebondie puis fondu). Burst d'achat réchauffé (or au lieu de bleu).
 - **0.18.4** – Finition scène 3D : feuilles de papier qui s'envolent au-dessus du campus (InstancedMesh), klaxon deux tons à la livraison d'un contrat, ciel de la scène synchronisé avec l'heure (jour/aube/nuit via les classes `.sky-*`), et arbres de bordure instanciés (18 meshes → 2 draw calls). Budget draw-calls révisé honnêtement dans ROADMAP : les bâtiments restent en meshes par pièce (interactifs + animés), la perf mobile tient par l'instanciation des décors + frame-skip + suspend hors-écran.
+- **0.18.5** – Livraison Atlas : Pages et la release VPS partagent désormais le même assemblage `site/`. L'archive statique et son inventaire complet de routes sont reproductibles, publiés dans GHCR par digest et attestés depuis le commit source.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
@@ -43,6 +44,7 @@ When you make notable changes (new features, mechanics, UI improvements), append
 - The social card is a rendered screenshot of the 3D campus stored at `assets/images/social-card.jpg` (1200x630), referenced with absolute URLs in Open Graph/Twitter meta tags and JSON-LD.
 - PNG icons (`favicon-32`, `apple-touch-icon` 180, `icon-192`, `icon-512`) live in `assets/images/`; `site.webmanifest` makes the game installable.
 - The GitHub Actions workflow (`.github/workflows/docs.yml`) builds the docs, bundles the game assets, copies `robots.txt`/`sitemap.xml`/`404.html`/`site.webmanifest`, and deploys everything via GitHub Pages (Pages source = GitHub Actions).
+- The separate `.github/workflows/vps-release.yml` workflow publishes that same `site/` tree and its route inventory as immutable, attested GHCR artifacts. Publication alone does not activate Atlas or change DNS.
 
 ## Accessibility
 
