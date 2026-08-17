@@ -61,6 +61,8 @@
   let smoke = null;      // fumées de cheminées (InstancedMesh)
   let papers = null;     // feuilles de papier volantes (InstancedMesh)
   let prestigeStamp = null; // plane texturé du tampon de prestige
+  let decorativeWorld = null; // décor toujours visible, sans vérité de jeu
+  let cloudLayer = null; // groupe de nuages instanciés, dérive très lente
 
   // Quel bâtiment secouer pour chaque événement narratif (juice PR3).
   const EVENT_TARGETS = {
@@ -191,23 +193,26 @@
   }
 
   function buildLights(THREE) {
-    const hemi = new THREE.HemisphereLight(0xf3ddb0, 0x2a2016, 1.1);
+    const hemi = new THREE.HemisphereLight(0xe9f3e9, 0x4b4434, 1.35);
     scene.add(hemi);
-    // Warm sun on the camera side so the facades facing the player are lit.
-    const sun = new THREE.DirectionalLight(0xffe1b3, 1.35);
+    // Warm, high sun on the camera side: readable facades without realtime
+    // shadows (the scene keeps its inexpensive painted blob shadows).
+    const sun = new THREE.DirectionalLight(0xffe0a8, 1.8);
     sun.position.set(12, 20, 14);
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0xfcd34d, 0.3);
+    const rim = new THREE.DirectionalLight(0x8fd4db, 0.42);
     rim.position.set(-10, 12, -14);
     scene.add(rim);
     lights = {
       hemi,
       sun,
       rim,
-      skyClear: new THREE.Color(0x9fc4e0),
-      skySmog: new THREE.Color(0x8a7f5e),
-      groundClear: new THREE.Color(0x14203a),
-      groundSmog: new THREE.Color(0x2b2417)
+      skyClear: new THREE.Color(0xe8f4ec),
+      skySmog: new THREE.Color(0xc4b98c),
+      groundClear: new THREE.Color(0x4b594e),
+      groundSmog: new THREE.Color(0x554b38),
+      fogClear: new THREE.Color(0xc9dfdc),
+      fogSmog: new THREE.Color(0xb8ad82)
     };
   }
 
@@ -222,29 +227,34 @@
     const k = instant ? 1 : 0.04;
     const smog = Math.max(0, Math.min(1, lastStats.footprint));
     if (!scene.fog) {
-      scene.fog = new THREE.Fog(0x0b1226, 30, 90);
+      scene.fog = new THREE.Fog(0xc9dfdc, 24, 62);
     }
     if (!lights.skyTarget) {
       // Instances réutilisées : pas d'allocation dans la boucle chaude.
       lights.skyTarget = new THREE.Color();
       lights.groundTarget = new THREE.Color();
+      lights.fogTarget = new THREE.Color();
     }
     const stepTo = (obj, prop, target) => {
       const next = obj[prop] + (target - obj[prop]) * k;
       obj[prop] = Math.abs(next - target) > 0.002 ? next : target;
     };
-    // Brouillard : lointain et discret à 0, proche et dense à 1.
-    stepTo(scene.fog, "far", 90 - smog * 48);
-    stepTo(lights.sun, "intensity", 1.15 + Math.max(0, Math.min(1, lastStats.quality)) * 0.45);
-    stepTo(lights.rim, "intensity", 0.15 + Math.max(0, Math.min(1, lastStats.brandImage)) * 0.55);
+    // Le smog rapproche l'horizon et le réchauffe, sans replonger le campus
+    // dans la nuit : la silhouette et les couleurs restent toujours lisibles.
+    stepTo(scene.fog, "far", 62 - smog * 22);
+    stepTo(lights.sun, "intensity", 1.55 + Math.max(0, Math.min(1, lastStats.quality)) * 0.55);
+    stepTo(lights.rim, "intensity", 0.24 + Math.max(0, Math.min(1, lastStats.brandImage)) * 0.48);
     lights.skyTarget.lerpColors(lights.skyClear, lights.skySmog, smog);
     lights.groundTarget.lerpColors(lights.groundClear, lights.groundSmog, smog);
+    lights.fogTarget.lerpColors(lights.fogClear, lights.fogSmog, smog);
     if (instant) {
       lights.hemi.color.copy(lights.skyTarget);
       lights.hemi.groundColor.copy(lights.groundTarget);
+      scene.fog.color.copy(lights.fogTarget);
     } else {
       lights.hemi.color.lerp(lights.skyTarget, k);
       lights.hemi.groundColor.lerp(lights.groundTarget, k);
+      scene.fog.color.lerp(lights.fogTarget, k);
     }
   }
 
@@ -271,46 +281,373 @@
     };
   }
 
-  /** Ground: grass base, two asphalt roads, sidewalk strip per row. */
-  function buildGround(THREE) {
+  function scenicMaterial(THREE, color, options) {
+    return new THREE.MeshStandardMaterial(Object.assign({
+      color,
+      roughness: 0.88,
+      metalness: 0,
+      flatShading: true
+    }, options || {}));
+  }
+
+  /** One draw call for an arbitrary set of scaled/rotated boxes. */
+  function addBoxBatch(THREE, parent, material, specs, name) {
+    if (!specs.length) return null;
+    const mesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      material,
+      specs.length
+    );
+    const dummy = new THREE.Object3D();
+    specs.forEach((spec, index) => {
+      dummy.position.set(spec.x || 0, spec.y || 0, spec.z || 0);
+      dummy.rotation.set(spec.rx || 0, spec.ry || 0, spec.rz || 0);
+      dummy.scale.set(spec.w || 1, spec.h || 1, spec.d || 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(index, dummy.matrix);
+      if (spec.color != null) mesh.setColorAt(index, new THREE.Color(spec.color));
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.name = name || "scenery-boxes";
+    parent.add(mesh);
+    return mesh;
+  }
+
+  /** One draw call for low-poly columns, chimneys, rolls or lamp posts. */
+  function addCylinderBatch(THREE, parent, material, specs, name, segments) {
+    if (!specs.length) return null;
+    const mesh = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(0.5, 0.5, 1, segments || 8),
+      material,
+      specs.length
+    );
+    const dummy = new THREE.Object3D();
+    specs.forEach((spec, index) => {
+      const radius = spec.r || 0.5;
+      dummy.position.set(spec.x || 0, spec.y || 0, spec.z || 0);
+      dummy.rotation.set(spec.rx || 0, spec.ry || 0, spec.rz || 0);
+      dummy.scale.set(radius * 2, spec.h || 1, radius * 2);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(index, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.name = name || "scenery-cylinders";
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function addConeBatch(THREE, parent, material, specs, name) {
+    if (!specs.length) return null;
+    const mesh = new THREE.InstancedMesh(
+      new THREE.ConeGeometry(0.5, 1, 6),
+      material,
+      specs.length
+    );
+    const dummy = new THREE.Object3D();
+    specs.forEach((spec, index) => {
+      const radius = spec.r || 0.5;
+      dummy.position.set(spec.x || 0, spec.y || 0, spec.z || 0);
+      dummy.rotation.set(spec.rx || 0, spec.ry || 0, spec.rz || 0);
+      dummy.scale.set(radius * 2, spec.h || 1, radius * 2);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(index, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.name = name || "scenery-cones";
+    parent.add(mesh);
+    return mesh;
+  }
+
+  /**
+   * Permanent campus dressing. Empty concrete pads make the world readable at
+   * quantity 0 but never imply ownership: they carry no buildingId and are not
+   * part of raycastTargets().
+   */
+  function buildGround(THREE, parent, palette) {
     const ground = new THREE.Group();
-    const mkBox = (w, h, d, color, x, y, z) => {
-      const m = new THREE.Mesh(
-        new THREE.BoxGeometry(w, h, d),
-        new THREE.MeshLambertMaterial({ color, flatShading: true })
+    ground.name = "decorative-ground";
+
+    addBoxBatch(THREE, ground, palette.ground, [
+      { x: 0, y: -0.3, z: -1.7, w: 31, h: 0.6, d: 23 }
+    ], "ground-slab");
+
+    addBoxBatch(THREE, ground, palette.road, [
+      { x: 0, y: 0.035, z: 2.4, w: 28, h: 0.07, d: 1.55 },
+      { x: 0, y: 0.035, z: -2.4, w: 28, h: 0.07, d: 1.55 },
+      { x: 10.8, y: 0.036, z: 0, w: 1.7, h: 0.07, d: 11 }
+    ], "campus-roads");
+
+    const pads = Object.keys(window.CityLayout.LOTS).map(id => {
+      const lot = window.CityLayout.LOTS[id];
+      return { x: lot.x, y: 0.06, z: lot.z, w: lot.w + 0.45, h: 0.1, d: lot.d + 0.45 };
+    });
+    pads.push(
+      { x: 0, y: 0.045, z: 3.45, w: 28, h: 0.09, d: 0.52 },
+      { x: 0, y: 0.045, z: 1.35, w: 28, h: 0.09, d: 0.52 },
+      { x: 0, y: 0.045, z: -1.35, w: 28, h: 0.09, d: 0.52 },
+      { x: 0, y: 0.045, z: -3.45, w: 28, h: 0.09, d: 0.52 },
+      { x: 8.7, y: 0.06, z: -5.15, w: 5.2, h: 0.11, d: 3.8 }
+    );
+    addBoxBatch(THREE, ground, palette.concrete, pads, "campus-pads");
+
+    const markings = [];
+    for (let x = -12; x <= 12; x += 2.4) {
+      markings.push(
+        { x, y: 0.079, z: 2.4, w: 1.05, h: 0.018, d: 0.07 },
+        { x, y: 0.079, z: -2.4, w: 1.05, h: 0.018, d: 0.07 }
       );
-      m.position.set(x, y, z);
-      ground.add(m);
-      return m;
-    };
-    // Base slab (grass, slightly darker at dusk).
-    mkBox(27, 0.5, 17, 0x33421f, 0, -0.25, 0);
-    // Roads between the rows.
-    mkBox(27, 0.06, 1.4, 0x33291a, 0, 0.005, 2.4);
-    mkBox(27, 0.06, 1.4, 0x33291a, 0, 0.005, -2.4);
-    // Central plaza connector.
-    mkBox(1.6, 0.06, 10, 0x4a3f2c, 10.8, 0.006, 0);
-    // Arbres de bordure : instanciés (9 troncs + 9 couronnes en 2 draw calls
-    // au lieu de 18 meshes) — gain perf sûr, ces arbres sont décoratifs et
-    // immobiles.
-    const trunkMesh = new THREE.InstancedMesh(
-      new THREE.CylinderGeometry(0.07, 0.09, 0.5, 5),
-      new THREE.MeshLambertMaterial({ color: 0x6b4a28, flatShading: true }),
-      9
-    );
-    const crownMesh = new THREE.InstancedMesh(
-      new THREE.ConeGeometry(0.45, 1.0, 6),
-      new THREE.MeshLambertMaterial({ color: 0x4a5a2c, flatShading: true }),
-      9
-    );
-    const td = new THREE.Object3D();
-    for (let i = 0; i < 9; i++) {
-      const x = -12 + i * 3;
-      td.position.set(x, 0.25, -7.4); td.updateMatrix(); trunkMesh.setMatrixAt(i, td.matrix);
-      td.position.set(x, 1.0, -7.4); td.updateMatrix(); crownMesh.setMatrixAt(i, td.matrix);
     }
-    ground.add(trunkMesh, crownMesh);
-    scene.add(ground);
+    [-8, 0, 8].forEach(crossingX => {
+      [-2, -1, 0, 1, 2].forEach(offset => {
+        markings.push(
+          { x: crossingX + offset * 0.22, y: 0.081, z: 2.4, w: 0.11, h: 0.02, d: 1.08 },
+          { x: crossingX + offset * 0.22, y: 0.081, z: -2.4, w: 0.11, h: 0.02, d: 1.08 }
+        );
+      });
+    });
+    for (let z = -6.3; z <= -4.1; z += 0.55) {
+      markings.push({ x: 11.16, y: 0.083, z, w: 0.62, h: 0.018, d: 0.055 });
+    }
+    addBoxBatch(THREE, ground, palette.marking, markings, "road-markings");
+
+    const treePositions = [];
+    for (let x = -12; x <= 6; x += 3) treePositions.push({ x, z: -7.55 });
+    [-11.8, -7.8, -3.8, 0.2, 4.2, 8.2].forEach(x => treePositions.push({ x, z: 7.55 }));
+    addCylinderBatch(THREE, ground, palette.treeTrunk, treePositions.map(p => ({
+      x: p.x, y: 0.28, z: p.z, r: 0.085, h: 0.56
+    })), "tree-trunks", 5);
+    addConeBatch(THREE, ground, palette.treeCrown, treePositions.map((p, i) => ({
+      x: p.x, y: 1.02 + (i % 2) * 0.08, z: p.z, r: 0.48, h: 1.1 + (i % 3) * 0.12
+    })), "tree-crowns");
+
+    const lampPositions = [];
+    [-11, -6, -1, 4, 9].forEach(x => {
+      lampPositions.push({ x, z: 3.15 }, { x, z: -3.15 });
+    });
+    addCylinderBatch(THREE, ground, palette.metal, lampPositions.map(p => ({
+      x: p.x, y: 0.72, z: p.z, r: 0.035, h: 1.42
+    })), "lamp-posts", 6);
+    addBoxBatch(THREE, ground, palette.window, lampPositions.map(p => ({
+      x: p.x, y: 1.47, z: p.z, w: 0.18, h: 0.13, d: 0.18
+    })), "lamp-heads");
+
+    const crates = [
+      { x: -12.2, y: 0.2, z: 6.3, w: 0.58, h: 0.4, d: 0.58, ry: 0.08 },
+      { x: -11.55, y: 0.17, z: 6.45, w: 0.48, h: 0.34, d: 0.48, ry: -0.12 },
+      { x: 12.15, y: 0.2, z: 5.5, w: 0.58, h: 0.4, d: 0.58, ry: -0.08 },
+      { x: 11.65, y: 0.15, z: 6.05, w: 0.42, h: 0.3, d: 0.42, ry: 0.15 }
+    ];
+    addBoxBatch(THREE, ground, palette.kraft, crates, "shipping-crates");
+    const paperStacks = [];
+    [-12.15, 12.1].forEach((x, side) => {
+      for (let i = 0; i < 4; i++) {
+        paperStacks.push({
+          x, y: 0.1 + i * 0.085, z: side ? 4.75 : 5.35,
+          w: 0.78, h: 0.075, d: 0.58, ry: (i - 1.5) * 0.035
+        });
+      }
+    });
+    addBoxBatch(THREE, ground, palette.paper, paperStacks, "paper-stacks");
+
+    parent.add(ground);
+  }
+
+  /**
+   * Original municipal printworks landmark. It is permanent scenery rather
+   * than a purchasable tier, deliberately has no buildingId and therefore can
+   * never consume a game click.
+   */
+  function buildPrintworksLandmark(THREE, parent, palette) {
+    const landmark = new THREE.Group();
+    landmark.name = "decorative-printworks";
+    landmark.userData.decorative = true;
+    landmark.position.set(8.7, 0.12, -5.15);
+    landmark.scale.setScalar(1.18);
+
+    addBoxBatch(THREE, landmark, palette.paper, [
+      { x: 0, y: 0.68, z: 0, w: 3.75, h: 1.36, d: 2.45 },
+      { x: -1.68, y: 0.46, z: 0.55, w: 1.05, h: 0.92, d: 1.35 },
+      { x: 0.82, y: 1.48, z: -0.28, w: 1.18, h: 2.96, d: 1.22 },
+      { x: 1.55, y: 0.58, z: 0.52, w: 0.58, h: 1.16, d: 1.1 }
+    ], "printworks-walls");
+    addBoxBatch(THREE, landmark, palette.ink, [
+      { x: 0, y: 1.39, z: 0, w: 4.02, h: 0.16, d: 2.65 },
+      { x: 0.82, y: 2.99, z: -0.28, w: 1.38, h: 0.15, d: 1.42 },
+      { x: -0.2, y: 0.12, z: 1.26, w: 4.2, h: 0.24, d: 0.18 },
+      { x: -0.62, y: 0.57, z: 1.245, w: 0.72, h: 0.86, d: 0.08 },
+      { x: 0.25, y: 0.57, z: 1.245, w: 0.72, h: 0.86, d: 0.08 }
+    ], "printworks-structure");
+    const roofTeeth = [-1.2, -0.4, 0.4, 1.2].map((x, i) => ({
+      x, y: 1.62 + (i % 2) * 0.025, z: -0.08,
+      w: 0.82, h: 0.1, d: 1.7, rz: 0.34
+    }));
+    roofTeeth.push(
+      { x: -1.72, y: 0.96, z: 1.18, w: 0.16, h: 0.18, d: 1.2 },
+      { x: 1.72, y: 0.96, z: 1.18, w: 0.16, h: 0.18, d: 1.2 }
+    );
+    addBoxBatch(THREE, landmark, palette.orange, roofTeeth, "printworks-orange-details");
+
+    const windows = [];
+    [-1.35, -0.72, 0.72, 1.35].forEach(x => {
+      windows.push({ x, y: 0.76, z: 1.235, w: 0.36, h: 0.34, d: 0.055 });
+    });
+    [0.96, 1.58, 2.2].forEach(y => {
+      windows.push(
+        { x: 0.55, y, z: 0.345, w: 0.28, h: 0.36, d: 0.055 },
+        { x: 1.09, y, z: 0.345, w: 0.28, h: 0.36, d: 0.055 },
+        { x: 1.415, y, z: -0.52, w: 0.055, h: 0.36, d: 0.3 }
+      );
+    });
+    addBoxBatch(THREE, landmark, palette.window, windows, "printworks-windows");
+
+    addCylinderBatch(THREE, landmark, palette.metal, [
+      { x: -1.18, y: 2.12, z: -0.62, r: 0.15, h: 1.48 },
+      { x: -0.66, y: 1.98, z: -0.68, r: 0.12, h: 1.18 },
+      { x: 1.2, y: 3.48, z: -0.38, r: 0.07, h: 0.92 }
+    ], "printworks-chimneys", 10);
+    addCylinderBatch(THREE, landmark, palette.orange, [
+      { x: -1.18, y: 2.84, z: -0.62, r: 0.19, h: 0.16 },
+      { x: -0.66, y: 2.55, z: -0.68, r: 0.16, h: 0.14 },
+      { x: 1.2, y: 3.9, z: -0.38, r: 0.1, h: 0.12 }
+    ], "printworks-chimney-caps", 10);
+
+    // Three paper rolls make the trade legible even before any owned machine
+    // appears. Their axes run along x and their amber caps read as press drums.
+    addCylinderBatch(THREE, landmark, palette.paper, [-0.95, 0, 0.95].map(x => ({
+      x, y: 0.46, z: 1.52, r: 0.29, h: 0.64, rz: Math.PI / 2
+    })), "printworks-paper-rolls", 12);
+    addCylinderBatch(THREE, landmark, palette.orange, [-0.95, 0, 0.95].flatMap(x => ([
+      { x: x - 0.34, y: 0.46, z: 1.52, r: 0.32, h: 0.06, rz: Math.PI / 2 },
+      { x: x + 0.34, y: 0.46, z: 1.52, r: 0.32, h: 0.06, rz: Math.PI / 2 }
+    ])), "printworks-roll-caps", 12);
+
+    // Text-free paper-and-crown mark on the tower facade.
+    addBoxBatch(THREE, landmark, palette.ink, [
+      { x: 0.82, y: 2.47, z: 0.355, w: 0.82, h: 0.46, d: 0.08 }
+    ], "printworks-signboard");
+    addBoxBatch(THREE, landmark, palette.paper, [
+      { x: 0.72, y: 2.45, z: 0.41, w: 0.28, h: 0.2, d: 0.035, rz: -0.08 },
+      { x: 0.84, y: 2.49, z: 0.415, w: 0.28, h: 0.2, d: 0.035, rz: 0.05 }
+    ], "printworks-paper-mark");
+    addConeBatch(THREE, landmark, palette.orange, [
+      { x: 0.83, y: 2.67, z: 0.42, r: 0.12, h: 0.12, rx: Math.PI / 2, rz: Math.PI / 4 }
+    ], "printworks-crown-mark");
+
+    parent.add(landmark);
+  }
+
+  /** Distant industrial silhouette and soft low-poly clouds, each batched. */
+  function buildHorizon(THREE, parent, palette) {
+    const horizon = new THREE.Group();
+    horizon.name = "decorative-horizon";
+    const skyline = [];
+    const skylineColors = [0x6f8290, 0x829392, 0x718889, 0x98a18f, 0x687d87];
+    for (let i = 0; i < 13; i++) {
+      const h = 1.4 + ((i * 17) % 24) / 10;
+      skyline.push({
+        x: -14 + i * 2.25,
+        y: h / 2 - 0.02,
+        z: -10.2 - (i % 3) * 0.65,
+        w: 1.35 + (i % 2) * 0.45,
+        h,
+        d: 1.25 + (i % 3) * 0.22,
+        color: skylineColors[i % skylineColors.length]
+      });
+    }
+    const buildings = addBoxBatch(THREE, horizon, palette.skyline, skyline, "distant-skyline");
+    if (buildings) buildings.frustumCulled = false;
+
+    const distantWindows = [];
+    skyline.forEach((b, i) => {
+      const rows = Math.max(1, Math.floor(b.h / 0.9));
+      for (let row = 0; row < Math.min(3, rows); row++) {
+        distantWindows.push({
+          x: b.x + (i % 2 ? -0.24 : 0.24),
+          y: 0.55 + row * 0.72,
+          z: b.z + b.d / 2 + 0.015,
+          w: 0.22,
+          h: 0.24,
+          d: 0.035
+        });
+      }
+    });
+    addBoxBatch(THREE, horizon, palette.window, distantWindows, "distant-windows");
+
+    addCylinderBatch(THREE, horizon, palette.skylineDark, [
+      { x: -11.5, y: 2.7, z: -10.1, r: 0.18, h: 5.4 },
+      { x: -9.8, y: 2.1, z: -10.8, r: 0.13, h: 4.2 },
+      { x: 12.2, y: 2.45, z: -10.4, r: 0.16, h: 4.9 }
+    ], "distant-stacks", 8);
+
+    cloudLayer = new THREE.Group();
+    cloudLayer.name = "cloud-layer";
+    const cloudLobes = [
+      [-2.8, 3.65, -8.4, 1.45, 0.5, 0.68],
+      [-1.65, 3.82, -8.45, 1.05, 0.68, 0.74],
+      [-0.6, 3.62, -8.4, 1.35, 0.46, 0.64],
+      [0.7, 4.05, -7.4, 1.35, 0.5, 0.66],
+      [1.85, 4.22, -7.45, 1.0, 0.68, 0.72],
+      [2.85, 4.0, -7.4, 1.28, 0.46, 0.62],
+      [3.8, 4.45, -6.8, 1.4, 0.52, 0.68],
+      [5.0, 4.62, -6.85, 1.0, 0.7, 0.76],
+      [6.0, 4.4, -6.8, 1.32, 0.48, 0.64]
+    ];
+    const cloudMesh = new THREE.InstancedMesh(
+      new THREE.IcosahedronGeometry(0.75, 1),
+      palette.cloud,
+      cloudLobes.length
+    );
+    const dummy = new THREE.Object3D();
+    cloudLobes.forEach((v, i) => {
+      dummy.position.set(v[0], v[1], v[2]);
+      dummy.scale.set(v[3], v[4], v[5]);
+      dummy.rotation.set(0, (i % 3) * 0.16, 0);
+      dummy.updateMatrix();
+      cloudMesh.setMatrixAt(i, dummy.matrix);
+    });
+    cloudMesh.instanceMatrix.needsUpdate = true;
+    cloudMesh.frustumCulled = false;
+    cloudLayer.add(cloudMesh);
+    horizon.add(cloudLayer);
+    parent.add(horizon);
+  }
+
+  function buildDecorativeWorld(THREE) {
+    decorativeWorld = new THREE.Group();
+    decorativeWorld.name = "decorative-world";
+    const palette = {
+      ground: scenicMaterial(THREE, 0x66866c, { roughness: 1 }),
+      concrete: scenicMaterial(THREE, 0xd7c7a5, { roughness: 0.96 }),
+      road: scenicMaterial(THREE, 0x40505a, { roughness: 0.92 }),
+      marking: scenicMaterial(THREE, 0xf4d89b, { roughness: 0.9 }),
+      paper: scenicMaterial(THREE, 0xf5ead2, { roughness: 0.96 }),
+      kraft: scenicMaterial(THREE, 0xc89d5e, { roughness: 0.92 }),
+      ink: scenicMaterial(THREE, 0x263746, { roughness: 0.82 }),
+      orange: scenicMaterial(THREE, 0xe7601e, { roughness: 0.68 }),
+      metal: scenicMaterial(THREE, 0x8b9aa0, { roughness: 0.48, metalness: 0.42 }),
+      window: scenicMaterial(THREE, 0xffb13b, {
+        roughness: 0.5,
+        emissive: 0xff8b24,
+        emissiveIntensity: 0.58
+      }),
+      treeTrunk: scenicMaterial(THREE, 0x6d4b30, { roughness: 1 }),
+      treeCrown: scenicMaterial(THREE, 0x4f774d, { roughness: 1 }),
+      skyline: scenicMaterial(THREE, 0xffffff, { roughness: 1 }),
+      skylineDark: scenicMaterial(THREE, 0x526773, { roughness: 0.94 }),
+      cloud: new THREE.MeshBasicMaterial({
+        color: 0xfff3db,
+        transparent: true,
+        opacity: 0.82,
+        depthWrite: false,
+        fog: false,
+        toneMapped: false
+      })
+    };
+    buildGround(THREE, decorativeWorld, palette);
+    buildPrintworksLandmark(THREE, decorativeWorld, palette);
+    buildHorizon(THREE, decorativeWorld, palette);
+    scene.add(decorativeWorld);
   }
 
   /**
@@ -523,8 +860,10 @@
   }
 
   function truckCountFor(totalBuildings) {
-    if (!totalBuildings) return 0;
-    return Math.max(1, Math.min(TRUCK_CAP, 1 + Math.floor(totalBuildings / 3)));
+    // Two supplier/service vehicles make the campus feel inhabited before the
+    // first purchase without claiming player production. Owned buildings still
+    // grow the fleet using the exact same capped progression as before.
+    return Math.max(2, Math.min(TRUCK_CAP, 1 + Math.floor(totalBuildings / 3)));
   }
 
   /** Retourne true si une frame doit être rendue (apparition/mouvement). */
@@ -762,6 +1101,11 @@
       if (easeView(false)) needsRender = true;
       const t = (timeMs || 0) / 1000;
       placeCamera(BASE_AZIMUTH + sweepOffset + Math.sin((t * 2 * Math.PI) / DRIFT_PERIOD_S) * DRIFT_AMPLITUDE);
+      if (cloudLayer) {
+        // Translate the whole instanced layer: one object update, no per-cloud
+        // matrices in the hot loop. Reduced-motion freezes its current pose.
+        cloudLayer.position.x = Math.sin(t * 0.055) * 0.7;
+      }
       animated.armSegments.forEach((seg, i) => {
         seg.rotation.z = Math.sin(t * 0.8 + i * 0.9) * 0.35;
       });
@@ -903,21 +1247,16 @@
   }
 
   /**
-   * Fond du ciel synchronisé avec l'heure locale : suit les classes
-   * .sky-dawn / .sky-day / .sky-night posées par app.js (la teinte pilotée
-   * par les jauges reste sur la lumière hémisphérique, indépendante).
+   * The canvas deliberately stays transparent: the CSS stage owns the sky
+   * gradient and can change with .sky-* without an opaque WebGL rectangle.
+   * Fog and lights remain bright enough for every time-of-day skin.
    */
   var skyObserver = null;
 
   function applySkyBackground() {
-    if (!scene) return;
-    var cl = document.documentElement.classList;
-    var color = 0x120b22; // crépuscule par défaut
-    if (cl.contains("sky-night")) color = 0x0a0616;
-    else if (cl.contains("sky-dawn")) color = 0x1e1230;
-    else if (cl.contains("sky-day")) color = 0x2a2444;
-    if (!scene.background) scene.background = new THREE.Color(color);
-    else scene.background.setHex(color);
+    if (!scene || !renderer) return;
+    scene.background = null;
+    renderer.setClearColor(0xffffff, 0);
     needsRender = true;
   }
 
@@ -979,6 +1318,25 @@
     apply();
   }
 
+  function disposeDecorativeWorld() {
+    if (!decorativeWorld) return;
+    const geometries = new Set();
+    const materials = new Set();
+    decorativeWorld.traverse(object => {
+      if (object.geometry) geometries.add(object.geometry);
+      if (Array.isArray(object.material)) {
+        object.material.forEach(material => materials.add(material));
+      } else if (object.material) {
+        materials.add(object.material);
+      }
+    });
+    geometries.forEach(geometry => geometry.dispose());
+    materials.forEach(material => material.dispose());
+    if (scene) scene.remove(decorativeWorld);
+    decorativeWorld = null;
+    cloudLayer = null;
+  }
+
   function dispose() {
     disposed = true;
     running = false;
@@ -999,6 +1357,7 @@
       skyObserver.disconnect();
       skyObserver = null;
     }
+    disposeDecorativeWorld();
     if (papers) {
       papers.mesh.geometry.dispose();
       papers.mesh.material.dispose();
@@ -1043,18 +1402,23 @@
         renderer = new THREE.WebGLRenderer({
           canvas,
           antialias: window.innerWidth >= MOBILE_MAX_WIDTH,
+          alpha: true,
           powerPreference: "low-power"
         });
       } catch (err) {
         return false;
       }
       renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.16;
+      renderer.setClearColor(0xffffff, 0);
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x120b22);
+      scene.background = null;
+      scene.fog = new THREE.Fog(0xc9dfdc, 24, 62);
       camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 120);
       placeCamera(BASE_AZIMUTH);
       buildLights(THREE);
-      buildGround(THREE);
+      buildDecorativeWorld(THREE);
       buildTrucks(THREE);
       buildSmoke(THREE);
       buildPapers(THREE);

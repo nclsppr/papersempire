@@ -5,9 +5,10 @@ visuelle (CSS, assets, images générées) doit respecter ce document.
 
 ## Concept
 
-Le décor reste la nuit de l'atelier : ciel crépusculaire violet, diorama three.js,
-wordmark letterpress — intouchables. Tout ce qui se **manipule** devient un objet
-de papeterie physique : fiches bristol crème opaques, boutons-tampons épais qui
+Papers Empire s'ouvre comme une **affiche jouable** : header bleu nuit, grand
+campus industriel three.js dans une lumière de papier et HUD réel superposé.
+Le monde 3D porte le spectacle ; tout ce qui se **manipule** reste un objet de
+papeterie physique : fiches bristol crème opaques, boutons-tampons épais qui
 s'écrasent au clic, étiquettes kraft, listings perforés, visas « APPROUVÉ ».
 La parodie vient de la bureaucratie matérielle prise au sérieux.
 
@@ -29,6 +30,9 @@ Palette de référence :
 | Rouge tampon | `--stamp-red` | `#b3251e` |
 | Or (monnaie, premium) | `--accent` | `#fbbf24` |
 | Nuit de l'atelier | `--bg-sky` / `--bg-deep` | `#271c40` / `#0b0617` |
+| Cadre du hero | `--navy-950` / `--navy-900` | `#07111f` / `#0c1b2d` |
+| Ciel du campus | `--hero-sky` / `--hero-haze` | `#b9dce4` / `#f5e6bd` |
+| Orange industriel | `--factory-orange` | `#c94f1a` |
 
 Règles clés :
 - **Pas d'emoji dans le chrome d'action et de structure** (boutons, footer,
@@ -61,8 +65,9 @@ Papers Empire art style: vintage bureaucratic stationery aesthetic for a
 satirical printing-factory idle game. Cream ivory cardstock (#fdf8ec) and warm
 kraft paper (#d9c29a) surfaces, dark sepia ink (#33261a) linework,
 administrative rubber-stamp red (#b3251e) accents, amber gold (#fbbf24)
-highlights used sparingly. When a background or environment is needed, a
-dusk-purple print-works night (#271c40 to #0b0617). Flat 2D scanned-paper
+highlights used sparingly. When a background or environment is needed, use
+either a dusk-purple print-works night (#271c40 to #0b0617) or the misty
+paper-blue campus sky (#b9dce4 to #f5e6bd). Flat 2D scanned-paper
 look, subtle cotton fiber grain, slightly distressed rubber-stamp edges,
 clean simple shapes, soft even lighting, no photorealism, no gloss, no neon.
 Strictly no letters, no words, no numbers in the image.
@@ -71,14 +76,28 @@ Strictly no letters, no words, no numbers in the image.
 Contraintes non négociables :
 1. **Jamais de texte dans les images** (l'i18n 4 langues passe par le HTML).
 2. La palette ci-dessus, rien d'autre (pas de bleus/verts saturés hors tokens).
-3. Fond transparent pour tout ce qui se pose sur une fiche ou le ciel ;
-   fond nuit violette uniquement pour les headers/key art.
+3. Fond transparent pour tout ce qui se pose sur une fiche ; les key arts
+   peuvent employer la nuit violette ou le ciel papier du campus.
 4. Style « objet scanné à plat » pour les éléments d'UI ; le rendu 3D lowpoly
    est réservé à la scène three.js (et au key art qui la met en scène).
 5. Formats : WebP pour les opaques, PNG pour les transparents ; tailles en
    puissances de 2 quand c'est une tuile.
 
 La liste des assets à générer vit dans [images-todo.md](images-todo.md).
+
+## Logo et hero (décision 2026-08-18)
+
+- Le symbole canonique est la **couronne de ramette** : trois feuilles pliées
+  sortent d'une presse et ne forment qu'une seule couronne.
+- Les sources vectorielles sont `assets/brand/papers-empire-mark.svg` et
+  `assets/brand/papers-empire-lockup.svg`. Le wordmark est tracé, autonome et
+  sans dépendance de police.
+- Favicon, icônes PWA et Apple touch icon dérivent du même symbole. Ne jamais
+  réintroduire l'ancien document blanc générique sur carré violet.
+- Dans le hero, le canvas reste décoratif (`aria-hidden`) ; titre, HUD et actions
+  restent en HTML, traduisibles et utilisables sans WebGL.
+- Le printworks permanent est un décor non productif : il donne une scène riche
+  à quantité zéro sans prétendre que le joueur possède déjà un bâtiment.
 
 ## Stickers de bâtiments vs 3D (décision 2026-07-18)
 
@@ -91,7 +110,7 @@ utilisé — ne pas remplacer les stickers dessinés sans nouvelle décision.
 
 ## Zones gelées
 
-- Wordmark letterpress `.header-title` (pile de text-shadows violets).
-- Scène three.js et ses recettes de bâtiments lowpoly.
-- Overrides `.sky-dawn/.sky-day/.sky-night` et scrims figés.
-- Bloc `.pref-high-contrast` (stylé à part, jamais routé par les tokens).
+- Sources SVG de la couronne de ramette : évolution uniquement par décision de marque explicite.
+- Identifiants de bâtiments, bridge lecture seule et caractère progressif/fallback de la scène.
+- Stickers dessinés des 11 bâtiments : ne pas les régénérer sans nouvelle décision.
+- Bloc `.pref-high-contrast` : toute évolution du hero doit être vérifiée dans ce mode.

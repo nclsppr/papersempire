@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.19 – « Empire World » : l'affiche devient jouable
+
+- Nouveau système de marque vectoriel : couronne de ramette, lockup tracé,
+  favicon et icônes installables issus du même symbole.
+- Hero plein cadre inspiré des affiches d'idle games, mais alimenté par les
+  vraies données : CTA d'impression, documents, DOC/s, prestige et culture.
+- Campus three.js visible dès une sauvegarde vierge grâce à un printworks
+  décoratif non productif, skyline, nuages, routes, lampadaires, palettes,
+  piles de papier et véhicules de service.
+- Canvas transparent, éclairage PBR léger, brouillard et ACES sans dépendance
+  ni post-traitement lourd ; état vierge mesuré à 27 appels et 4 388 triangles.
+- Responsive 390 px sans débordement, quatre langues, contraste élevé,
+  mouvement réduit et désactivation de la scène revérifiés.
+
 ## 0.12 – « Atelier tamponné » : le re-skin parodique
 - Nouveau design system complet : le décor crépusculaire et le diorama three.js restent la nuit de l'atelier, tout ce qui se manipule devient papeterie physique (fiches bristol à coin corné, boutons-tampons avec socle 3D et écrasement au clic, étiquettes kraft, réglettes, post-its).
 - Visas « APPROUVÉ » tamponnés sur les succès débloqués, traduits en 4 langues (GUTTGEHEESCHT inclus).

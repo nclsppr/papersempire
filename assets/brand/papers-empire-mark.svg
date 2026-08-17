@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="mark-title mark-desc">
+  <title id="mark-title">Papers Empire</title>
+  <desc id="mark-desc">Three folded paper sheets rise like a crown from a printing press.</desc>
+
+  <!-- Hard letterpress extrusion. -->
+  <g fill="#0b0617" stroke="#0b0617" stroke-width="9" stroke-linejoin="round" transform="translate(7 8)">
+    <path d="m38 96 39-42 31 35-14 62-43-11Z"/>
+    <path d="M82 62 128 27l46 35-17 94H99Z"/>
+    <path d="m148 89 31-35 39 42-13 44-43 11Z"/>
+  </g>
+
+  <!-- Three folded sheets create one crown silhouette. -->
+  <g stroke="#33261a" stroke-width="8" stroke-linejoin="round">
+    <path d="m38 96 39-42 31 35-14 62-43-11Z" fill="#eee3c9"/>
+    <path d="M82 62 128 27l46 35-17 94H99Z" fill="#fdf8ec"/>
+    <path d="m148 89 31-35 39 42-13 44-43 11Z" fill="#eee3c9"/>
+    <path d="m77 54 3 28 28 7Z" fill="#fbbf24"/>
+    <path d="m128 27 17 32 29 3Z" fill="#fbbf24"/>
+    <path d="m179 54-3 28-28 7Z" fill="#fbbf24"/>
+  </g>
+
+  <!-- A compact platen makes the paper crown read as a printing press. -->
+  <rect x="31" y="145" width="194" height="67" rx="7" fill="#0b0617" transform="translate(7 8)"/>
+  <rect x="31" y="145" width="194" height="27" rx="6" fill="#fbbf24" stroke="#33261a" stroke-width="8"/>
+  <path d="M43 171h170v40H43Z" fill="#fdf8ec" stroke="#33261a" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M77 190h102" fill="none" stroke="#b3251e" stroke-width="9" stroke-linecap="round"/>
+  <path d="M64 211v17m128-17v17" fill="none" stroke="#33261a" stroke-width="10" stroke-linecap="round"/>
+</svg>

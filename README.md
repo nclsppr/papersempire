@@ -9,6 +9,9 @@ All project documentation now lives inside the `docs/` directory and is publishe
 - [Game Design](docs/game-design.md)
 
 ## Development
-- `npm install` – install dev tools (Playwright, Retype).
-- `npm test` – run unit tests and Playwright layout checks.
+- `python3 -m http.server 8000` – serve the static game locally.
+- `npm install` – install the Retype documentation tool.
 - `npm run docs:build` – build the static docs site with Retype (output in `docs-site/`).
+
+There is currently no automated test suite in the repository; validate UI
+changes in the browser and run `node --check` on modified JavaScript files.

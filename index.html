@@ -7,7 +7,7 @@
   <meta name="description" content="Transforme ta petite imprimerie en usine 4.0 : bâtiments, contrats premium, réorgs stratégiques et bourrages papier. Jeu idle gratuit dans ton navigateur.">
   <meta name="author" content="Nicolas Pieper">
   <meta name="robots" content="index, follow, max-image-preview:large">
-  <meta name="theme-color" content="#1a1230">
+  <meta name="theme-color" content="#07111f">
   <link rel="canonical" href="https://papersempire.com/">
   <link rel="alternate" hreflang="fr" href="https://papersempire.com/">
   <link rel="alternate" hreflang="en" href="https://papersempire.com/en/">
@@ -125,12 +125,19 @@
 <header class="app-header" role="banner">
   <div class="header-inner">
     <div class="header-top">
-      <div class="header-brand">
-        <h1 class="header-title" data-game-title>Papers Empire</h1>
-        <span class="header-tagline" data-i18n="app.tagline">Transforme ton imprimerie en usine 4.0 omnicanale.</span>
-</div>
+      <a class="header-brand" href="#sceneStage" aria-label="Papers Empire">
+        <img class="brand-lockup" src="/assets/brand/papers-empire-lockup.svg" alt="" width="254" height="112">
+        <span class="sr-only">Papers Empire</span>
+</a>
+      <nav class="primary-nav" aria-label="Navigation principale">
+        <a class="active" href="#sceneStage" data-i18n="nav.factory">Usine 3D</a>
+        <a href="#printStation" data-i18n="nav.production">Production</a>
+        <a href="#buildingsPanel" data-i18n="nav.buildings">Bâtiments</a>
+        <a href="#upgradesPanel" data-i18n="nav.upgrades">Améliorations</a>
+</nav>
       <div class="header-actions">
         <a class="nav-dash-link" id="dashboardLink" href="/dashboard/" data-i18n="nav.dashboard">Dashboard</a>
+        <a class="header-play-link" href="#printStation" data-i18n="actions.playNow">Jouer maintenant</a>
         <button class="icon-button" type="button" data-open-settings id="settingsGearButton">
           <svg class="icon-gear" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm9.4 5.3-1.9-.4a7.6 7.6 0 0 0 0-2.8l1.9-.4a.9.9 0 0 0 .6-1.2l-.9-2.2a.9.9 0 0 0-1.2-.5l-1.8.8a7.6 7.6 0 0 0-2-2l.8-1.8a.9.9 0 0 0-.5-1.2l-2.2-.9a.9.9 0 0 0-1.2.6l-.4 1.9a7.6 7.6 0 0 0-2.8 0l-.4-1.9a.9.9 0 0 0-1.2-.6l-2.2.9a.9.9 0 0 0-.5 1.2l.8 1.8a7.6 7.6 0 0 0-2 2l-1.8-.8a.9.9 0 0 0-1.2.5l-.9 2.2a.9.9 0 0 0 .6 1.2l1.9.4a7.6 7.6 0 0 0 0 2.8l-1.9.4a.9.9 0 0 0-.6 1.2l.9 2.2a.9.9 0 0 0 1.2.5l1.8-.8a7.6 7.6 0 0 0 2 2l-.8 1.8a.9.9 0 0 0 .5 1.2l2.2.9a.9.9 0 0 0 1.2-.6l.4-1.9a7.6 7.6 0 0 0 2.8 0l.4 1.9a.9.9 0 0 0 1.2.6l2.2-.9a.9.9 0 0 0 .5-1.2l-.8-1.8a7.6 7.6 0 0 0 2-2l1.8.8a.9.9 0 0 0 1.2-.5l.9-2.2a.9.9 0 0 0-.6-1.2Z"/></svg>
           <span class="sr-only" data-i18n="actions.openSettings"></span>
@@ -156,23 +163,73 @@
 </button>
 </div>
 
-  <!-- Scène 3D du campus (enrichissement progressif) : purement décorative,
-       toutes les données restent dans l'interface DOM ci-dessous. -->
-  <section class="stage" id="sceneStage" aria-hidden="true">
-    <canvas id="cityCanvas"></canvas>
+  <!-- Le canvas est décoratif ; le HUD et les actions superposés restent
+       des éléments DOM accessibles et reflètent l'état réel du jeu. -->
+  <section class="stage" id="sceneStage" aria-labelledby="heroTitle">
+    <canvas id="cityCanvas" aria-hidden="true"></canvas>
     <div class="stage-fallback" id="stageFallback">
       <div class="stage-skyline" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
 </div>
       <p class="stage-fallback-text" data-i18n="scene.fallback"></p>
 </div>
+
+    <div class="hero-copy">
+      <p class="hero-kicker" data-i18n="hero.kicker">IDLE GAME D'IMPRIMERIE</p>
+      <h1 class="hero-title" id="heroTitle">
+        <span data-i18n="hero.line1">IMPRIME.</span>
+        <span data-i18n="hero.line2">AUTOMATISE.</span>
+        <span class="hero-title-accent" data-i18n="hero.line3">RÈGNE.</span>
+</h1>
+      <p class="hero-lede" data-i18n="hero.lede">Pars d'un atelier minuscule et bâtis un empire du document, machine après machine.</p>
+      <div class="hero-actions">
+        <button class="hero-primary" id="heroClickButton" type="button" data-i18n="actions.printNow">Imprimer maintenant</button>
+        <a class="hero-secondary" href="#buildingsPanel" data-i18n="actions.exploreFactory">Explorer l'usine</a>
+</div>
+      <ul class="hero-benefits" aria-label="Caractéristiques du jeu">
+        <li data-i18n="hero.benefitIdle">Production même hors ligne</li>
+        <li data-i18n="hero.benefitGrow">Machines qui évoluent en direct</li>
+        <li data-i18n="hero.benefitFree">Gratuit dans le navigateur</li>
+</ul>
+</div>
+
+    <aside class="empire-hud" aria-labelledby="empireHudTitle">
+      <div class="empire-hud-heading">
+        <span class="hud-live-dot" aria-hidden="true"></span>
+        <h2 id="empireHudTitle" data-i18n="hud.title">Ton empire</h2>
+</div>
+      <dl class="empire-hud-grid">
+        <div>
+          <dt data-i18n="hud.documents">Documents</dt>
+          <dd id="heroDocBank">0</dd>
+</div>
+        <div>
+          <dt data-i18n="hud.production">Production</dt>
+          <dd id="heroDocPs">0 DOC/s</dd>
+</div>
+        <div>
+          <dt data-i18n="hud.prestige">Prestige</dt>
+          <dd>x<span id="heroPrestige">1.00</span></dd>
+</div>
+        <div>
+          <dt data-i18n="hud.culture">Culture</dt>
+          <dd id="heroCulture">0</dd>
+</div>
+</dl>
+</aside>
+
+    <div class="stage-status" aria-hidden="true">
+      <span></span>
+      <strong data-i18n="scene.liveCampus">Campus en direct</strong>
+</div>
     <div class="stage-flavor" id="flavorLine"></div>
+    <div class="paper-tear" aria-hidden="true"></div>
 </section>
 
 <main id="mainContent" class="app" role="main">
   <!-- Colonne gauche: clic + stats -->
-  <div class="layout-column" aria-label="Production et clics automatiques">
-    <div class="card" role="region" aria-label="Stats principales">
+  <div class="layout-column" id="printStation" aria-label="Production et clics automatiques">
+    <div class="card command-card" role="region" aria-label="Stats principales">
       <div class="stats-main">
         <div class="stat-line">
           <span class="stat-label" data-i18n="stats.docBank"></span>
@@ -234,14 +291,14 @@
 </div>
 
   <!-- Colonne centre: bâtiments -->
-  <div class="card" role="region" aria-label="Bâtiments">
+  <div class="card catalog-card" id="buildingsPanel" role="region" aria-label="Bâtiments">
     <h2 data-i18n="sections.buildingsTitle">Bâtiments de production</h2>
     <div class="small" data-i18n="sections.buildingsHint">Achète des paliers pour automatiser tes documents traités.</div>
     <div class="buildings-list" id="buildingsList"></div>
 </div>
 
   <!-- Colonne droite: upgrades, prestige, log -->
-  <div class="layout-column" aria-label="Améliorations et progression">
+  <div class="layout-column" id="upgradesPanel" aria-label="Améliorations et progression">
     <div class="card" role="region" aria-label="Améliorations">
       <h2 data-i18n="sections.upgradesTitle">Améliorations et prestige</h2>
       <div class="section">
