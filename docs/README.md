@@ -36,6 +36,7 @@ Track meaningful milestones in the project:
 - **0.18.5** – Livraison Atlas : Pages et la release VPS partagent désormais le même assemblage `site/`. L'archive statique et son inventaire complet de routes sont reproductibles, publiés dans GHCR par digest et attestés depuis le commit source.
 - **0.19.0** – « Empire World » : nouveau logo vectoriel couronne de ramette, hero jouable avec HUD réel, navigation et CTA multilingues, campus three.js riche dès quantité zéro (printworks décoratif, skyline, nuages, voirie et activité), nouveau cadrage desktop/mobile, ACES et icônes PWA raccordées à la marque. High contrast, mouvement réduit et fallback progressif restent contractuels.
 - **0.19.1** – Documentation opérationnelle Atlas : séparation explicite entre la publication sans secret VPS et la réconciliation centrale, avec une preuve historique datée.
+- **0.19.2** – Procédure Atlas visible depuis le README racine : branche et pull request vers `master`, attente de la release productrice, passage central planifié et commande de réconciliation immédiate sans modification de `vps-infra`.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
