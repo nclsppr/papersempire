@@ -391,6 +391,11 @@
     DOM.culturePoints = document.getElementById("culturePoints");
     DOM.prestigeMult = document.getElementById("prestigeMult");
     DOM.clickButton = document.getElementById("clickButton");
+    DOM.heroClickButton = document.getElementById("heroClickButton");
+    DOM.heroDocBank = document.getElementById("heroDocBank");
+    DOM.heroDocPs = document.getElementById("heroDocPs");
+    DOM.heroPrestige = document.getElementById("heroPrestige");
+    DOM.heroCulture = document.getElementById("heroCulture");
     DOM.prestigeButton = document.getElementById("prestigeButton");
     DOM.prestigeInfo = document.getElementById("prestigeInfo");
     DOM.buildingsList = document.getElementById("buildingsList");
@@ -436,6 +441,9 @@
   function bindUIEvents() {
     if (DOM.clickButton) {
       DOM.clickButton.addEventListener("click", handleClick);
+    }
+    if (DOM.heroClickButton) {
+      DOM.heroClickButton.addEventListener("click", handleClick);
     }
     if (DOM.prestigeButton) {
       DOM.prestigeButton.addEventListener("click", () => {
@@ -1491,10 +1499,17 @@
   /** Renders the live stats ribbons and gauges. */
   function renderStats() {
     const DOCps = computeDocPerSecond();
-    if (DOM.docBank) DOM.docBank.textContent = formatNumber(gameState.resources.docBank);
+    const formattedBank = formatNumber(gameState.resources.docBank);
+    const formattedDocPs = t("stats.docPsValue", { amount: formatNumber(DOCps) });
+    const formattedPrestige = prestigeMultiplier().toFixed(2);
+    if (DOM.docBank) DOM.docBank.textContent = formattedBank;
     if (DOM.docTotal) DOM.docTotal.textContent = formatNumber(gameState.resources.docTotal);
     if (DOM.ccTotal) DOM.ccTotal.textContent = formatNumber(gameState.resources.ccTotal);
-    if (DOM.docPs) DOM.docPs.textContent = t("stats.docPsValue", { amount: formatNumber(DOCps) });
+    if (DOM.docPs) DOM.docPs.textContent = formattedDocPs;
+    if (DOM.heroDocBank) DOM.heroDocBank.textContent = formattedBank;
+    if (DOM.heroDocPs) DOM.heroDocPs.textContent = formattedDocPs;
+    if (DOM.heroPrestige) DOM.heroPrestige.textContent = formattedPrestige;
+    if (DOM.heroCulture) DOM.heroCulture.textContent = gameState.resources.culturePoints;
 
     const q = clamp01(gameState.stats.quality);
     const f = clamp01(gameState.stats.footprint);
@@ -1509,7 +1524,7 @@
     if (DOM.imageFill) DOM.imageFill.style.width = (img * 100).toFixed(1) + "%";
 
     if (DOM.culturePoints) DOM.culturePoints.textContent = gameState.resources.culturePoints;
-    if (DOM.prestigeMult) DOM.prestigeMult.textContent = prestigeMultiplier().toFixed(2);
+    if (DOM.prestigeMult) DOM.prestigeMult.textContent = formattedPrestige;
   }
 
   /** Updates the prestige card state and CTA messaging. */

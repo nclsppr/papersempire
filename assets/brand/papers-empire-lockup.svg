@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 232" role="img" aria-labelledby="lockup-title lockup-desc">
+  <title id="lockup-title">Papers Empire</title>
+  <desc id="lockup-desc">Papers Empire wordmark beside a crown made from folded paper sheets and a printing press.</desc>
+
+  <defs>
+    <g id="press-crown">
+      <g fill="#0b0617" stroke="#0b0617" stroke-width="9" stroke-linejoin="round" transform="translate(7 8)">
+        <path d="m38 96 39-42 31 35-14 62-43-11Z"/>
+        <path d="M82 62 128 27l46 35-17 94H99Z"/>
+        <path d="m148 89 31-35 39 42-13 44-43 11Z"/>
+      </g>
+      <g stroke="#33261a" stroke-width="8" stroke-linejoin="round">
+        <path d="m38 96 39-42 31 35-14 62-43-11Z" fill="#eee3c9"/>
+        <path d="M82 62 128 27l46 35-17 94H99Z" fill="#fdf8ec"/>
+        <path d="m148 89 31-35 39 42-13 44-43 11Z" fill="#eee3c9"/>
+        <path d="m77 54 3 28 28 7Z" fill="#fbbf24"/>
+        <path d="m128 27 17 32 29 3Z" fill="#fbbf24"/>
+        <path d="m179 54-3 28-28 7Z" fill="#fbbf24"/>
+      </g>
+      <rect x="31" y="145" width="194" height="67" rx="7" fill="#0b0617" transform="translate(7 8)"/>
+      <rect x="31" y="145" width="194" height="27" rx="6" fill="#fbbf24" stroke="#33261a" stroke-width="8"/>
+      <path d="M43 171h170v40H43Z" fill="#fdf8ec" stroke="#33261a" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M77 190h102" fill="none" stroke="#b3251e" stroke-width="9" stroke-linecap="round"/>
+      <path d="M64 211v17m128-17v17" fill="none" stroke="#33261a" stroke-width="10" stroke-linecap="round"/>
+    </g>
+
+    <!-- Custom slab letters keep the wordmark deterministic and dependency-free. -->
+    <g id="papers-letters" fill-rule="evenodd">
+      <path d="M0 72V0h34c18 0 27 9 27 25S51 50 34 50H19v22Zm19-56v18h13c8 0 11-3 11-9s-3-9-11-9Z"/>
+      <path d="M69 72 93 0h23l24 72h-20l-4-14H92l-4 14Zm28-30h14l-7-24Z"/>
+      <path d="M148 72V0h34c18 0 27 9 27 25s-10 25-27 25h-15v22Zm19-56v18h13c8 0 11-3 11-9s-3-9-11-9Z"/>
+      <path d="M217 0h58v16h-39v12h34v16h-34v12h41v16h-60Z"/>
+      <path d="M286 72V0h34c18 0 27 9 27 25 0 11-5 19-14 23l20 24h-24l-17-22h-7v22Zm19-56v18h13c8 0 11-3 11-9s-3-9-11-9Z"/>
+      <path d="M415 5v17c-10-5-20-7-29-7-8 0-12 3-12 7 0 5 5 7 17 10 20 5 28 12 28 24 0 13-11 19-31 19-13 0-24-3-32-8V50c11 6 21 9 31 9 9 0 14-2 14-7 0-4-5-6-17-9-19-5-27-13-27-25 0-12 11-18 30-18 11 0 21 2 28 5Z"/>
+    </g>
+
+    <g id="empire-letters" fill-rule="evenodd">
+      <path d="M0 0h58v16H19v12h34v16H19v12h41v16H0Z"/>
+      <path d="M69 72V0h20l15 34 15-34h20v72h-18V29l-10 25H97L87 29v43Z"/>
+      <path d="M148 72V0h34c18 0 27 9 27 25s-10 25-27 25h-15v22Zm19-56v18h13c8 0 11-3 11-9s-3-9-11-9Z"/>
+      <path d="M217 0h54v16h-18v40h18v16h-54V56h18V16h-18Z"/>
+      <path d="M280 72V0h34c18 0 27 9 27 25 0 11-5 19-14 23l20 24h-24l-17-22h-7v22Zm19-56v18h13c8 0 11-3 11-9s-3-9-11-9Z"/>
+      <path d="M353 0h58v16h-39v12h34v16h-34v12h41v16h-60Z"/>
+    </g>
+  </defs>
+
+  <use href="#press-crown" transform="translate(4 2) scale(.88)"/>
+
+  <!-- Deep-navy hard extrusion, then cream letter faces with sepia outlines. -->
+  <g stroke-linejoin="round" paint-order="stroke fill">
+    <g transform="translate(252 23)">
+      <use href="#papers-letters" fill="#0b0617" stroke="#0b0617" stroke-width="8" transform="translate(7 8)"/>
+      <use href="#papers-letters" fill="#fdf8ec" stroke="#33261a" stroke-width="5.5"/>
+    </g>
+
+    <path d="M255 111h122" fill="none" stroke="#fbbf24" stroke-width="7" stroke-linecap="round"/>
+
+    <g transform="translate(238 122) scale(1.06)">
+      <use href="#empire-letters" fill="#0b0617" stroke="#0b0617" stroke-width="8" transform="translate(7 8)"/>
+      <use href="#empire-letters" fill="#fdf8ec" stroke="#33261a" stroke-width="5.5"/>
+    </g>
+  </g>
+
+  <path d="M254 216h408" fill="none" stroke="#7f1a15" stroke-width="9" stroke-linecap="round"/>
+  <path d="M254 211h408" fill="none" stroke="#b3251e" stroke-width="6" stroke-linecap="round"/>
+</svg>

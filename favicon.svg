@@ -1,39 +1,18 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background rounded square with Kraken-style purple gradient -->
-  <defs>
-    <linearGradient id="pe-purple" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#5B2BE0"/>
-      <stop offset="100%" stop-color="#201354"/>
-    </linearGradient>
-  </defs>
-  <!-- Rounded square -->
-  <rect x="32" y="32" width="448" height="448" rx="112" ry="112" fill="url(#pe-purple)"/>
-  
-  <!-- White paper with folded top-right corner -->
-  <g>
-    <!-- Main paper body -->
-    <path
-      d="
-        M 152 116
-        H 296
-        L 360 180
-        V 396
-        H 152
-        V 116
-        Z
-      "
-      fill="#FFFFFF"
-    />
-    
-    <!-- Folded corner (triangle) - slightly darker shade -->
-    <path
-      d="
-        M 296 116
-        V 180
-        H 360
-        Z
-      "
-      fill="#E8E8E8"
-    />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="favicon-title">
+  <title id="favicon-title">Papers Empire</title>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#271c40"/>
+
+  <!-- Simplified crown-of-paper mark, tuned to survive at favicon sizes. -->
+  <g stroke="#33261a" stroke-width="8" stroke-linejoin="round">
+    <path d="m38 96 39-42 31 35-14 62-43-11Z" fill="#eee3c9"/>
+    <path d="M82 62 128 27l46 35-17 94H99Z" fill="#fdf8ec"/>
+    <path d="m148 89 31-35 39 42-13 44-43 11Z" fill="#eee3c9"/>
+    <path d="m77 54 3 28 28 7Z" fill="#fbbf24"/>
+    <path d="m128 27 17 32 29 3Z" fill="#fbbf24"/>
+    <path d="m179 54-3 28-28 7Z" fill="#fbbf24"/>
   </g>
+
+  <rect x="31" y="145" width="194" height="27" rx="6" fill="#fbbf24" stroke="#33261a" stroke-width="8"/>
+  <path d="M43 171h170v40H43Z" fill="#fdf8ec" stroke="#33261a" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M77 190h102" fill="none" stroke="#b3251e" stroke-width="9" stroke-linecap="round"/>
 </svg>
