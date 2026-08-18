@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
   workflow_dispatch:
 
 permissions:
@@ -38,8 +37,7 @@ jobs:
 
   deploy:
     needs: build
-    # La garde suit la branche par défaut pendant son renommage. La référence
-    # master du déclencheur sera retirée après le cutover.
+    # Seule la branche par défaut canonique peut publier le site.
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     environment:
       name: github-pages
