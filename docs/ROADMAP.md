@@ -62,8 +62,9 @@ mots, et gratifiant quand on revient.
 
 ## Règles de fonctionnement
 
-- Direct-to-master, commits/pushes fréquents, pas de tests automatisés (choix
-  assumé) : vérification manuelle en navigateur avant chaque push.
+- Pull requests vers `main`, commits fréquents, pas de suite de tests
+  applicative (choix assumé) : vérification manuelle en navigateur avant
+  chaque fusion.
 - Chaque version significative : entrée dans `README.md` (Versioned Change
   History) + `RELEASE_NOTES.md` si release majeure.
 - Tout changement visuel respecte `design-system.md`.

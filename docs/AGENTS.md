@@ -35,7 +35,9 @@
 ## Commit Guidelines
 
 - Use short, imperative commit messages (e.g., `feat: add habitat selector`, `fix: prevent negative food count`).
-- Commit and push directly to `master` — no pull requests.
+- Create a feature branch and open a pull request to `main`.
+- Merge only after the required checks pass. Do not push directly to the
+  protected default branch.
 - Link to any relevant design notes in `game-design.md` and include screenshots or short clips for UI changes when possible.
 
 ## Understand the game design

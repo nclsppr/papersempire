@@ -13,7 +13,7 @@ All project documentation now lives inside the `docs/` directory and is publishe
 A normal game or documentation release does not require a `vps-infra` code or contract
 change:
 
-1. create a branch in this repository and open a pull request to `master`;
+1. create a branch in this repository and open a pull request to `main`;
 2. wait for `Validate VPS release`, then merge the pull request;
 3. verify that the merged commit's
    [`VPS release`](https://github.com/nclsppr/papersempire/actions/workflows/vps-release.yml)
