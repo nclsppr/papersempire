@@ -60,6 +60,30 @@ flat 2D, slightly uneven ink coverage`. Le visa rouge « débloqué » reste en 
 - [x] `docs-header.webp` (1600×400, stocké dans assets/images/ — intégration au site docs à faire)
       Wide banner: a flat lay of cream and kraft paper sheets, a rubber stamp, paper clips and a golden coin scattered on a dusk-purple desk surface #271c40, top-down scan aesthetic, calm composition with empty space in the middle for overlaid text
 
+## Factory Key Art — 0.20
+
+Assets générés avec le skill ImageGen intégré, puis convertis en WebP sans
+réinterprétation locale :
+
+- [x] `assets/brand/papers-empire-logo-v2.png` + `.webp` — lockup exact
+      « PAPERS EMPIRE / IDLE GAME », plaque d'usine bleu nuit, lettres crème
+      extrudées, tuyaux, couronne de papier dorée et ruban orange, fond navy.
+- [x] `assets/images/hero-horizon-wide.webp` — horizon panoramique peint,
+      lumière matinale à gauche, ville européenne distante, cour industrielle
+      libre pour accueillir la scène Three.js.
+- [x] `assets/images/hero-horizon-mobile.webp` — composition verticale dédiée,
+      davantage de ciel et une zone centrale libre ; ce n'est pas un recadrage.
+- [x] `assets/images/progression/step-{print,automate,research,produce,expand,prestige}.webp`
+      — six objets industriels peints, détourés visuellement sur le même navy,
+      sans libellé afin de garder l'i18n en HTML.
+
+Direction de prompt commune : key art premium d'idle game, illustration peinte
+isométrique, acier bleu, tuyaux orange, papier crème, or industriel, lumière
+matinale chaude, texture imprimée subtile, lisible à petite taille, sans
+watermark ni faux élément d'interface. Pour les horizons : espace calme à
+gauche et cour vide au premier plan. Pour les étapes : un seul objet centré,
+silhouette nette et fond navy uniforme.
+
 ## Plus tard (si la feature arrive)
 
 - [ ] Icônes de compétences (arbre de compétences pas encore dans le jeu) —

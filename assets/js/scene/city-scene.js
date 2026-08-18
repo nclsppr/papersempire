@@ -17,9 +17,20 @@
   // Gentle idle drift: +/-3 degrees over ~40s.
   const DRIFT_AMPLITUDE = (3 * Math.PI) / 180;
   const DRIFT_PERIOD_S = 40;
-  const BASE_AZIMUTH = Math.PI / 4;
-  const ELEVATION = (35 * Math.PI) / 180;
+  const BASE_AZIMUTH = (42 * Math.PI) / 180;
+  const ELEVATION = (31 * Math.PI) / 180;
   const CAMERA_DISTANCE = 30;
+  // The permanent printworks is the hero's visual anchor. It must remain in
+  // frame when the first owned lot appears instead of being pushed out by the
+  // dynamic focus logic.
+  const HERO_VIEW = { x: 1.15, z: -0.75, zoom: 1.12 };
+  const HERO_VIEW_MOBILE = { x: 2.1, z: -2.0, zoom: 1.42 };
+  const LANDMARK_BOUNDS = {
+    minX: 4.35,
+    maxX: 12.25,
+    minZ: -8.7,
+    maxZ: -1.25
+  };
 
   let renderer = null;
   let scene = null;
@@ -53,6 +64,8 @@
   let sweepActive = false;
   // Dernières valeurs d'ambiance effectivement rendues (mode still).
   let renderedAmbiance = null;
+  let shadowsEnabled = false;
+  const decorativeTextures = new Set();
 
   // Camions de livraison (roadmap 0.18) : InstancedMesh plafonnés, animés
   // seulement hors reduce-motion, nombre croissant avec l'empire.
@@ -63,6 +76,7 @@
   let prestigeStamp = null; // plane texturé du tampon de prestige
   let decorativeWorld = null; // décor toujours visible, sans vérité de jeu
   let cloudLayer = null; // groupe de nuages instanciés, dérive très lente
+  let pressSheetLayer = null; // repères imprimés glissant sur les convoyeurs
 
   // Quel bâtiment secouer pour chaque événement narratif (juice PR3).
   const EVENT_TARGETS = {
@@ -93,12 +107,11 @@
   }
 
   // --- Cadrage dynamique ---------------------------------------------------
-  // La caméra cadre la partie OCCUPÉE du campus : plein cadre sur le premier
-  // kiosque, puis dézoome à mesure que l'empire s'étend, jusqu'au monde
-  // entier. view.* = état courant (lissé), viewTarget.* = cible du cadrage.
-  const view = { x: 0, z: 0, zoom: 1 };
-  const viewTarget = { x: 0, z: 0, zoom: 1 };
-  const MAX_ZOOM = 2.6;
+  // La caméra cadre la partie OCCUPÉE du campus tout en conservant la grande
+  // imprimerie-signature. view.* = état courant (lissé), viewTarget.* = cible.
+  const view = { x: HERO_VIEW.x, z: HERO_VIEW.z, zoom: HERO_VIEW.zoom };
+  const viewTarget = { x: HERO_VIEW.x, z: HERO_VIEW.z, zoom: HERO_VIEW.zoom };
+  const MAX_ZOOM = 1.55;
 
   /** Positions the ortho camera on the iso axis, looking at the view center. */
   function placeCamera(azimuth) {
@@ -138,11 +151,19 @@
       });
     });
     if (!any) {
-      viewTarget.x = 0;
-      viewTarget.z = 0;
-      viewTarget.zoom = 1;
+      const hero = isMobile ? HERO_VIEW_MOBILE : HERO_VIEW;
+      viewTarget.x = hero.x;
+      viewTarget.z = hero.z;
+      viewTarget.zoom = hero.zoom;
       return;
     }
+    // The landmark is permanent scenery, not an owned lot, but it is the
+    // compositional anchor of the hero. Unioning its bounds prevents the first
+    // purchase from zooming into a tiny kiosk and ejecting the printworks.
+    minX = Math.min(minX, LANDMARK_BOUNDS.minX);
+    maxX = Math.max(maxX, LANDMARK_BOUNDS.maxX);
+    minZ = Math.min(minZ, LANDMARK_BOUNDS.minZ);
+    maxZ = Math.max(maxZ, LANDMARK_BOUNDS.maxZ);
     viewTarget.x = (minX + maxX) / 2;
     viewTarget.z = (minZ + maxZ) / 2;
     // Étendue projetée en iso (azimut ~45°) : l'axe écran-x porte (dx+dz)/√2,
@@ -151,7 +172,12 @@
     const spanZ = (maxZ - minZ) + 3.5;
     const projected = (spanX + spanZ) / (2 * Math.SQRT2) + 2.2;
     const halfWorld = 26 * 0.56;
-    viewTarget.zoom = Math.max(1, Math.min(MAX_ZOOM, halfWorld / Math.max(4, projected)));
+    const fittedZoom = halfWorld / Math.max(4, projected);
+    // Portrait canvases dedicate their upper half to the DOM hero copy. A
+    // modest crop makes the factory readable in the remaining visual band.
+    const minZoom = isMobile ? 1.16 : 1;
+    const boost = isMobile ? 1.16 : 1;
+    viewTarget.zoom = Math.max(minZoom, Math.min(MAX_ZOOM, fittedZoom * boost));
   }
 
   /** Glisse la vue vers sa cible ; retourne true tant que ça bouge. */
@@ -193,14 +219,27 @@
   }
 
   function buildLights(THREE) {
-    const hemi = new THREE.HemisphereLight(0xe9f3e9, 0x4b4434, 1.35);
+    const hemi = new THREE.HemisphereLight(0xe9f3e9, 0x4b4434, 0.84);
     scene.add(hemi);
-    // Warm, high sun on the camera side: readable facades without realtime
-    // shadows (the scene keeps its inexpensive painted blob shadows).
-    const sun = new THREE.DirectionalLight(0xffe0a8, 1.8);
-    sun.position.set(12, 20, 14);
+    // One warm key light supplies the long illustrated shadows. On capable
+    // desktop layouts its shadow map is cached: it is refreshed only when the
+    // architectural state changes, never for trucks, smoke or flying paper.
+    const sun = new THREE.DirectionalLight(0xffd99a, 2.18);
+    sun.position.set(13, 22, 15);
+    if (shadowsEnabled) {
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.camera.left = -18;
+      sun.shadow.camera.right = 18;
+      sun.shadow.camera.top = 18;
+      sun.shadow.camera.bottom = -18;
+      sun.shadow.camera.near = 2;
+      sun.shadow.camera.far = 58;
+      sun.shadow.bias = -0.00045;
+      sun.shadow.normalBias = 0.028;
+    }
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0x8fd4db, 0.42);
+    const rim = new THREE.DirectionalLight(0x8fd4db, 0.3);
     rim.position.set(-10, 12, -14);
     scene.add(rim);
     lights = {
@@ -242,8 +281,8 @@
     // Le smog rapproche l'horizon et le réchauffe, sans replonger le campus
     // dans la nuit : la silhouette et les couleurs restent toujours lisibles.
     stepTo(scene.fog, "far", 62 - smog * 22);
-    stepTo(lights.sun, "intensity", 1.55 + Math.max(0, Math.min(1, lastStats.quality)) * 0.55);
-    stepTo(lights.rim, "intensity", 0.24 + Math.max(0, Math.min(1, lastStats.brandImage)) * 0.48);
+    stepTo(lights.sun, "intensity", 1.92 + Math.max(0, Math.min(1, lastStats.quality)) * 0.52);
+    stepTo(lights.rim, "intensity", 0.2 + Math.max(0, Math.min(1, lastStats.brandImage)) * 0.4);
     lights.skyTarget.lerpColors(lights.skyClear, lights.skySmog, smog);
     lights.groundTarget.lerpColors(lights.groundClear, lights.groundSmog, smog);
     lights.fogTarget.lerpColors(lights.fogClear, lights.fogSmog, smog);
@@ -290,6 +329,22 @@
     }, options || {}));
   }
 
+  function configureScenicShadows(mesh, name) {
+    if (!mesh || !shadowsEnabled) return mesh;
+    const label = name || "";
+    const receiverOnly = /ground-slab|campus-roads|campus-pads|road-markings|factory-apron/.test(label);
+    const unshadowed = /distant-|cloud|windows|sign-logo|paper-web|printed-sheets/.test(label);
+    mesh.castShadow = !receiverOnly && !unshadowed && !(mesh.material && mesh.material.transparent);
+    mesh.receiveShadow = !unshadowed;
+    return mesh;
+  }
+
+  function markShadowDirty() {
+    if (shadowsEnabled && renderer && renderer.shadowMap) {
+      renderer.shadowMap.needsUpdate = true;
+    }
+  }
+
   /** One draw call for an arbitrary set of scaled/rotated boxes. */
   function addBoxBatch(THREE, parent, material, specs, name) {
     if (!specs.length) return null;
@@ -310,6 +365,7 @@
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.name = name || "scenery-boxes";
+    configureScenicShadows(mesh, mesh.name);
     parent.add(mesh);
     return mesh;
   }
@@ -333,6 +389,7 @@
     });
     mesh.instanceMatrix.needsUpdate = true;
     mesh.name = name || "scenery-cylinders";
+    configureScenicShadows(mesh, mesh.name);
     parent.add(mesh);
     return mesh;
   }
@@ -355,6 +412,35 @@
     });
     mesh.instanceMatrix.needsUpdate = true;
     mesh.name = name || "scenery-cones";
+    configureScenicShadows(mesh, mesh.name);
+    parent.add(mesh);
+    return mesh;
+  }
+
+  /** One draw call for pipe elbows, roof tanks and other round details. */
+  function addSphereBatch(THREE, parent, material, specs, name) {
+    if (!specs.length) return null;
+    const mesh = new THREE.InstancedMesh(
+      new THREE.IcosahedronGeometry(0.5, 1),
+      material,
+      specs.length
+    );
+    const dummy = new THREE.Object3D();
+    specs.forEach((spec, index) => {
+      dummy.position.set(spec.x || 0, spec.y || 0, spec.z || 0);
+      dummy.rotation.set(spec.rx || 0, spec.ry || 0, spec.rz || 0);
+      const radius = spec.r || 0.5;
+      dummy.scale.set(
+        (spec.sx || radius) * 2,
+        (spec.sy || radius) * 2,
+        (spec.sz || radius) * 2
+      );
+      dummy.updateMatrix();
+      mesh.setMatrixAt(index, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.name = name || "scenery-spheres";
+    configureScenicShadows(mesh, mesh.name);
     parent.add(mesh);
     return mesh;
   }
@@ -387,7 +473,10 @@
       { x: 0, y: 0.045, z: 1.35, w: 28, h: 0.09, d: 0.52 },
       { x: 0, y: 0.045, z: -1.35, w: 28, h: 0.09, d: 0.52 },
       { x: 0, y: 0.045, z: -3.45, w: 28, h: 0.09, d: 0.52 },
-      { x: 8.7, y: 0.06, z: -5.15, w: 5.2, h: 0.11, d: 3.8 }
+      // Broad civic apron for the permanent printworks and its demonstration
+      // presses. It deliberately covers a short road segment like a factory
+      // forecourt, giving the landmark room to dominate the hero composition.
+      { x: 8.3, y: 0.065, z: -4.95, w: 8.15, h: 0.12, d: 7.45 }
     );
     addBoxBatch(THREE, ground, palette.concrete, pads, "campus-pads");
 
@@ -441,10 +530,10 @@
     addBoxBatch(THREE, ground, palette.kraft, crates, "shipping-crates");
     const paperStacks = [];
     [-12.15, 12.1].forEach((x, side) => {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 7; i++) {
         paperStacks.push({
-          x, y: 0.1 + i * 0.085, z: side ? 4.75 : 5.35,
-          w: 0.78, h: 0.075, d: 0.58, ry: (i - 1.5) * 0.035
+          x, y: 0.1 + i * 0.07, z: side ? 4.75 : 5.35,
+          w: 1.05, h: 0.06, d: 0.76, ry: (i - 3) * 0.025
         });
       }
     });
@@ -458,81 +547,225 @@
    * than a purchasable tier, deliberately has no buildingId and therefore can
    * never consume a game click.
    */
+  function addFactoryLogo(THREE, landmark) {
+    let plane = null;
+    const texture = new THREE.TextureLoader().load(
+      "/assets/brand/papers-empire-logo-v2.webp",
+      loaded => {
+        if (disposed) {
+          loaded.dispose();
+          decorativeTextures.delete(loaded);
+          return;
+        }
+        loaded.colorSpace = THREE.SRGBColorSpace;
+        loaded.anisotropy = renderer
+          ? Math.min(4, renderer.capabilities.getMaxAnisotropy())
+          : 1;
+        loaded.needsUpdate = true;
+        if (plane) plane.visible = true;
+        needsRender = true;
+      },
+      undefined,
+      () => {
+        // The geometric paper-and-crown mark immediately behind the plane is
+        // the deliberate offline / missing-asset fallback.
+        if (plane) plane.visible = false;
+        needsRender = true;
+      }
+    );
+    texture.colorSpace = THREE.SRGBColorSpace;
+    decorativeTextures.add(texture);
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      toneMapped: false
+    });
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 0.945), material);
+    plane.name = "printworks-sign-logo";
+    plane.position.set(1.28, 3.22, 0.177);
+    plane.visible = false;
+    configureScenicShadows(plane, plane.name);
+    landmark.add(plane);
+  }
+
   function buildPrintworksLandmark(THREE, parent, palette) {
     const landmark = new THREE.Group();
     landmark.name = "decorative-printworks";
     landmark.userData.decorative = true;
-    landmark.position.set(8.7, 0.12, -5.15);
-    landmark.scale.setScalar(1.18);
+    landmark.position.set(8.25, 0.08, -4.95);
+    landmark.scale.setScalar(1.34);
 
-    addBoxBatch(THREE, landmark, palette.paper, [
-      { x: 0, y: 0.68, z: 0, w: 3.75, h: 1.36, d: 2.45 },
-      { x: -1.68, y: 0.46, z: 0.55, w: 1.05, h: 0.92, d: 1.35 },
-      { x: 0.82, y: 1.48, z: -0.28, w: 1.18, h: 2.96, d: 1.22 },
-      { x: 1.55, y: 0.58, z: 0.52, w: 0.58, h: 1.16, d: 1.1 }
-    ], "printworks-walls");
-    addBoxBatch(THREE, landmark, palette.ink, [
-      { x: 0, y: 1.39, z: 0, w: 4.02, h: 0.16, d: 2.65 },
-      { x: 0.82, y: 2.99, z: -0.28, w: 1.38, h: 0.15, d: 1.42 },
-      { x: -0.2, y: 0.12, z: 1.26, w: 4.2, h: 0.24, d: 0.18 },
-      { x: -0.62, y: 0.57, z: 1.245, w: 0.72, h: 0.86, d: 0.08 },
-      { x: 0.25, y: 0.57, z: 1.245, w: 0.72, h: 0.86, d: 0.08 }
-    ], "printworks-structure");
-    const roofTeeth = [-1.2, -0.4, 0.4, 1.2].map((x, i) => ({
-      x, y: 1.62 + (i % 2) * 0.025, z: -0.08,
-      w: 0.82, h: 0.1, d: 1.7, rz: 0.34
-    }));
-    roofTeeth.push(
-      { x: -1.72, y: 0.96, z: 1.18, w: 0.16, h: 0.18, d: 1.2 },
-      { x: 1.72, y: 0.96, z: 1.18, w: 0.16, h: 0.18, d: 1.2 }
+    // A broad paved plinth binds the plant, its loading dock and the two
+    // demonstration press lines into one readable industrial campus.
+    addBoxBatch(THREE, landmark, palette.concrete, [
+      { x: 0, y: 0, z: 0.35, w: 5.9, h: 0.07, d: 5.2 }
+    ], "factory-apron");
+
+    const blueBoxes = [
+      { x: -0.1, y: 1.0, z: -0.42, w: 4.85, h: 2.0, d: 2.82 },
+      { x: 1.28, y: 2.42, z: -0.58, w: 1.55, h: 4.84, d: 1.5 },
+      { x: -2.22, y: 0.72, z: 0.04, w: 1.18, h: 1.44, d: 1.72 },
+      { x: 2.27, y: 0.82, z: 0.15, w: 0.72, h: 1.64, d: 1.6 },
+      // Press housings on the forecourt.
+      { x: -1.15, y: 0.72, z: 1.42, w: 1.04, h: 1.18, d: 0.9 },
+      { x: 0.58, y: 0.67, z: 1.34, w: 1.0, h: 1.08, d: 0.88 }
+    ];
+    addBoxBatch(THREE, landmark, palette.steelBlue, blueBoxes, "printworks-blue-masses");
+
+    const inkBoxes = [
+      { x: -0.1, y: 2.03, z: -0.42, w: 5.04, h: 0.16, d: 3.0 },
+      { x: 1.28, y: 4.89, z: -0.58, w: 1.75, h: 0.16, d: 1.7 },
+      { x: 0, y: 0.16, z: 1.0, w: 5.35, h: 0.24, d: 0.18 },
+      // Loading-bay portals and the logo backplate.
+      { x: -1.82, y: 0.66, z: 1.005, w: 0.72, h: 1.05, d: 0.09 },
+      { x: -0.82, y: 0.66, z: 1.005, w: 0.72, h: 1.05, d: 0.09 },
+      { x: 1.28, y: 3.22, z: 0.168, w: 1.38, h: 1.08, d: 0.1 },
+      // Two conveyors aimed toward the viewer.
+      { x: -1.15, y: 0.29, z: 2.05, w: 0.8, h: 0.26, d: 2.55 },
+      { x: 0.58, y: 0.27, z: 1.99, w: 0.78, h: 0.24, d: 2.42 },
+      { x: -1.56, y: 0.47, z: 2.05, w: 0.08, h: 0.48, d: 2.58 },
+      { x: -0.74, y: 0.47, z: 2.05, w: 0.08, h: 0.48, d: 2.58 },
+      { x: 0.18, y: 0.44, z: 1.99, w: 0.07, h: 0.42, d: 2.45 },
+      { x: 0.98, y: 0.44, z: 1.99, w: 0.07, h: 0.42, d: 2.45 }
+    ];
+    [-1.72, -0.86, 0, 0.86].forEach(x => {
+      inkBoxes.push({ x, y: 2.22, z: -0.48, w: 1.03, h: 0.11, d: 2.08, rz: 0.39 });
+    });
+    addBoxBatch(THREE, landmark, palette.ink, inkBoxes, "printworks-ink-structure");
+
+    const paperBoxes = [
+      { x: -0.18, y: 1.05, z: 1.01, w: 3.45, h: 1.55, d: 0.08 },
+      { x: 1.28, y: 1.22, z: 0.174, w: 1.13, h: 1.28, d: 0.055 },
+      { x: -1.15, y: 0.465, z: 2.05, w: 0.62, h: 0.045, d: 2.34 },
+      { x: 0.58, y: 0.435, z: 1.99, w: 0.6, h: 0.045, d: 2.21 },
+      // Geometric logo fallback behind the asynchronously loaded artwork.
+      { x: 1.15, y: 3.18, z: 0.224, w: 0.36, h: 0.27, d: 0.025, rz: -0.08 },
+      { x: 1.36, y: 3.23, z: 0.226, w: 0.36, h: 0.27, d: 0.025, rz: 0.07 }
+    ];
+    for (let i = 0; i < 7; i++) {
+      paperBoxes.push({
+        x: 1.93,
+        y: 0.12 + i * 0.065,
+        z: 2.34,
+        w: 0.82,
+        h: 0.052,
+        d: 0.64,
+        ry: (i - 3) * 0.028
+      });
+    }
+    addBoxBatch(THREE, landmark, palette.paper, paperBoxes, "printworks-paper-web");
+
+    const orangeBoxes = [
+      { x: -2.49, y: 1.18, z: 0.2, w: 0.16, h: 1.75, d: 1.72 },
+      { x: 2.49, y: 1.18, z: 0.2, w: 0.16, h: 1.75, d: 1.72 },
+      { x: -0.1, y: 1.52, z: 1.058, w: 3.55, h: 0.12, d: 0.06 },
+      { x: -1.15, y: 1.33, z: 1.43, w: 1.12, h: 0.11, d: 0.96 },
+      { x: 0.58, y: 1.25, z: 1.35, w: 1.08, h: 0.1, d: 0.94 }
+    ];
+    addBoxBatch(THREE, landmark, palette.orange, orangeBoxes, "printworks-orange-details");
+
+    const printedSheets = [];
+    [-1.15, 0.58].forEach((x, line) => {
+      for (let i = 0; i < 5; i++) {
+        printedSheets.push({
+          x,
+          y: line ? 0.47 : 0.5,
+          z: 1.35 + i * 0.37,
+          w: 0.34,
+          h: 0.022,
+          d: 0.11
+        });
+      }
+    });
+    pressSheetLayer = addBoxBatch(
+      THREE,
+      landmark,
+      palette.orange,
+      printedSheets,
+      "printworks-printed-sheets"
     );
-    addBoxBatch(THREE, landmark, palette.orange, roofTeeth, "printworks-orange-details");
 
     const windows = [];
-    [-1.35, -0.72, 0.72, 1.35].forEach(x => {
-      windows.push({ x, y: 0.76, z: 1.235, w: 0.36, h: 0.34, d: 0.055 });
+    [-1.95, -1.35, -0.75, -0.15, 0.45].forEach(x => {
+      windows.push({ x, y: 1.0, z: 1.062, w: 0.35, h: 0.42, d: 0.045 });
     });
-    [0.96, 1.58, 2.2].forEach(y => {
+    [1.25, 2.0, 2.75, 3.5, 4.25].forEach(y => {
       windows.push(
-        { x: 0.55, y, z: 0.345, w: 0.28, h: 0.36, d: 0.055 },
-        { x: 1.09, y, z: 0.345, w: 0.28, h: 0.36, d: 0.055 },
-        { x: 1.415, y, z: -0.52, w: 0.055, h: 0.36, d: 0.3 }
+        { x: 0.98, y, z: 0.178, w: 0.26, h: 0.39, d: 0.04 },
+        { x: 1.58, y, z: 0.178, w: 0.26, h: 0.39, d: 0.04 },
+        { x: 2.06, y, z: -0.57, w: 0.04, h: 0.38, d: 0.28 }
       );
     });
     addBoxBatch(THREE, landmark, palette.window, windows, "printworks-windows");
 
-    addCylinderBatch(THREE, landmark, palette.metal, [
-      { x: -1.18, y: 2.12, z: -0.62, r: 0.15, h: 1.48 },
-      { x: -0.66, y: 1.98, z: -0.68, r: 0.12, h: 1.18 },
-      { x: 1.2, y: 3.48, z: -0.38, r: 0.07, h: 0.92 }
-    ], "printworks-chimneys", 10);
-    addCylinderBatch(THREE, landmark, palette.orange, [
-      { x: -1.18, y: 2.84, z: -0.62, r: 0.19, h: 0.16 },
-      { x: -0.66, y: 2.55, z: -0.68, r: 0.16, h: 0.14 },
-      { x: 1.2, y: 3.9, z: -0.38, r: 0.1, h: 0.12 }
-    ], "printworks-chimney-caps", 10);
+    const metalCylinders = [
+      { x: -1.72, y: 3.0, z: -0.95, r: 0.18, h: 2.05 },
+      { x: -0.95, y: 2.82, z: -1.0, r: 0.15, h: 1.7 },
+      { x: 0.05, y: 2.74, z: -1.02, r: 0.13, h: 1.5 },
+      { x: 1.72, y: 5.28, z: -0.72, r: 0.09, h: 0.82 },
+      // Roof tanks.
+      { x: 0.66, y: 2.63, z: -0.7, r: 0.32, h: 0.68 },
+      { x: 1.92, y: 1.86, z: -0.86, r: 0.27, h: 0.58 }
+    ];
+    [-1.15, 0.58].forEach((x, line) => {
+      [1.2, 1.68, 2.16].forEach((z, i) => {
+        metalCylinders.push({
+          x,
+          y: (line ? 0.67 : 0.71) + (i % 2) * 0.04,
+          z,
+          r: line ? 0.19 : 0.22,
+          h: line ? 0.84 : 0.9,
+          rz: Math.PI / 2
+        });
+      });
+    });
+    addCylinderBatch(THREE, landmark, palette.metal, metalCylinders, "printworks-machinery", 12);
 
-    // Three paper rolls make the trade legible even before any owned machine
-    // appears. Their axes run along x and their amber caps read as press drums.
-    addCylinderBatch(THREE, landmark, palette.paper, [-0.95, 0, 0.95].map(x => ({
-      x, y: 0.46, z: 1.52, r: 0.29, h: 0.64, rz: Math.PI / 2
-    })), "printworks-paper-rolls", 12);
-    addCylinderBatch(THREE, landmark, palette.orange, [-0.95, 0, 0.95].flatMap(x => ([
-      { x: x - 0.34, y: 0.46, z: 1.52, r: 0.32, h: 0.06, rz: Math.PI / 2 },
-      { x: x + 0.34, y: 0.46, z: 1.52, r: 0.32, h: 0.06, rz: Math.PI / 2 }
-    ])), "printworks-roll-caps", 12);
+    const paperRolls = [-1.15, 0.58].map((x, line) => ({
+      x,
+      y: line ? 0.65 : 0.7,
+      z: 0.86,
+      r: line ? 0.3 : 0.34,
+      h: line ? 0.82 : 0.9,
+      rz: Math.PI / 2
+    }));
+    addCylinderBatch(THREE, landmark, palette.paper, paperRolls, "printworks-paper-rolls", 14);
 
-    // Text-free paper-and-crown mark on the tower facade.
-    addBoxBatch(THREE, landmark, palette.ink, [
-      { x: 0.82, y: 2.47, z: 0.355, w: 0.82, h: 0.46, d: 0.08 }
-    ], "printworks-signboard");
-    addBoxBatch(THREE, landmark, palette.paper, [
-      { x: 0.72, y: 2.45, z: 0.41, w: 0.28, h: 0.2, d: 0.035, rz: -0.08 },
-      { x: 0.84, y: 2.49, z: 0.415, w: 0.28, h: 0.2, d: 0.035, rz: 0.05 }
-    ], "printworks-paper-mark");
+    const orangeCylinders = [
+      // Chimney and tank caps.
+      { x: -1.72, y: 4.01, z: -0.95, r: 0.22, h: 0.16 },
+      { x: -0.95, y: 3.65, z: -1, r: 0.19, h: 0.15 },
+      { x: 0.05, y: 3.47, z: -1.02, r: 0.17, h: 0.14 },
+      { x: 1.72, y: 5.66, z: -0.72, r: 0.13, h: 0.13 },
+      // Exterior pipe circuit: vertical risers plus x/z runs.
+      { x: 2.5, y: 2.4, z: -0.78, r: 0.09, h: 3.2 },
+      { x: 1.42, y: 3.98, z: -0.78, r: 0.09, h: 2.15, rz: Math.PI / 2 },
+      { x: 0.36, y: 3.28, z: -0.78, r: 0.08, h: 1.4 },
+      { x: 0.36, y: 2.62, z: -0.05, r: 0.08, h: 1.46, rx: Math.PI / 2 },
+      { x: -2.43, y: 1.42, z: -1.14, r: 0.075, h: 1.72 },
+      { x: -1.74, y: 2.25, z: -1.14, r: 0.075, h: 1.38, rz: Math.PI / 2 }
+    ];
+    [-1.15, 0.58].forEach((x, line) => {
+      const half = line ? 0.46 : 0.5;
+      orangeCylinders.push(
+        { x: x - half, y: line ? 0.67 : 0.71, z: 1.2, r: line ? 0.22 : 0.25, h: 0.07, rz: Math.PI / 2 },
+        { x: x + half, y: line ? 0.67 : 0.71, z: 1.2, r: line ? 0.22 : 0.25, h: 0.07, rz: Math.PI / 2 },
+        { x: x - half, y: line ? 0.71 : 0.75, z: 2.16, r: line ? 0.22 : 0.25, h: 0.07, rz: Math.PI / 2 },
+        { x: x + half, y: line ? 0.71 : 0.75, z: 2.16, r: line ? 0.22 : 0.25, h: 0.07, rz: Math.PI / 2 }
+      );
+    });
+    addCylinderBatch(THREE, landmark, palette.orange, orangeCylinders, "printworks-orange-pipes", 12);
+    addSphereBatch(THREE, landmark, palette.orange, [
+      { x: 2.5, y: 3.98, z: -0.78, r: 0.13 },
+      { x: 0.36, y: 3.98, z: -0.78, r: 0.12 },
+      { x: 0.36, y: 2.62, z: -0.78, r: 0.11 },
+      { x: -2.43, y: 2.25, z: -1.14, r: 0.105 }
+    ], "printworks-pipe-elbows");
+
     addConeBatch(THREE, landmark, palette.orange, [
-      { x: 0.83, y: 2.67, z: 0.42, r: 0.12, h: 0.12, rx: Math.PI / 2, rz: Math.PI / 4 }
+      { x: 1.28, y: 3.72, z: 0.227, r: 0.16, h: 0.16, rx: Math.PI / 2, rz: Math.PI / 4 }
     ], "printworks-crown-mark");
+
+    addFactoryLogo(THREE, landmark);
 
     parent.add(landmark);
   }
@@ -542,24 +775,35 @@
     const horizon = new THREE.Group();
     horizon.name = "decorative-horizon";
     const skyline = [];
-    const skylineColors = [0x6f8290, 0x829392, 0x718889, 0x98a18f, 0x687d87];
-    for (let i = 0; i < 13; i++) {
-      const h = 1.4 + ((i * 17) % 24) / 10;
-      skyline.push({
-        x: -14 + i * 2.25,
-        y: h / 2 - 0.02,
-        z: -10.2 - (i % 3) * 0.65,
-        w: 1.35 + (i % 2) * 0.45,
-        h,
-        d: 1.25 + (i % 3) * 0.22,
-        color: skylineColors[i % skylineColors.length]
-      });
-    }
+    const skylineColors = [0x627987, 0x748b94, 0x829392, 0x91a19d, 0x5b7180, 0x9aa897];
+    const layerCounts = [13, 10, 8];
+    layerCounts.forEach((count, layer) => {
+      const step = 31 / Math.max(1, count - 1);
+      for (let i = 0; i < count; i++) {
+        const h = 1.05 + ((i * 17 + layer * 9) % 30) / 10 + layer * 0.2;
+        skyline.push({
+          x: -15.5 + i * step + (layer % 2 ? 0.65 : 0),
+          y: h / 2 - 0.05,
+          z: -10.5 - layer * 2.2 - (i % 3) * 0.32,
+          w: 1.1 + ((i + layer) % 3) * 0.38,
+          h,
+          d: 1.0 + (i % 3) * 0.18,
+          color: skylineColors[(i + layer * 2) % skylineColors.length]
+        });
+      }
+    });
+    // A distant editorial-city landmark echoes the reference skyline without
+    // competing with the much more saturated foreground printworks.
+    skyline.push(
+      { x: 13.3, y: 3.25, z: -13.7, w: 1.05, h: 6.5, d: 1.05, color: 0x71858d },
+      { x: 13.3, y: 6.78, z: -13.7, w: 0.62, h: 0.56, d: 0.62, color: 0x637985 }
+    );
     const buildings = addBoxBatch(THREE, horizon, palette.skyline, skyline, "distant-skyline");
     if (buildings) buildings.frustumCulled = false;
 
     const distantWindows = [];
     skyline.forEach((b, i) => {
+      if (b.z < -12.2 || i % 2) return;
       const rows = Math.max(1, Math.floor(b.h / 0.9));
       for (let row = 0; row < Math.min(3, rows); row++) {
         distantWindows.push({
@@ -577,7 +821,8 @@
     addCylinderBatch(THREE, horizon, palette.skylineDark, [
       { x: -11.5, y: 2.7, z: -10.1, r: 0.18, h: 5.4 },
       { x: -9.8, y: 2.1, z: -10.8, r: 0.13, h: 4.2 },
-      { x: 12.2, y: 2.45, z: -10.4, r: 0.16, h: 4.9 }
+      { x: 12.2, y: 2.45, z: -10.4, r: 0.16, h: 4.9 },
+      { x: 13.3, y: 7.6, z: -13.7, r: 0.085, h: 1.15 }
     ], "distant-stacks", 8);
 
     cloudLayer = new THREE.Group();
@@ -591,7 +836,13 @@
       [2.85, 4.0, -7.4, 1.28, 0.46, 0.62],
       [3.8, 4.45, -6.8, 1.4, 0.52, 0.68],
       [5.0, 4.62, -6.85, 1.0, 0.7, 0.76],
-      [6.0, 4.4, -6.8, 1.32, 0.48, 0.64]
+      [6.0, 4.4, -6.8, 1.32, 0.48, 0.64],
+      [-8.4, 5.0, -11.5, 1.25, 0.46, 0.62],
+      [-7.35, 5.18, -11.55, 0.94, 0.64, 0.7],
+      [-6.38, 4.98, -11.5, 1.18, 0.44, 0.6],
+      [9.2, 5.35, -12.2, 1.34, 0.48, 0.64],
+      [10.35, 5.52, -12.25, 0.98, 0.66, 0.72],
+      [11.35, 5.3, -12.2, 1.2, 0.45, 0.61]
     ];
     const cloudMesh = new THREE.InstancedMesh(
       new THREE.IcosahedronGeometry(0.75, 1),
@@ -624,6 +875,7 @@
       paper: scenicMaterial(THREE, 0xf5ead2, { roughness: 0.96 }),
       kraft: scenicMaterial(THREE, 0xc89d5e, { roughness: 0.92 }),
       ink: scenicMaterial(THREE, 0x263746, { roughness: 0.82 }),
+      steelBlue: scenicMaterial(THREE, 0x355c70, { roughness: 0.72, metalness: 0.08 }),
       orange: scenicMaterial(THREE, 0xe7601e, { roughness: 0.68 }),
       metal: scenicMaterial(THREE, 0x8b9aa0, { roughness: 0.48, metalness: 0.42 }),
       window: scenicMaterial(THREE, 0xffb13b, {
@@ -906,6 +1158,30 @@
     return true;
   }
 
+  function configureBuildingShadows(group) {
+    if (!group) return;
+    group.traverse(object => {
+      if (!object.isMesh) return;
+      if (object.name === "shadow") {
+        // The recipe's inexpensive painted blob remains the mobile fallback;
+        // showing it together with a real shadow would double-darken the base.
+        object.visible = !shadowsEnabled;
+        object.castShadow = false;
+        object.receiveShadow = false;
+        return;
+      }
+      object.castShadow = shadowsEnabled && !(object.material && object.material.transparent);
+      object.receiveShadow = shadowsEnabled;
+    });
+    // Cached shadow maps must not contain poses from continuously moving parts.
+    const moving = [];
+    if (group.userData.armSegments) moving.push(...group.userData.armSegments);
+    if (group.userData.ring) moving.push(group.userData.ring);
+    moving.forEach(node => node.traverse(object => {
+      if (object.isMesh) object.castShadow = false;
+    }));
+  }
+
   /** Creates (once) the group for each building lot, initially hidden. */
   function buildLots(THREE) {
     const layout = window.CityLayout;
@@ -914,6 +1190,7 @@
       const lot = layout.LOTS[id];
       const group = recipes.build(THREE, id);
       if (!group) return;
+      configureBuildingShadows(group);
       group.position.set(lot.x, 0, lot.z);
       group.visible = false;
       scene.add(group);
@@ -981,6 +1258,7 @@
       group.visible = b.quantity > 0;
       if (b.quantity > 0) {
         recipes.applyQuantity(THREE, group, b.quantity);
+        configureBuildingShadows(group);
       }
       if (firstAppearance && !initialSync && window.SceneEffects && !reduceMotion()) {
         window.SceneEffects.popIn(group);
@@ -997,6 +1275,7 @@
       // meshes are unique, so the recipes can dispose/rebuild them safely).
       copies.forEach(copy => {
         recipes.applyQuantity(THREE, copy, b.quantity);
+        configureBuildingShadows(copy);
       });
       for (let i = copies.length; i < offsets.length - 1; i++) {
         const off = offsets[i + 1];
@@ -1010,6 +1289,7 @@
           }
         }
         recipes.applyQuantity(THREE, clone, b.quantity);
+        configureBuildingShadows(clone);
         clone.position.set(group.position.x + off.x, 0, group.position.z + off.z);
         clone.rotation.y = off.rotY;
         clone.visible = true;
@@ -1023,6 +1303,7 @@
     if (changed) {
       recollectAnimated();
       updateViewTarget();
+      markShadowDirty();
     }
     lastStats = snapshot.stats;
     lastQuantities = {};
@@ -1060,6 +1341,10 @@
       needsRender = true;
     }
     const still = reduceMotion();
+    if (still && pressSheetLayer && pressSheetLayer.position.z !== 0) {
+      pressSheetLayer.position.z = 0;
+      needsRender = true;
+    }
 
     // Camions : dt borné (l'onglet a pu être masqué), nombre lié à l'empire.
     const nowMs = timeMs || 0;
@@ -1105,6 +1390,11 @@
         // Translate the whole instanced layer: one object update, no per-cloud
         // matrices in the hot loop. Reduced-motion freezes its current pose.
         cloudLayer.position.x = Math.sin(t * 0.055) * 0.7;
+      }
+      if (pressSheetLayer) {
+        // A tiny synchronized feed motion is enough to make both press lines
+        // feel operational without rewriting per-instance matrices.
+        pressSheetLayer.position.z = Math.sin(t * 1.15) * 0.055;
       }
       animated.armSegments.forEach((seg, i) => {
         seg.rotation.z = Math.sin(t * 0.8 + i * 0.9) * 0.35;
@@ -1290,7 +1580,9 @@
       const w = stageEl.clientWidth;
       const h = stageEl.clientHeight;
       if (!w || !h) return;
+      const wasMobile = isMobile;
       isMobile = window.innerWidth < MOBILE_MAX_WIDTH;
+      if (isMobile !== wasMobile) updateViewTarget();
       // Le DPR fait partie de l'état de taille : glisser la fenêtre vers un
       // écran de densité différente ne change pas les pixels CSS du stage.
       const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : DPR_CAP_DESKTOP);
@@ -1319,22 +1611,26 @@
   }
 
   function disposeDecorativeWorld() {
-    if (!decorativeWorld) return;
-    const geometries = new Set();
-    const materials = new Set();
-    decorativeWorld.traverse(object => {
-      if (object.geometry) geometries.add(object.geometry);
-      if (Array.isArray(object.material)) {
-        object.material.forEach(material => materials.add(material));
-      } else if (object.material) {
-        materials.add(object.material);
-      }
-    });
-    geometries.forEach(geometry => geometry.dispose());
-    materials.forEach(material => material.dispose());
-    if (scene) scene.remove(decorativeWorld);
-    decorativeWorld = null;
-    cloudLayer = null;
+    if (decorativeWorld) {
+      const geometries = new Set();
+      const materials = new Set();
+      decorativeWorld.traverse(object => {
+        if (object.geometry) geometries.add(object.geometry);
+        if (Array.isArray(object.material)) {
+          object.material.forEach(material => materials.add(material));
+        } else if (object.material) {
+          materials.add(object.material);
+        }
+      });
+      geometries.forEach(geometry => geometry.dispose());
+      materials.forEach(material => material.dispose());
+      if (scene) scene.remove(decorativeWorld);
+      decorativeWorld = null;
+      cloudLayer = null;
+      pressSheetLayer = null;
+    }
+    decorativeTextures.forEach(texture => texture.dispose());
+    decorativeTextures.clear();
   }
 
   function dispose() {
@@ -1412,6 +1708,13 @@
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.16;
       renderer.setClearColor(0xffffff, 0);
+      shadowsEnabled = window.innerWidth >= 1100;
+      renderer.shadowMap.enabled = shadowsEnabled;
+      if (shadowsEnabled) {
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.autoUpdate = false;
+        renderer.shadowMap.needsUpdate = true;
+      }
       scene = new THREE.Scene();
       scene.background = null;
       scene.fog = new THREE.Fog(0xc9dfdc, 24, 62);
@@ -1423,6 +1726,8 @@
       buildSmoke(THREE);
       buildPapers(THREE);
       buildLots(THREE);
+      updateViewTarget();
+      markShadowDirty();
       watchResize(THREE);
       watchSky(THREE);
       watchVisibility();
@@ -1467,6 +1772,7 @@
           sceneEnabled: sceneEnabled(),
           isMobile,
           reduceMotion: reduceMotion(),
+          shadowsEnabled,
           needsRender,
           disposed
         }),

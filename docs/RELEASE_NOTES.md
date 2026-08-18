@@ -1,5 +1,21 @@
 # Release Notes
 
+## 0.20 – « Factory Key Art » : le monde devient l'affiche
+
+- Nouveau lockup illustré généré pour Papers Empire : plaque industrielle bleu
+  nuit, lettres crème, couronne de papier et ruban orange, avec PNG master et
+  WebP de production.
+- Hero hybride : horizon peint desktop/mobile derrière un campus Three.js
+  transparent, usine centrale agrandie, lumière plus cinématographique et HUD
+  vertical toujours relié aux vraies données du jeu.
+- Nouveau rail narratif en papier déchiré avec six illustrations originales,
+  catalogue de progression et preuves produit honnêtes avant l'interface de jeu.
+- Composition resserrée pour faire apparaître la progression dès le premier
+  écran desktop, tout en conservant les variantes mobile, contraste élevé,
+  mouvement réduit et fallback sans WebGL.
+- Textes du nouveau rail disponibles en français, anglais, allemand et
+  luxembourgeois ; aucun chiffre social ou classement fictif n'a été ajouté.
+
 ## 0.19 – « Empire World » : l'affiche devient jouable
 
 - Nouveau système de marque vectoriel : couronne de ramette, lockup tracé,

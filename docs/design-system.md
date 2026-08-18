@@ -32,7 +32,9 @@ Palette de référence :
 | Nuit de l'atelier | `--bg-sky` / `--bg-deep` | `#271c40` / `#0b0617` |
 | Cadre du hero | `--navy-950` / `--navy-900` | `#07111f` / `#0c1b2d` |
 | Ciel du campus | `--hero-sky` / `--hero-haze` | `#b9dce4` / `#f5e6bd` |
-| Orange industriel | `--factory-orange` | `#c94f1a` |
+| Acier de l'usine | `--steel-blue` | `#28516a` |
+| Orange industriel | `--factory-orange` | `#d7521b` |
+| Signal positif | `--factory-green` | `#719746` |
 
 Règles clés :
 - **Pas d'emoji dans le chrome d'action et de structure** (boutons, footer,
@@ -74,7 +76,9 @@ Strictly no letters, no words, no numbers in the image.
 ```
 
 Contraintes non négociables :
-1. **Jamais de texte dans les images** (l'i18n 4 langues passe par le HTML).
+1. **Jamais de texte dans les images d'interface** (l'i18n 4 langues passe par
+   le HTML). Le lockup de marque est l'unique exception : son texte exact est
+   contrôlé visuellement avant intégration et reste doublé par un nom accessible.
 2. La palette ci-dessus, rien d'autre (pas de bleus/verts saturés hors tokens).
 3. Fond transparent pour tout ce qui se pose sur une fiche ; les key arts
    peuvent employer la nuit violette ou le ciel papier du campus.
@@ -85,19 +89,28 @@ Contraintes non négociables :
 
 La liste des assets à générer vit dans [images-todo.md](images-todo.md).
 
-## Logo et hero (décision 2026-08-18)
+## Identité illustrée et hero hybride (décision 2026-08-18)
 
-- Le symbole canonique est la **couronne de ramette** : trois feuilles pliées
-  sortent d'une presse et ne forment qu'une seule couronne.
-- Les sources vectorielles sont `assets/brand/papers-empire-mark.svg` et
-  `assets/brand/papers-empire-lockup.svg`. Le wordmark est tracé, autonome et
-  sans dépendance de police.
-- Favicon, icônes PWA et Apple touch icon dérivent du même symbole. Ne jamais
-  réintroduire l'ancien document blanc générique sur carré violet.
-- Dans le hero, le canvas reste décoratif (`aria-hidden`) ; titre, HUD et actions
-  restent en HTML, traduisibles et utilisables sans WebGL.
+- Le lockup principal est désormais l'illustration raster
+  `assets/brand/papers-empire-logo-v2.png`, dérivée en WebP pour le site :
+  lettres crème épaisses, plaque acier bleu nuit, tuyauterie, couronne de papier
+  dorée et ruban orange. Le texte autorisé est exactement « PAPERS EMPIRE » et
+  « IDLE GAME ».
+- La couronne de ramette reste le symbole compact. Les SVG
+  `papers-empire-mark.svg` et `papers-empire-lockup.svg` demeurent des fallbacks
+  légers ; favicon, icônes PWA et Apple touch icon continuent de dériver du mark.
+- Le hero associe un matte painting généré (`hero-horizon-wide.webp` et sa
+  composition mobile dédiée) au campus Three.js transparent. Le raster porte le
+  ciel, la brume et la ville distante ; Three.js porte l'usine, son activité et
+  la progression réellement possédée.
+- Dans le hero, le canvas reste décoratif (`aria-hidden`) ; titre, HUD, actions
+  et chiffres restent en HTML, traduisibles et utilisables sans WebGL.
 - Le printworks permanent est un décor non productif : il donne une scène riche
   à quantité zéro sans prétendre que le joueur possède déjà un bâtiment.
+- Le rail « Imprime → Règne » utilise six illustrations raster sans texte. Les
+  titres, descriptions et preuves produit restent du HTML dans les quatre langues.
+- Aucun nombre de joueurs, avis presse, classement ou communauté n'est affiché
+  tant qu'il ne provient pas d'une source produit réelle.
 
 ## Stickers de bâtiments vs 3D (décision 2026-07-18)
 

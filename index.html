@@ -126,7 +126,10 @@
   <div class="header-inner">
     <div class="header-top">
       <a class="header-brand" href="#sceneStage" aria-label="Papers Empire">
-        <img class="brand-lockup" src="/assets/brand/papers-empire-lockup.svg" alt="" width="254" height="112">
+        <picture class="brand-picture">
+          <source srcset="/assets/brand/papers-empire-logo-v2.webp" type="image/webp">
+          <img class="brand-lockup" src="/assets/brand/papers-empire-logo-v2.png" alt="" width="700" height="560" decoding="async" fetchpriority="high">
+</picture>
         <span class="sr-only">Papers Empire</span>
 </a>
       <nav class="primary-nav" aria-label="Navigation principale">
@@ -166,6 +169,10 @@
   <!-- Le canvas est décoratif ; le HUD et les actions superposés restent
        des éléments DOM accessibles et reflètent l'état réel du jeu. -->
   <section class="stage" id="sceneStage" aria-labelledby="heroTitle">
+    <picture class="hero-horizon" aria-hidden="true">
+      <source media="(max-width: 700px)" srcset="/assets/images/hero-horizon-mobile.webp">
+      <img src="/assets/images/hero-horizon-wide.webp" alt="" width="1774" height="887" decoding="async" fetchpriority="high">
+</picture>
     <canvas id="cityCanvas" aria-hidden="true"></canvas>
     <div class="stage-fallback" id="stageFallback">
       <div class="stage-skyline" aria-hidden="true">
@@ -199,20 +206,40 @@
         <h2 id="empireHudTitle" data-i18n="hud.title">Ton empire</h2>
 </div>
       <dl class="empire-hud-grid">
-        <div>
-          <dt data-i18n="hud.documents">Documents</dt>
+        <div class="empire-hud-row">
+          <dt class="empire-hud-label">
+            <span class="empire-hud-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M7 2h8l4 4v16H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 2H7v16h10V7h-3V4Zm-5 7h6v2H9v-2Zm0 4h6v2H9v-2Z"/></svg>
+</span>
+            <span data-i18n="hud.documents">Documents</span>
+</dt>
           <dd id="heroDocBank">0</dd>
 </div>
-        <div>
-          <dt data-i18n="hud.production">Production</dt>
+        <div class="empire-hud-row">
+          <dt class="empire-hud-label">
+            <span class="empire-hud-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 3h16v5H4V3Zm2 7h12l2 4v7H4v-7l2-4Zm2 2-1 2h10l-1-2H8Zm0 4v3h8v-3H8Z"/></svg>
+</span>
+            <span data-i18n="hud.production">Production</span>
+</dt>
           <dd id="heroDocPs">0 DOC/s</dd>
 </div>
-        <div>
-          <dt data-i18n="hud.prestige">Prestige</dt>
+        <div class="empire-hud-row">
+          <dt class="empire-hud-label">
+            <span class="empire-hud-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="m12 2 2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8L12 2Zm-4 17h8v3H8v-3Z"/></svg>
+</span>
+            <span data-i18n="hud.prestige">Prestige</span>
+</dt>
           <dd>x<span id="heroPrestige">1.00</span></dd>
 </div>
-        <div>
-          <dt data-i18n="hud.culture">Culture</dt>
+        <div class="empire-hud-row">
+          <dt class="empire-hud-label">
+            <span class="empire-hud-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2 5 5v6c0 4.8 2.9 9.3 7 11 4.1-1.7 7-6.2 7-11V5l-7-3Zm0 3.1 4 1.7V11c0 3.2-1.7 6.3-4 7.8-2.3-1.5-4-4.6-4-7.8V6.8l4-1.7Zm-1 3h2V10h2v2h-2v2h-2v-2H9v-2h2V8.1Z"/></svg>
+</span>
+            <span data-i18n="hud.culture">Culture</span>
+</dt>
           <dd id="heroCulture">0</dd>
 </div>
 </dl>
@@ -224,6 +251,106 @@
 </div>
     <div class="stage-flavor" id="flavorLine"></div>
     <div class="paper-tear" aria-hidden="true"></div>
+</section>
+
+<section class="empire-roadmap" aria-labelledby="roadmapTitle">
+  <div class="empire-roadmap-inner">
+    <header class="roadmap-heading">
+      <p class="roadmap-eyebrow" data-i18n="roadmap.eyebrow">DE L'ATELIER À L'EMPIRE</p>
+      <h2 id="roadmapTitle" data-i18n="roadmap.title">UN IDLE GAME COMPLET, VIVANT ET GRATUIT</h2>
+      <p data-i18n="roadmap.subtitle">Six étapes, onze bâtiments et un campus qui grandit avec ta sauvegarde.</p>
+</header>
+
+    <div class="roadmap-content">
+      <ol class="roadmap-steps">
+        <li class="roadmap-step">
+          <img src="/assets/images/progression/step-print.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <div>
+            <h3 data-i18n="roadmap.step.print.title">Imprime</h3>
+            <p data-i18n="roadmap.step.print.body">Produis tes premiers documents d'un clic.</p>
+</div>
+</li>
+        <li class="roadmap-step">
+          <img src="/assets/images/progression/step-automate.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <div>
+            <h3 data-i18n="roadmap.step.automate.title">Automatise</h3>
+            <p data-i18n="roadmap.step.automate.body">Débloque des bâtiments qui produisent sans interruption.</p>
+</div>
+</li>
+        <li class="roadmap-step">
+          <img src="/assets/images/progression/step-research.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <div>
+            <h3 data-i18n="roadmap.step.research.title">Recherche</h3>
+            <p data-i18n="roadmap.step.research.body">Achète des améliorations et affine tes baromètres.</p>
+</div>
+</li>
+        <li class="roadmap-step">
+          <img src="/assets/images/progression/step-produce.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <div>
+            <h3 data-i18n="roadmap.step.produce.title">Produis</h3>
+            <p data-i18n="roadmap.step.produce.body">Développe onze métiers, de la reprographie à l'IA.</p>
+</div>
+</li>
+        <li class="roadmap-step">
+          <img src="/assets/images/progression/step-expand.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <div>
+            <h3 data-i18n="roadmap.step.expand.title">Développe</h3>
+            <p data-i18n="roadmap.step.expand.body">Fais grandir un campus qui reflète réellement tes achats.</p>
+</div>
+</li>
+        <li class="roadmap-step">
+          <img src="/assets/images/progression/step-prestige.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <div>
+            <h3 data-i18n="roadmap.step.prestige.title">Réorganise</h3>
+            <p data-i18n="roadmap.step.prestige.body">Convertis ta progression en culture et repars plus fort.</p>
+</div>
+</li>
+</ol>
+
+      <aside class="roadmap-catalogue" aria-labelledby="roadmapCatalogueTitle">
+        <p class="roadmap-catalogue-eyebrow" data-i18n="roadmap.catalogue.eyebrow">CATALOGUE DE L'ATELIER</p>
+        <h3 id="roadmapCatalogueTitle" data-i18n="roadmap.catalogue.title">Onze bâtiments à débloquer</h3>
+        <div class="roadmap-catalogue-grid">
+          <figure>
+            <img src="/assets/images/building-reproOperator.webp" alt="" width="128" height="128" loading="lazy" decoding="async">
+            <figcaption data-i18n="building.reproOperator.name">Opérateur repro</figcaption>
+</figure>
+          <figure>
+            <img src="/assets/images/building-reproWorkshop.webp" alt="" width="128" height="128" loading="lazy" decoding="async">
+            <figcaption data-i18n="building.reproWorkshop.name">Atelier reprographie</figcaption>
+</figure>
+          <figure>
+            <img src="/assets/images/building-digitalPress.webp" alt="" width="128" height="128" loading="lazy" decoding="async">
+            <figcaption data-i18n="building.digitalPress.name">Presse numérique</figcaption>
+</figure>
+          <figure>
+            <img src="/assets/images/building-offsetPress.webp" alt="" width="128" height="128" loading="lazy" decoding="async">
+            <figcaption data-i18n="building.offsetPress.name">Presse offset</figcaption>
+</figure>
+          <figure>
+            <img src="/assets/images/building-finishingWorkshop.webp" alt="" width="128" height="128" loading="lazy" decoding="async">
+            <figcaption data-i18n="building.finishingWorkshop.name">Atelier de finition</figcaption>
+</figure>
+          <figure>
+            <img src="/assets/images/building-logistics.webp" alt="" width="128" height="128" loading="lazy" decoding="async">
+            <figcaption data-i18n="building.logistics.name">Logistique et tri postal</figcaption>
+</figure>
+</div>
+        <a class="roadmap-catalogue-link" href="#buildingsPanel" data-i18n="roadmap.catalogue.cta">Découvrir tous les bâtiments</a>
+</aside>
+</div>
+
+    <div class="roadmap-proof" aria-labelledby="roadmapProofTitle">
+      <h3 class="sr-only" id="roadmapProofTitle" data-i18n="roadmap.proof.title">Joue comme tu veux</h3>
+      <ul>
+        <li data-i18n="roadmap.proof.free">Gratuit</li>
+        <li data-i18n="roadmap.proof.noAccount">Sans compte</li>
+        <li data-i18n="roadmap.proof.localSave">Sauvegarde locale</li>
+        <li data-i18n="roadmap.proof.languages">4 langues</li>
+        <li><a href="https://github.com/nclsppr/papersempire" data-i18n="roadmap.proof.source">Code source public</a></li>
+</ul>
+</div>
+</div>
 </section>
 
 <main id="mainContent" class="app" role="main">
