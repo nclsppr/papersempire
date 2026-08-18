@@ -6,6 +6,7 @@
    * Filled once during initialization.
    */
   const DOM = {};
+  const assetUrl = window.PEAssetUrl || function (path) { return path; };
 
   const GAME_TITLE = window.GAME_TITLE || "Papers Empire";
   const { computeBuildingEffects, getBuildingImpact } = ModifierUtils;
@@ -2703,7 +2704,7 @@
       // Tampon-badge illustré (images-todo P3), retiré silencieusement si absent.
       const badge = document.createElement("img");
       badge.className = "achievement-badge";
-      badge.src = "/assets/images/achievement-" + def.id + ".png";
+      badge.src = assetUrl("/assets/images/achievement-" + def.id + ".png");
       badge.alt = "";
       badge.decoding = "async";
       badge.loading = "lazy";
@@ -2839,7 +2840,7 @@
       // Miniature industrielle V4 avec repli vers l'ancien sticker, puis emoji.
       const sticker = document.createElement("img");
       sticker.className = "building-sticker";
-      sticker.src = "/assets/images/building-" + b.id + "-v4.webp";
+      sticker.src = assetUrl("/assets/images/building-" + b.id + "-v4.webp");
       sticker.alt = "";
       sticker.decoding = "async";
       sticker.loading = "lazy";
@@ -2847,7 +2848,7 @@
       sticker.addEventListener("error", () => {
         if (!triedLegacySticker) {
           triedLegacySticker = true;
-          sticker.src = "/assets/images/building-" + b.id + ".webp";
+          sticker.src = assetUrl("/assets/images/building-" + b.id + ".webp");
           return;
         }
         sticker.remove();

@@ -12,6 +12,13 @@
   <link rel="preload" href="/assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/style.css">
   <link rel="stylesheet" href="/assets/css/experience-v4.css">
+  <script>
+  // Recharge les assets versionnés quand Safari restaure cette page depuis
+  // son BFCache au lieu d'effectuer une nouvelle navigation réseau.
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) window.location.reload();
+  });
+  </script>
 </head>
 <body class="dash-standalone data-zone-shell">
   <a class="skip-link" href="#dataZoneTitle" data-i18n="analytics.skipToContent">Aller aux analyses</a>
@@ -19,9 +26,12 @@
   <header class="app-header data-zone-header" id="dataZoneHeader">
     <div class="header-inner">
       <div class="header-top">
-        <a class="header-home-link data-zone-brand" href="/" aria-label="Papers Empire">
-          <span class="header-title">Papers Empire</span>
-          <span class="data-zone-brand-line" data-i18n="analytics.brandLine">Factory intelligence</span>
+        <a class="header-home-link data-zone-brand" href="/" aria-label="Data Science Zone · Papers Empire">
+          <img class="data-zone-brand-mark" src="/assets/brand/data-science-zone-mark.svg" alt="" width="256" height="256">
+          <span class="data-zone-brand-copy">
+            <span class="data-zone-brand-parent">Papers Empire</span>
+            <span class="header-title" data-i18n="nav.dashboard">Data Science Zone</span>
+          </span>
         </a>
         <div class="header-actions data-zone-header-actions">
           <span class="data-state-chip is-empty" id="dataStateChip" role="status" aria-live="polite">
@@ -381,6 +391,7 @@
     </div>
   </footer>
 
+  <script src="/assets/js/asset-url.js" defer></script>
   <script src="/assets/i18n/fr.js" defer></script>
   <script src="/assets/i18n/en.js" defer></script>
   <script src="/assets/i18n/de.js" defer></script>

@@ -16,6 +16,7 @@ papersempire/
 │   ├── css/style.css
 │   ├── i18n/{fr,en,de,lb}.js
 │   └── js/
+│       ├── asset-url.js          # Release stamp for runtime-built asset URLs
 │       ├── app.js
 │       ├── accessibility.js      # Settings store + preference wiring
 │       ├── achievements.js
@@ -37,6 +38,8 @@ papersempire/
 
 ## 3. Key Modules
 - **app.js:** entry point. Sets up the DOM cache, localisation, render loop, god mode, contracts, modifiers, log, and event banner. Imports helpers via global variables.
+- **asset-url.js:** carries the immutable build revision from its script URL to
+  generated building thumbnails and dynamically imported Three.js resources.
 - **accessibility.js:** exposes `Settings` with `getPrefs`, `getPreference`, `setPreference`, and `refresh`. Toggling a setting updates `document.documentElement` immediately and persists to `pe-accessibility`.
 - **ui-effects.js:** small particle factory + Web Audio tones. Respects `documentElement.dataset` flags so you can disable sounds or particles without touching the module.
 - **tutorial.js:** keeps tutorial steps in memory, controls the overlay, and listens for `markMilestone()` calls. It is intentionally decoupled so we can script custom flows in the future.
@@ -65,10 +68,13 @@ flowchart LR
   can additionally be exercised from Node.
 - **Static UI:** validate HTML, CSS, identifiers, ARIA references and all four
   i18n catalogs before publication.
+- **Résilience UI:** `npm run ui:check` vérifie les contrats BFCache, fallback
+  contraste élevé/première frame, fente de presse, cache runtime et sous-marque
+  analytique. Pages et la release VPS l'exécutent avant leur build.
 - **Docs:** `npm run docs:build` generates the Retype site into `docs-site/` so CI/GitHub Pages can publish it.
-- **Limite actuelle:** le dépôt ne contient pas de suite de tests automatisés.
-  Les parcours clavier, Safari/iPhone et WebGL doivent donc être contrôlés dans
-  de vrais navigateurs avant de déclarer une release validée.
+- **Limite actuelle:** le dépôt ne contient pas de suite navigateur complète.
+  Les parcours clavier, Safari/iPhone et WebGL doivent donc encore être
+  contrôlés dans de vrais navigateurs avant de déclarer une release validée.
 
 ## 6. Documentation & Releases
 - Retype sources live in `docs/`. Add a new Markdown file per major feature (events, accessibility, endgame, balance…).

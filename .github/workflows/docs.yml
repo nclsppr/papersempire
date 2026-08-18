@@ -24,6 +24,8 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - name: Validate mobile UI resilience contracts
+        run: npm run ui:check
       # docs:build invoque le wrapper retype.js via node directement :
       # npm 10.9.x (node 22) ne crée pas le lien node_modules/.bin/retype
       # à l'installation (collision de noms de bin avec les paquets

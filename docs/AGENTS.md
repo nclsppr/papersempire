@@ -29,8 +29,10 @@
 
 ## Testing Guidelines
 
-- There is no automated test suite, by choice: rely on quick manual checks in the browser.
-- Before committing, verify: page loads without console errors, interactions respond as expected, and layout works at common viewport sizes.
+- Run `npm run ui:check` for the automated resilience contracts; there is no
+  full browser suite yet.
+- Before committing, also verify: page loads without console errors,
+  interactions respond as expected, and layout works at common viewport sizes.
 
 ## Commit Guidelines
 

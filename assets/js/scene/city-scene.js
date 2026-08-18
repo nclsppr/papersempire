@@ -12,6 +12,7 @@
  * building quantities. It never mutates game state.
  */
 (function () {
+  const assetUrl = window.PEAssetUrl || function (path) { return path; };
   const DPR_CAP_DESKTOP = 1.5;
   const MOBILE_MAX_WIDTH = 960;
   // Gentle idle drift: +/-3 degrees over ~40s.
@@ -72,6 +73,8 @@
   let shadowsEnabled = false;
   let sceneMode = "landing";
   let requestedSceneMode = null;
+  let firstFrameRendered = false;
+  let contextUnavailable = false;
   const decorativeTextures = new Set();
 
   // Camions de livraison (roadmap 0.18) : InstancedMesh plafonnés, animés
@@ -125,6 +128,20 @@
 
   function mattePaintingPresent() {
     return !!(stageEl && stageEl.querySelector && stageEl.querySelector(".hero-horizon img"));
+  }
+
+  function announceFirstFrame() {
+    if (firstFrameRendered || !canvas) return;
+    const context = renderer && renderer.getContext ? renderer.getContext() : null;
+    if (!context || context.isContextLost()) {
+      if (!contextUnavailable) {
+        contextUnavailable = true;
+        canvas.dispatchEvent(new CustomEvent("pe:scene-unavailable"));
+      }
+      return;
+    }
+    firstFrameRendered = true;
+    canvas.dispatchEvent(new CustomEvent("pe:scene-first-frame"));
   }
 
   /**
@@ -635,7 +652,7 @@
   function addFactoryLogo(THREE, landmark) {
     let plane = null;
     const texture = new THREE.TextureLoader().load(
-      "/assets/brand/papers-empire-logo-v2.webp",
+      assetUrl("/assets/brand/papers-empire-logo-v2.webp"),
       loaded => {
         if (disposed) {
           loaded.dispose();
@@ -1177,7 +1194,7 @@
   function spawnPrestigeStamp(THREE) {
     if (!window.SceneEffects) return;
     if (!prestigeStamp) {
-      const tex = new THREE.TextureLoader().load("/assets/images/seal-crest.png");
+      const tex = new THREE.TextureLoader().load(assetUrl("/assets/images/seal-crest.png"));
       tex.colorSpace = THREE.SRGBColorSpace;
       const geo = new THREE.PlaneGeometry(5.5, 5.5);
       const matStamp = new THREE.MeshBasicMaterial({
@@ -1549,6 +1566,7 @@
       });
     }
     renderer.render(scene, camera);
+    announceFirstFrame();
     markAmbianceRendered();
     needsRender = false;
   }
@@ -1902,6 +1920,9 @@
       }
       canvas = canvasEl;
       THREERef = THREE;
+      disposed = false;
+      firstFrameRendered = false;
+      contextUnavailable = false;
       stageEl = canvas.closest(".stage") || canvas.parentElement;
       sceneMode = resolveSceneMode(canvasEl);
       try {
@@ -1948,8 +1969,10 @@
       window.__PE_SCENE_EVENTS__ = [];
       canvas.addEventListener("webglcontextlost", event => {
         event.preventDefault();
+        contextUnavailable = true;
         dispose();
         if (stageEl) stageEl.classList.remove("scene-active");
+        canvas.dispatchEvent(new CustomEvent("pe:scene-unavailable"));
       });
       running = true;
       scheduleFrame(THREE);
@@ -2004,6 +2027,7 @@
           easeView(true);
           placeCamera(BASE_AZIMUTH);
           renderer.render(scene, camera);
+          announceFirstFrame();
           markAmbianceRendered();
           return renderer.info.render.triangles;
         }

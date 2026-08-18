@@ -8,6 +8,8 @@
 (function () {
   "use strict";
 
+  const assetUrl = window.PEAssetUrl || function (path) { return path; };
+
   const SNAPSHOT_KEY = "pe-dash-snapshot";
   const HISTORY_KEY = "pe-analytics-history-v1";
   const POLL_MS = 3000;
@@ -876,7 +878,7 @@
     els.recommendationImage.onerror = function () {
       if (!triedFallback) {
         triedFallback = true;
-        els.recommendationImage.src = "/assets/images/building-" + id + ".webp";
+        els.recommendationImage.src = assetUrl("/assets/images/building-" + id + ".webp");
         return;
       }
       els.recommendationImage.hidden = true;
@@ -884,7 +886,7 @@
       els.recommendationPlaceholder.textContent = id.slice(0, 2).toUpperCase();
       els.recommendationPlaceholder.title = t("analytics.investment.imageFallback");
     };
-    els.recommendationImage.src = "/assets/images/building-" + id + "-v4.webp";
+    els.recommendationImage.src = assetUrl("/assets/images/building-" + id + "-v4.webp");
   }
 
   function renderRecommendation() {

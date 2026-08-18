@@ -10,7 +10,7 @@
  *   <dossier-site> : racine du site déployé (contient index.html)
  *   [sha]          : version pour ?v= (ex. ${GITHUB_SHA::8}) — optionnel
  */
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const [siteDir, stamp] = process.argv.slice(2);
@@ -247,9 +247,46 @@ function localize(html, lang) {
 
 function stampAssets(html) {
   if (!stamp) return html;
-  return html
-    .replace(/(href="\/assets\/[^"?]+\.css)"/g, `$1?v=${stamp}"`)
-    .replace(/(src="\/assets\/[^"?]+\.js)"/g, `$1?v=${stamp}"`);
+  // Toutes les ressources locales portent la révision, pas seulement CSS/JS.
+  // Safari peut sinon combiner un HTML neuf avec une image, une police ou un
+  // srcset conservé pendant la durée du cache partagé.
+  return html.replace(
+    /(\/(?:assets\/[^"'()<>,\s?]+|favicon\.svg|site\.webmanifest))/g,
+    `$1?v=${stamp}`
+  );
+}
+
+function stampCssAssetUrls(css) {
+  if (!stamp) return css;
+  return css.replace(
+    /url\((["']?)((?:\.\.\/|\/assets\/)[^)"'?]+)\1\)/g,
+    (match, quote, assetPath) => `url(${quote}${assetPath}?v=${stamp}${quote})`
+  );
+}
+
+function stampJavaScriptAssetUrls(js) {
+  if (!stamp) return js;
+  // Les imports ES relatifs (dont three.core.min.js) et les URLs statiques
+  // construites depuis JavaScript doivent suivre la même révision que la page.
+  // Les chemins assemblés dynamiquement passent, eux, par PEAssetUrl au runtime.
+  return js.replace(
+    /(["'`])((?:\/assets\/|assets\/|\.{1,2}\/)[^"'`\r\n?]+?\.(?:js|css|png|webp|svg|jpe?g|gif|avif|woff2?))\1/g,
+    (match, quote, assetPath) => `${quote}${assetPath}?v=${stamp}${quote}`
+  );
+}
+
+function visitJavaScriptFiles(directory, callback) {
+  if (!existsSync(directory)) return;
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) visitJavaScriptFiles(path, callback);
+    else if (entry.isFile() && entry.name.endsWith(".js")) callback(path);
+  }
+}
+
+function stampManifestAssets(manifest) {
+  if (!stamp) return manifest;
+  return manifest.replace(/(\/assets\/[^"?]+)(")/g, `$1?v=${stamp}$2`);
 }
 
 for (const lang of LANGS) {
@@ -268,5 +305,29 @@ if (stamp) {
     const dashboardHtml = readFileSync(dashboardPath, "utf8");
     writeFileSync(dashboardPath, stampAssets(dashboardHtml));
     console.log(`dashboard/index.html estampillé ?v=${stamp}`);
+  }
+
+  for (const cssName of ["style.css", "experience-v4.css"]) {
+    const cssPath = join(siteDir, "assets", "css", cssName);
+    if (!existsSync(cssPath)) continue;
+    writeFileSync(cssPath, stampCssAssetUrls(readFileSync(cssPath, "utf8")));
+    console.log(`${cssName} : assets internes estampillés ?v=${stamp}`);
+  }
+
+  visitJavaScriptFiles(join(siteDir, "assets"), jsPath => {
+    writeFileSync(jsPath, stampJavaScriptAssetUrls(readFileSync(jsPath, "utf8")));
+  });
+  console.log(`JavaScript : imports et assets statiques estampillés ?v=${stamp}`);
+
+  const manifestPath = join(siteDir, "site.webmanifest");
+  if (existsSync(manifestPath)) {
+    writeFileSync(manifestPath, stampManifestAssets(readFileSync(manifestPath, "utf8")));
+    console.log(`site.webmanifest : icônes estampillées ?v=${stamp}`);
+  }
+
+  const notFoundPath = join(siteDir, "404.html");
+  if (existsSync(notFoundPath)) {
+    writeFileSync(notFoundPath, stampAssets(readFileSync(notFoundPath, "utf8")));
+    console.log(`404.html estampillé ?v=${stamp}`);
   }
 }

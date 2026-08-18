@@ -1,6 +1,6 @@
 # Architecture
 
-Cette page décrit le contrat technique de Papers Empire 0.22.0. Elle résume les
+Cette page décrit le contrat technique de Papers Empire 0.23.0. Elle résume les
 modules clés, les deux états de l'expérience, les flux locaux de données et les
 limites de la Data Science Zone.
 
@@ -81,6 +81,7 @@ sequenceDiagram
 | `assets/js/persistence.js` | Sauvegarde locale, export/import |
 | `assets/js/achievements.js` | Définition / évaluation des succès |
 | `assets/js/accessibility.js` | Préférences high contrast / texte / motion |
+| `assets/js/asset-url.js` | Propage la révision du build aux assets dont le nom est assemblé au runtime |
 | `assets/js/scene/*.js` | Production twin procédural (enrichissement progressif) |
 | `assets/vendor/three.module.min.js` | three.js **0.185.1** vendored (+ `three.core.min.js`, importé par le premier) |
 | `scripts/build-site.sh` | Assemblage reproductible du jeu et de la documentation |
@@ -92,7 +93,10 @@ carte compacte du jeu : `scene-loader.js` (script
 classique) importe dynamiquement le module three.js vendored ; en cas d'échec
 (`file://`, WebGL absent, vieux navigateur, toggle
 « scène 3D » désactivé) le fallback CSS reste affiché et le jeu DOM est
-inchangé. La scène lit l'état via `window.__PE_SCENE__.getSnapshot()`
+inchangé. Le loader ne pose `scene-active` qu'après l'événement de première
+frame valide ; contraste élevé, perte de contexte et retour BFCache ne peuvent
+donc pas remplacer le matte par un canvas vide. La scène lit l'état via
+`window.__PE_SCENE__.getSnapshot()`
 (copie défensive exposée par `app.js`) en polling dans sa propre boucle rAF —
 elle ne mute jamais la simulation. Les interactions d'achat du canvas sont
 désactivées hors de la vue `playing` et réutilisent les règles métier du DOM.
@@ -153,10 +157,11 @@ n'est envoyée et aucune synchronisation entre appareils n'est promise.
 - Si un historique multi-appareil est un jour requis, concevoir explicitement
   consentement, schéma, rétention et confidentialité avant d'ajouter un backend.
 
-Le dépôt ne suit actuellement aucune suite de tests automatisés. Les mentions
-historiques de Playwright/Node décrivent d'anciennes versions ; les validations
-actuelles reposent sur les contrôles navigateur, la syntaxe JavaScript et
-l'assemblage statique.
+Le dépôt ne suit actuellement aucune suite navigateur complète. Le check Node
+`npm run ui:check` verrouille néanmoins les contrats de résilience iPhone les
+plus fragiles et est exécuté dans les workflows Pages et VPS ; les validations
+finales reposent encore sur ce check, la syntaxe JavaScript, l'assemblage
+statique et les contrôles navigateur/appareil.
 
 Voir aussi :
 - [`accessibility.md`](accessibility.md)

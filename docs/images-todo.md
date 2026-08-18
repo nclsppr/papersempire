@@ -101,8 +101,16 @@ flat 2D, slightly uneven ink coverage`. Le visa rouge « débloqué » reste en 
 
 ## Factory Key Art — 0.20
 
-Assets générés avec le skill ImageGen intégré, puis convertis en WebP sans
-réinterprétation locale :
+Assets générés avec le skill ImageGen intégré. Les illustrations peintes sont
+conservées en masters raster ; les marques simples sont reconstruites en SVG
+déterministe pour rester nettes et accessibles :
+
+- [x] `assets/brand/data-science-zone-mark.svg` — sous-marque « Crown Analyzer »
+      reconstruite en vectoriel déterministe après exploration ImageGen ;
+      couronne de papier, analyseur à rouleaux et signal cyan.
+- [x] `assets/brand/sources/data-science-zone-concept.png` — master d'exploration
+      peint conservé comme source de direction, exclu de l'archive publique et
+      jamais chargé par le site.
 
 - [x] `assets/brand/papers-empire-logo-v2.png` + `.webp` — lockup exact
       « PAPERS EMPIRE / IDLE GAME », plaque d'usine bleu nuit, lettres crème

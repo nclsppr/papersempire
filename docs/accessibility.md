@@ -46,16 +46,25 @@ The ⚙️ button opens a modal built with four sections. All controls are nativ
   control back onto the document body.
 - Continuous counters are not live regions. A dedicated atomic announcer only
   receives meaningful new activity messages.
+- Une page restaurée par le BFCache Safari est rechargée une seule fois : cela
+  évite de conserver une ancienne cascade CSS ou un contexte WebGL noir après
+  un aller-retour vers la Data Science Zone.
+- Le contraste élevé empêche le démarrage de Three.js et conserve le fallback
+  DOM/CSS. Une scène déjà rendue revient elle aussi au fallback quand la
+  préférence est activée.
 
 ## Guided Tutorial
 `assets/js/tutorial.js` orchestrates a first-run overlay that highlights important modules (print button → buildings → journal → settings). It hooks into `Settings` to know whether the user already finished the flow, and exposes `markMilestone()` so `app.js` can advance steps when the player actually completes each action.
 
 ## Testing & Tooling
 
-The repository intentionally has no automated browser suite. Each visual
-release runs syntax checks, CSS validation, i18n key/reference alignment and a
-static multilingual build. iPhone/Safari interaction still requires a manual
-device pass before declaring device-specific rendering fully verified.
+The repository intentionally has no full automated browser suite. Each visual
+release runs syntax checks, CSS validation, i18n key/reference alignment, a
+static multilingual build and `npm run ui:check` for the critical BFCache,
+fallback, print-feed, cache-runtime and sub-brand contracts. This gate is
+enforced by the Pages and VPS workflows. iPhone/Safari interaction still
+requires a manual device pass before declaring device-specific rendering fully
+verified.
 
 ## Preference Flow
 ```mermaid
