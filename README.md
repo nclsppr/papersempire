@@ -2,6 +2,8 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
+Current release contract: **0.22.0 — Production Twin V4**.
+
 ## Quick Links
 - [Docs Overview](docs/README.md)
 - [Developer Guide](docs/DOCUMENTATION.md)

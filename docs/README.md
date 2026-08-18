@@ -1,6 +1,6 @@
 # Papers Empire
 
-Papers Empire is a browser-based incremental game that runs entirely on the client side. The experience is intentionally light-hearted: you're modernising an industrial print shop while channeling the vibe of workplace sitcoms.
+Papers Empire is a browser-based incremental game that runs entirely on the client side. The experience is intentionally light-hearted: you're modernising an industrial print shop while channeling the vibe of workplace sitcoms. The current release contract is **0.22.0 — Production Twin V4**.
 
 The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier maintenance. Additional helper modules power the modifier builder math and god-mode utilities so they can be unit-tested in isolation.
 
@@ -43,6 +43,14 @@ Track meaningful milestones in the project:
 - **0.21.1** – Migration de la branche par défaut de `master` vers `main` :
   workflows, protection, GitHub Pages, documentation et réconciliation Atlas
   suivent désormais le même nom canonique.
+- **0.22.0** – « Production Twin V4 » : design system rendu révocable et
+  recentré sur la miniature industrielle illustrée ; landing transformée en sas
+  qui disparaît après l'entrée ; scène Three.js partagée et compacte dans le
+  jeu ; remplacement des onze stickers par des machines isométriques sur
+  fond alpha ; Dashboard renommé Data Science Zone avec analyses locales et
+  explicables des cadences, achats quantité +1, retours en DOC et prestige. Les
+  limites de couverture locale et l'absence de métriques financières réelles
+  sont affichées comme partie du produit.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 

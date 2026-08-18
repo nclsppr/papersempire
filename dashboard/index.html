@@ -2,127 +2,390 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard · Papers Empire</title>
+  <title data-i18n="analytics.pageTitle">Data Science Zone · Papers Empire</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <!-- Vue personnelle de la partie du joueur : rien à indexer ici. -->
   <meta name="robots" content="noindex, follow">
-  <meta name="theme-color" content="#1a1230">
+  <meta name="theme-color" content="#0b1721">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
   <link rel="preload" href="/assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/experience-v4.css">
 </head>
-<body class="dash-standalone">
-<header class="app-header">
-  <div class="header-inner">
-    <div class="header-top">
-      <a class="header-home-link" href="/"><span class="header-title">Papers Empire</span></a>
-      <div class="header-actions">
-        <a class="nav-dash-link" id="backToGameLink" href="/" data-i18n="nav.backToGame">← Retour à l'atelier</a>
-</div>
-</div>
-</div>
-</header>
+<body class="dash-standalone data-zone-shell">
+  <a class="skip-link" href="#dataZoneTitle" data-i18n="analytics.skipToContent">Aller aux analyses</a>
 
-<main id="mainContent" class="app">
-  <!-- Tableau de bord : KPIs et graphiques temps réel. Lecture seule via le
-       pont window.__PE_DASH__ (app.js) ; rendu par assets/js/dashboard.js. -->
-  <section class="card dashboard-card" id="dashboardCard" aria-label="Tableau de bord" data-i18n-aria-label="dashboard.regionLabel">
-    <h2 data-i18n="dashboard.title">Tableau de bord 📊</h2>
-    <div class="small" data-i18n="dashboard.hint">La direction adore les KPIs. Tout ton empire en chiffres, en direct.</div>
-    <div class="dash-kpis">
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.production">Production 🖨️</span>
-        <span class="dash-kpi-value" data-dash-kpi="production">–</span>
-        <span class="dash-kpi-trend" data-dash-kpi="trend"></span>
-</div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.docBank">Documents en banque 📄</span>
-        <span class="dash-kpi-value" data-dash-kpi="bank">–</span>
-</div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.docTotal">Documents cumulés 🗂️</span>
-        <span class="dash-kpi-value" data-dash-kpi="total">–</span>
-</div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.trust">Confiance cumulée ⭐</span>
-        <span class="dash-kpi-value" data-dash-kpi="trust">–</span>
-</div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.culture">Culture · Prestige ✨</span>
-        <span class="dash-kpi-value" data-dash-kpi="culture">–</span>
-</div>
-      <div class="dash-kpi">
-        <span class="dash-kpi-label" data-i18n="dashboard.kpi.buildings">Bâtiments actifs 🏭</span>
-        <span class="dash-kpi-value" data-dash-kpi="buildings">–</span>
-</div>
-</div>
-    <div class="dash-charts">
-      <figure class="dash-chart-block">
-        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.buildings">Production par bâtiment (DOC/s)</figcaption>
-        <div id="dashBars" class="dash-bars"></div>
-</figure>
-      <figure class="dash-chart-block dash-chart-wide">
-        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.gauges">Baromètres d'entreprise (%)</figcaption>
-        <div class="dash-gauges">
-          <div class="dash-gauge">
-            <span class="dash-gauge-label" data-i18n="gauges.quality"></span>
-            <svg id="dashGaugeQuality" class="dash-svg" aria-hidden="true"></svg>
-</div>
-          <div class="dash-gauge">
-            <span class="dash-gauge-label" data-i18n="gauges.footprint"></span>
-            <svg id="dashGaugeFootprint" class="dash-svg" aria-hidden="true"></svg>
-</div>
-          <div class="dash-gauge">
-            <span class="dash-gauge-label" data-i18n="gauges.image"></span>
-            <svg id="dashGaugeImage" class="dash-svg" aria-hidden="true"></svg>
-</div>
-</div>
-</figure>
-      <figure class="dash-chart-block dash-chart-wide">
-        <figcaption class="dash-chart-title" data-i18n="dashboard.chart.docTotal">Documents cumulés · session en cours</figcaption>
-        <div class="dash-chart-holder">
-          <svg id="dashProdChart" class="dash-svg" role="img" aria-hidden="true"></svg>
-          <div id="dashProdTip" class="dash-tip" hidden></div>
-          <p id="dashProdEmpty" class="dash-empty" data-i18n="dashboard.empty">Collecte des données en cours…</p>
-</div>
-</figure>
-</div>
-    <details id="dashTableDetails" class="dash-table-details">
-      <summary data-i18n="dashboard.table.toggle">Données brutes (table)</summary>
-      <table class="dash-table">
-        <thead>
-          <tr>
-            <th scope="col" data-i18n="dashboard.table.metric">Indicateur</th>
-            <th scope="col" data-i18n="dashboard.table.value">Valeur</th>
-</tr>
-</thead>
-        <tbody id="dashTableBody"></tbody>
-</table>
-</details>
-</section>
-</main>
+  <header class="app-header data-zone-header" id="dataZoneHeader">
+    <div class="header-inner">
+      <div class="header-top">
+        <a class="header-home-link data-zone-brand" href="/" aria-label="Papers Empire">
+          <span class="header-title">Papers Empire</span>
+          <span class="data-zone-brand-line" data-i18n="analytics.brandLine">Factory intelligence</span>
+        </a>
+        <div class="header-actions data-zone-header-actions">
+          <span class="data-state-chip is-empty" id="dataStateChip" role="status" aria-live="polite">
+            <span class="data-state-dot" aria-hidden="true"></span>
+            <span id="dataStateLabel" data-i18n="analytics.status.waiting">En attente de données</span>
+          </span>
+          <a class="nav-dash-link" id="backToGameLink" href="/" data-i18n="analytics.backToFactory">← Retour à l'atelier</a>
+        </div>
+      </div>
+    </div>
+  </header>
 
+  <main id="mainContent" class="app data-zone">
+    <section class="data-zone-intro" id="analyticsHero" aria-labelledby="dataZoneTitle">
+      <div class="data-zone-intro-copy">
+        <span class="data-zone-kicker" data-i18n="analytics.kicker">Salle de contrôle · modèle de production</span>
+        <h1 id="dataZoneTitle" tabindex="-1" data-i18n="analytics.title">Data Science Zone</h1>
+        <p class="data-zone-lede" data-i18n="analytics.lede">Comprends ce que produit l'empire, compare le prochain investissement et mesure les effets observés sur cette partie.</p>
+      </div>
+      <dl class="data-zone-meta">
+        <div>
+          <dt data-i18n="analytics.meta.freshness">Dernière mesure</dt>
+          <dd id="dataFreshness">—</dd>
+        </div>
+        <div>
+          <dt data-i18n="analytics.meta.coverage">Couverture locale</dt>
+          <dd id="dataCoverage">—</dd>
+        </div>
+        <div>
+          <dt data-i18n="analytics.meta.model">Modèle</dt>
+          <dd id="dataModelVersion">—</dd>
+        </div>
+      </dl>
+    </section>
 
-<footer class="app-footer">
-  <div class="footer-inner">
-    <span class="footer-madeby">
-      <span data-i18n="footer.madeBy">Créé par</span>
-      <a href="https://nicolaspieper.com" rel="author">Nicolas Pieper</a>
-</span>
-    <nav class="footer-links" aria-label="Liens" data-i18n-aria-label="footer.linksLabel">
-      <a data-dashboard-link href="/dashboard/" data-i18n="nav.dashboard">Dashboard</a>
-      <a href="/docs/" data-i18n="footer.docs">Documentation</a>
-      <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Code source</a>
-</nav>
-</div>
-</footer>
+    <nav class="data-zone-nav" aria-label="Sections d'analyse" data-i18n-aria-label="analytics.nav.label">
+      <a href="#overviewSection" data-i18n="analytics.nav.overview">Vue d'ensemble</a>
+      <a href="#trendSection" data-i18n="analytics.nav.trends">Tendances</a>
+      <a href="#investmentSection" data-i18n="analytics.nav.investments">Investissements</a>
+      <a href="#flowSection" data-i18n="analytics.nav.flows">Flux</a>
+      <a href="#runArchiveSection" data-i18n="analytics.nav.runs">Archives</a>
+    </nav>
+
+    <section class="data-zone-section" id="overviewSection" aria-labelledby="overviewTitle">
+      <div class="data-zone-section-heading">
+        <div>
+          <span class="data-zone-section-index">01</span>
+          <h2 id="overviewTitle" data-i18n="analytics.overview.title">État de la chaîne</h2>
+        </div>
+        <p data-i18n="analytics.overview.hint">Valeurs instantanées du dernier snapshot local. DOC est à la fois la production et la ressource dépensée.</p>
+      </div>
+      <div class="data-zone-kpis" id="overviewKpis">
+        <article class="data-kpi is-primary">
+          <span class="data-kpi-label" data-i18n="analytics.kpi.docRate">Cadence automatique</span>
+          <strong class="data-kpi-value" id="kpiDocRate">—</strong>
+          <span class="data-kpi-context" id="kpiDocTrend" aria-live="polite">—</span>
+        </article>
+        <article class="data-kpi">
+          <span class="data-kpi-label" data-i18n="analytics.kpi.ccRate">Confiance automatique</span>
+          <strong class="data-kpi-value" id="kpiCcRate">—</strong>
+          <span class="data-kpi-context" data-i18n="analytics.kpi.currentEstimate">Estimation au niveau actuel des jauges</span>
+        </article>
+        <article class="data-kpi">
+          <span class="data-kpi-label" data-i18n="analytics.kpi.docBank">DOC disponibles</span>
+          <strong class="data-kpi-value" id="kpiDocBank">—</strong>
+          <span class="data-kpi-context" data-i18n="analytics.kpi.spendable">Ressource mobilisable</span>
+        </article>
+        <article class="data-kpi">
+          <span class="data-kpi-label" data-i18n="analytics.kpi.docTotal">DOC produits</span>
+          <strong class="data-kpi-value" id="kpiDocTotal">—</strong>
+          <span class="data-kpi-context" data-i18n="analytics.kpi.runTotal">Cumul de la partie</span>
+        </article>
+        <article class="data-kpi">
+          <span class="data-kpi-label" data-i18n="analytics.kpi.ccTotal">Confiance cumulée</span>
+          <strong class="data-kpi-value" id="kpiCcTotal">—</strong>
+          <span class="data-kpi-context" id="kpiPrestigeOutlook">—</span>
+        </article>
+        <article class="data-kpi">
+          <span class="data-kpi-label" data-i18n="analytics.kpi.culture">Culture · coefficient</span>
+          <strong class="data-kpi-value" id="kpiCulture">—</strong>
+          <span class="data-kpi-context" id="kpiBuildingCount">—</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="data-zone-section data-zone-chart-section" id="trendSection" aria-labelledby="trendTitle">
+      <div class="data-zone-section-heading">
+        <div>
+          <span class="data-zone-section-index">02</span>
+          <h2 id="trendTitle" data-i18n="analytics.trend.title">Cadence dans le temps</h2>
+        </div>
+        <p data-i18n="analytics.trend.hint">Les points utilisent leurs horodatages réels. Les interruptions restent visibles, sans ré-échantillonnage inventé.</p>
+      </div>
+      <div class="data-zone-panel trend-panel">
+        <div class="trend-toolbar">
+          <div class="segmented-control" role="group" aria-label="Mesure affichée" data-i18n-aria-label="analytics.trend.metricLabel">
+            <button class="is-active" id="trendMetricDoc" type="button" data-trend-metric="docPerSecond" aria-pressed="true" data-i18n="analytics.metric.docRate">DOC/s</button>
+            <button id="trendMetricCc" type="button" data-trend-metric="ccPerSecond" aria-pressed="false" data-i18n="analytics.metric.ccRate">CC/s</button>
+          </div>
+          <p class="trend-summary" id="trendSummary" aria-live="polite">—</p>
+        </div>
+        <div class="analytics-chart-wrap" id="trendChartWrap">
+          <svg id="analyticsTrendChart" class="analytics-trend-chart" role="img" aria-labelledby="trendChartTitle trendChartDescription">
+            <title id="trendChartTitle" data-i18n="analytics.trend.chartTitle">Cadence observée</title>
+            <desc id="trendChartDescription" data-i18n="analytics.trend.chartEmptyDescription">Aucune donnée temporelle disponible.</desc>
+          </svg>
+          <div class="analytics-chart-tip" id="trendChartTip" hidden></div>
+          <p class="data-empty-state" id="trendEmptyState" data-i18n="analytics.trend.empty">La chronologie se construit pendant que l'atelier tourne.</p>
+        </div>
+        <details class="analytics-data-details" id="historyTableDetails">
+          <summary data-i18n="analytics.trend.tableToggle">Lire la chronologie sous forme de tableau</summary>
+          <div class="data-table-scroll">
+            <table class="data-table compact-table">
+              <thead>
+                <tr>
+                  <th scope="col" data-i18n="analytics.table.timestamp">Horodatage</th>
+                  <th scope="col" data-i18n="analytics.metric.docRate">DOC/s</th>
+                  <th scope="col" data-i18n="analytics.metric.ccRate">CC/s</th>
+                  <th scope="col" data-i18n="analytics.kpi.docBank">DOC disponibles</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="data-zone-section" id="investmentSection" aria-labelledby="investmentTitle">
+      <div class="data-zone-section-heading">
+        <div>
+          <span class="data-zone-section-index">03</span>
+          <h2 id="investmentTitle" data-i18n="analytics.investment.title">Décision d'investissement</h2>
+        </div>
+        <p data-i18n="analytics.investment.hint">Le retour mesure le temps estimé pour reproduire en DOC le coût du prochain exemplaire, à cadence constante.</p>
+      </div>
+
+      <article class="data-zone-panel recommendation-panel" id="recommendationPanel" aria-labelledby="recommendationTitle">
+        <div class="recommendation-visual" aria-hidden="true">
+          <img id="recommendationImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" decoding="async" hidden>
+          <span class="recommendation-placeholder" id="recommendationPlaceholder">PE</span>
+        </div>
+        <div class="recommendation-copy">
+          <span class="recommendation-label" data-i18n="analytics.recommendation.label">Meilleur retour DOC observé</span>
+          <h3 id="recommendationTitle" data-i18n="analytics.recommendation.waiting">Calcul en attente</h3>
+          <p id="recommendationReason" data-i18n="analytics.recommendation.method">Classement des machines débloquées selon le temps de retour estimé.</p>
+          <dl class="recommendation-metrics">
+            <div>
+              <dt data-i18n="analytics.investment.cost">Coût prochain</dt>
+              <dd id="recommendationCost">—</dd>
+            </div>
+            <div>
+              <dt data-i18n="analytics.investment.marginalDoc">Gain marginal</dt>
+              <dd id="recommendationDocGain">—</dd>
+            </div>
+            <div>
+              <dt data-i18n="analytics.investment.payback">Retour estimé</dt>
+              <dd id="recommendationPayback">—</dd>
+            </div>
+            <div>
+              <dt data-i18n="analytics.investment.afford">Temps avant achat</dt>
+              <dd id="recommendationAfford">—</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="recommendation-projection">
+          <label for="projectionHorizon" data-i18n="analytics.projection.label">Projection de production</label>
+          <select id="projectionHorizon">
+            <option value="300" data-i18n="analytics.projection.5min">Dans 5 minutes</option>
+            <option value="900" selected data-i18n="analytics.projection.15min">Dans 15 minutes</option>
+            <option value="1800" data-i18n="analytics.projection.30min">Dans 30 minutes</option>
+          </select>
+          <strong id="projectionValue">—</strong>
+          <span id="projectionDelta">—</span>
+          <small data-i18n="analytics.projection.assumption">Estimation: cadence constante, sans autre achat, clic, contrat ni événement.</small>
+        </div>
+      </article>
+
+      <div class="data-zone-panel investment-matrix-panel">
+        <div class="panel-heading-inline">
+          <div>
+            <h3 data-i18n="analytics.matrix.title">Matrice des 11 actifs</h3>
+            <p data-i18n="analytics.matrix.hint">Clique sur un en-tête pour trier. « Est. » signale une hypothèse documentée par le modèle.</p>
+          </div>
+          <span id="investmentCount">0 / 11</span>
+        </div>
+        <div class="data-table-scroll">
+          <table class="data-table investment-table" id="investmentTable">
+            <thead>
+              <tr>
+                <th scope="col" data-sort-column="name" aria-sort="none"><button type="button" data-sort="name" data-i18n="analytics.investment.asset">Actif</button></th>
+                <th scope="col" data-sort-column="quantity" aria-sort="none"><button type="button" data-sort="quantity" data-i18n="analytics.investment.quantity">Qté</button></th>
+                <th scope="col" data-sort-column="currentDirectProduction" aria-sort="none"><button type="button" data-sort="currentDirectProduction" data-i18n="analytics.investment.currentProduction">Production directe</button></th>
+                <th scope="col" data-sort-column="totalInvested" aria-sort="none"><button type="button" data-sort="totalInvested" data-i18n="analytics.investment.totalInvested">DOC investis · est.</button></th>
+                <th scope="col" data-sort-column="currentCost" aria-sort="none"><button type="button" data-sort="currentCost" data-i18n="analytics.investment.cost">Coût prochain</button></th>
+                <th scope="col" data-sort-column="marginalDocPerSecond" aria-sort="none"><button type="button" data-sort="marginalDocPerSecond" data-i18n="analytics.investment.marginalDoc">Δ DOC/s</button></th>
+                <th scope="col" data-sort-column="marginalCcPerSecond" aria-sort="none"><button type="button" data-sort="marginalCcPerSecond" data-i18n="analytics.investment.marginalCc">Δ CC/s</button></th>
+                <th scope="col" data-sort-column="paybackSeconds" aria-sort="ascending"><button type="button" data-sort="paybackSeconds" data-i18n="analytics.investment.payback">Retour estimé</button></th>
+                <th scope="col" data-sort-column="affordSeconds" aria-sort="none"><button type="button" data-sort="affordSeconds" data-i18n="analytics.investment.afford">Avant achat</button></th>
+                <th scope="col" data-sort-column="status" aria-sort="none"><button type="button" data-sort="status" data-i18n="analytics.investment.status">Statut</button></th>
+              </tr>
+            </thead>
+            <tbody id="investmentTableBody"></tbody>
+          </table>
+        </div>
+        <p class="data-empty-state" id="investmentEmptyState" data-i18n="analytics.investment.empty">Les calculs d'investissement nécessitent un snapshot V2 de l'atelier.</p>
+      </div>
+    </section>
+
+    <section class="data-zone-section data-zone-split" id="flowSection" aria-labelledby="flowTitle">
+      <div class="data-zone-section-heading data-zone-section-heading-wide">
+        <div>
+          <span class="data-zone-section-index">04</span>
+          <h2 id="flowTitle" data-i18n="analytics.flow.title">Attribution des flux</h2>
+        </div>
+        <p data-i18n="analytics.flow.hint">Cumul observé pendant le cycle de prestige en cours. Un effet d'événement peut être négatif.</p>
+      </div>
+
+      <article class="data-zone-panel flow-panel" aria-labelledby="docFlowTitle">
+        <div class="panel-heading-inline">
+          <div>
+            <h3 id="docFlowTitle" data-i18n="analytics.flow.docTitle">Origine des DOC</h3>
+            <p data-i18n="analytics.flow.observed">Mesures observées, pas une comptabilité monétaire.</p>
+          </div>
+          <strong id="docFlowTotal">—</strong>
+        </div>
+        <div class="flow-list" id="docFlowList"></div>
+      </article>
+
+      <article class="data-zone-panel flow-panel" aria-labelledby="ccFlowTitle">
+        <div class="panel-heading-inline">
+          <div>
+            <h3 id="ccFlowTitle" data-i18n="analytics.flow.ccTitle">Origine de la confiance</h3>
+            <p data-i18n="analytics.flow.observed">Mesures observées, pas une comptabilité monétaire.</p>
+          </div>
+          <strong id="ccFlowTotal">—</strong>
+        </div>
+        <div class="flow-list" id="ccFlowList"></div>
+      </article>
+
+      <article class="data-zone-panel gauge-panel" id="efficiencyPanel" aria-labelledby="efficiencyTitle">
+        <div class="panel-heading-inline">
+          <div>
+            <h3 id="efficiencyTitle" data-i18n="analytics.efficiency.title">Conditions d'efficacité</h3>
+            <p data-i18n="analytics.efficiency.hint">Jauges actuelles et évolution depuis le premier point conservé.</p>
+          </div>
+        </div>
+        <div class="efficiency-gauges">
+          <div class="efficiency-gauge">
+            <div><span id="gaugeQualityLabel" data-i18n="analytics.gauge.quality">Qualité</span><strong id="gaugeQualityValue">—</strong></div>
+            <meter id="gaugeQuality" min="0" max="1" low="0.35" high="0.65" optimum="1" value="0" aria-labelledby="gaugeQualityLabel gaugeQualityValue">0%</meter>
+            <small id="gaugeQualityDelta">—</small>
+          </div>
+          <div class="efficiency-gauge">
+            <div><span id="gaugeFootprintLabel" data-i18n="analytics.gauge.footprint">Empreinte</span><strong id="gaugeFootprintValue">—</strong></div>
+            <meter id="gaugeFootprint" min="0" max="1" low="0.35" high="0.65" optimum="0" value="0" aria-labelledby="gaugeFootprintLabel gaugeFootprintValue">0%</meter>
+            <small id="gaugeFootprintDelta">—</small>
+          </div>
+          <div class="efficiency-gauge">
+            <div><span id="gaugeBrandLabel" data-i18n="analytics.gauge.brand">Image de marque</span><strong id="gaugeBrandValue">—</strong></div>
+            <meter id="gaugeBrand" min="0" max="1" low="0.35" high="0.65" optimum="1" value="0" aria-labelledby="gaugeBrandLabel gaugeBrandValue">0%</meter>
+            <small id="gaugeBrandDelta">—</small>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="data-zone-section" id="runArchiveSection" aria-labelledby="runArchiveTitle">
+      <div class="data-zone-section-heading">
+        <div>
+          <span class="data-zone-section-index">05</span>
+          <h2 id="runArchiveTitle" data-i18n="analytics.runs.title">Archives des cycles</h2>
+        </div>
+        <p data-i18n="analytics.runs.hint">Le cycle courant et les cycles clôturés par prestige, conservés uniquement dans ce navigateur.</p>
+      </div>
+      <div class="data-zone-panel run-archive-panel">
+        <div class="data-table-scroll">
+          <table class="data-table run-table" id="runArchiveTable">
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="analytics.runs.cycle">Cycle</th>
+                <th scope="col" data-i18n="analytics.runs.duration">Durée active</th>
+                <th scope="col" data-i18n="analytics.runs.autoDoc">DOC auto</th>
+                <th scope="col" data-i18n="analytics.runs.manualDoc">DOC manuels</th>
+                <th scope="col" data-i18n="analytics.runs.spend">DOC investis</th>
+                <th scope="col" data-i18n="analytics.runs.cc">Confiance observée</th>
+                <th scope="col" data-i18n="analytics.runs.outcome">Issue</th>
+              </tr>
+            </thead>
+            <tbody id="runArchiveTableBody"></tbody>
+          </table>
+        </div>
+        <p class="data-empty-state" id="runArchiveEmptyState" data-i18n="analytics.runs.empty">Aucun cycle instrumenté pour le moment.</p>
+      </div>
+    </section>
+
+    <section class="data-zone-section data-contract-section" id="dataContractSection" aria-labelledby="dataContractTitle">
+      <div class="data-zone-section-heading">
+        <div>
+          <span class="data-zone-section-index">06</span>
+          <h2 id="dataContractTitle" data-i18n="analytics.contract.title">Contrat de lecture</h2>
+        </div>
+        <p data-i18n="analytics.contract.hint">Ce que les chiffres disent — et ce qu'ils ne disent pas.</p>
+      </div>
+      <div class="data-contract-grid">
+        <article class="data-zone-panel">
+          <h3 data-i18n="analytics.contract.exactTitle">Mesuré ou exact</h3>
+          <ul>
+            <li data-i18n="analytics.contract.exactSnapshot">Ressources, quantités et jauges du dernier snapshot.</li>
+            <li data-i18n="analytics.contract.exactMarginal">Gain marginal obtenu en simulant exactement une unité supplémentaire.</li>
+            <li data-i18n="analytics.contract.exactLocal">Flux instrumentés pendant le cycle de prestige en cours.</li>
+          </ul>
+        </article>
+        <article class="data-zone-panel is-estimate">
+          <h3 data-i18n="analytics.contract.estimateTitle">Estimé sous hypothèses</h3>
+          <ul>
+            <li data-i18n="analytics.contract.estimatePayback">Retour DOC: coût divisé par le gain automatique, à cadence constante.</li>
+            <li data-i18n="analytics.contract.estimateAfford">Temps avant achat: aucun autre achat, clic, contrat ou événement.</li>
+            <li data-i18n="analytics.contract.estimateSpend">Investissement historique reconstruit avec le modèle de coût actuel.</li>
+          </ul>
+        </article>
+        <article class="data-zone-panel is-boundary">
+          <h3 data-i18n="analytics.contract.boundaryTitle">Limites</h3>
+          <ul>
+            <li data-i18n="analytics.contract.boundaryCurrency">DOC est une ressource de jeu, pas une monnaie réelle.</li>
+            <li data-i18n="analytics.contract.boundaryNoProfit">Aucun chiffre ne représente revenu, marge ou profit financier.</li>
+            <li id="dataCoverageCaveat" data-i18n="analytics.contract.boundaryPartial">L'historique peut être partiel après migration ou effacement du stockage.</li>
+          </ul>
+        </article>
+      </div>
+
+      <details class="analytics-data-details" id="rawDataDetails">
+        <summary data-i18n="analytics.raw.toggle">Inspecter le dernier snapshot</summary>
+        <div class="data-table-scroll">
+          <table class="data-table compact-table">
+            <thead>
+              <tr><th scope="col" data-i18n="analytics.raw.field">Champ</th><th scope="col" data-i18n="analytics.raw.value">Valeur</th></tr>
+            </thead>
+            <tbody id="rawDataTableBody"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="app-footer data-zone-footer">
+    <div class="footer-inner">
+      <span class="footer-madeby">
+        <span data-i18n="footer.madeBy">Créé par</span>
+        <a href="https://nicolaspieper.com" rel="author">Nicolas Pieper</a>
+      </span>
+      <nav class="footer-links" aria-label="Liens" data-i18n-aria-label="footer.linksLabel">
+        <a href="/" data-i18n="analytics.backToFactory">Retour à l'atelier</a>
+        <a href="/docs/" data-i18n="footer.docs">Documentation</a>
+        <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Code source</a>
+      </nav>
+    </div>
+  </footer>
 
   <script src="/assets/i18n/fr.js" defer></script>
   <script src="/assets/i18n/en.js" defer></script>
   <script src="/assets/i18n/de.js" defer></script>
   <script src="/assets/i18n/lb.js" defer></script>
+  <script src="/assets/js/accessibility.js" defer></script>
   <script src="/assets/js/dashboard.js" defer></script>
 </body>
 </html>

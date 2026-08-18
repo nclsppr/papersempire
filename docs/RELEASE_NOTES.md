@@ -1,5 +1,40 @@
 # Release Notes
 
+## 0.22.0 — « Production Twin V4 » : le monde, le jeu et la donnée ne font plus qu'un — 2026-08-18
+
+- Nouveau contrat visuel révocable : la métaphore « Atelier tamponné » cesse
+  d'être une zone gelée. La direction active devient une miniature industrielle
+  illustrée — acier bleu nuit, orange sécurité, papier ivoire, métal et lumière
+  chaude — évaluée sur son utilité produit.
+- La landing devient un sas : une partie vierge reste inactive jusqu'à l'entrée
+  explicite dans l'atelier ; après démarrage, le contenu marketing disparaît et
+  une sauvegarde existante revient directement au jeu. L'introduction reste
+  consultable sans remettre la progression à zéro.
+- Le production twin Three.js est partagé : spectacle dans l'affiche, carte
+  compacte dans le jeu, toujours reliée aux bâtiments possédés. La nouvelle
+  cible abandonne le rendu pixel/low-poly rudimentaire au profit de géométries
+  procédurales mieux finies, matériaux PBR partagés et absence de double horizon.
+- Les onze stickers de bâtiments sont remplacés par une famille cohérente de
+  miniatures isométriques de machines sur fond alpha, avec masters PNG 512 px
+  et dérivés WebP validés sur fond nuit et papier. Les anciens fichiers sont
+  conservés comme fallbacks ; badges et tampons restent
+  réservés aux succès et validations qui justifient cette métaphore.
+- Le Dashboard devient **Data Science Zone** : coût suivant, gain marginal
+  DOC/s et CC/s à quantité +1, temps d'accès, retour du coût en DOC,
+  contributions observées, jauges et perspective de prestige. Les analyses
+  réutilisent les règles métier sans muter la partie.
+- Les contrats actifs survivent à la navigation vers la Data Science Zone. Une
+  réorganisation les annule explicitement puis régénère les offres selon les
+  prérequis du nouveau cycle, afin d'éviter toute récompense héritée du run
+  précédent.
+- La zone explicite ses limites : DOC n'est ni un revenu ni une marge,
+  l'historique est local, borné et potentiellement partiel, les projections
+  supposent une cadence constante et aucune donnée multi-joueur n'est inventée.
+- Le contrat iPhone reste non négociable : cibles de 44 px, safe areas, focus
+  cohérent avec la vue visible, mouvement réduit et budgets Three.js mesurables.
+  Les contrôles navigateur, clavier, iPhone et les mesures WebGL restent requis
+  avant de considérer la candidate 0.22.0 validée pour fusion.
+
 ## 0.21 – « Operations Deck » : l'affiche devient un vrai poste de commande — 2026-08-18
 
 - Reconstruction complète du jeu sous le hero : plaque d'exploitation avec

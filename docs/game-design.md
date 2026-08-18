@@ -1,6 +1,6 @@
 ````markdown
 # Papers Empire 📄🖨️🏭  
-Game Design Document (GDD) – version développeur
+Game Design Document (GDD) – version développeur 0.22.0
 
 ---
 
@@ -17,10 +17,27 @@ Tu passes de:
 
 ### 1.2 Plateforme cible
 
-- Web (navigateur desktop en priorité, mobile friendly si possible)
+- Web, avec desktop et iPhone comme surfaces de jeu de premier rang.
 - Tech libre, par exemple:
   - Front: HTML5 + JS / TS (React, Vue ou vanilla)
   - Backend: optionnel (peut être full client-side)
+
+### 1.3 Contrat d'expérience V4
+
+L'expérience est composée de trois surfaces complémentaires, pas de trois
+produits séparés :
+
+1. la **landing** est un sas de découverte ; sur une partie vierge, elle ne
+   démarre pas silencieusement la simulation ;
+2. le **jeu** apparaît après l'entrée et conserve le production twin Three.js
+   sous une forme compacte et interactive ;
+3. la **Data Science Zone** explique la production observée et aide à arbitrer
+   les achats sans inventer de données financières.
+
+Après le premier démarrage, une sauvegarde revient directement au jeu. Le
+joueur peut revoir l'introduction sans réinitialiser sa progression. L'affiche,
+sa navigation marketing et son rail narratif ne restent donc pas au-dessus de
+l'interface de production.
 
 ---
 
@@ -538,28 +555,50 @@ const defaultConfig: GameConfig = {
 
 ## 10. UI et feedback joueur 🎨
 
-Petit récap côté dev front:
+### 10.1 Poste de production
 
-* Panneau principal:
+Le jeu présente un poste d'exploitation hiérarchisé :
 
-  * Bouton clic "imprimante de bureau" avec compteur DOC et CC.
-  * Liste de bâtiments avec:
+* une console de presse manuelle avec DOC, CC et cadence ;
+* un catalogue de machines avec quantité, coût suivant, contribution et action
+  d'achat ;
+* le bureau des méthodes pour les améliorations ;
+* les contrats, événements, jauges, succès et réorganisation ;
+* la carte compacte du production twin, qui garde la relation spatiale avec les
+  bâtiments possédés.
 
-    * Nom, quantité, production, coût, bouton "Acheter".
-  * Liste d'upgrades disponibles.
+Les miniatures de machines isométriques remplacent les anciens
+stickers bristol. Les badges tamponnés sont conservés quand ils signifient une
+validation ou un haut fait. La métaphore de papeterie n'est plus appliquée à
+tous les contrôles.
 
-* Bandeau de jauges:
+### 10.2 Feedback
 
-  * Qualité (barre de 0 à 100 %)
-  * Empreinte papier (inversée visuellement: plus c'est vert, mieux c'est)
-  * Image de marque (étoiles, par exemple)
+* Un clic ou un achat produit un feedback court, causal et interruptible.
+* Qualité et image de marque montent visuellement avec leur valeur ; l'empreinte
+  est explicitement inversée, car une valeur basse est favorable.
+* Les événements restent des modales à choix, avec durée et conséquences
+  compréhensibles.
+* Le panneau prestige affiche la culture actuelle et le gain potentiel de la
+  réorganisation avant confirmation.
+* Le mouvement n'est jamais requis pour comprendre un état et s'arrête selon
+  les préférences d'accessibilité.
 
-* Panneau d'événements:
+### 10.3 Data Science Zone
 
-  * Popup avec 2 ou 3 boutons (choices).
-  * Timer de durée restante.
+La Data Science Zone transforme les données locales du run en décisions
+pratiques : quelle machine devient abordable, quel achat apporte le meilleur
+gain marginal, combien de temps son coût représente à cadence constante, quelle
+source contribue à la production et quel gain de culture est disponible.
 
-* Panneau prestige:
+Les métriques emploient les unités du jeu :
 
-  * Culture actuelle.
-  * Simulation du gain en cas de réorg immédiate.
+* `DOC/s` et `CC/s` pour les cadences ;
+* `DOC` pour les coûts et retours internes ;
+* secondes/minutes/heures pour les horizons constants ;
+* pourcentages pour qualité, empreinte et image de marque.
+
+Le mot « rentabilité » désigne uniquement un retour de coût **en DOC**. DOC
+étant à la fois le volume produit et la monnaie du jeu, la zone ne calcule ni
+revenu, ni dépense réelle, ni bénéfice, ni marge. Toute projection affiche cette
+hypothèse et l'étendue de son historique local.

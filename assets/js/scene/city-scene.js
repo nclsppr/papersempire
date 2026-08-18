@@ -1,5 +1,5 @@
 /**
- * CityScene — lowpoly industrial-campus diorama rendered with three.js.
+ * CityScene — illustrated industrial-campus miniature rendered with three.js.
  *
  * Progressive enhancement layer: scene-loader.js dynamically imports the
  * vendored three.js module and calls CityScene.init(THREE, canvas). If that
@@ -25,6 +25,7 @@
   // dynamic focus logic.
   const HERO_VIEW = { x: 1.15, z: -0.75, zoom: 1.12 };
   const HERO_VIEW_MOBILE = { x: 2.1, z: -2.0, zoom: 1.42 };
+  const HERO_VIEW_MOBILE_LANDING = { x: 7.35, z: -4.95, zoom: 1.2 };
   const LANDMARK_BOUNDS = {
     minX: 4.35,
     maxX: 12.25,
@@ -33,6 +34,7 @@
   };
 
   let renderer = null;
+  let THREERef = null;
   let scene = null;
   let camera = null;
   let canvas = null;
@@ -45,7 +47,7 @@
   let lotCopies = {};
   let animated = { armSegments: [], rings: [] };
   let needsRender = true;
-  let frameToggle = false;
+  let lastFrameTick = 0;
   let isMobile = false;
   let disposed = false;
   let applySize = null;
@@ -54,7 +56,10 @@
   let sizedDpr = 0;
   let sizeCheckCountdown = 0;
   let resizeObserver = null;
+  let resizeRafId = 0;
+  let experienceObserver = null;
   let onWindowResize = null;
+  let sleepTimer = 0;
   let lights = null;
   let lastStats = null;
   let raycaster = null;
@@ -65,6 +70,8 @@
   // Dernières valeurs d'ambiance effectivement rendues (mode still).
   let renderedAmbiance = null;
   let shadowsEnabled = false;
+  let sceneMode = "landing";
+  let requestedSceneMode = null;
   const decorativeTextures = new Set();
 
   // Camions de livraison (roadmap 0.18) : InstancedMesh plafonnés, animés
@@ -103,7 +110,42 @@
   }
 
   function sceneEnabled() {
-    return document.documentElement.dataset.sceneEnabled !== "0";
+    return document.documentElement.dataset.sceneEnabled !== "0" &&
+      !document.documentElement.classList.contains("pref-high-contrast");
+  }
+
+  function finePointerEffects() {
+    return window.innerWidth >= 1100 && typeof window.matchMedia === "function" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+
+  function normalizeSceneMode(value) {
+    return value === "playing" || value === "landing" ? value : null;
+  }
+
+  function mattePaintingPresent() {
+    return !!(stageEl && stageEl.querySelector && stageEl.querySelector(".hero-horizon img"));
+  }
+
+  /**
+   * Landing mode assumes a CSS/raster matte behind the transparent canvas and
+   * omits the procedural skyline. A future standalone gameplay canvas can set
+   * `CityScene.setMode("playing")`, `window.__PE_SCENE_MODE__`, or a
+   * data-experience/data-scene-mode attribute before init without depending on
+   * hero markup.
+   */
+  function resolveSceneMode(canvasEl) {
+    const explicit = normalizeSceneMode(requestedSceneMode) ||
+      normalizeSceneMode(window.__PE_SCENE_MODE__) ||
+      normalizeSceneMode(document.documentElement.dataset.experience) ||
+      normalizeSceneMode(canvasEl && canvasEl.dataset ? canvasEl.dataset.sceneMode : null) ||
+      normalizeSceneMode(stageEl && stageEl.dataset ? stageEl.dataset.sceneMode : null);
+    if (explicit) return explicit;
+    return mattePaintingPresent() ? "landing" : "playing";
+  }
+
+  function worldTheme() {
+    return window.PEWorldTheme || null;
   }
 
   // --- Cadrage dynamique ---------------------------------------------------
@@ -122,7 +164,8 @@
       y,
       view.z + r * Math.sin(azimuth)
     );
-    camera.lookAt(view.x, 0.6, view.z);
+    const targetY = isMobile && sceneMode === "landing" ? 2.65 : 0.6;
+    camera.lookAt(view.x, targetY, view.z);
     if (camera.zoom !== view.zoom) {
       camera.zoom = view.zoom;
       camera.updateProjectionMatrix();
@@ -151,7 +194,9 @@
       });
     });
     if (!any) {
-      const hero = isMobile ? HERO_VIEW_MOBILE : HERO_VIEW;
+      const hero = isMobile
+        ? (sceneMode === "landing" ? HERO_VIEW_MOBILE_LANDING : HERO_VIEW_MOBILE)
+        : HERO_VIEW;
       viewTarget.x = hero.x;
       viewTarget.z = hero.z;
       viewTarget.zoom = hero.zoom;
@@ -219,13 +264,36 @@
   }
 
   function buildLights(THREE) {
-    const hemi = new THREE.HemisphereLight(0xe9f3e9, 0x4b4434, 0.84);
+    const theme = worldTheme();
+    const rig = theme ? theme.lighting : {
+      hemisphereSky: 0xeaf4ee,
+      hemisphereGround: 0x514735,
+      hemisphereIntensity: 0.84,
+      sunColor: 0xffd394,
+      sunIntensity: 2.34,
+      sunPosition: { x: 13, y: 22, z: 15 },
+      rimColor: 0x91d8dd,
+      rimIntensity: 0.34,
+      rimPosition: { x: -11, y: 13, z: -14 },
+      skyClear: 0xe8f4ec,
+      skySmog: 0xc4b98c,
+      groundClear: 0x4b594e,
+      groundSmog: 0x554b38,
+      fogClear: 0xc9dfdc,
+      fogSmog: 0xb8ad82
+    };
+    const hemi = new THREE.HemisphereLight(
+      rig.hemisphereSky,
+      rig.hemisphereGround,
+      rig.hemisphereIntensity
+    );
     scene.add(hemi);
-    // One warm key light supplies the long illustrated shadows. On capable
+    // One warm side key supplies long illustrated shadows and catches the
+    // chamfered silhouettes. On capable
     // desktop layouts its shadow map is cached: it is refreshed only when the
     // architectural state changes, never for trucks, smoke or flying paper.
-    const sun = new THREE.DirectionalLight(0xffd99a, 2.18);
-    sun.position.set(13, 22, 15);
+    const sun = new THREE.DirectionalLight(rig.sunColor, rig.sunIntensity);
+    sun.position.set(rig.sunPosition.x, rig.sunPosition.y, rig.sunPosition.z);
     if (shadowsEnabled) {
       sun.castShadow = true;
       sun.shadow.mapSize.set(1024, 1024);
@@ -239,19 +307,25 @@
       sun.shadow.normalBias = 0.028;
     }
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0x8fd4db, 0.3);
-    rim.position.set(-10, 12, -14);
+    // Cool opposing rim separates steel/pipes from the warm painted horizon.
+    // It has no shadow map and therefore remains inexpensive on mobile.
+    const rim = new THREE.DirectionalLight(rig.rimColor, rig.rimIntensity);
+    rim.position.set(rig.rimPosition.x, rig.rimPosition.y, rig.rimPosition.z);
     scene.add(rim);
     lights = {
       hemi,
       sun,
       rim,
-      skyClear: new THREE.Color(0xe8f4ec),
-      skySmog: new THREE.Color(0xc4b98c),
-      groundClear: new THREE.Color(0x4b594e),
-      groundSmog: new THREE.Color(0x554b38),
-      fogClear: new THREE.Color(0xc9dfdc),
-      fogSmog: new THREE.Color(0xb8ad82)
+      sunMin: rig.sunIntensity - 0.28,
+      sunRange: 0.56,
+      rimMin: Math.max(0.16, rig.rimIntensity - 0.16),
+      rimRange: 0.4,
+      skyClear: new THREE.Color(rig.skyClear),
+      skySmog: new THREE.Color(rig.skySmog),
+      groundClear: new THREE.Color(rig.groundClear),
+      groundSmog: new THREE.Color(rig.groundSmog),
+      fogClear: new THREE.Color(rig.fogClear),
+      fogSmog: new THREE.Color(rig.fogSmog)
     };
   }
 
@@ -281,8 +355,8 @@
     // Le smog rapproche l'horizon et le réchauffe, sans replonger le campus
     // dans la nuit : la silhouette et les couleurs restent toujours lisibles.
     stepTo(scene.fog, "far", 62 - smog * 22);
-    stepTo(lights.sun, "intensity", 1.92 + Math.max(0, Math.min(1, lastStats.quality)) * 0.52);
-    stepTo(lights.rim, "intensity", 0.2 + Math.max(0, Math.min(1, lastStats.brandImage)) * 0.4);
+    stepTo(lights.sun, "intensity", lights.sunMin + Math.max(0, Math.min(1, lastStats.quality)) * lights.sunRange);
+    stepTo(lights.rim, "intensity", lights.rimMin + Math.max(0, Math.min(1, lastStats.brandImage)) * lights.rimRange);
     lights.skyTarget.lerpColors(lights.skyClear, lights.skySmog, smog);
     lights.groundTarget.lerpColors(lights.groundClear, lights.groundSmog, smog);
     lights.fogTarget.lerpColors(lights.fogClear, lights.fogSmog, smog);
@@ -323,10 +397,21 @@
   function scenicMaterial(THREE, color, options) {
     return new THREE.MeshStandardMaterial(Object.assign({
       color,
-      roughness: 0.88,
+      roughness: 0.82,
       metalness: 0,
-      flatShading: true
+      flatShading: false
     }, options || {}));
+  }
+
+  function sharedWorldGeometry(THREE, kind, segments) {
+    const theme = worldTheme();
+    if (theme && theme.geometry) return theme.geometry(THREE, kind, segments);
+    if (kind === "box" || kind === "chamferBox") return new THREE.BoxGeometry(1, 1, 1);
+    if (kind === "cylinder") return new THREE.CylinderGeometry(0.5, 0.5, 1, segments || 12);
+    if (kind === "cone") return new THREE.ConeGeometry(0.5, 1, segments || 8);
+    if (kind === "icosahedron") return new THREE.IcosahedronGeometry(0.5, 1);
+    if (kind === "plane") return new THREE.PlaneGeometry(1, 1);
+    throw new Error("Unknown scenic geometry: " + kind);
   }
 
   function configureScenicShadows(mesh, name) {
@@ -346,10 +431,10 @@
   }
 
   /** One draw call for an arbitrary set of scaled/rotated boxes. */
-  function addBoxBatch(THREE, parent, material, specs, name) {
+  function addBoxBatch(THREE, parent, material, specs, name, geometryKind) {
     if (!specs.length) return null;
     const mesh = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(1, 1, 1),
+      sharedWorldGeometry(THREE, geometryKind || "box"),
       material,
       specs.length
     );
@@ -374,7 +459,7 @@
   function addCylinderBatch(THREE, parent, material, specs, name, segments) {
     if (!specs.length) return null;
     const mesh = new THREE.InstancedMesh(
-      new THREE.CylinderGeometry(0.5, 0.5, 1, segments || 8),
+      sharedWorldGeometry(THREE, "cylinder", Math.max(10, segments || 12)),
       material,
       specs.length
     );
@@ -397,7 +482,7 @@
   function addConeBatch(THREE, parent, material, specs, name) {
     if (!specs.length) return null;
     const mesh = new THREE.InstancedMesh(
-      new THREE.ConeGeometry(0.5, 1, 6),
+      sharedWorldGeometry(THREE, "cone", 6),
       material,
       specs.length
     );
@@ -421,7 +506,7 @@
   function addSphereBatch(THREE, parent, material, specs, name) {
     if (!specs.length) return null;
     const mesh = new THREE.InstancedMesh(
-      new THREE.IcosahedronGeometry(0.5, 1),
+      sharedWorldGeometry(THREE, "icosahedron"),
       material,
       specs.length
     );
@@ -609,7 +694,14 @@
       { x: -1.15, y: 0.72, z: 1.42, w: 1.04, h: 1.18, d: 0.9 },
       { x: 0.58, y: 0.67, z: 1.34, w: 1.0, h: 1.08, d: 0.88 }
     ];
-    addBoxBatch(THREE, landmark, palette.steelBlue, blueBoxes, "printworks-blue-masses");
+    addBoxBatch(
+      THREE,
+      landmark,
+      palette.steelBlue,
+      blueBoxes,
+      "printworks-blue-masses",
+      "chamferBox"
+    );
 
     const inkBoxes = [
       { x: -0.1, y: 2.03, z: -0.42, w: 5.04, h: 0.16, d: 3.0 },
@@ -867,38 +959,45 @@
   function buildDecorativeWorld(THREE) {
     decorativeWorld = new THREE.Group();
     decorativeWorld.name = "decorative-world";
-    const palette = {
-      ground: scenicMaterial(THREE, 0x66866c, { roughness: 1 }),
-      concrete: scenicMaterial(THREE, 0xd7c7a5, { roughness: 0.96 }),
-      road: scenicMaterial(THREE, 0x40505a, { roughness: 0.92 }),
-      marking: scenicMaterial(THREE, 0xf4d89b, { roughness: 0.9 }),
+    const theme = worldTheme();
+    const palette = theme && theme.createPalette ? theme.createPalette(THREE) : {
+      ground: scenicMaterial(THREE, 0x66866c, { roughness: 0.98 }),
+      concrete: scenicMaterial(THREE, 0xd7c7a5, { roughness: 0.94 }),
+      road: scenicMaterial(THREE, 0x40505a, { roughness: 0.9, metalness: 0.02 }),
+      marking: scenicMaterial(THREE, 0xf4d89b, { roughness: 0.88 }),
       paper: scenicMaterial(THREE, 0xf5ead2, { roughness: 0.96 }),
-      kraft: scenicMaterial(THREE, 0xc89d5e, { roughness: 0.92 }),
-      ink: scenicMaterial(THREE, 0x263746, { roughness: 0.82 }),
-      steelBlue: scenicMaterial(THREE, 0x355c70, { roughness: 0.72, metalness: 0.08 }),
-      orange: scenicMaterial(THREE, 0xe7601e, { roughness: 0.68 }),
-      metal: scenicMaterial(THREE, 0x8b9aa0, { roughness: 0.48, metalness: 0.42 }),
+      kraft: scenicMaterial(THREE, 0xc89d5e, { roughness: 0.9 }),
+      ink: scenicMaterial(THREE, 0x263746, { roughness: 0.82, metalness: 0.03 }),
+      steelBlue: scenicMaterial(THREE, 0x355c70, { roughness: 0.7, metalness: 0.1 }),
+      orange: scenicMaterial(THREE, 0xe7601e, { roughness: 0.64, metalness: 0.03 }),
+      metal: scenicMaterial(THREE, 0x8b9aa0, { roughness: 0.46, metalness: 0.46 }),
       window: scenicMaterial(THREE, 0xffb13b, {
-        roughness: 0.5,
+        roughness: 0.48,
         emissive: 0xff8b24,
-        emissiveIntensity: 0.58
+        emissiveIntensity: 0.52
       }),
       treeTrunk: scenicMaterial(THREE, 0x6d4b30, { roughness: 1 }),
       treeCrown: scenicMaterial(THREE, 0x4f774d, { roughness: 1 }),
       skyline: scenicMaterial(THREE, 0xffffff, { roughness: 1 }),
-      skylineDark: scenicMaterial(THREE, 0x526773, { roughness: 0.94 }),
-      cloud: new THREE.MeshBasicMaterial({
+      skylineDark: scenicMaterial(THREE, 0x526773, { roughness: 0.94 })
+    };
+    if (sceneMode === "playing" && !mattePaintingPresent()) {
+      // Clouds deliberately remain unlit/translucent. They only exist for a
+      // standalone gameplay scene with no raster matte behind the canvas.
+      palette.cloud = new THREE.MeshBasicMaterial({
         color: 0xfff3db,
         transparent: true,
         opacity: 0.82,
         depthWrite: false,
         fog: false,
         toneMapped: false
-      })
-    };
+      });
+    }
     buildGround(THREE, decorativeWorld, palette);
     buildPrintworksLandmark(THREE, decorativeWorld, palette);
-    buildHorizon(THREE, decorativeWorld, palette);
+    if (palette.cloud) {
+      buildHorizon(THREE, decorativeWorld, palette);
+    }
     scene.add(decorativeWorld);
   }
 
@@ -906,15 +1005,20 @@
    * Camions de livraison qui circulent sur les deux routes (z = +/-2.4).
    * Deux InstancedMesh (caisse + cabine) partagent géométrie et matériau :
    * tout le parc tient en 2 draw calls, quel que soit le nombre affiché.
-   * Palette atelier : caisse crème, cabine kraft. Cap dur = 8.
+   * Palette atelier V4 : caisse acier bleu, cabine orange. Cap dur = 8.
    */
   const TRUCK_CAP = 8;
 
   function buildTrucks(THREE) {
     const bodyGeo = new THREE.BoxGeometry(0.5, 0.26, 0.28);
     const cabGeo = new THREE.BoxGeometry(0.16, 0.2, 0.26);
-    const bodyMat = new THREE.MeshLambertMaterial({ color: 0xf4ead2, flatShading: true });
-    const cabMat = new THREE.MeshLambertMaterial({ color: 0xbf9d5f, flatShading: true });
+    const theme = worldTheme();
+    const bodyMat = theme
+      ? theme.material(THREE, "steelBlue")
+      : scenicMaterial(THREE, 0x355c70, { roughness: 0.7, metalness: 0.1 });
+    const cabMat = theme
+      ? theme.material(THREE, "orange")
+      : scenicMaterial(THREE, 0xe7601e, { roughness: 0.64, metalness: 0.03 });
     const body = new THREE.InstancedMesh(bodyGeo, bodyMat, TRUCK_CAP);
     const cab = new THREE.InstancedMesh(cabGeo, cabMat, TRUCK_CAP);
     body.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -1231,7 +1335,7 @@
     const growth = copy.getObjectByName("growth");
     if (!growth) return;
     growth.traverse(o => {
-      if (o.geometry) o.geometry.dispose();
+      if (o.geometry && !o.geometry.userData.peWorldShared) o.geometry.dispose();
     });
   }
 
@@ -1263,8 +1367,12 @@
       if (firstAppearance && !initialSync && window.SceneEffects && !reduceMotion()) {
         window.SceneEffects.popIn(group);
       }
-      // Duplicate copies beyond the first, up to the lot's visual cap.
-      const offsets = layout.duplicateOffsets(b.id, layout.copiesFor(b.id, b.quantity));
+      // Desktop can turn quantity into a small campus. On mobile, the growth
+      // stages already communicate progression; extra full recipes would take
+      // the scene from ~186 to ~476 draw calls at the visual cap.
+      const desktopCopies = layout.copiesFor(b.id, b.quantity);
+      const visualCopies = isMobile ? Math.min(1, desktopCopies) : desktopCopies;
+      const offsets = layout.duplicateOffsets(b.id, visualCopies);
       const copies = lotCopies[b.id];
       while (copies.length > Math.max(0, offsets.length - 1)) {
         const dead = copies.pop();
@@ -1313,19 +1421,53 @@
     return changed;
   }
 
+  function scheduleFrame(THREE, delayMs = 0) {
+    if (disposed || !running || rafId || sleepTimer) return;
+    if (delayMs > 0) {
+      sleepTimer = window.setTimeout(() => {
+        sleepTimer = 0;
+        if (!disposed && running && !rafId) {
+          rafId = requestAnimationFrame(t => animate(THREE, t));
+        }
+      }, delayMs);
+      return;
+    }
+    rafId = requestAnimationFrame(t => animate(THREE, t));
+  }
+
+  function wakeScene() {
+    if (disposed || !running || !THREERef) return;
+    needsRender = true;
+    if (sleepTimer) {
+      clearTimeout(sleepTimer);
+      sleepTimer = 0;
+    }
+    scheduleFrame(THREERef);
+  }
+
   function animate(THREE, timeMs) {
     if (disposed) return;
-    rafId = requestAnimationFrame(t => animate(THREE, t));
+    rafId = 0;
     if (!running || !stageInView || document.hidden || !sceneEnabled()) {
       // Personne ne regarde : les notifications de juice accumulées
       // n'auront plus de sens au retour — on les jette au fil de l'eau.
       const queue = window.__PE_SCENE_EVENTS__;
       if (queue && queue.length) queue.length = 0;
+      // Keep a very slow poll as a fallback for browsers that throttle
+      // observer callbacks; visibility/intersection changes wake immediately.
+      scheduleFrame(THREE, 750);
       return;
     }
-    // Mobile renders every other frame (~30fps).
-    frameToggle = !frameToggle;
-    if (isMobile && frameToggle) return;
+    const still = reduceMotion();
+    scheduleFrame(THREE, still ? 250 : 0);
+    // Time-based cap is stable on 60/120/144 Hz panels. Skipping every other
+    // rAF would still render 60 fps on an iPhone ProMotion display.
+    if (!still) {
+      const frameInterval = 1000 / (isMobile ? 30 : 60);
+      const sinceLastFrame = timeMs - lastFrameTick;
+      if (lastFrameTick && sinceLastFrame < frameInterval) return;
+      lastFrameTick = timeMs - (sinceLastFrame % frameInterval);
+    }
 
     // Belt-and-braces sizing: ResizeObserver/timers can be throttled away
     // in hidden or embedded documents, and a stage that was 0-sized at
@@ -1340,7 +1482,6 @@
     if (snapshot && syncBuildings(THREE, snapshot)) {
       needsRender = true;
     }
-    const still = reduceMotion();
     if (still && pressSheetLayer && pressSheetLayer.position.z !== 0) {
       pressSheetLayer.position.z = 0;
       needsRender = true;
@@ -1363,15 +1504,19 @@
       needsRender = true;
     }
     drainSceneEvents(THREE);
-    if (window.SceneEffects) {
-      if (still) {
+      if (window.SceneEffects) {
+        if (still) {
         // reduce-motion activé en cours de vol : on amène les effets
         // actifs à leur état final (avec nettoyage) au lieu de les
         // laisser s'animer jusqu'au bout.
-        if (window.SceneEffects.finishAll()) needsRender = true;
-      } else if (window.SceneEffects.tick(timeMs || 0)) {
-        needsRender = true;
-      }
+          if (window.SceneEffects.finishAll()) {
+            needsRender = true;
+            markShadowDirty();
+          }
+        } else if (window.SceneEffects.tick(timeMs || 0)) {
+          needsRender = true;
+          markShadowDirty();
+        }
     }
 
     if (still && ambianceNeedsRender()) needsRender = true;
@@ -1436,8 +1581,10 @@
   function raycastTargets() {
     const targets = [];
     Object.keys(lotGroups).forEach(id => {
-      targets.push(lotGroups[id]);
-      lotCopies[id].forEach(copy => targets.push(copy));
+      if (lotGroups[id].visible) targets.push(lotGroups[id]);
+      lotCopies[id].forEach(copy => {
+        if (copy.visible) targets.push(copy);
+      });
     });
     return targets;
   }
@@ -1466,6 +1613,7 @@
     // navigateur l'annule si le geste devient un drag/scroll (tactile).
     canvas.addEventListener("click", event => {
       if (!running || !renderer) return;
+      if (sceneMode !== "playing" || document.documentElement.dataset.experience !== "playing") return;
       const id = raycastBuilding(THREE, event.clientX, event.clientY);
       if (!id) return;
       const btn = document.querySelector('[data-building-btn="' + id + '"]');
@@ -1477,6 +1625,11 @@
     });
     canvas.addEventListener("pointermove", event => {
       if (!running || !renderer) return;
+      if (event.pointerType === "touch") return;
+      if (sceneMode !== "playing") {
+        canvas.style.cursor = "";
+        return;
+      }
       const now = performance.now();
       if (now - lastHoverCheck < 120) return;
       lastHoverCheck = now;
@@ -1553,10 +1706,29 @@
   function watchSky(THREE) {
     applySkyBackground();
     if (!("MutationObserver" in window)) return;
-    skyObserver = new MutationObserver(applySkyBackground);
+    skyObserver = new MutationObserver(() => {
+      applySkyBackground();
+      wakeScene();
+    });
     skyObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"]
+    });
+  }
+
+  function watchExperienceMode() {
+    if (!("MutationObserver" in window)) return;
+    experienceObserver = new MutationObserver(() => {
+      const next = normalizeSceneMode(document.documentElement.dataset.experience);
+      if (next && next !== sceneMode) {
+        sceneMode = next;
+        updateViewTarget();
+      }
+      wakeScene();
+    });
+    experienceObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-experience", "data-scene-enabled"]
     });
   }
 
@@ -1565,12 +1737,13 @@
       const io = new IntersectionObserver(entries => {
         entries.forEach(e => {
           stageInView = e.isIntersecting;
+          if (stageInView) wakeScene();
         });
       });
       io.observe(stageEl);
     }
     document.addEventListener("visibilitychange", () => {
-      needsRender = true;
+      wakeScene();
     });
   }
 
@@ -1582,7 +1755,12 @@
       if (!w || !h) return;
       const wasMobile = isMobile;
       isMobile = window.innerWidth < MOBILE_MAX_WIDTH;
-      if (isMobile !== wasMobile) updateViewTarget();
+      if (isMobile !== wasMobile) {
+        // Copy caps differ across this breakpoint. Invalidating the snapshot
+        // removes/adds clones even when game quantities themselves did not move.
+        lastQuantities = null;
+        updateViewTarget();
+      }
       // Le DPR fait partie de l'état de taille : glisser la fenêtre vers un
       // écran de densité différente ne change pas les pixels CSS du stage.
       const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : DPR_CAP_DESKTOP);
@@ -1597,10 +1775,12 @@
     };
     applySize = apply;
     if ("ResizeObserver" in window) {
-      let pending = 0;
       resizeObserver = new ResizeObserver(() => {
-        clearTimeout(pending);
-        pending = setTimeout(apply, 80);
+        if (resizeRafId) return;
+        resizeRafId = requestAnimationFrame(() => {
+          resizeRafId = 0;
+          apply();
+        });
       });
       resizeObserver.observe(stageEl);
     } else {
@@ -1615,10 +1795,12 @@
       const geometries = new Set();
       const materials = new Set();
       decorativeWorld.traverse(object => {
-        if (object.geometry) geometries.add(object.geometry);
+        if (object.geometry && !object.geometry.userData.peWorldShared) geometries.add(object.geometry);
         if (Array.isArray(object.material)) {
-          object.material.forEach(material => materials.add(material));
-        } else if (object.material) {
+          object.material.forEach(material => {
+            if (!material.userData.peWorldShared) materials.add(material);
+          });
+        } else if (object.material && !object.material.userData.peWorldShared) {
           materials.add(object.material);
         }
       });
@@ -1637,6 +1819,15 @@
     disposed = true;
     running = false;
     if (rafId) cancelAnimationFrame(rafId);
+    rafId = 0;
+    if (sleepTimer) {
+      clearTimeout(sleepTimer);
+      sleepTimer = 0;
+    }
+    if (resizeRafId) {
+      cancelAnimationFrame(resizeRafId);
+      resizeRafId = 0;
+    }
     if (resizeObserver) {
       resizeObserver.disconnect();
       resizeObserver = null;
@@ -1652,6 +1843,10 @@
     if (skyObserver) {
       skyObserver.disconnect();
       skyObserver = null;
+    }
+    if (experienceObserver) {
+      experienceObserver.disconnect();
+      experienceObserver = null;
     }
     disposeDecorativeWorld();
     if (papers) {
@@ -1672,18 +1867,31 @@
     }
     if (trucks) {
       trucks.body.geometry.dispose();
-      trucks.body.material.dispose();
+      if (!trucks.body.material.userData.peWorldShared) trucks.body.material.dispose();
       trucks.cab.geometry.dispose();
-      trucks.cab.material.dispose();
+      if (!trucks.cab.material.userData.peWorldShared) trucks.cab.material.dispose();
       trucks = null;
     }
+    if (window.BuildingRecipes && window.BuildingRecipes.disposeResources) {
+      window.BuildingRecipes.disposeResources();
+    }
+    const theme = worldTheme();
+    if (theme && theme.dispose && THREERef) theme.dispose(THREERef);
     if (renderer) {
       renderer.dispose();
       renderer = null;
     }
+    THREERef = null;
   }
 
   window.CityScene = {
+    /** Optional pre-init hook for a future full gameplay canvas. */
+    setMode(mode) {
+      const normalized = normalizeSceneMode(mode);
+      if (!normalized || renderer) return false;
+      requestedSceneMode = normalized;
+      return true;
+    },
     /**
      * Boots the diorama. Returns true on success, false when prerequisites
      * are missing — the loader then leaves the CSS fallback in place.
@@ -1693,11 +1901,13 @@
         return false;
       }
       canvas = canvasEl;
+      THREERef = THREE;
       stageEl = canvas.closest(".stage") || canvas.parentElement;
+      sceneMode = resolveSceneMode(canvasEl);
       try {
         renderer = new THREE.WebGLRenderer({
           canvas,
-          antialias: window.innerWidth >= MOBILE_MAX_WIDTH,
+          antialias: finePointerEffects(),
           alpha: true,
           powerPreference: "low-power"
         });
@@ -1708,7 +1918,7 @@
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.16;
       renderer.setClearColor(0xffffff, 0);
-      shadowsEnabled = window.innerWidth >= 1100;
+      shadowsEnabled = finePointerEffects();
       renderer.shadowMap.enabled = shadowsEnabled;
       if (shadowsEnabled) {
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1730,6 +1940,7 @@
       markShadowDirty();
       watchResize(THREE);
       watchSky(THREE);
+      watchExperienceMode();
       watchVisibility();
       wirePointer(THREE);
       // File des notifications de jeu (achats/événements/prestige) que
@@ -1741,9 +1952,9 @@
         if (stageEl) stageEl.classList.remove("scene-active");
       });
       running = true;
-      rafId = requestAnimationFrame(t => animate(THREE, t));
-      // Debug/test handle (also used by Playwright specs and headless
-      // environments where document.hidden pauses the normal loop).
+      scheduleFrame(THREE);
+      // Debug/measurement handle, including headless environments where
+      // document.hidden pauses the normal loop.
       window.__PE_SCENE_DEBUG__ = {
         get info() {
           return renderer ? renderer.info.render : null;
@@ -1776,6 +1987,7 @@
           needsRender,
           disposed
         }),
+        mode: () => sceneMode,
         /** Syncs state and renders a single frame, bypassing pause guards. */
         renderOnce() {
           if (!renderer) return null;
