@@ -40,6 +40,9 @@ Track meaningful milestones in the project:
 - **0.19.3** – Précision de la cadence Atlas : la réconciliation est planifiée toutes les dix minutes en best effort et peut être retardée par GitHub ; publication et activation restent séparées.
 - **0.20.0** – « Factory Key Art » : lockup illustré raster, horizons peints desktop/mobile, usine Three.js recadrée comme sujet principal et rail narratif en six étapes avant le jeu, sans métriques sociales inventées et avec i18n FR/EN/DE/LB.
 - **0.21.0** – « Operations Deck » : reconstruction de l'interface de gestion en pupitre industriel asymétrique, sprite SVG maison, presse à passage de feuille, catalogue de machines enrichi, bons/visas distincts et fiabilisation tactile iPhone (voiles de modale, cibles 44 px, safe areas, rendus DOM mémoïsés), avec i18n FR/EN/DE/LB.
+- **0.21.1** – Migration de la branche par défaut de `master` vers `main` :
+  workflows, protection, GitHub Pages, documentation et réconciliation Atlas
+  suivent désormais le même nom canonique.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
@@ -51,7 +54,7 @@ When you make notable changes (new features, mechanics, UI improvements), append
 - PNG icons (`favicon-32`, `apple-touch-icon` 180, `icon-192`, `icon-512`) live in `assets/images/`; `site.webmanifest` makes the game installable.
 - The GitHub Actions workflow (`.github/workflows/docs.yml`) builds the docs, bundles the game assets, copies `robots.txt`/`sitemap.xml`/`404.html`/`site.webmanifest`, and deploys everything via GitHub Pages (Pages source = GitHub Actions).
 - The separate `.github/workflows/vps-release.yml` workflow publishes that same `site/` tree and its route inventory as immutable, attested GHCR artifacts. It has no Atlas secret and never contacts the VPS.
-- The central [`nclsppr/vps-infra`](https://github.com/nclsppr/vps-infra) reconciler owns activation. Its best-effort GitHub Actions schedule is configured to run every ten minutes, but GitHub may delay scheduled executions. On each run, it resolves the exact `master` HEAD, requires the configured checks to pass, resolves `sha-<commit>` tags to digests, and asks Atlas to verify the attestations and HTTP contract again before a transactional switch. Publication alone cannot activate a version, and the resolver does not fall back to an older green commit.
+- The central [`nclsppr/vps-infra`](https://github.com/nclsppr/vps-infra) reconciler owns activation. Its best-effort GitHub Actions schedule is configured to run every ten minutes, but GitHub may delay scheduled executions. On each run, it resolves the exact `main` HEAD, requires the configured checks to pass, resolves `sha-<commit>` tags to digests, and asks Atlas to verify the attestations and HTTP contract again before a transactional switch. Publication alone cannot activate a version, and the resolver does not fall back to an older green commit.
 - Historical evidence observed on 18 August 2026: source `c9b5165187765b5bfc089a196d4e5bdbfefb2a2f`, published by Actions run [`32078995055`](https://github.com/nclsppr/papersempire/actions/runs/32078995055), was accepted by Atlas in central run [`32080417977`](https://github.com/nclsppr/vps-infra/actions/runs/32080417977) with site `sha256:d0c7645202e1db75c9a89008132fa53c62e37f9b17684730be62856b87cb4c7c` and routes `sha256:be525ef7f387c06c266c1a429ae524c8feca8d0235c1c2822bb7ad48a6f149f3`. This documentation commit creates another candidate of its own. Check the central workflow and Atlas protected state for the current tuple instead of treating this snapshot as a permanent active digest.
 
 ## Accessibility
