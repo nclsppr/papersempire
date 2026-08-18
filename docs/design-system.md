@@ -1,162 +1,183 @@
-# Design system — « Atelier tamponné »
+# Design system V4 — « Production Twin »
 
-Le design system officiel de Papers Empire, choisi le 2026-07-17. Toute évolution
-visuelle (CSS, assets, images générées) doit respecter ce document.
+Ce document formalise la direction de Papers Empire 0.22.0. Il remplace le
+gel « Atelier tamponné » par un système **révocable et challengé** : une règle
+visuelle est un choix de produit tant qu'elle améliore la lisibilité, le plaisir
+de jeu et la cohérence du monde, jamais une vérité à préserver pour elle-même.
 
 ## Concept
 
-Papers Empire s'ouvre comme une **affiche jouable** : header bleu nuit, grand
-campus industriel three.js dans une lumière de papier et HUD réel superposé.
-Le monde 3D porte le spectacle ; tout ce qui se **manipule** reste un objet de
-papeterie physique : fiches bristol crème opaques, boutons-tampons épais qui
-s'écrasent au clic, étiquettes kraft, listings perforés, visas « APPROUVÉ ».
-La parodie vient de la bureaucratie matérielle prise au sérieux.
+Papers Empire est une **miniature industrielle illustrée et vivante**. Le même
+atelier constitue l'affiche d'entrée, le terrain de jeu et la source des
+analyses : c'est le **production twin**. Acier bleu nuit, émail orange, rouleaux
+métalliques, papier ivoire et lumière chaude composent un monde de fabrication
+précis, généreux et immédiatement identifiable.
 
-## Tokens
+La satire administrative demeure dans le ton et les situations. Elle n'oblige
+plus chaque contrôle à ressembler à une fiche bristol ou à un tampon. Les
+tampons, badges et papiers physiques sont réservés aux moments où leur sens est
+réel : validation, succès, bon de commande, rapport ou archive.
 
-La source de vérité est la couche `:root` de `assets/css/style.css`
-(primitives historiques + couche sémantique + surcharges « Atelier tamponné »).
-Ne jamais coder une couleur en dur dans un composant : consommer les tokens.
+## Contrat d'expérience
 
-Palette de référence :
+### La landing est un sas
 
-| Rôle | Token | Valeur |
-|---|---|---|
-| Bristol (faces des fiches) | `--paper-bright` | `#fdf8ec` |
-| Papier ombré (plis, trames) | `--paper-shade` | `#eee3c9` |
-| Kraft (étiquettes, onglets) | `--kraft` | `#d9c29a` |
-| Encre principale | `--ink-strong` | `#33261a` |
-| Encre diluée | `--ink-soft` | `#6b5b45` |
-| Rouge tampon | `--stamp-red` | `#b3251e` |
-| Or (monnaie, premium) | `--accent` | `#fbbf24` |
-| Nuit de l'atelier | `--bg-sky` / `--bg-deep` | `#271c40` / `#0b0617` |
-| Cadre du hero | `--navy-950` / `--navy-900` | `#07111f` / `#0c1b2d` |
-| Ciel du campus | `--hero-sky` / `--hero-haze` | `#b9dce4` / `#f5e6bd` |
-| Acier de l'usine | `--steel-blue` | `#28516a` |
-| Orange industriel | `--factory-orange` | `#d7521b` |
-| Signal positif | `--factory-green` | `#719746` |
+La landing présente la promesse et permet d'entrer dans l'atelier. Elle n'est
+pas une seconde interface conservée au-dessus du jeu.
 
-Règles clés :
-- **Pas d'emoji dans le chrome d'action et de structure** (boutons, footer,
-  navigation, titres de colonnes, jauges, hauts faits) : l'iconographie y
-  passe par les stickers, tampons et SVG encrés. Les compteurs du poste de
-  commande utilisent eux aussi le sprite SVG V3 ; les emojis dynamiques des
-  événements restent tolérés en attendant leurs illustrations dédiées.
-- **Le kraft est un accent, jamais un fond de contrôle** : liserés
-  (`--kraft-deep`), bordures, étiquettes. Les contrôles secondaires (onglets,
-  navigation) vivent en `--paper-shade` ; seuls les boutons d'ACTION portent
-  les couleurs fortes (or, vert, indigo, rouge).
-- Les boutons sont GROS et assumés : socle 3D en `box-shadow` dur, écrasement
-  au `:active` par `translateY` qui consomme la tranche. Jamais de bouton plat.
-- Ombres toujours en 2 couches : tranche dure sans flou + portée douce.
-- Chiffres et KPIs en chasse fixe (`--font-mono`), façon dactylographie.
-- Motion : max 5 animations infinies simultanées, `prefers-reduced-motion` respecté.
-- Contrastes AA minimum (encre/bristol ≈ 12,8:1) ; focus ring adapté au fond clair.
-- Modes `pref-high-contrast` et `pref-large-text` toujours fonctionnels.
+- Avant la première entrée, l'affiche, sa navigation marketing et son rail
+  narratif sont visibles ; la simulation, les événements, le tutoriel et
+  l'autosauvegarde ne démarrent pas sur une sauvegarde vierge.
+- « Entrer dans l'atelier » fait disparaître les surfaces marketing et révèle
+  le jeu. L'intention de démarrage est persistée séparément de la vue courante.
+- Une sauvegarde existante ouvre directement l'expérience de jeu. Un accès
+  explicite à l'introduction peut réafficher le sas sans réinitialiser la partie.
+- Dans le jeu, la scène reste présente sous une forme compacte : elle devient
+  une carte de production interactive, pas une copie du hero.
+- La navigation, le skip link et le focus suivent l'état visible ; aucun lien
+  ou contrôle ne doit rester derrière une surface `hidden`, `inert` ou
+  `aria-hidden`.
 
-## Pupitre d'exploitation et iconographie V3 (décision 2026-08-18)
+### Un monde, trois lectures
 
-L'interface située sous l'affiche n'est plus une grille de cartes équivalentes :
-elle forme un **pupitre d'exploitation**. Une plaque sombre établit le contexte
-et affiche uniquement des indicateurs réels ; la presse manuelle devient une
-console acier/papier, le catalogue des machines domine la composition, puis le
-bureau des méthodes, les bons de commande et le classeur de visas prennent des
-surfaces distinctes. Les repères 01 à 05 donnent un ordre stable sans simuler
-un processus qui n'existe pas dans les mécaniques.
+| Surface | Rôle | Densité |
+| --- | --- | --- |
+| Landing | Promesse, marque, spectacle | Cinématographique et éditoriale |
+| Jeu | Décision, achat, progression | Compacte, tactile, orientée action |
+| Data Science Zone | Explication et arbitrage | Analytique, traçable, sans décor gratuit |
 
-Le système iconographique suit trois couches :
+La scène Three.js, les miniatures de machines et la Data Science Zone doivent
+parler de la même usine. Une machine ne change pas arbitrairement de silhouette,
+de palette ou de rôle entre ces trois lectures.
 
-1. les 11 stickers illustrés pour les bâtiments et les 16 badges tamponnés pour
-   les succès ;
-2. un sprite SVG inline, trait carré 1,8 px et `currentColor`, pour la
-   signalétique structurelle (presse, usine, réglage, contrat, journal, qualité,
-   empreinte, image et culture) ;
-3. les effets de matière CSS/Three.js pour les moments gagnés par une action.
+## Fondations visuelles
 
-ImageGen n'est volontairement pas utilisé pour cette passe : les familles
-illustrées de bâtiments et de succès sont complètes, tandis que les petits
-glyphes de chrome doivent rester nets, teintables et utilisables en quatre
-langues. Le prochain besoin raster légitime est l'illustration des événements
-narratifs, traitée comme une passe autonome.
+La source de vérité technique des tokens reste le CSS. Les noms exacts peuvent
+évoluer avec l'implémentation, mais les rôles suivants doivent rester couverts :
 
-La motion suit la métaphore « feuille → presse → bon tamponné » : passage de
-feuille au clic, copeaux rectangulaires lors d'un achat, visa ponctuel pour une
-amélioration ou un contrat. Aucun de ces effets ne boucle, ne retarde la
-mutation métier ou ne s'exécute dans un onglet masqué / en mouvement réduit.
+| Rôle | Référence | Usage |
+| --- | --- | --- |
+| Nuit acier | `#07111f` à `#0c1b2d` | Chrome, plans profonds, Data Science Zone |
+| Acier peint | `#28516a` | Châssis, panneaux, surfaces de contrôle |
+| Orange sécurité | `#d7521b` | Action principale, tuyaux, signal de production |
+| Papier ivoire | `#fdf8ec` | Feuilles, zones de lecture, contraste clair |
+| Laiton chaud | `#d49a2a` | Détails premium et progression, avec parcimonie |
+| Rendement positif | `#719746` | Gain, efficacité et état favorable uniquement |
+| Encre | `#211b17` | Texte sur surfaces claires |
 
-Sur écran tactile, les liens structurants font au moins 44 px de haut. Les
-voiles de modale n'acceptent les événements de pointeur que lorsqu'ils sont
-réellement ouverts ; les safe areas sont consommées dans le header/footer avec
-`viewport-fit=cover`.
+Principes :
 
-## Génération d'images — LE prompt-maître
+- Les actions primaires sont orange, les gains mesurés sont verts et les
+  surfaces analytiques sont acier/nuit. La couleur ne doit jamais être la seule
+  porteuse d'information.
+- Les nombres opérationnels utilisent une police à chasse fixe ; les titres de
+  marque et de sections utilisent une graisse expressive, courte et lisible.
+- Les cartes ne sont pas toutes équivalentes : échelle, rythme et hiérarchie
+  suivent l'importance métier. Éviter les grilles de tuiles interchangeables.
+- Les ombres, biseaux et reflets suggèrent une miniature peinte, sans produire
+  de plastique générique ni de verre décoratif.
+- Pas d'emoji dans le chrome d'action ou de structure. Les pictogrammes
+  structurels restent vectoriels/code-native ; les illustrations raster portent
+  les machines, les personnages et les scènes.
+- Toute cible tactile structurante mesure au moins 44 × 44 px et consomme les
+  safe areas iOS. Le focus visible, les modes fort contraste/grand texte et
+  `prefers-reduced-motion` sont des invariants.
+- Les transitions nomment leurs propriétés ; pas de `transition: all`. Les
+  boucles décoratives s'arrêtent hors viewport, dans un onglet caché ou en
+  mouvement réduit.
 
-Toute image générée pour le jeu (bâtiments, hauts faits, headers, textures,
-compétences futures) DOIT composer avec ce prompt-maître pour garder la
-cohérence. Structure : `[PROMPT-MAÎTRE] + [description spécifique de l'asset]`.
+## Miniatures de machines
 
+Les anciens stickers bristol ne sont plus la référence obligatoire. Les onze
+bâtiments utilisent des miniatures isométriques illustrées sur fond alpha :
+châssis acier bleu nuit, panneaux orange, rouleaux métal/laiton, papier
+ivoire, lumière de studio chaude et détails CMJN discrets.
+
+- Une miniature représente un seul sujet, avec silhouette nette à petite taille.
+- Aucun texte, chiffre, watermark, carte ou ombre rectangulaire n'est cuit dans
+  l'image ; les libellés et états restent en HTML traduisible.
+- Les masters sont conservés. Les dérivés web utilisent PNG ou WebP alpha et un
+  nom de version explicite ; ils ne détruisent pas les assets historiques.
+- Les anciens stickers restent des fallbacks temporaires tant que leur
+  remplacement n'est pas intégré et vérifié. Un mélange durable de deux styles
+  dans une même liste n'est pas une destination acceptable.
+- Les badges tamponnés restent pertinents pour les hauts faits et validations,
+  pas comme langage universel de navigation.
+
+Prompt de direction commun :
+
+```text
+Papers Empire production twin, premium illustrated industrial miniature,
+isometric three-quarter view, deep navy painted steel chassis, safety-orange
+enamel panels and pipes, warm brass and brushed-metal rollers, ivory paper,
+subtle CMYK mechanical details, warm studio key light, readable silhouette,
+transparent background, no base card, no text, no letters, no numbers, no
+watermark, no photorealism, no pixel art.
 ```
-Papers Empire art style: vintage bureaucratic stationery aesthetic for a
-satirical printing-factory idle game. Cream ivory cardstock (#fdf8ec) and warm
-kraft paper (#d9c29a) surfaces, dark sepia ink (#33261a) linework,
-administrative rubber-stamp red (#b3251e) accents, amber gold (#fbbf24)
-highlights used sparingly. When a background or environment is needed, use
-either a dusk-purple print-works night (#271c40 to #0b0617) or the misty
-paper-blue campus sky (#b9dce4 to #f5e6bd). Flat 2D scanned-paper
-look, subtle cotton fiber grain, slightly distressed rubber-stamp edges,
-clean simple shapes, soft even lighting, no photorealism, no gloss, no neon.
-Strictly no letters, no words, no numbers in the image.
-```
 
-Contraintes non négociables :
-1. **Jamais de texte dans les images d'interface** (l'i18n 4 langues passe par
-   le HTML). Le lockup de marque est l'unique exception : son texte exact est
-   contrôlé visuellement avant intégration et reste doublé par un nom accessible.
-2. La palette ci-dessus, rien d'autre (pas de bleus/verts saturés hors tokens).
-3. Fond transparent pour tout ce qui se pose sur une fiche ; les key arts
-   peuvent employer la nuit violette ou le ciel papier du campus.
-4. Style « objet scanné à plat » pour les éléments d'UI ; le rendu 3D lowpoly
-   est réservé à la scène three.js (et au key art qui la met en scène).
-5. Formats : WebP pour les opaques, PNG pour les transparents ; tailles en
-   puissances de 2 quand c'est une tuile.
+La liste de production et l'état de chaque asset vivent dans
+[images-todo.md](images-todo.md).
 
-La liste des assets à générer vit dans [images-todo.md](images-todo.md).
+## Scène Three.js
 
-## Identité illustrée et hero hybride (décision 2026-08-18)
+La scène n'a plus pour cible un rendu « pixel art » ou low-poly volontairement
+rudimentaire. Elle vise la même miniature industrielle que les illustrations,
+avec géométries procédurales biseautées, cylindres suffisamment lisses,
+matériaux PBR partagés, métal/roughness cohérents et éclairage chaud contrôlé.
 
-- Le lockup principal est désormais l'illustration raster
-  `assets/brand/papers-empire-logo-v2.png`, dérivée en WebP pour le site :
-  lettres crème épaisses, plaque acier bleu nuit, tuyauterie, couronne de papier
-  dorée et ruban orange. Le texte autorisé est exactement « PAPERS EMPIRE » et
-  « IDLE GAME ».
-- La couronne de ramette reste le symbole compact. Les SVG
-  `papers-empire-mark.svg` et `papers-empire-lockup.svg` demeurent des fallbacks
-  légers ; favicon, icônes PWA et Apple touch icon continuent de dériver du mark.
-- Le hero associe un matte painting généré (`hero-horizon-wide.webp` et sa
-  composition mobile dédiée) au campus Three.js transparent. Le raster porte le
-  ciel, la brume et la ville distante ; Three.js porte l'usine, son activité et
-  la progression réellement possédée.
-- Dans le hero, le canvas reste décoratif (`aria-hidden`) ; titre, HUD, actions
-  et chiffres restent en HTML, traduisibles et utilisables sans WebGL.
-- Le printworks permanent est un décor non productif : il donne une scène riche
-  à quantité zéro sans prétendre que le joueur possède déjà un bâtiment.
-- Le rail « Imprime → Règne » utilise six illustrations raster sans texte. Les
-  titres, descriptions et preuves produit restent du HTML dans les quatre langues.
-- Aucun nombre de joueurs, avis presse, classement ou communauté n'est affiché
-  tant qu'il ne provient pas d'une source produit réelle.
+Contrat technique :
 
-## Stickers de bâtiments vs 3D (décision 2026-07-18)
+- lecture seule de l'état du jeu ; une interaction canvas passe par les mêmes
+  règles d'achat que le DOM et n'est active qu'en mode jeu ;
+- enrichissement progressif et fallback DOM/CSS complet sans WebGL ;
+- pas de double horizon procédural devant le matte painting du hero ;
+- géométries et matériaux partagés ou mis en cache ; décor répétitif instancié ;
+- budget iPhone cible : au plus 50 draw calls, 80 000 triangles et environ
+  16 Mo de textures ; DPR 1 et 30 fps acceptés, sans ombres temps réel ni
+  post-traitement mobile ;
+- rendu suspendu hors viewport/onglet caché et rendu à la demande en mouvement
+  réduit.
 
-Les 11 stickers de bâtiments restent les **illustrations dessinées** à la main
-(caractère, personnalité) : décision de Nicolas. La cohérence avec le diorama
-three.js passe par la **palette partagée** (crème/sépia/or, cf. 0.18.2), pas
-par une identité pixel-à-pixel. Un pipeline de régénération existe (rendu
-isométrique par bâtiment → API OpenAI edits) et fonctionne, mais n'est PAS
-utilisé — ne pas remplacer les stickers dessinés sans nouvelle décision.
+Ces chiffres sont des budgets de conception à mesurer pendant la validation ;
+ils ne constituent pas, à eux seuls, une preuve de performance obtenue.
 
-## Zones gelées
+## Data Science Zone
 
-- Sources SVG de la couronne de ramette : évolution uniquement par décision de marque explicite.
-- Identifiants de bâtiments, bridge lecture seule et caractère progressif/fallback de la scène.
-- Stickers dessinés des 11 bâtiments : ne pas les régénérer sans nouvelle décision.
-- Bloc `.pref-high-contrast` : toute évolution du hero doit être vérifiée dans ce mode.
+La page historiquement nommée Dashboard devient **Data Science Zone**. Son
+esthétique est celle d'une salle de contrôle du production twin, et sa fonction
+est d'aider à décider :
+
+- cadence DOC/s et confiance CC/s ;
+- coût du prochain exemplaire et temps d'accessibilité à cadence constante ;
+- gain marginal DOC/s et CC/s simulé à quantité +1 ;
+- délai de retour exprimé en DOC, jamais en argent réel ;
+- contribution observée des sources de production ;
+- évolution locale des jauges et perspective de prestige ;
+- archive bornée des runs et couverture de mesure clairement indiquée.
+
+Chaque projection expose ses hypothèses. `DOC` est à la fois production et
+monnaie interne : il ne s'agit ni de chiffre d'affaires, ni de marge, ni de
+rentabilité comptable. La télémétrie reste locale au navigateur, partielle après
+migration ou effacement du stockage, et ne permet aucune comparaison entre
+joueurs. Aucun indicateur synthétique ne doit masquer ces limites.
+
+## Ce qui est invariant, ce qui est révocable
+
+Invariants produit :
+
+- vérité des données et absence de métriques sociales ou financières inventées ;
+- identifiants de bâtiments et compatibilité des sauvegardes ;
+- scène en lecture seule, amélioration progressive et fallback fonctionnel ;
+- accessibilité clavier/tactile, i18n HTML et préférences utilisateur ;
+- conservation des sources canoniques lors d'une exploration de marque.
+
+Décisions révocables :
+
+- palette précise, typographies, profondeur des biseaux et niveau de grain ;
+- composition de la landing et densité de la carte de production ;
+- traitement d'une miniature, d'un badge ou d'un effet ;
+- toute métaphore décorative, y compris fiches, stickers et tampons.
+
+Une évolution de ces décisions doit être documentée, testée dans les états
+landing/jeu/Data Science Zone et comparée à l'objectif produit, sans devoir
+obtenir une exception à une ancienne « zone gelée ».

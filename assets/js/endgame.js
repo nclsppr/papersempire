@@ -201,10 +201,43 @@
 
   injectContractTranslations();
 
-  function loadData(gameState) {
+  function loadData(gameState, savedContract) {
+    restoreActiveContract(savedContract);
     availableContracts = [];
     refillContracts(gameState);
     return Promise.resolve(CONTRACT_DEFS.length);
+  }
+
+  function restoreActiveContract(savedContract) {
+    activeContract.current = null;
+    activeContract.timer = 0;
+    if (!savedContract || typeof savedContract !== "object") return;
+    const contract = CONTRACT_DEFS.find(def => def.id === savedContract.id);
+    const timer = Number(savedContract.timer);
+    if (!contract || !Number.isFinite(timer) || timer <= 0) return;
+    activeContract.current = contract;
+    activeContract.timer = Math.min(contract.duration, timer);
+  }
+
+  function exportActiveContract() {
+    if (!activeContract.current) return null;
+    return {
+      id: activeContract.current.id,
+      timer: Math.max(0, activeContract.timer)
+    };
+  }
+
+  function cancelActiveContract() {
+    const hadActiveContract = Boolean(activeContract.current);
+    activeContract.current = null;
+    activeContract.timer = 0;
+    return hadActiveContract;
+  }
+
+  function resetForPrestige(gameState) {
+    cancelActiveContract();
+    availableContracts = [];
+    refillContracts(gameState);
   }
 
   function getAvailableContracts(gameState) {
@@ -320,6 +353,9 @@
     rerollContracts,
     startContract,
     tickContract,
+    exportActiveContract,
+    cancelActiveContract,
+    resetForPrestige,
     activeContract
   };
 })();

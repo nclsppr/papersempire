@@ -10,7 +10,7 @@
  *   <dossier-site> : racine du site déployé (contient index.html)
  *   [sha]          : version pour ?v= (ex. ${GITHUB_SHA::8}) — optionnel
  */
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const [siteDir, stamp] = process.argv.slice(2);
@@ -70,13 +70,16 @@ const PREFILLED_KEYS = [
   "prestige.buttonLocked",
   "actions.printDocument",
   "actions.playNow",
+  "actions.enterFactory",
   "actions.printNow",
   "actions.exploreFactory",
   "app.tagline",
   "nav.factory",
+  "nav.gameOverview",
   "nav.production",
   "nav.buildings",
   "nav.upgrades",
+  "nav.dashboard",
   "hero.kicker",
   "hero.line1",
   "hero.line2",
@@ -230,7 +233,7 @@ function localize(html, lang) {
   for (const key of PREFILLED_KEYS) {
     const value = dict[key];
     if (!value) continue;
-    const re = new RegExp(`(data-i18n="${key.replace(".", "\\.")}"[^>]*>)[^<]*(<)`);
+    const re = new RegExp(`(data-i18n="${key.replaceAll(".", "\\.")}"[^>]*>)[^<]*(<)`, "g");
     html = html.replace(re, `$1${escapeHtml(value)}$2`);
   }
   html = html.replace(
@@ -259,4 +262,11 @@ for (const lang of LANGS) {
 if (stamp) {
   writeFileSync(join(siteDir, "index.html"), stampAssets(rootHtml));
   console.log(`index.html estampillé ?v=${stamp}`);
+
+  const dashboardPath = join(siteDir, "dashboard", "index.html");
+  if (existsSync(dashboardPath)) {
+    const dashboardHtml = readFileSync(dashboardPath, "utf8");
+    writeFileSync(dashboardPath, stampAssets(dashboardHtml));
+    console.log(`dashboard/index.html estampillé ?v=${stamp}`);
+  }
 }

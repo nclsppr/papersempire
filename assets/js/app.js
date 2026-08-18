@@ -9,6 +9,7 @@
 
   const GAME_TITLE = window.GAME_TITLE || "Papers Empire";
   const { computeBuildingEffects, getBuildingImpact } = ModifierUtils;
+  const EconomyAnalytics = window.EconomyAnalytics || null;
   const { sanitizeTimeScale, updateCheatProgress } = GodModeUtils;
   const Events = window.Events;
   const Settings = window.Settings;
@@ -33,6 +34,11 @@
   const SUPPORTED_LANGS = ["fr", "en", "de", "lb"];
   const DEFAULT_LANG = "fr";
   const DOM_RENDER_INTERVAL_MS = 100;
+  const DASH_SNAPSHOT_KEY = "pe-dash-snapshot";
+  const ANALYTICS_HISTORY_KEY = "pe-analytics-history-v1";
+  const DASH_SNAPSHOT_INTERVAL_MS = 3000;
+  const ANALYTICS_SAMPLE_INTERVAL_MS = 15000;
+  const ANALYTICS_MAX_SAMPLES = 240;
   // Equivalent au rythme nominal historique à 60 Hz, mais désormais appliqué
   // une seule fois par tick et proportionnel au temps simulé.
   const INFRA_STAT_RATE_PER_SECOND = 0.024;
@@ -125,6 +131,51 @@
   let saveTimer = null;
   let bannerHideTimer = null;
   let persistenceDisabled = false;
+  let experienceStarted = false;
+  let experienceStartedAt = null;
+  let experienceMode = "landing";
+  let lastDashboardPersistAt = 0;
+  let lastAnalyticsSampleAt = 0;
+  let analyticsHistory = [];
+
+  function createRunId() {
+    return "run-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function createAnalyticsState(partialHistory = false) {
+    const now = Date.now();
+    return {
+      schemaVersion: 1,
+      coverageStart: now,
+      partialHistory: !!partialHistory,
+      currentRun: {
+        id: createRunId(),
+        startedAt: now,
+        activeSeconds: 0,
+        autoDocs: 0,
+        manualDocs: 0,
+        offlineDocs: 0,
+        contractDocs: 0,
+        eventDocNet: 0,
+        autoCc: 0,
+        contractCc: 0,
+        eventCcNet: 0,
+        buildingSpend: 0,
+        upgradeSpend: 0,
+        clicks: 0,
+        contractsCompleted: 0,
+        eventsResolved: 0
+      },
+      lifetimeObserved: {
+        prestiges: 0,
+        docs: 0,
+        cc: 0
+      },
+      runSummaries: []
+    };
+  }
+
+  let analyticsState = createAnalyticsState(false);
 
   /** Static blueprint for every building available in the MVP. */
   const BUILDING_DEFS = [
@@ -309,12 +360,152 @@
     initLocalization();
     eventState.eventsEnabled = areEventsAllowed();
     initGame();
+    initExperienceMode();
     initGodModeControls();
     initTutorialGuidance();
     initFlavorTicker();
     applyTimeOfDaySky();
     setInterval(applyTimeOfDaySky, 10 * 60 * 1000);
     greetConsoleVisitors();
+  }
+
+  function hasMeaningfulProgress(saved) {
+    if (!saved) return false;
+    const resources = saved.resources || {};
+    if (resources.docTotal > 0 || resources.docBank > 0 || resources.ccTotal > 0 || resources.culturePoints > 0) {
+      return true;
+    }
+    if (Array.isArray(saved.buildings) && saved.buildings.some(item => item && item.quantity > 0)) {
+      return true;
+    }
+    if (Array.isArray(saved.upgrades) && saved.upgrades.some(item => item && item.purchased)) {
+      return true;
+    }
+    return !!(saved.achievements && Object.values(saved.achievements).some(Boolean));
+  }
+
+  function wantsWelcomeView() {
+    try {
+      return new URLSearchParams(window.location.search).get("welcome") === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function updateWelcomeParam(show, hash) {
+    try {
+      const url = new URL(window.location.href);
+      if (show) url.searchParams.set("welcome", "1");
+      else url.searchParams.delete("welcome");
+      if (typeof hash === "string" && hash) url.hash = hash;
+      window.history.replaceState(null, "", url);
+    } catch {
+      // file:// and privacy-hardened contexts may reject History mutations.
+    }
+  }
+
+  function applyExperienceMode(mode, options = {}) {
+    experienceMode = mode === "playing" ? "playing" : "landing";
+    document.documentElement.dataset.experience = experienceMode;
+    const playing = experienceMode === "playing";
+    if (DOM.mainContent) {
+      DOM.mainContent.inert = !playing;
+      DOM.mainContent.setAttribute("aria-hidden", playing ? "false" : "true");
+    }
+    if (DOM.sceneStage) {
+      DOM.sceneStage.setAttribute("aria-labelledby", playing ? "empireHudTitle" : "heroTitle");
+    }
+    if (DOM.skipLink) {
+      DOM.skipLink.setAttribute("href", playing ? "#gameViewTitle" : "#heroTitle");
+    }
+    document.querySelectorAll("[data-landing-only]").forEach(element => {
+      element.inert = playing;
+      element.setAttribute("aria-hidden", playing ? "true" : "false");
+    });
+    window.__PE_SCENE_MODE__ = experienceMode;
+    if (options.updateUrl !== false) updateWelcomeParam(!playing && experienceStarted);
+  }
+
+  function initExperienceMode() {
+    const showWelcome = wantsWelcomeView();
+    applyExperienceMode(showWelcome || !experienceStarted ? "landing" : "playing", { updateUrl: false });
+    if (experienceMode === "playing") {
+      requestAnimationFrame(showOfflineReport);
+    }
+  }
+
+  function startExperience(event) {
+    if (event) event.preventDefault();
+    const firstStart = !experienceStarted;
+    experienceStarted = true;
+    if (!experienceStartedAt) experienceStartedAt = Date.now();
+    if (firstStart) {
+      // Instrumentation starts with the actual game, not while someone reads
+      // the landing. This keeps coverage and run duration product-truthful.
+      analyticsState = createAnalyticsState(false);
+      analyticsState.coverageStart = experienceStartedAt;
+      analyticsState.currentRun.startedAt = experienceStartedAt;
+      analyticsHistory = [];
+      lastAnalyticsSampleAt = 0;
+    }
+    applyExperienceMode("playing");
+    if (firstStart) gameState.time.lastUpdate = performance.now();
+    queueSave(true);
+    showOfflineReport();
+    const targetSelector = event && event.currentTarget
+      ? event.currentTarget.getAttribute("href")
+      : null;
+    const target = targetSelector && targetSelector.startsWith("#")
+      ? document.querySelector(targetSelector)
+      : DOM.mainContent;
+    updateWelcomeParam(false, targetSelector || "#gameViewTitle");
+    requestAnimationFrame(() => {
+      if ([DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
+        return;
+      }
+      const destination = target || DOM.mainContent || DOM.clickButton;
+      const focusTarget = destination && destination.matches && destination.matches("button, a, [tabindex]")
+        ? destination
+        : destination && destination.querySelector
+        ? destination.querySelector("h1[tabindex], h2[tabindex], [tabindex='-1']") || DOM.gameViewTitle
+        : DOM.gameViewTitle || DOM.clickButton;
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        focusTarget.focus({ preventScroll: true });
+      }
+      const settleDelay = reduceMotionPreferred() ? 0 : 580;
+      setTimeout(() => {
+        const tutorialActive = TutorialEngine && typeof TutorialEngine.isActive === "function" && TutorialEngine.isActive();
+        if (tutorialActive || [DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
+          return;
+        }
+        if (destination && typeof destination.scrollIntoView === "function") {
+          destination.scrollIntoView({ behavior: reduceMotionPreferred() ? "auto" : "smooth", block: "start" });
+        }
+      }, settleDelay);
+    });
+    if (TutorialEngine && typeof TutorialEngine.maybeStart === "function") {
+      setTimeout(() => TutorialEngine.maybeStart(), reduceMotionPreferred() ? 0 : 420);
+    }
+  }
+
+  function showIntro(event) {
+    if (event) event.preventDefault();
+    if (TutorialEngine && typeof TutorialEngine.isActive === "function" && TutorialEngine.isActive()) {
+      TutorialEngine.skip(false);
+    }
+    applyExperienceMode("landing");
+    updateWelcomeParam(experienceStarted, "#sceneStage");
+    requestAnimationFrame(() => {
+      if (DOM.sceneStage && typeof DOM.sceneStage.scrollIntoView === "function") {
+        DOM.sceneStage.scrollIntoView({ behavior: reduceMotionPreferred() ? "auto" : "smooth", block: "start" });
+      }
+      if (DOM.heroClickButton) DOM.heroClickButton.focus({ preventScroll: true });
+    });
+  }
+
+  function reduceMotionPreferred() {
+    return document.documentElement.classList.contains("pref-reduce-motion") ||
+      !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
 
   /* Ticker d'ambiance : une ligne de vie d'atelier tourne en bas de
@@ -387,6 +578,13 @@
 
   /** Stores every frequently used DOM node locally for fast access. */
   function cacheDomReferences() {
+    DOM.mainContent = document.getElementById("mainContent");
+    DOM.sceneStage = document.getElementById("sceneStage");
+    DOM.heroTitle = document.getElementById("heroTitle");
+    DOM.gameViewTitle = document.getElementById("gameViewTitle");
+    DOM.skipLink = document.querySelector(".skip-link");
+    DOM.startTriggers = document.querySelectorAll("[data-start-game]");
+    DOM.introTriggers = document.querySelectorAll("[data-show-intro]");
     DOM.langSelect = document.getElementById("langSelect");
     DOM.docBank = document.getElementById("docBank");
     DOM.docTotal = document.getElementById("docTotal");
@@ -465,9 +663,22 @@
     if (DOM.clickButton) {
       DOM.clickButton.addEventListener("click", handleClick);
     }
-    if (DOM.heroClickButton) {
-      DOM.heroClickButton.addEventListener("click", handleClick);
+    if (DOM.startTriggers && DOM.startTriggers.length) {
+      DOM.startTriggers.forEach(trigger => trigger.addEventListener("click", startExperience));
     }
+    if (DOM.introTriggers && DOM.introTriggers.length) {
+      DOM.introTriggers.forEach(trigger => trigger.addEventListener("click", showIntro));
+    }
+    document.querySelectorAll("[data-dashboard-link]").forEach(link => {
+      link.addEventListener("click", () => queueSave(true));
+    });
+    const flushOnLifecycleBoundary = () => {
+      if (experienceStarted) queueSave(true);
+    };
+    window.addEventListener("pagehide", flushOnLifecycleBoundary);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flushOnLifecycleBoundary();
+    });
     if (DOM.prestigeButton) {
       DOM.prestigeButton.addEventListener("click", () => {
         if (!canPrestige()) return;
@@ -680,6 +891,7 @@
     const target = candidates.find(candidate => {
       return candidate && candidate !== document.body && candidate !== document.documentElement &&
         candidate.isConnected && !candidate.disabled &&
+        !candidate.closest('[inert], [aria-hidden="true"], [hidden], .hidden') &&
         (!overlay || !overlay.contains(candidate));
     });
     if (target && typeof target.focus === "function") {
@@ -917,6 +1129,12 @@
       alert(t("actions.importError"));
       return;
     }
+    try {
+      window.localStorage.removeItem(DASH_SNAPSHOT_KEY);
+      window.localStorage.removeItem(ANALYTICS_HISTORY_KEY);
+    } catch {
+      // The imported save remains the source of truth.
+    }
     disablePersistence();
     location.reload();
   }
@@ -929,6 +1147,8 @@
     }
     try {
       window.localStorage.removeItem("pe-accessibility");
+      window.localStorage.removeItem(DASH_SNAPSHOT_KEY);
+      window.localStorage.removeItem(ANALYTICS_HISTORY_KEY);
     } catch {
       // ignore storage errors
     }
@@ -1015,8 +1235,66 @@
       translate: t,
       settings: Settings,
       onComplete: () => logMessage("log.tutorialComplete"),
-      autoStart: true
+      autoStart: experienceStarted && experienceMode === "playing"
     });
+  }
+
+  function assignFiniteNumbers(target, source) {
+    if (!source || typeof source !== "object") return;
+    Object.keys(target).forEach(key => {
+      if (typeof target[key] !== "number") return;
+      const value = source[key];
+      if (typeof value === "number" && Number.isFinite(value)) {
+        target[key] = value;
+      }
+    });
+  }
+
+  function isValidTimestamp(value) {
+    return Number.isFinite(value) && value > 0 && Number.isFinite(new Date(value).getTime());
+  }
+
+  function hydrateAnalyticsState(savedAnalytics, partialHistory) {
+    const next = createAnalyticsState(partialHistory);
+    if (!savedAnalytics || typeof savedAnalytics !== "object") return next;
+    if (isValidTimestamp(savedAnalytics.coverageStart)) {
+      next.coverageStart = savedAnalytics.coverageStart;
+    }
+    next.partialHistory = !!savedAnalytics.partialHistory;
+    const savedRun = savedAnalytics.currentRun;
+    if (savedRun && typeof savedRun === "object") {
+      if (typeof savedRun.id === "string" && savedRun.id) next.currentRun.id = savedRun.id;
+      const defaultStartedAt = next.currentRun.startedAt;
+      assignFiniteNumbers(next.currentRun, savedRun);
+      next.currentRun.startedAt = isValidTimestamp(savedRun.startedAt)
+        ? savedRun.startedAt
+        : defaultStartedAt;
+    }
+    assignFiniteNumbers(next.lifetimeObserved, savedAnalytics.lifetimeObserved);
+    if (Array.isArray(savedAnalytics.runSummaries)) {
+      next.runSummaries = savedAnalytics.runSummaries
+        .filter(item => item && typeof item === "object")
+        .slice(-20)
+        .map(item => {
+          const summary = { ...item };
+          summary.startedAt = isValidTimestamp(item.startedAt) ? item.startedAt : null;
+          summary.endedAt = isValidTimestamp(item.endedAt) ? item.endedAt : null;
+          return summary;
+        });
+    }
+    return next;
+  }
+
+  function loadAnalyticsHistory() {
+    try {
+      const raw = JSON.parse(window.localStorage.getItem(ANALYTICS_HISTORY_KEY) || "null");
+      if (!raw || raw.schemaVersion !== 1 || !Array.isArray(raw.samples)) return [];
+      return raw.samples
+        .filter(sample => sample && isValidTimestamp(sample.generatedAt))
+        .slice(-ANALYTICS_MAX_SAMPLES);
+    } catch {
+      return [];
+    }
   }
 
   /** Initialises the building deck, upgrades and kicks off the loop. */
@@ -1066,11 +1344,33 @@
     ];
 
     const savedState = Persistence.load ? Persistence.load() : null;
+    experienceStartedAt = savedState && savedState.meta && isValidTimestamp(savedState.meta.startedAt)
+      ? savedState.meta.startedAt
+      : null;
+    experienceStarted = !!experienceStartedAt || hasMeaningfulProgress(savedState);
+    if (experienceStarted && !experienceStartedAt) {
+      experienceStartedAt = savedState && isValidTimestamp(savedState.savedAt)
+        ? savedState.savedAt
+        : Date.now();
+    }
+    analyticsState = hydrateAnalyticsState(savedState && savedState.analytics, !!savedState && !savedState.analytics);
+    analyticsHistory = loadAnalyticsHistory();
+    if (savedState && savedState.analytics && analyticsHistory.length === 0) {
+      // An imported/cleared profile may retain aggregate counters without the
+      // separate time-series key. Never present that situation as complete.
+      analyticsState.partialHistory = true;
+    }
+    if (analyticsHistory.length) {
+      lastAnalyticsSampleAt = analyticsHistory[analyticsHistory.length - 1].generatedAt;
+    }
     applyPersistedState(savedState);
     offlineReport = settleOfflineProgress(savedState);
 
     if (window.EndgameModule) {
-      window.EndgameModule.loadData(gameState).then(() => {
+      const savedContract = savedState && savedState.endgame
+        ? savedState.endgame.activeContract
+        : null;
+      window.EndgameModule.loadData(gameState, savedContract).then(() => {
         renderContractsPanel();
       });
     }
@@ -1083,49 +1383,69 @@
     showOfflineReport();
     gameState.time.lastUpdate = performance.now();
     requestAnimationFrame(gameLoop);
-    // Autosave périodique (débouncé) : alimente aussi la page /dashboard/.
-    setInterval(() => queueSave(), 5000);
+    // Autosave périodique seulement après l'entrée dans le jeu : la landing
+    // ne crée plus une fausse sauvegarde ni une fausse session analytique.
+    setInterval(() => {
+      if (experienceStarted) queueSave();
+    }, 5000);
   }
 
   function buildPersistedState() {
     return {
-      version: 1,
+      version: 2,
+      meta: { startedAt: experienceStartedAt },
       resources: { ...gameState.resources },
       stats: { ...gameState.stats },
       buildings: gameState.buildings.map(b => ({ id: b.id, quantity: b.quantity })),
       upgrades: gameState.upgrades.map(u => ({ id: u.id, purchased: !!u.purchased })),
       achievements: achievementsState.unlocked,
+      endgame: {
+        activeContract: window.EndgameModule && typeof window.EndgameModule.exportActiveContract === "function"
+          ? window.EndgameModule.exportActiveContract()
+          : null
+      },
+      analytics: JSON.parse(JSON.stringify(analyticsState)),
       lastSeen: Date.now()
     };
   }
 
+  function isStateRecord(value) {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function restoreResourceNumbers(savedResources) {
+    if (!isStateRecord(savedResources)) return;
+    Object.keys(gameState.resources).forEach(key => {
+      const value = savedResources[key];
+      // Les monnaies sont des valeurs continues et peuvent légitimement
+      // dépasser MAX_SAFE_INTEGER dans une partie avancée. La contrainte
+      // d'entier sûr reste réservée aux quantités de bâtiments.
+      if (Number.isFinite(value) && value >= 0) {
+        gameState.resources[key] = value;
+      }
+    });
+  }
+
   function applyPersistedState(saved) {
-    if (!saved) return;
+    if (!isStateRecord(saved)) return;
     // Migration des sauvegardes d'avant le renommage des identifiants
     // (imageVbs -> brandImage, vbsPortal -> clientPortal).
-    if (saved.stats && "imageVbs" in saved.stats) {
-      if (!("brandImage" in saved.stats)) {
-        saved.stats.brandImage = saved.stats.imageVbs;
-      }
-      delete saved.stats.imageVbs;
+    const savedStats = isStateRecord(saved.stats) ? saved.stats : null;
+    restoreResourceNumbers(saved.resources);
+    if (savedStats) {
+      const brandImage = Number.isFinite(savedStats.brandImage)
+        ? savedStats.brandImage
+        : savedStats.imageVbs;
+      if (Number.isFinite(savedStats.quality)) gameState.stats.quality = clamp01(savedStats.quality);
+      if (Number.isFinite(savedStats.footprint)) gameState.stats.footprint = clamp01(savedStats.footprint);
+      if (Number.isFinite(brandImage)) gameState.stats.brandImage = clamp01(brandImage);
     }
     if (Array.isArray(saved.buildings)) {
       for (const entry of saved.buildings) {
-        if (entry && entry.id === "vbsPortal") {
-          entry.id = "clientPortal";
-        }
-      }
-    }
-    if (saved.resources) {
-      Object.assign(gameState.resources, saved.resources);
-    }
-    if (saved.stats) {
-      Object.assign(gameState.stats, saved.stats);
-    }
-    if (Array.isArray(saved.buildings)) {
-      for (const entry of saved.buildings) {
-        const target = gameState.buildings.find(b => b.id === entry.id);
-        if (target && typeof entry.quantity === "number") {
+        if (!isStateRecord(entry)) continue;
+        const buildingId = entry.id === "vbsPortal" ? "clientPortal" : entry.id;
+        const target = gameState.buildings.find(b => b.id === buildingId);
+        if (target && Number.isSafeInteger(entry.quantity) && entry.quantity >= 0) {
           target.quantity = entry.quantity;
           // isUnlocked is not persisted: keep owned buildings visible even
           // when the current bank is below their (grown) next-unit cost.
@@ -1137,14 +1457,25 @@
     }
     if (Array.isArray(saved.upgrades)) {
       for (const entry of saved.upgrades) {
+        if (!isStateRecord(entry)) continue;
         const target = gameState.upgrades.find(u => u.id === entry.id);
         if (target) {
-          target.purchased = !!entry.purchased;
+          target.purchased = entry.purchased === true;
         }
       }
     }
-    if (saved.achievements) {
-      achievementsState.unlocked = { ...saved.achievements };
+    if (isStateRecord(saved.achievements)) {
+      const achievementIds = new Set(
+        window.Achievements && Array.isArray(window.Achievements.definitions)
+          ? window.Achievements.definitions.map(definition => definition.id)
+          : []
+      );
+      achievementsState.unlocked = Object.fromEntries(
+        Object.entries(saved.achievements).filter(([id, unlocked]) => {
+          if (!achievementIds.has(id)) return false;
+          return unlocked === true || (Number.isFinite(unlocked) && unlocked > 0);
+        })
+      );
     }
   }
 
@@ -1164,6 +1495,8 @@
     if (gain < 1) return null;
     gameState.resources.docBank += gain;
     gameState.resources.docTotal += gain;
+    analyticsState.currentRun.offlineDocs += gain;
+    analyticsState.lifetimeObserved.docs += gain;
     return { elapsedSeconds, cappedSeconds, gain };
   }
 
@@ -1184,6 +1517,7 @@
 
   function showOfflineReport() {
     if (!offlineReport) return;
+    if (experienceMode !== "playing") return;
     // Sous ~5 min d'absence : crédit silencieux, pas de modale plein écran
     // à chaque pause café (fatigue de modale).
     if (offlineReport.elapsedSeconds < gameState.config.offlineModalMinSeconds) {
@@ -1242,29 +1576,146 @@
     queueSave(true);
   }
 
-  /** Écrit la sauvegarde ET le snapshot du dashboard : la page /dashboard/
-      lit ce dernier via localStorage + événements storage (live inter-onglets). */
-  function persistNow() {
-    Persistence.save(buildPersistedState());
+  /** Projection sérialisable de l'économie. Le module analytique reste pur :
+      lire la Data Science Zone ne peut jamais modifier la simulation. */
+  function buildEconomyState() {
+    return {
+      buildings: gameState.buildings.map(building => ({ ...building })),
+      upgrades: gameState.upgrades.map(upgrade => ({ ...upgrade })),
+      resources: { ...gameState.resources },
+      stats: { ...gameState.stats },
+      config: { ...gameState.config }
+    };
+  }
+
+  function buildDashboardSnapshot() {
+    const generatedAt = Date.now();
+    const economyState = buildEconomyState();
+    const fallbackMultipliers = computeMultipliers();
+    const fallbackDocPerSecond = computeDocPerSecond(fallbackMultipliers);
+    const automatic = EconomyAnalytics && typeof EconomyAnalytics.computeAutomaticEconomics === "function"
+      ? EconomyAnalytics.computeAutomaticEconomics(economyState)
+      : { status: "unavailable", reason: "analytics-module-missing" };
+    const investments = EconomyAnalytics && typeof EconomyAnalytics.buildInvestmentRows === "function"
+      ? EconomyAnalytics.buildInvestmentRows(economyState)
+      : [];
+    const prestige = EconomyAnalytics && typeof EconomyAnalytics.computePrestigeOutlook === "function"
+      ? EconomyAnalytics.computePrestigeOutlook(economyState)
+      : null;
+    const docPerSecond = automatic.status === "exact"
+      ? automatic.docPerSecond
+      : fallbackDocPerSecond;
+    const ccPerSecond = automatic.status === "exact"
+      ? automatic.ccPerSecond
+      : docPerSecond *
+        (0.1 + clamp01(gameState.stats.quality) * 0.9) *
+        (0.5 + clamp01(gameState.stats.brandImage) * 0.5) *
+        fallbackMultipliers.ccMult;
+    const productionById = new Map(
+      automatic.status === "exact" && Array.isArray(automatic.buildings)
+        ? automatic.buildings.map(item => [item.id, item.directAutomaticDocPerSecond])
+        : []
+    );
+
+    return {
+      schemaVersion: 2,
+      modelVersion: automatic.formulaVersion || 1,
+      generatedAt,
+      runId: analyticsState.currentRun.id,
+      coverageStart: analyticsState.coverageStart,
+      partialHistory: analyticsState.partialHistory,
+      current: {
+        docPerSecond,
+        ccPerSecond,
+        docBank: gameState.resources.docBank,
+        docTotal: gameState.resources.docTotal,
+        ccTotal: gameState.resources.ccTotal,
+        culturePoints: gameState.resources.culturePoints,
+        prestigeMult: prestigeMultiplier(),
+        buildingCount: gameState.buildings.reduce((sum, building) => sum + building.quantity, 0),
+        stats: { ...gameState.stats },
+        buildings: gameState.buildings.map(building => ({
+          id: building.id,
+          nameKey: building.nameKey,
+          quantity: building.quantity,
+          production: productionById.get(building.id) || 0
+        }))
+      },
+      economics: {
+        automatic,
+        investments,
+        prestige
+      },
+      analytics: JSON.parse(JSON.stringify(analyticsState))
+    };
+  }
+
+  function analyticsHistoryEnvelope() {
+    return {
+      schemaVersion: 1,
+      coverageStart: analyticsState.coverageStart,
+      partialHistory: analyticsState.partialHistory,
+      samples: analyticsHistory.map(sample => ({ ...sample }))
+    };
+  }
+
+  function recordAnalyticsSample(snapshot) {
+    if (!snapshot || snapshot.generatedAt - lastAnalyticsSampleAt < ANALYTICS_SAMPLE_INTERVAL_MS) return;
+    const current = snapshot.current;
+    analyticsHistory.push({
+      generatedAt: snapshot.generatedAt,
+      runId: snapshot.runId,
+      docPerSecond: current.docPerSecond,
+      ccPerSecond: current.ccPerSecond,
+      docBank: current.docBank,
+      docTotal: current.docTotal,
+      ccTotal: current.ccTotal,
+      quality: current.stats.quality,
+      footprint: current.stats.footprint,
+      brandImage: current.stats.brandImage
+    });
+    if (analyticsHistory.length > ANALYTICS_MAX_SAMPLES) {
+      analyticsHistory = analyticsHistory.slice(-ANALYTICS_MAX_SAMPLES);
+      analyticsState.partialHistory = true;
+      snapshot.partialHistory = true;
+      if (snapshot.analytics) snapshot.analytics.partialHistory = true;
+    }
+    lastAnalyticsSampleAt = snapshot.generatedAt;
+    window.localStorage.setItem(ANALYTICS_HISTORY_KEY, JSON.stringify(analyticsHistoryEnvelope()));
+  }
+
+  /** Écrit la sauvegarde et publie un snapshot analytique borné. La page
+      /dashboard/ le suit via localStorage et l'événement storage. */
+  function persistNow(forceDashboard = false) {
     try {
-      window.localStorage.setItem("pe-dash-snapshot", JSON.stringify(window.__PE_DASH__.getSnapshot()));
+      const now = Date.now();
+      if (forceDashboard || now - lastDashboardPersistAt >= DASH_SNAPSHOT_INTERVAL_MS) {
+        const snapshot = buildDashboardSnapshot();
+        recordAnalyticsSample(snapshot);
+        window.localStorage.setItem(DASH_SNAPSHOT_KEY, JSON.stringify(snapshot));
+        lastDashboardPersistAt = snapshot.generatedAt;
+      }
     } catch {
       // quota plein : le jeu reste prioritaire, le dashboard vivra sans live
     }
+    // Keep the canonical save independent from analytics storage failures and
+    // persist any partial-history flag raised while bounding the time series.
+    Persistence.save(buildPersistedState());
   }
 
   function queueSave(force = false) {
+    if (!experienceStarted) return;
     if (persistenceDisabled) return;
     if (!Persistence.isAvailable || !Persistence.isAvailable()) return;
     if (force) {
       if (saveTimer) clearTimeout(saveTimer);
       saveTimer = null;
-      persistNow();
+      persistNow(true);
       return;
     }
     if (saveTimer) return;
     saveTimer = setTimeout(() => {
-      persistNow();
+      persistNow(false);
       saveTimer = null;
     }, 500);
   }
@@ -1455,6 +1906,15 @@
       return;
     }
 
+    if (!experienceStarted) {
+      gameState.time.lastUpdate = timestamp;
+      if (timestamp - uiState.lastFrameRender >= DOM_RENDER_INTERVAL_MS) {
+        renderAll();
+      }
+      requestAnimationFrame(gameLoop);
+      return;
+    }
+
     // Onglet resté masqué (rAF suspendu) : la longue absence passe par le
     // barème hors-ligne (rendement réduit, plafond, sans confiance) au lieu
     // d'être rejouée à 100 % dans update() — sinon « ne jamais fermer
@@ -1498,6 +1958,9 @@
     const docGain = DOCps * dt;
     gameState.resources.docBank += docGain;
     gameState.resources.docTotal += docGain;
+    analyticsState.currentRun.activeSeconds += dt;
+    analyticsState.currentRun.autoDocs += docGain;
+    analyticsState.lifetimeObserved.docs += docGain;
 
     const ccGainPerSec =
       DOCps *
@@ -1507,6 +1970,8 @@
 
     const ccGain = ccGainPerSec * dt;
     gameState.resources.ccTotal += ccGain;
+    analyticsState.currentRun.autoCc += ccGain;
+    analyticsState.lifetimeObserved.cc += ccGain;
 
     const targetQualityBase = 0.3 + mults.baseQualityOffset + gameState.resources.culturePoints * 0.02;
     const targetQuality = clamp01(targetQualityBase);
@@ -1519,11 +1984,12 @@
     gameState.stats.footprint = clamp01(gameState.stats.footprint);
 
     refreshUpgradeUnlocks();
-    maybeSpawnSmallEvents(dt, DOCps);
-    checkDynamicEvents(dt);
-    tickContracts(dt);
+    if (experienceMode === "playing") {
+      maybeSpawnSmallEvents(dt, DOCps);
+      checkDynamicEvents(dt);
+      tickContracts(dt);
+    }
     checkAchievements();
-    queueSave();
   }
 
   /** introduces occasional incidents/optimisations to keep gauges dynamic. */
@@ -1549,11 +2015,15 @@
 
   /** Handles manual clicks to print documents immediately. */
   function handleClick(event) {
+    if (!experienceStarted) startExperience();
     const mults = computeMultipliers();
     const base = gameState.config.docPerClickBase;
     const docGain = base * mults.clickMult * prestigeMultiplier();
     gameState.resources.docBank += docGain;
     gameState.resources.docTotal += docGain;
+    analyticsState.currentRun.manualDocs += docGain;
+    analyticsState.currentRun.clicks += 1;
+    analyticsState.lifetimeObserved.docs += docGain;
     refreshUpgradeUnlocks();
     checkAchievements();
     queueSave();
@@ -1578,6 +2048,7 @@
 
     const shouldRestoreFocus = document.activeElement === sourceEl;
     gameState.resources.docBank -= cost;
+    analyticsState.currentRun.buildingSpend += cost;
     const previousQuantity = b.quantity;
     b.quantity += 1;
     uiState.buildingsDirty = true;
@@ -1616,6 +2087,7 @@
 
     const shouldRestoreFocus = document.activeElement === sourceEl;
     gameState.resources.docBank -= upg.cost;
+    analyticsState.currentRun.upgradeSpend += upg.cost;
     upg.purchased = true;
     uiState.upgradesDirty = true;
     logMessage("log.buyUpgrade", { name: getUpgradeName(upg) });
@@ -1650,6 +2122,18 @@
     if (gain <= 0) return;
 
     notifyScene("prestige");
+    const completedAt = Date.now();
+    analyticsState.runSummaries.push({
+      ...analyticsState.currentRun,
+      endedAt: completedAt,
+      docTotal: gameState.resources.docTotal,
+      ccTotal: gameState.resources.ccTotal,
+      cultureEarned: gain
+    });
+    analyticsState.runSummaries = analyticsState.runSummaries.slice(-20);
+    analyticsState.lifetimeObserved.prestiges += 1;
+    analyticsState.currentRun = createAnalyticsState(false).currentRun;
+    analyticsState.currentRun.startedAt = completedAt;
     gameState.resources.culturePoints += gain;
     gameState.resources.docBank = 0;
     gameState.resources.docTotal = 0;
@@ -1668,6 +2152,9 @@
     gameState.stats.quality = 0.5;
     gameState.stats.footprint = 0.5;
     gameState.stats.brandImage = 0.5;
+    if (window.EndgameModule && typeof window.EndgameModule.resetForPrestige === "function") {
+      window.EndgameModule.resetForPrestige(gameState);
+    }
 
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
@@ -1974,12 +2461,29 @@
     return true;
   }
 
+  function captureResourceTotals() {
+    return {
+      docBank: gameState.resources.docBank,
+      docTotal: gameState.resources.docTotal,
+      ccTotal: gameState.resources.ccTotal
+    };
+  }
+
+  function recordEventOutcome(before) {
+    if (!before) return;
+    analyticsState.currentRun.eventDocNet += gameState.resources.docBank - before.docBank;
+    analyticsState.currentRun.eventCcNet += gameState.resources.ccTotal - before.ccTotal;
+    analyticsState.currentRun.eventsResolved += 1;
+  }
+
   function handleEventChoiceClick(event) {
     const btn = event.target.closest("[data-choice]");
     if (!btn) return;
     const choiceId = btn.dataset.choice;
+    const before = captureResourceTotals();
     const result = Events.resolveChoice(choiceId, gameState);
     if (!result) return;
+    recordEventOutcome(before);
     DOM.eventResult.textContent = t(result.resultKey);
     logMessage("log.eventResult", { result: t(result.resultKey) });
     queueSave(true);
@@ -2091,8 +2595,16 @@
 
   function tickContracts(dt) {
     if (!window.EndgameModule) return;
+    const before = captureResourceTotals();
     const result = window.EndgameModule.tickContract(dt, gameState);
     if (result) {
+      const docGain = Math.max(0, gameState.resources.docTotal - before.docTotal);
+      const ccGain = Math.max(0, gameState.resources.ccTotal - before.ccTotal);
+      analyticsState.currentRun.contractDocs += docGain;
+      analyticsState.currentRun.contractCc += ccGain;
+      analyticsState.currentRun.contractsCompleted += 1;
+      analyticsState.lifetimeObserved.docs += docGain;
+      analyticsState.lifetimeObserved.cc += ccGain;
       logMessage("log.contractComplete", { name: t(result.nameKey) });
       showEventBanner("contracts.banner.completed", "positive", { name: t(result.nameKey) });
       if (UIEffects && typeof UIEffects.playHorn === "function") UIEffects.playHorn();
@@ -2142,8 +2654,10 @@
     const btn = event.target.closest("[data-minigame-response]");
     if (!btn) return;
     const answer = btn.getAttribute("data-minigame-response");
+    const before = captureResourceTotals();
     const result = Events.resolveMinigame(answer, gameState);
     if (!result) return;
+    recordEventOutcome(before);
     DOM.eventResult.textContent = t(result.resultKey);
     logMessage("log.eventResult", { result: t(result.resultKey) });
     queueSave(true);
@@ -2322,17 +2836,23 @@
       const emoji = b.emoji || "🏗️";
       const emojiSpan = document.createElement("span");
       emojiSpan.className = "building-emoji";
-      // Sticker illustré (images-todo P2) avec repli emoji si absent/404.
+      // Miniature industrielle V4 avec repli vers l'ancien sticker, puis emoji.
       const sticker = document.createElement("img");
       sticker.className = "building-sticker";
-      sticker.src = "/assets/images/building-" + b.id + ".webp";
+      sticker.src = "/assets/images/building-" + b.id + "-v4.webp";
       sticker.alt = "";
       sticker.decoding = "async";
       sticker.loading = "lazy";
+      let triedLegacySticker = false;
       sticker.addEventListener("error", () => {
+        if (!triedLegacySticker) {
+          triedLegacySticker = true;
+          sticker.src = "/assets/images/building-" + b.id + ".webp";
+          return;
+        }
         sticker.remove();
         emojiSpan.textContent = emoji;
-      }, { once: true });
+      });
       emojiSpan.appendChild(sticker);
       const labelSpan = document.createElement("span");
       labelSpan.className = "building-name-label";
@@ -2641,30 +3161,8 @@
    */
   window.__PE_DASH__ = {
     format: formatNumber,
-    getSnapshot() {
-      const mults = computeMultipliers();
-      const prestige = prestigeMultiplier();
-      return {
-        docPerSecond: computeDocPerSecond(mults),
-        docBank: gameState.resources.docBank,
-        docTotal: gameState.resources.docTotal,
-        ccTotal: gameState.resources.ccTotal,
-        culturePoints: gameState.resources.culturePoints,
-        prestigeMult: prestige,
-        buildingCount: gameState.buildings.reduce((sum, b) => sum + b.quantity, 0),
-        stats: {
-          quality: gameState.stats.quality,
-          footprint: gameState.stats.footprint,
-          brandImage: gameState.stats.brandImage
-        },
-        buildings: gameState.buildings.map(b => ({
-          id: b.id,
-          nameKey: b.nameKey,
-          quantity: b.quantity,
-          production: (b.baseProduction || 0) * b.quantity * mults.docMult * prestige
-        }))
-      };
-    }
+    getSnapshot: buildDashboardSnapshot,
+    getHistory: analyticsHistoryEnvelope
   };
 
   window.__PE_SCENE__ = {

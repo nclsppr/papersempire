@@ -1,9 +1,48 @@
-# TODO — assets images à générer
+# TODO — production d'images
 
-Checklist des images à produire pour « Atelier tamponné ». Chaque prompt se
-compose ainsi : **prompt-maître** (voir [design-system.md](design-system.md))
-**+ le prompt spécifique ci-dessous**. Jamais de texte dans les images.
-Destination : `assets/images/` avec le nom de fichier indiqué.
+Ce document distingue la production V4 active des lots historiques « Atelier
+tamponné ». Le prompt courant vit dans
+[`design-system.md`](design-system.md). Jamais de texte dans les images
+d'interface ; les libellés restent en HTML et dans l'i18n.
+
+## V4 — miniatures du Production Twin (actif)
+
+Chaque machine est un objet isométrique unique sur **fond alpha réel**, sans
+carte, sans contour de sticker et sans ombre rectangulaire cuite. Les masters
+générés sont conservés ; un dérivé web est validé à la taille d'affichage avant
+de remplacer le fallback historique.
+
+Direction commune : acier peint bleu nuit, émail orange sécurité, rouleaux
+métalliques/laiton, papier ivoire, accents CMJN mécaniques discrets, lumière
+chaude, finition de miniature industrielle premium, pas de pixel art.
+
+- [x] `building-reproOperator-v4.png` — opérateur repro et copieur compact
+- [x] `building-reproWorkshop-v4.png` — atelier de reprographie multi-machines
+- [x] `building-digitalPress-v4.png` — presse numérique industrielle
+- [x] `building-offsetPress-v4.png` — presse offset et grandes bobines
+- [x] `building-finishingWorkshop-v4.png` — massicot et plieuse industriels
+- [x] `building-insertingLine-v4.png` — ligne automatisée de mise sous pli
+- [x] `building-logistics-v4.png` — véhicule de livraison et bacs papier
+- [x] `building-clientPortal-v4.png` — baie sécurisée et passage de document
+- [x] `building-comBridge-v4.png` — hub omnicanal reliant des flux papier
+- [x] `building-factory40-v4.png` — usine intelligente et bras robotisé
+- [x] `building-pampyAI-v4.png` — assistant industriel IA et document contrôlé
+
+Pour cocher un asset : vérifier le sujet, le détourage, l'absence de texte et de
+watermark, le profil couleur, le poids du dérivé, puis son rendu sur fond nuit
+et papier. Si WebP alpha est retenu, garder le PNG master et documenter le nom
+du dérivé plutôt que d'écraser l'asset historique.
+
+Lot V4 produit et contrôlé le 2026-08-18 : masters PNG alpha 512×512 dans
+`assets/images/buildings-v4/sources/`, dérivés WebP alpha 512×512
+`assets/images/building-<id>-v4.webp`, rendus vérifiés sur fond papier et fond
+nuit. Le manifeste de production et le prompt-maître sont conservés avec les
+masters.
+
+## Lots historiques — « Atelier tamponné »
+
+Les éléments ci-dessous restent disponibles comme fallbacks et archive de
+production. Leur style bristol/sticker n'est plus le prompt-maître V4.
 
 ## Priorité 1 — matière du design system
 
@@ -16,7 +55,7 @@ Destination : `assets/images/` avec le nom de fichier indiqué.
 - [x] `seal-crest.png` (PNG alpha, détouré ; câblage prestige à faire en 0.18) (256×256, alpha — célébration de prestige)
       Round rubber stamp seal, distressed red ink #b3251e on fully transparent background, ornate double circle border with small typographic stars, in the center a minimalist paper stack icon with a crown, vintage bureaucratic office stamp style, slightly uneven ink coverage, flat 2D
 
-## Priorité 2 — illustrations des bâtiments (stickers 128×128, alpha)
+## Priorité 2 historique — illustrations des bâtiments (stickers 128×128)
 
 Style commun : `flat stationery sticker illustration of [SUJET], sepia ink
 linework on a small cream cardstock die-cut sticker shape with a thin kraft
@@ -87,6 +126,6 @@ silhouette nette et fond navy uniforme.
 ## Plus tard (si la feature arrive)
 
 - [ ] Icônes de compétences (arbre de compétences pas encore dans le jeu) —
-      même style que les hauts faits, pictogrammes à définir avec la feature.
+      style à définir avec la feature, sans hériter automatiquement des tampons.
 - [ ] Illustrations d'événements (les événements utilisent des emojis pour
-      l'instant) — stickers 96×96, un par type d'événement.
+      l'instant) — scènes/objets du production twin, un par type d'événement.

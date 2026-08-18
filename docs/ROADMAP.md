@@ -1,70 +1,87 @@
 # Roadmap produit
 
-Depuis le 2026-07-18, le jeu évolue avec un mandat produit clair : **qu'un
-maximum de personnes prennent du plaisir à y jouer**. Les règles historiques
-(une seule page, portée MVP) ne sont plus des contraintes.
+Le mandat reste simple : **qu'un maximum de personnes prennent du plaisir à
+jouer**, avec une interface qui aide réellement à comprendre et développer son
+usine. Les anciennes contraintes de page unique ou de métaphore visuelle figée
+ne sont plus des objectifs.
 
-## Vision
+## Vision V4
 
-Un idle game satirique de bureau qu'on a plaisir à laisser tourner et à
-retrouver : lisible en un coup d'œil, juteux à chaque clic, drôle dans ses
-mots, et gratifiant quand on revient.
+Papers Empire est un idle game industriel satirique dont le monde, les actions
+et les données racontent la même usine : le **production twin**.
 
-## Piliers
+1. **Plaisir immédiat** — interactions causales, machine vivante, feedback bref.
+2. **Progression lisible** — prochain objectif, coût et impact accessibles.
+3. **Décisions éclairées** — la Data Science Zone explique les arbitrages sans
+   inventer de finance réelle.
+4. **Retrouvailles** — les gains hors ligne récompensent le retour.
+5. **Monde cohérent** — landing, jeu, Three.js et illustrations partagent une
+   direction « miniature industrielle illustrée ».
+6. **Accès universel** — iPhone, clavier, préférences d'accessibilité et quatre
+   langues restent des surfaces de premier rang.
 
-1. **Plaisir immédiat** — chaque interaction rend quelque chose (tampon qui
-   claque, chiffres qui popent), sans fatiguer (budget motion).
-2. **Progression qui respire** — toujours un prochain objectif visible :
-   bâtiment, amélioration, contrat, réorg.
-3. **Retrouvailles** — revenir doit être une récompense, pas une punition.
-4. **Partage** — le jeu se montre : belles cartes sociales, pages par langue,
-   moments « screenshotables ».
+## Jalons livrés
 
-## Prochaines versions (ordre de priorité)
+- **0.12 — Atelier tamponné** : première identité cohérente et documentée.
+- **0.13 — Gains hors ligne** : équipe de nuit à 50 %, plafond 8 h.
+- **0.14 — Dashboard autonome** : page locale synchronisée entre onglets.
+- **0.15 / 0.17 — Contenu mid-game** : hauts faits, contrats et événements.
+- **0.18 — Campus vivant** : palette, véhicules et activité procédurale.
+- **0.19 / 0.20 — Empire World / Factory Key Art** : marque, hero hybride et
+  rail narratif.
+- **0.21 — Operations Deck** : poste de commande et fiabilité tactile iPhone.
+- **0.21.1 — Branche canonique `main`** : workflows, Pages et réconciliation
+  Atlas alignés.
 
-- **0.12 — Re-skin « Atelier tamponné »** : ✅ livré. Voir `design-system.md`.
-- **0.13 — Gains hors-ligne** : ✅ livré. « Rapport d'activité » tamponné à la
-  réouverture ; l'équipe de nuit produit à 50 %, plafonné à 8 h.
-- **0.14 — Le dashboard déménage sur sa page** : ✅ livré. `/dashboard/` avec
-  synchro live inter-onglets ; l'historique long et les records restent à
-  ajouter (rejoint 0.16).
-- **0.15 — Contenu mid-game, tranche 1** : ✅ livré. 11 nouveaux hauts faits
-  (16 au total), 4 langues.
-- **0.16 — Matière graphique** : intégration des assets générés
-  (`images-todo.md`) — EN ATTENTE d'une clé OpenAI valide (l'actuelle est
-  rejetée par l'API).
-- **0.17 — Contenu mid-game, tranche 2** : ✅ livré. Contrats t5-t8 jusqu'au
-  Recensement national (1M), 3 événements, chiffres arbitrés ; l'équilibrage
-  fin de la courbe reste à observer en jeu réel.
-- **0.18 — La scène 3D rejoint l'atelier** (demande du 2026-07-18) : refonte
-  visuelle du diorama three.js pour qu'il aille avec « Atelier tamponné »,
-  plus joli et plus fun :
-  - palette raccordée (crème/kraft/encre sépia, fenêtres or ambré) — ✅ livré ;
-  - **camions de livraison qui circulent sur les routes** entre les bâtiments,
-    en nombre croissant avec l'empire (plafonnés, `InstancedMesh`) — ✅ livré ;
-  - vie ambiante discrète : fumées lowpoly des cheminées ✅ + tampon géant au
-    prestige (seal-crest) ✅ ; reste feuilles de papier qui s'envolent et
-    klaxon à la complétion d'un contrat ;
-  - ciel synchronisé avec les classes `.sky-*` existantes.
-  Décision 2026-07-18 : les stickers de bâtiments restent dessinés (pas de
-  régénération depuis l'iso) ; la cohérence passe par la palette.
-  Reste à faire : feuilles volantes + klaxon, ciel synchronisé, et
-  surtout l'optimisation draw calls (le campus procédural est à ~210 calls,
-  cible < 50 par fusion/instanciation des géométries de bâtiments).
-  Budget perf mobile NON NÉGOCIABLE : pixelRatio plafonné (≤ 2, 1.5 mobile),
-  aucun éclairage dynamique coûteux ni ombre temps réel (blob shadows),
-  matériaux partagés, < 50 draw calls, rendu suspendu quand le stage sort du
-  viewport (IntersectionObserver) ou que l'onglet est masqué, cible 60 fps
-  desktop / 30 fps mobile milieu de gamme.
-- **Plus tard** : arbre de compétences (« formations internes »), records et
-  fins de partie partageables, mode sombre/clair de l'atelier (jour/nuit déjà
-  amorcé par `.sky-*`).
+## 0.22 — Production Twin V4
 
-## Règles de fonctionnement
+Contrat livré par la branche V4 ; la validation navigateur et les mesures de
+performance restent les portes de sortie de la release :
 
-- Pull requests vers `main`, commits fréquents, pas de suite de tests
-  applicative (choix assumé) : vérification manuelle en navigateur avant
-  chaque fusion.
-- Chaque version significative : entrée dans `README.md` (Versioned Change
-  History) + `RELEASE_NOTES.md` si release majeure.
-- Tout changement visuel respecte `design-system.md`.
+- [x] design system rendu révocable : invariants produit séparés des choix
+  décoratifs ;
+- [x] landing transformée en sas qui disparaît après l'entrée dans l'atelier ;
+- [x] scène Three.js partagée, conservée en carte compacte dans le jeu ;
+- [x] Dashboard renommé **Data Science Zone** et recentré sur l'analyse locale
+  de production, d'investissement DOC/CC et de prestige ;
+- [x] modèle analytique quantité +1 et limites de projection documentés ;
+- [x] les onze stickers remplacés dans le catalogue et l'analyse par des
+  miniatures isométriques WebP sur fond alpha, avec masters PNG et fallbacks
+  historiques conservés ;
+- [~] montée en gamme Three.js par matériaux PBR, géométries/matériaux partagés
+  et suppression du double horizon ; budgets à mesurer sur appareils réels ;
+- [ ] captures comparatives desktop/iPhone, vérification clavier et revue des
+  métriques WebGL avant fusion.
+
+`[~]` signifie que le pipeline et la direction font partie de la V4, mais que la
+couverture exhaustive ou la preuve sur appareil n'est pas revendiquée.
+
+## Après 0.22
+
+Ordre indicatif, à challenger avec les retours de jeu :
+
+- observer des runs early/mid/late et ajuster la courbe à partir de données
+  locales explicitement consenties/exportées ;
+- compléter les miniatures manquantes et traiter les illustrations d'événements ;
+- créer des records et fins de partie partageables à partir de faits du run ;
+- explorer un arbre de compétences (« formations internes ») seulement s'il
+  ajoute de vraies décisions ;
+- étudier un historique multi-appareil uniquement avec un contrat explicite de
+  consentement, confidentialité et rétention.
+
+## Budgets et règles de fonctionnement
+
+- Scène mobile cible : au plus 50 draw calls, 80 000 triangles, environ 16 Mo
+  de textures, DPR 1 / 30 fps acceptés, sans ombres temps réel ni post-process.
+  Ces limites doivent être mesurées, pas déduites du code.
+- Rendu Three.js suspendu hors viewport et onglet caché ; rendu à la demande en
+  mouvement réduit.
+- Cibles tactiles structurantes d'au moins 44 px, safe areas iOS et focus
+  visible obligatoires.
+- Pull requests vers `main`, fusion après les contrôles requis et validation
+  manuelle proportionnée au changement.
+- Chaque version significative met à jour `docs/README.md` et
+  `docs/RELEASE_NOTES.md`.
+- Tout changement visuel confronte sa décision à
+  [`design-system.md`](design-system.md), sans considérer ce document comme un
+  verrou esthétique permanent.

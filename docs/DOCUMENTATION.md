@@ -10,7 +10,7 @@ This guide tracks the current architecture after the UX/Accessibility refactor, 
 
 ## 2. File Structure (simplified)
 ```
-victorzoo/
+papersempire/
 ├── index.html
 ├── assets/
 │   ├── css/style.css
@@ -26,23 +26,11 @@ victorzoo/
 │       ├── godmode-utils.js
 │       ├── ui-effects.js         # Particles + audio cues
 │       └── tutorial.js           # Guided onboarding flow
-├── tests/
-│   ├── modifiers.test.js
-│   ├── godmode.test.js
-│   ├── events.test.js
-│   ├── i18n.test.js
-│   ├── settings.test.js
-│   └── playwright/
-│       ├── layout.spec.ts
-│       ├── contracts.spec.ts
-│       ├── events.spec.ts
-│       └── tutorial.spec.ts
 ├── docs/ (Retype sources)
 │   ├── accessibility.md
 │   ├── DOCUMENTATION.md (this file)
 │   ├── RELEASE_NOTES.md
 │   └── …
-├── playwright.config.ts
 ├── package.json
 └── retype.yml
 ```
@@ -72,10 +60,15 @@ flowchart LR
   App -->|trigger| Effects
 ```
 
-## 5. Testing & Commands
-- **Unit tests:** `npm run test:unit` sequentially executes all Node tests (modifiers, godmode, events, i18n consistency, settings).
-- **E2E tests:** `npm run test:e2e` launches Playwright. Specs cover layout, contracts, events, and the new tutorial/settings UX.
+## 5. Validation & Commands
+- **JavaScript:** use `node --check` on every changed script; pure UMD helpers
+  can additionally be exercised from Node.
+- **Static UI:** validate HTML, CSS, identifiers, ARIA references and all four
+  i18n catalogs before publication.
 - **Docs:** `npm run docs:build` generates the Retype site into `docs-site/` so CI/GitHub Pages can publish it.
+- **Limite actuelle:** le dépôt ne contient pas de suite de tests automatisés.
+  Les parcours clavier, Safari/iPhone et WebGL doivent donc être contrôlés dans
+  de vrais navigateurs avant de déclarer une release validée.
 
 ## 6. Documentation & Releases
 - Retype sources live in `docs/`. Add a new Markdown file per major feature (events, accessibility, endgame, balance…).

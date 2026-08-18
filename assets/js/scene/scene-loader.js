@@ -3,9 +3,9 @@
  *
  * three.js 0.185.1 is vendored as an ES module (assets/vendor/). This file
  * is a CLASSIC script so the game keeps working everywhere: it feature-
- * detects, then dynamically imports the module. On ANY failure — file://
- * (Playwright loads the game that way and module fetches are blocked by
- * CORS), an old browser without dynamic import, missing WebGL, a fetch
+ * detects, loads the tiny shared world theme, then dynamically imports the
+ * module. On ANY failure — file:// (module fetches are blocked by CORS),
+ * an old browser without dynamic import, missing WebGL, a fetch
  * error — the promise rejects or init returns false, we log one info line
  * and the CSS skyline fallback simply stays visible. The DOM game is never
  * affected.
@@ -14,9 +14,13 @@
   // Resolved NOW (document.currentScript is only valid during initial
   // execution) into an absolute URL: dynamic-import base-URL rules differ
   // between browsers for Function-wrapped import, absolute URLs do not.
-  const VENDOR_URL = document.currentScript
-    ? new URL("../../vendor/three.module.min.js", document.currentScript.src).href
+  const SCRIPT_URL = document.currentScript ? document.currentScript.src : "";
+  const VENDOR_URL = SCRIPT_URL
+    ? new URL("../../vendor/three.module.min.js", SCRIPT_URL).href
     : "assets/vendor/three.module.min.js";
+  const THEME_URL = SCRIPT_URL
+    ? new URL("./world-theme.js", SCRIPT_URL).href
+    : "assets/js/scene/world-theme.js";
 
   let booted = false;
 
@@ -73,7 +77,14 @@
       console.info("[scene] dynamic import unsupported — keeping the CSS fallback.");
       return;
     }
-    importer(VENDOR_URL)
+    const themeReady = window.PEWorldTheme
+      ? Promise.resolve()
+      : importer(THEME_URL).catch(err => {
+        // Theme failure must never take the game down: both scene modules
+        // retain compact PBR fallbacks for this path.
+        console.info("[scene] shared world theme unavailable:", err && err.message ? err.message : err);
+      });
+    themeReady.then(() => importer(VENDOR_URL))
       .then(THREE => {
         const ok = window.CityScene.init(THREE, canvas);
         if (ok) {

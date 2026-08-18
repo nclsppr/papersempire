@@ -1,6 +1,6 @@
 /**
- * building-recipes.js — procedural lowpoly buildings for the industrial
- * campus diorama (Papers Empire). Browser-only IIFE attaching
+ * building-recipes.js — procedural illustrated miniatures for the industrial
+ * campus (Papers Empire). Browser-only IIFE attaching
  * window.BuildingRecipes. three.js is NEVER imported here: every public
  * function receives the THREE namespace as its first parameter.
  *
@@ -9,56 +9,76 @@
  * - Each recipe fits inside its lot footprint (w along x, d along z).
  * - floorsFor(quantity) = min(5, 1 + floor(log2(max(1, quantity)))).
  *
- * Only primitive geometries are used: Box, Cylinder, Cone, Plane (shadow and
- * billboard only) and Sphere sparingly for tiny details.
+ * Only a compact shared geometry kit is used: chamfered boxes, smooth low-poly
+ * rollers/pipes, faceted cones, planes and spheres. No texture or model load.
  */
 (function () {
   "use strict";
 
-  /**
-   * Palette « Atelier tamponné » (0.18) : tons chauds papeterie pour que le
-   * diorama 3D s'accorde aux stickers plats. Les fenêtres passent en or
-   * ambré émissif (fini les bleus tech froids), toits sépia, murs cardstock.
-   */
+  /** Palette V4 — same numeric values as PEWorldTheme for the fallback path. */
   var PALETTE = {
-    paper: 0xf6ecd6,  // mur cardstock crème
-    accent: 0xfbbf24, // signalétique / glow -> or ambré (ex bleu ciel)
-    glass: 0xfcd34d,  // fenêtres -> or clair (ex bleu clair)
-    amber: 0xf59e0b,  // or profond (inchangé)
-    hivis: 0xf97316,  // orange sécurité (inchangé)
-    good: 0x9a7b3f,   // ex vert : accent laiton chaud
-    slate: 0x6b5b45,  // structure sombre -> encre diluée chaude
-    roof: 0x5b4736,   // toits -> sépia (ex navy)
-    metal: 0xb3a488,  // métal -> taupe chaud (ex gris bleuté)
-    dark: 0x2a2016    // base sombre + fond des glows -> sépia profond
+    paper: 0xf5ead2,
+    accent: 0xe7601e,
+    glass: 0x52798b,
+    amber: 0xffb13b,
+    hivis: 0xe7601e,
+    good: 0x5f824f,
+    slate: 0x355c70,
+    roof: 0x263746,
+    metal: 0x8b9aa0,
+    dark: 0x263746
   };
 
   // --------------------------------------------------------------------------
-  // Material caches — one Lambert material per color, one emissive variant per
-  // glow color. Shared aggressively: NEVER create a material per mesh call.
+  // Shared resources. PEWorldTheme owns the normal runtime caches; these local
+  // maps preserve progressive enhancement if that tiny module fails to load.
   // --------------------------------------------------------------------------
-  var materialCache = new Map(); // colorHex -> MeshLambertMaterial
-  var emissiveCache = new Map(); // emissiveHex -> MeshLambertMaterial (glowing)
+  var materialCache = new Map();
+  var emissiveCache = new Map();
+  var geometryCache = new Map();
   var shadowMaterial = null;     // single shared MeshBasicMaterial
 
-  function mat(THREE, colorHex) {
-    var m = materialCache.get(colorHex);
+  function worldTheme() {
+    return typeof window !== "undefined" ? window.PEWorldTheme : null;
+  }
+
+  function mat(THREE, colorHex, options) {
+    options = options || {};
+    var theme = worldTheme();
+    if (theme && theme.materialForColor) {
+      return theme.materialForColor(THREE, colorHex, options);
+    }
+    var key = colorHex + (options.faceted ? ":faceted" : ":smooth");
+    var m = materialCache.get(key);
     if (!m) {
-      m = new THREE.MeshLambertMaterial({ color: colorHex, flatShading: true });
-      materialCache.set(colorHex, m);
+      m = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        roughness: colorHex === PALETTE.metal ? 0.46 : 0.78,
+        metalness: colorHex === PALETTE.metal ? 0.46 : 0.04,
+        flatShading: !!options.faceted
+      });
+      m.userData.peWorldShared = true;
+      materialCache.set(key, m);
     }
     return m;
   }
 
   function glowMat(THREE, emissiveHex) {
+    var theme = worldTheme();
+    if (theme && theme.materialForColor) {
+      return theme.materialForColor(THREE, emissiveHex, { glow: emissiveHex });
+    }
     var m = emissiveCache.get(emissiveHex);
     if (!m) {
-      m = new THREE.MeshLambertMaterial({
+      m = new THREE.MeshStandardMaterial({
         color: PALETTE.dark,
+        roughness: 0.58,
+        metalness: 0.06,
         emissive: emissiveHex,
-        emissiveIntensity: 0.9,
-        flatShading: true
+        emissiveIntensity: 0.74,
+        flatShading: false
       });
+      m.userData.peWorldShared = true;
       emissiveCache.set(emissiveHex, m);
     }
     return m;
@@ -72,23 +92,48 @@
         opacity: 0.35,
         depthWrite: false
       });
+      shadowMaterial.userData.peWorldShared = true;
     }
     return shadowMaterial;
   }
 
+  function sharedGeometry(THREE, kind, segments) {
+    var theme = worldTheme();
+    if (theme && theme.geometry) return theme.geometry(THREE, kind, segments);
+    var key = kind + (segments ? ":" + segments : "");
+    if (geometryCache.has(key)) return geometryCache.get(key);
+    var geo;
+    // The fallback deliberately uses the lightest core primitives. The normal
+    // runtime path receives the chamfered box from PEWorldTheme.
+    if (kind === "box" || kind === "chamferBox") geo = new THREE.BoxGeometry(1, 1, 1);
+    else if (kind === "cylinder") geo = new THREE.CylinderGeometry(0.5, 0.5, 1, segments || 12);
+    else if (kind === "cone") geo = new THREE.ConeGeometry(0.5, 1, segments || 8);
+    else if (kind === "ring") geo = new THREE.CylinderGeometry(0.5, 0.5, 1, segments || 16, 1, true);
+    else if (kind === "sphere") geo = new THREE.SphereGeometry(0.5, segments || 12, 8);
+    else if (kind === "plane") geo = new THREE.PlaneGeometry(1, 1);
+    else throw new Error("Unknown building geometry: " + kind);
+    geo.userData.peWorldShared = true;
+    geometryCache.set(key, geo);
+    return geo;
+  }
+
   // --------------------------------------------------------------------------
-  // Small mesh helpers. All meshes keep castShadow/receiveShadow at the
-  // default false (the scene uses fake blob shadows, no shadow maps).
+  // Small mesh helpers. Unit geometries are scaled per mesh: dozens of objects
+  // now share a handful of GPU buffers while retaining independent transforms.
   // --------------------------------------------------------------------------
   function addBox(THREE, parent, colorHex, w, h, d, x, y, z) {
-    var mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(THREE, colorHex));
+    var rounded = Math.min(Math.abs(w), Math.abs(h), Math.abs(d)) >= 0.065;
+    var mesh = new THREE.Mesh(sharedGeometry(THREE, rounded ? "chamferBox" : "box"), mat(THREE, colorHex));
+    mesh.scale.set(w, h, d);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     return mesh;
   }
 
   function addGlowBox(THREE, parent, emissiveHex, w, h, d, x, y, z) {
-    var mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), glowMat(THREE, emissiveHex));
+    var rounded = Math.min(Math.abs(w), Math.abs(h), Math.abs(d)) >= 0.065;
+    var mesh = new THREE.Mesh(sharedGeometry(THREE, rounded ? "chamferBox" : "box"), glowMat(THREE, emissiveHex));
+    mesh.scale.set(w, h, d);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     return mesh;
@@ -96,10 +141,13 @@
 
   // CylinderGeometry(radiusTop, radiusBottom, height, radialSegments)
   function addCylinder(THREE, parent, colorHex, rTop, rBottom, h, seg, x, y, z) {
-    var mesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(rTop, rBottom, h, seg),
-      mat(THREE, colorHex)
-    );
+    var equalRadius = Math.abs(rTop - rBottom) < 0.0001;
+    var geometry = equalRadius
+      ? sharedGeometry(THREE, "cylinder", Math.max(10, seg || 12))
+      : new THREE.CylinderGeometry(rTop, rBottom, 1, Math.max(10, seg || 12));
+    var mesh = new THREE.Mesh(geometry, mat(THREE, colorHex));
+    if (equalRadius) mesh.scale.set(rTop * 2, h, rTop * 2);
+    else mesh.scale.y = h;
     mesh.position.set(x, y, z);
     parent.add(mesh);
     return mesh;
@@ -107,7 +155,11 @@
 
   // ConeGeometry(radius, height, radialSegments)
   function addCone(THREE, parent, colorHex, r, h, seg, x, y, z) {
-    var mesh = new THREE.Mesh(new THREE.ConeGeometry(r, h, seg), mat(THREE, colorHex));
+    var mesh = new THREE.Mesh(
+      sharedGeometry(THREE, "cone", seg || 8),
+      mat(THREE, colorHex, { faceted: true })
+    );
+    mesh.scale.set(r * 2, h, r * 2);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     return mesh;
@@ -115,8 +167,9 @@
 
   // Thin open-ended cylinder used as a glowing "ring" (no torus in the kit).
   function addGlowRing(THREE, parent, emissiveHex, radius, height, x, y, z) {
-    var geo = new THREE.CylinderGeometry(radius, radius, height, 24, 1, true);
+    var geo = sharedGeometry(THREE, "ring", 16);
     var mesh = new THREE.Mesh(geo, glowMat(THREE, emissiveHex));
+    mesh.scale.set(radius * 2, height, radius * 2);
     mesh.position.set(x, y, z);
     parent.add(mesh);
     return mesh;
@@ -125,7 +178,8 @@
   // Tiny worker: hivis box torso + paper sphere head.
   function addWorker(THREE, parent, x, z) {
     addBox(THREE, parent, PALETTE.hivis, 0.18, 0.28, 0.12, x, 0.14, z);
-    var head = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), mat(THREE, PALETTE.paper));
+    var head = new THREE.Mesh(sharedGeometry(THREE, "sphere", 10), mat(THREE, PALETTE.paper));
+    head.scale.setScalar(0.18);
     head.position.set(x, 0.37, z);
     parent.add(head);
   }
@@ -140,9 +194,10 @@
     var wheelSpots = [[-0.13, 0.12], [0.13, 0.12], [-0.13, -0.2], [0.13, -0.2]];
     for (var i = 0; i < wheelSpots.length; i++) {
       var wheel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.06, 0.05, 8),
+        sharedGeometry(THREE, "cylinder", 10),
         mat(THREE, PALETTE.dark)
       );
+      wheel.scale.set(0.12, 0.05, 0.12);
       wheel.rotation.z = Math.PI / 2; // axle along x
       wheel.position.set(wheelSpots[i][0], 0.06, wheelSpots[i][1]);
       truck.add(wheel);
@@ -154,22 +209,23 @@
   // Fake blob shadow under the building.
   function addShadowPlane(THREE, group, w, d) {
     var mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(w + 0.3, d + 0.3),
+      sharedGeometry(THREE, "plane"),
       getShadowMaterial(THREE)
     );
+    mesh.scale.set(w + 0.3, d + 0.3, 1);
     mesh.rotation.x = -Math.PI / 2;
     mesh.position.y = 0.01;
     mesh.name = "shadow";
     group.add(mesh);
   }
 
-  // Removes every child of a node and disposes their geometries.
-  // Materials are shared module-wide and are never disposed here.
+  // Removes every child of a node. Shared world geometries stay alive; only a
+  // rare custom frustum, if introduced by a recipe, is owned by the child.
   function clearGroup(node) {
     for (var i = node.children.length - 1; i >= 0; i--) {
       var child = node.children[i];
       child.traverse(function (obj) {
-        if (obj.geometry) obj.geometry.dispose();
+        if (obj.geometry && !obj.geometry.userData.peWorldShared) obj.geometry.dispose();
       });
       node.remove(child);
     }
@@ -370,9 +426,10 @@
       build: function (THREE, group) {
         addBox(THREE, group, PALETTE.dark, 0.3, 0.4, 0.06, 0, 0.2, 0.41); // entrance
         var billboard = new THREE.Mesh(
-          new THREE.PlaneGeometry(0.34, 0.22),
+          sharedGeometry(THREE, "plane"),
           glowMat(THREE, PALETTE.accent)
         );
+        billboard.scale.set(0.34, 0.22, 1);
         billboard.position.set(0.25, 0.32, 0.44);
         group.add(billboard);
       },
@@ -478,9 +535,10 @@
         addGlowBox(THREE, growth, PALETTE.accent, 0.5, 0.06, 0.03, 0, 0.17, 0.76);
         var topY = storeys * 0.34;
         var dome = new THREE.Mesh(
-          new THREE.SphereGeometry(0.55, 8, 6),
+          sharedGeometry(THREE, "sphere", 12),
           glowMat(THREE, PALETTE.accent)
         );
+        dome.scale.setScalar(1.1);
         dome.position.set(0, topY + 0.42, 0);
         dome.name = "dome";
         growth.add(dome);
@@ -545,10 +603,25 @@
     return group;
   }
 
+  /** Releases only resources owned by the local progressive-enhancement path. */
+  function disposeResources() {
+    materialCache.forEach(function (material) { material.dispose(); });
+    emissiveCache.forEach(function (material) { material.dispose(); });
+    geometryCache.forEach(function (geometry) { geometry.dispose(); });
+    materialCache.clear();
+    emissiveCache.clear();
+    geometryCache.clear();
+    if (shadowMaterial) {
+      shadowMaterial.dispose();
+      shadowMaterial = null;
+    }
+  }
+
   window.BuildingRecipes = {
     PALETTE: PALETTE,
     floorsFor: floorsFor,
     build: build,
-    applyQuantity: applyQuantity
+    applyQuantity: applyQuantity,
+    disposeResources: disposeResources
   };
 })();

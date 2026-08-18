@@ -1,9 +1,8 @@
 /**
  * CityLayout — deterministic lot placement for the 3D campus.
  *
- * Pure math, zero DOM/three.js access, so it can be unit-tested in Node
- * (see tests/scene-layout.test.js). Same UMD-ish export pattern as
- * modifier-utils.js.
+ * Pure math, zero DOM/three.js access, so it can be unit-tested in Node.
+ * Same UMD-ish export pattern as modifier-utils.js.
  *
  * World: ground spans x in [-13, +13], z in [-8, +8] (26 x 16), y up.
  * Producers line the front row (z = +5), flux buildings the middle (z = 0),
