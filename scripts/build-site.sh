@@ -35,6 +35,10 @@ cp "$REPOSITORY_ROOT/404.html" "$output_directory/404.html"
 cp "$REPOSITORY_ROOT/site.webmanifest" "$output_directory/site.webmanifest"
 cp "$REPOSITORY_ROOT/sitemap.xml" "$output_directory/sitemap.xml"
 cp -R "$REPOSITORY_ROOT/assets" "$output_directory/assets"
+# Les masters ImageGen/PNG et manifestes de production restent versionnés dans
+# le dépôt pour la traçabilité, mais ne sont jamais téléchargés par le jeu.
+# L'arbre de sortie vient d'être créé et est donc sûr à élaguer ici.
+find "$output_directory/assets" -type d -name sources -prune -exec rm -rf -- {} +
 cp -R "$REPOSITORY_ROOT/dashboard" "$output_directory/dashboard"
 cp -R "$REPOSITORY_ROOT/docs-site/." "$output_directory/docs/"
 

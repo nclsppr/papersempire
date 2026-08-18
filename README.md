@@ -2,7 +2,7 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
-Current release contract: **0.22.0 — Production Twin V4**.
+Current release contract: **0.23.0 — Precision Pass V5**.
 
 ## Quick Links
 - [Docs Overview](docs/README.md)
@@ -42,7 +42,9 @@ for incident diagnosis, rollback, quarantine, and key rotation.
 ## Development
 - `python3 -m http.server 8000` – serve the static game locally.
 - `npm install` – install the Retype documentation tool.
+- `npm run ui:check` – validate Safari/WebGL/cache and interaction resilience contracts.
 - `npm run docs:build` – build the static docs site with Retype (output in `docs-site/`).
 
-There is currently no automated test suite in the repository; validate UI
-changes in the browser and run `node --check` on modified JavaScript files.
+The repository has a focused Node resilience gate but no full browser suite;
+also validate visual changes in a browser and run `node --check` on modified
+JavaScript files.

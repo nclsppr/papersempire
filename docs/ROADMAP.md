@@ -33,6 +33,18 @@ et les données racontent la même usine : le **production twin**.
 - **0.21.1 — Branche canonique `main`** : workflows, Pages et réconciliation
   Atlas alignés.
 
+## 0.23 — Precision Pass V5
+
+- [x] Rechargement unique des pages restaurées par le BFCache Safari.
+- [x] Révélation du canvas uniquement après une première frame WebGL valide.
+- [x] Fallback visible en contraste élevé, perte de contexte et échec WebGL.
+- [x] Versionnement commun des CSS, JS, images, polices, imports Three.js,
+      ressources runtime et icônes installables.
+- [x] Sous-marque vectorielle « Crown Analyzer » pour la Data Science Zone.
+- [x] Admission papier masquée par une vraie fente et animation sans reflow.
+- [x] Rail de progression restructuré en liste lisible sur iPhone.
+- [x] Contrat de résilience exécuté dans les validations Pages et VPS.
+
 ## 0.22 — Production Twin V4
 
 Contrat livré par la branche V4 ; la validation navigateur et les mesures de

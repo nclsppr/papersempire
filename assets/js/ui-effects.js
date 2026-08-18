@@ -3,6 +3,7 @@
   let audioUnlocked = false;
   let activePaperCues = 0;
   const MAX_PAPER_CUES = 18;
+  const pressAnimations = new WeakMap();
 
   const SOUND_PRESETS = {
     click: { freq: 360, duration: 0.08 },
@@ -154,9 +155,46 @@
     playSound("contract");
   }
 
+  function animatePressFeed(press) {
+    if (!press || !canCreateMotion()) return;
+    const sheet = press.querySelector(".paper-sheet");
+    const lip = press.querySelector(".press-slot-in");
+    if (!sheet || typeof sheet.animate !== "function") {
+      retriggerClass(press, "is-feeding", 540);
+      return;
+    }
+
+    const previous = pressAnimations.get(press);
+    if (previous) previous.forEach(function (animation) { animation.cancel(); });
+
+    const sheetAnimation = sheet.animate([
+      { opacity: 1, transform: "translate3d(-50%, 0, 0)", offset: 0 },
+      { opacity: 1, transform: "translate3d(-50%, 45px, 0) scaleX(0.97) skewX(-0.5deg)", offset: 0.58 },
+      { opacity: 1, transform: "translate3d(-50%, 55px, 0) scaleX(0.91) skewX(-1deg)", offset: 0.70 },
+      { opacity: 0, transform: "translate3d(-50%, 58px, 0) scaleX(0.9) skewX(-1deg)", offset: 0.72 },
+      { opacity: 0, transform: "translate3d(-50%, -5px, 0)", offset: 0.73 },
+      { opacity: 1, transform: "translate3d(-50%, 0, 0)", offset: 1 }
+    ], {
+      duration: 510,
+      easing: "cubic-bezier(0.2, 0.72, 0.2, 1)"
+    });
+    const lipAnimation = lip && typeof lip.animate === "function"
+      ? lip.animate([
+          { filter: "brightness(1)", transform: "translateY(0)" },
+          { filter: "brightness(1.55)", transform: "translateY(1px)", offset: 0.56 },
+          { filter: "brightness(1)", transform: "translateY(0)" }
+        ], { duration: 350, easing: "ease-out" })
+      : null;
+    const animations = lipAnimation ? [sheetAnimation, lipAnimation] : [sheetAnimation];
+    pressAnimations.set(press, animations);
+    sheetAnimation.addEventListener("finish", function () {
+      if (pressAnimations.get(press) === animations) pressAnimations.delete(press);
+    }, { once: true });
+  }
+
   function playClickEffect(target) {
     const press = target && target.closest ? target.closest(".press-console") : null;
-    if (press) retriggerClass(press, "is-feeding", 480);
+    if (press) animatePressFeed(press);
     if (!press) emitPaperCues(target, 1);
     playSound("click");
   }

@@ -1,6 +1,6 @@
-# Design system V4 — « Production Twin »
+# Design system V5 — « Production Twin · Precision Pass »
 
-Ce document formalise la direction de Papers Empire 0.22.0. Il remplace le
+Ce document formalise la direction de Papers Empire 0.23.0. Il remplace le
 gel « Atelier tamponné » par un système **révocable et challengé** : une règle
 visuelle est un choix de produit tant qu'elle améliore la lisibilité, le plaisir
 de jeu et la cohérence du monde, jamais une vérité à préserver pour elle-même.
@@ -160,6 +160,25 @@ monnaie interne : il ne s'agit ni de chiffre d'affaires, ni de marge, ni de
 rentabilité comptable. La télémétrie reste locale au navigateur, partielle après
 migration ou effacement du stockage, et ne permet aucune comparaison entre
 joueurs. Aucun indicateur synthétique ne doit masquer ces limites.
+
+### Sous-marque « Crown Analyzer »
+
+La Data Science Zone possède une signature propre sans devenir une marque
+indépendante. Son emblème conserve la couronne de feuilles de Papers Empire et
+la monte sur un analyseur de production : rouleaux, feuille alimentée et une
+unique courbe cyan. Le cyan signale la mesure ; le laiton, l'ivoire, l'orange
+sécurité et l'acier nuit maintiennent la filiation avec l'usine.
+
+- source vectorielle livrée : `assets/brand/data-science-zone-mark.svg` ;
+- exploration peinte conservée :
+  `assets/brand/sources/data-science-zone-concept.png` ;
+- les répertoires `sources/` restent versionnés dans le dépôt mais sont exclus
+  de l'archive publique ; seuls les dérivés utilisés partent en production ;
+- le nom « Data Science Zone » reste du texte HTML déterministe et le sous-titre
+  reste localisable ;
+- le favicon et la marque produit globale restent Papers Empire ;
+- pas de cerveau, atome, base de données ou histogramme générique : le signe
+  doit raconter la mesure d'une production de papier.
 
 ## Ce qui est invariant, ce qui est révocable
 

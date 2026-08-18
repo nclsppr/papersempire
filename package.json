@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "docs:build": "node node_modules/retypeapp/retype.js build --output docs-site"
+    "docs:build": "node node_modules/retypeapp/retype.js build --output docs-site",
+    "ui:check": "node scripts/validate-ui-resilience.mjs"
   },
   "devDependencies": {
     "retypeapp": "^4.6.0"

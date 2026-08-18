@@ -40,6 +40,13 @@ html[data-experience="landing"] #cityCanvas {
 
 html[data-experience] #cityCanvas {
   cursor: default;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+
+.stage.scene-active #cityCanvas {
+  opacity: 1;
 }
 
 html[data-experience="landing"] .stage {
@@ -294,27 +301,53 @@ html[data-experience="playing"] body {
 }
 
 .data-zone-brand {
-  display: inline-grid;
-  gap: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
   color: #fff7e6;
   text-decoration: none;
+  transition: transform 180ms ease-out;
+}
+
+.data-zone-brand:hover {
+  transform: translateY(-1px);
+}
+
+.data-zone-brand:focus-visible {
+  outline: 2px solid var(--world-cyan);
+  outline-offset: 4px;
+}
+
+.data-zone-brand-mark {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  filter: drop-shadow(0 7px 12px rgba(0, 4, 9, 0.38));
+}
+
+.data-zone-brand-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.data-zone-brand-parent {
+  color: var(--world-brass);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .data-zone-brand .header-title {
   color: #fff7e6;
   font-family: var(--font-display);
-  font-size: clamp(1rem, 1.6vw, 1.35rem);
-  letter-spacing: 0.025em;
-  line-height: 1;
-}
-
-.data-zone-brand-line {
-  color: var(--world-cyan);
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-size: clamp(0.98rem, 1.45vw, 1.28rem);
+  letter-spacing: 0.01em;
+  line-height: 0.95;
   text-transform: uppercase;
 }
 
@@ -388,6 +421,7 @@ html[data-experience="playing"] body {
 }
 
 .data-zone-intro {
+  position: relative;
   min-height: 320px;
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.55fr);
@@ -395,6 +429,25 @@ html[data-experience="playing"] body {
   gap: 48px;
   padding: 72px 0 42px;
   border-bottom: 1px solid var(--world-line);
+}
+
+.data-zone-intro-copy {
+  position: relative;
+  isolation: isolate;
+}
+
+.data-zone-intro-copy::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  right: clamp(0px, 5vw, 72px);
+  width: clamp(150px, 19vw, 270px);
+  aspect-ratio: 1;
+  background: url("../brand/data-science-zone-mark.svg") center / contain no-repeat;
+  opacity: 0.085;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .data-zone-kicker,
@@ -539,12 +592,15 @@ html[data-experience="playing"] body {
 
 .data-zone-section-heading h2 {
   margin: 0;
+  min-width: 0;
   color: #fff7e6;
   font-family: var(--font-display);
   font-size: clamp(1.6rem, 3vw, 2.65rem);
   font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .data-zone-section-heading > p {
@@ -1336,6 +1392,12 @@ html[data-experience="playing"] body {
     padding-block: 8px;
   }
 
+  .data-zone-brand-mark {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
   .data-zone-header-actions {
     width: 100%;
     justify-content: space-between;
@@ -1456,6 +1518,33 @@ html[data-experience="playing"] body {
     font-size: clamp(2.65rem, 15vw, 4.7rem);
   }
 
+  .data-zone-brand {
+    gap: 8px;
+  }
+
+  .data-zone-brand-mark {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+
+  .data-zone-brand-parent {
+    display: none;
+  }
+
+  .data-zone-brand .header-title {
+    max-width: 132px;
+    font-size: 0.82rem;
+    line-height: 0.92;
+  }
+
+  .data-zone-intro-copy::after {
+    top: 42%;
+    right: 0;
+    width: 150px;
+    opacity: 0.07;
+  }
+
   .data-zone-meta {
     grid-template-columns: 1fr;
   }
@@ -1552,6 +1641,36 @@ html[data-experience="playing"] body {
   }
 }
 
+@media (max-width: 480px) {
+  .data-zone-intro-copy::after {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .data-state-chip {
+    flex: 0 0 44px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  #dataStateLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .data-zone-header .nav-dash-link {
+    flex: 1;
+    max-width: none;
+    text-align: center;
+    white-space: normal;
+  }
+}
+
 @media (any-pointer: coarse) {
   .data-zone-nav a,
   .segmented-control button,
@@ -1568,6 +1687,14 @@ html[data-experience="playing"] body {
 @media (prefers-reduced-motion: reduce) {
   .stage,
   .operations-deck .building-row {
+    transition: none;
+  }
+
+  #cityCanvas {
+    transition: none;
+  }
+
+  .data-zone-brand {
     transition: none;
   }
 

@@ -1,6 +1,6 @@
 # Papers Empire
 
-Papers Empire is a browser-based incremental game that runs entirely on the client side. The experience is intentionally light-hearted: you're modernising an industrial print shop while channeling the vibe of workplace sitcoms. The current release contract is **0.22.0 — Production Twin V4**.
+Papers Empire is a browser-based incremental game that runs entirely on the client side. The experience is intentionally light-hearted: you're modernising an industrial print shop while channeling the vibe of workplace sitcoms. The current release contract is **0.23.0 — Precision Pass V5**.
 
 The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier maintenance. Additional helper modules power the modifier builder math and god-mode utilities so they can be unit-tested in isolation.
 
@@ -51,6 +51,15 @@ Track meaningful milestones in the project:
   explicables des cadences, achats quantité +1, retours en DOC et prestige. Les
   limites de couverture locale et l'absence de métriques financières réelles
   sont affichées comme partie du produit.
+- **0.23.0** – « Precision Pass V5 » : retour Safari BFCache traité par une
+  recharge unique des assets versionnés ; scène Three.js révélée seulement
+  après une première frame valide, avec fallback conservé en contraste élevé,
+  perte de contexte ou échec WebGL ; nouvelle marque vectorielle Data Science
+  Zone issue d'une exploration ImageGen ; geste d'admission papier reconstruit
+  autour d'une fente réellement masquante ; progression de landing réorganisée
+  en liste lisible sur iPhone ; assets dynamiques, imports Three.js et manifest
+  alignés sur la révision du build ; contrat de résilience vérifiable localement
+  et exécuté en CI par `npm run ui:check`.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 

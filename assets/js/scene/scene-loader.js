@@ -15,21 +15,44 @@
   // execution) into an absolute URL: dynamic-import base-URL rules differ
   // between browsers for Function-wrapped import, absolute URLs do not.
   const SCRIPT_URL = document.currentScript ? document.currentScript.src : "";
+  const assetUrl = window.PEAssetUrl || function (path) { return path; };
   const VENDOR_URL = SCRIPT_URL
-    ? new URL("../../vendor/three.module.min.js", SCRIPT_URL).href
-    : "assets/vendor/three.module.min.js";
+    ? assetUrl(new URL("../../vendor/three.module.min.js", SCRIPT_URL).href)
+    : assetUrl("assets/vendor/three.module.min.js");
   const THEME_URL = SCRIPT_URL
-    ? new URL("./world-theme.js", SCRIPT_URL).href
-    : "assets/js/scene/world-theme.js";
+    ? assetUrl(new URL("./world-theme.js", SCRIPT_URL).href)
+    : assetUrl("assets/js/scene/world-theme.js");
 
   let booted = false;
+  let booting = false;
+  let rendered = false;
+  let unavailable = false;
+  let preferenceObserver = null;
+
+  function sceneAllowed() {
+    const root = document.documentElement;
+    return root.dataset.sceneEnabled !== "0" && !root.classList.contains("pref-high-contrast");
+  }
+
+  function syncStageState() {
+    const stage = document.getElementById("sceneStage");
+    if (!stage) return;
+    const active = rendered && sceneAllowed();
+    stage.classList.toggle("scene-active", active);
+    stage.classList.toggle("scene-loading", booted && !rendered && !unavailable && sceneAllowed());
+  }
 
   function supportsWebGL() {
     try {
       // three r163+ n'accepte plus que WebGL2 : inutile de télécharger le
       // module (~750 Ko) sur un navigateur WebGL1-only.
       const probe = document.createElement("canvas");
-      return !!probe.getContext("webgl2");
+      const context = probe.getContext("webgl2");
+      if (context) {
+        const loseContext = context.getExtension("WEBGL_lose_context");
+        if (loseContext) loseContext.loseContext();
+      }
+      return !!context;
     } catch (err) {
       return false;
     }
@@ -40,27 +63,26 @@
    * scène désactivée puis la réactive dans les paramètres, on relance le
    * boot dès que data-scene-enabled repasse à "1" (sans rechargement).
    */
-  function watchReEnable() {
-    if (!("MutationObserver" in window)) return;
-    const mo = new MutationObserver(() => {
-      if (document.documentElement.dataset.sceneEnabled !== "0" && !booted) {
-        mo.disconnect();
-        boot();
-      }
+  function watchPreferences() {
+    if (preferenceObserver || !("MutationObserver" in window)) return;
+    preferenceObserver = new MutationObserver(() => {
+      syncStageState();
+      if (sceneAllowed() && !booted) boot();
     });
-    mo.observe(document.documentElement, {
+    preferenceObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-scene-enabled"]
+      attributeFilter: ["class", "data-scene-enabled"]
     });
   }
 
   function boot() {
-    if (booted) return;
+    if (booted || booting) return;
     const stage = document.getElementById("sceneStage");
     const canvas = document.getElementById("cityCanvas");
     if (!stage || !canvas || !window.CityScene) return;
-    if (document.documentElement.dataset.sceneEnabled === "0") {
-      watchReEnable();
+    watchPreferences();
+    if (!sceneAllowed()) {
+      syncStageState();
       return;
     }
     if (!supportsWebGL()) {
@@ -77,6 +99,7 @@
       console.info("[scene] dynamic import unsupported — keeping the CSS fallback.");
       return;
     }
+    booting = true;
     const themeReady = window.PEWorldTheme
       ? Promise.resolve()
       : importer(THEME_URL).catch(err => {
@@ -86,15 +109,34 @@
       });
     themeReady.then(() => importer(VENDOR_URL))
       .then(THREE => {
+        const markReady = () => {
+          unavailable = false;
+          rendered = true;
+          syncStageState();
+        };
+        const markUnavailable = () => {
+          unavailable = true;
+          rendered = false;
+          syncStageState();
+        };
+        canvas.addEventListener("pe:scene-first-frame", markReady, { once: true });
+        canvas.addEventListener("pe:scene-unavailable", markUnavailable);
         const ok = window.CityScene.init(THREE, canvas);
         if (ok) {
+          booting = false;
           booted = true;
-          stage.classList.add("scene-active");
+          syncStageState();
         } else {
+          booting = false;
+          canvas.removeEventListener("pe:scene-first-frame", markReady);
+          canvas.removeEventListener("pe:scene-unavailable", markUnavailable);
           console.info("[scene] init declined — keeping the CSS fallback.");
         }
       })
       .catch(err => {
+        booting = false;
+        rendered = false;
+        syncStageState();
         console.info("[scene] 3D disabled:", err && err.message ? err.message : err);
       });
   }

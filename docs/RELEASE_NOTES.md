@@ -1,5 +1,28 @@
 # Release Notes
 
+## 0.23.0 — « Precision Pass V5 » : l'usine tient aussi dans la poche — 2026-08-18
+
+- Safari ne peut plus restaurer indéfiniment une ancienne combinaison
+  HTML/CSS/WebGL depuis son BFCache : le retour d'une page gelée déclenche une
+  recharge unique, puis repart du build courant. HTML, CSS, JavaScript, images,
+  polices, `srcset`, imports Three.js, ressources assemblées au runtime et
+  icônes du manifest partagent désormais le même identifiant de révision.
+- Le canvas Three.js reste caché jusqu'à sa première frame valide. L'image de
+  secours demeure visible si WebGL2 est absent, si le module échoue, si le
+  contexte est perdu ou lorsque le contraste élevé désactive la scène.
+- La Data Science Zone reçoit l'emblème vectoriel « Crown Analyzer », conçu à
+  partir d'une exploration ImageGen : couronne de papier, rouleaux et courbe de
+  cadence cyan, avec nom et sous-titre conservés en HTML.
+- La feuille de la presse manuelle dispose désormais d'une vraie chambre
+  d'admission masquée. Elle glisse dans la fente sans s'écraser ni traverser le
+  bouton ; les clics rapides rejouent une animation WAAPI sans forcer de reflow.
+- Sur mobile, les six étapes de la landing deviennent une liste image/copie
+  lisible, tandis que la composition verticale fidèle à l'affiche reste active
+  sur grand écran.
+- `npm run ui:check` verrouille les contrats BFCache, contraste élevé, première
+  frame Three.js, fente de presse, cache runtime et présence du sous-logo ; le
+  contrôle est exécuté par les workflows Pages et VPS.
+
 ## 0.22.0 — « Production Twin V4 » : le monde, le jeu et la donnée ne font plus qu'un — 2026-08-18
 
 - Nouveau contrat visuel révocable : la métaphore « Atelier tamponné » cesse
