@@ -39,11 +39,9 @@ Palette de référence :
 Règles clés :
 - **Pas d'emoji dans le chrome d'action et de structure** (boutons, footer,
   navigation, titres de colonnes, jauges, hauts faits) : l'iconographie y
-  passe par les stickers, tampons et SVG encrés générés (`images-todo.md`).
-  **Exception : les surfaces de données** — les compteurs du panneau de stats
-  et le tableau de bord (titre + tuiles KPI) gardent leurs emojis, qui y
-  apportent de la lisibilité ludique sans casser la hiérarchie. Les emojis
-  dynamiques des événements sont tolérés en attendant leurs illustrations.
+  passe par les stickers, tampons et SVG encrés. Les compteurs du poste de
+  commande utilisent eux aussi le sprite SVG V3 ; les emojis dynamiques des
+  événements restent tolérés en attendant leurs illustrations dédiées.
 - **Le kraft est un accent, jamais un fond de contrôle** : liserés
   (`--kraft-deep`), bordures, étiquettes. Les contrôles secondaires (onglets,
   navigation) vivent en `--paper-shade` ; seuls les boutons d'ACTION portent
@@ -55,6 +53,41 @@ Règles clés :
 - Motion : max 5 animations infinies simultanées, `prefers-reduced-motion` respecté.
 - Contrastes AA minimum (encre/bristol ≈ 12,8:1) ; focus ring adapté au fond clair.
 - Modes `pref-high-contrast` et `pref-large-text` toujours fonctionnels.
+
+## Pupitre d'exploitation et iconographie V3 (décision 2026-08-18)
+
+L'interface située sous l'affiche n'est plus une grille de cartes équivalentes :
+elle forme un **pupitre d'exploitation**. Une plaque sombre établit le contexte
+et affiche uniquement des indicateurs réels ; la presse manuelle devient une
+console acier/papier, le catalogue des machines domine la composition, puis le
+bureau des méthodes, les bons de commande et le classeur de visas prennent des
+surfaces distinctes. Les repères 01 à 05 donnent un ordre stable sans simuler
+un processus qui n'existe pas dans les mécaniques.
+
+Le système iconographique suit trois couches :
+
+1. les 11 stickers illustrés pour les bâtiments et les 16 badges tamponnés pour
+   les succès ;
+2. un sprite SVG inline, trait carré 1,8 px et `currentColor`, pour la
+   signalétique structurelle (presse, usine, réglage, contrat, journal, qualité,
+   empreinte, image et culture) ;
+3. les effets de matière CSS/Three.js pour les moments gagnés par une action.
+
+ImageGen n'est volontairement pas utilisé pour cette passe : les familles
+illustrées de bâtiments et de succès sont complètes, tandis que les petits
+glyphes de chrome doivent rester nets, teintables et utilisables en quatre
+langues. Le prochain besoin raster légitime est l'illustration des événements
+narratifs, traitée comme une passe autonome.
+
+La motion suit la métaphore « feuille → presse → bon tamponné » : passage de
+feuille au clic, copeaux rectangulaires lors d'un achat, visa ponctuel pour une
+amélioration ou un contrat. Aucun de ces effets ne boucle, ne retarde la
+mutation métier ou ne s'exécute dans un onglet masqué / en mouvement réduit.
+
+Sur écran tactile, les liens structurants font au moins 44 px de haut. Les
+voiles de modale n'acceptent les événements de pointeur que lorsqu'ils sont
+réellement ouverts ; les safe areas sont consommées dans le header/footer avec
+`viewport-fit=cover`.
 
 ## Génération d'images — LE prompt-maître
 

@@ -39,6 +39,7 @@ Track meaningful milestones in the project:
 - **0.19.2** – Procédure Atlas visible depuis le README racine : branche et pull request vers `master`, attente de la release productrice, passage central planifié et commande de réconciliation immédiate sans modification de `vps-infra`.
 - **0.19.3** – Précision de la cadence Atlas : la réconciliation est planifiée toutes les dix minutes en best effort et peut être retardée par GitHub ; publication et activation restent séparées.
 - **0.20.0** – « Factory Key Art » : lockup illustré raster, horizons peints desktop/mobile, usine Three.js recadrée comme sujet principal et rail narratif en six étapes avant le jeu, sans métriques sociales inventées et avec i18n FR/EN/DE/LB.
+- **0.21.0** – « Operations Deck » : reconstruction de l'interface de gestion en pupitre industriel asymétrique, sprite SVG maison, presse à passage de feuille, catalogue de machines enrichi, bons/visas distincts et fiabilisation tactile iPhone (voiles de modale, cibles 44 px, safe areas, rendus DOM mémoïsés), avec i18n FR/EN/DE/LB.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 

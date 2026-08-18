@@ -4316,3 +4316,1672 @@ body {
     transition: none;
   }
 }
+
+/* ======================================================================
+   OPERATIONS DECK V3 — le jeu devient un pupitre d'imprimerie.
+   Les objets manipulables restent en papier ; la structure et les plaques
+   de lecture prennent le vocabulaire acier/encre du campus.
+   ====================================================================== */
+
+:root {
+  --ops-night: var(--navy-950);
+  --ops-panel: var(--navy-900);
+  --ops-steel: var(--steel-blue);
+  --ops-signal: var(--factory-orange);
+  --ops-signal-deep: var(--factory-orange-deep);
+  --ops-positive: var(--factory-green);
+  --ops-paper-line: rgba(51, 38, 26, 0.17);
+  --ops-night-line: rgba(253, 248, 236, 0.16);
+  --ops-night-soft: rgba(253, 248, 236, 0.72);
+  --tap-highlight: rgba(215, 82, 27, 0.25);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --header-offset: calc(var(--header-h) + var(--safe-area-top));
+}
+
+html {
+  scroll-padding-top: calc(var(--header-offset) + 8px);
+}
+
+.pe-icon-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.pe-icon {
+  display: block;
+  width: 1.25em;
+  height: 1.25em;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+/* Un voile fermé ou en train de fermer ne doit jamais intercepter un tap.
+   Seul l'état réellement ouvert reprend la main. */
+.settings-modal,
+.event-modal,
+.settings-modal.is-closing,
+.event-modal.is-closing {
+  pointer-events: none;
+}
+
+.settings-modal.is-open,
+.event-modal.is-open {
+  pointer-events: auto;
+}
+
+.operations-deck {
+  width: min(100%, 1480px);
+  margin: 0 auto;
+  padding: 52px clamp(18px, 3vw, 42px) 72px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 24px);
+  align-items: start;
+  background:
+    radial-gradient(circle at 48% 2%, rgba(40, 81, 106, 0.48), transparent 34rem),
+    linear-gradient(rgba(253, 248, 236, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(253, 248, 236, 0.018) 1px, transparent 1px);
+  background-size: auto, 40px 40px, 40px 40px;
+}
+
+.operations-masthead {
+  grid-column: 1 / -1;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 178px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(440px, 0.75fr);
+  align-items: stretch;
+  border: 1px solid rgba(253, 248, 236, 0.18);
+  border-top: 5px solid var(--ops-signal);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 78% 0, rgba(40, 81, 106, 0.62), transparent 24rem),
+    linear-gradient(135deg, var(--ops-panel), var(--ops-night));
+  box-shadow: 0 5px 0 rgba(3, 8, 16, 0.5), 0 22px 48px rgba(3, 8, 16, 0.38);
+  color: var(--paper-bright);
+}
+
+.operations-masthead::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(rgba(253, 248, 236, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(253, 248, 236, 0.035) 1px, transparent 1px),
+    url("../images/paper-grain-tile.webp") center / 360px 360px;
+  background-size: 28px 28px, 28px 28px, 360px 360px;
+  mix-blend-mode: soft-light;
+  opacity: 0.44;
+  pointer-events: none;
+}
+
+.operations-title-block {
+  padding: clamp(24px, 3vw, 38px);
+}
+
+.operations-eyebrow,
+.panel-kicker {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.operations-eyebrow {
+  color: var(--accent);
+}
+
+.operations-title-block h2 {
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--paper-bright);
+  font-size: clamp(1.55rem, 3vw, 2.85rem);
+  letter-spacing: 0.015em;
+  line-height: 0.98;
+}
+
+.operations-title-block > p:last-child {
+  max-width: 650px;
+  margin: 14px 0 0;
+  color: var(--ops-night-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.operations-readout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  margin: 0;
+  border-left: 1px solid var(--ops-night-line);
+  background: rgba(3, 8, 16, 0.28);
+}
+
+.operations-readout > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px 16px;
+  border-left: 1px solid var(--ops-night-line);
+}
+
+.operations-readout > div:first-child {
+  border-left: 0;
+}
+
+.operations-readout dt {
+  color: var(--ops-night-soft);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.operations-readout dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 1.75vw, 1.45rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operations-jump {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid rgba(253, 248, 236, 0.18);
+  border-radius: 6px;
+  background: rgba(7, 17, 31, 0.86);
+  box-shadow: 0 3px 0 rgba(3, 8, 16, 0.42);
+}
+
+.operations-jump a {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 9px 14px;
+  border-left: 1px solid var(--ops-night-line);
+  color: var(--paper-bright);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.operations-jump a:first-child {
+  border-left: 0;
+}
+
+.operations-jump a:hover {
+  background: rgba(40, 81, 106, 0.46);
+  color: var(--accent);
+}
+
+.operations-jump a:active {
+  background: rgba(215, 82, 27, 0.32);
+}
+
+.operations-jump a:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.operations-jump b {
+  color: var(--ops-signal);
+  font-size: 0.58rem;
+}
+
+.operations-jump .pe-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.operations-deck > #printStation {
+  grid-column: span 4;
+  position: sticky;
+  top: calc(var(--header-offset) + 20px);
+  z-index: 2;
+}
+
+.operations-deck > #buildingsPanel {
+  grid-column: span 8;
+}
+
+.operations-deck > #upgradesPanel,
+.operations-deck > .progress-card {
+  grid-column: 1 / -1;
+}
+
+.operations-deck .card {
+  min-width: 0;
+  padding: clamp(16px, 1.8vw, 24px);
+}
+
+.operations-deck .catalog-card {
+  transform: none;
+}
+
+.panel-heading {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 42px;
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.progress-card .panel-heading {
+  grid-template-columns: 38px minmax(0, 1fr) minmax(110px, auto);
+}
+
+.panel-heading > div {
+  min-width: 0;
+}
+
+.panel-heading h2 {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: clamp(1.02rem, 1.5vw, 1.32rem);
+  line-height: 1.05;
+}
+
+.panel-kicker {
+  color: var(--ops-signal-deep);
+}
+
+.panel-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 34px;
+  border: 1px solid var(--card-edge);
+  border-bottom: 4px solid var(--ops-signal);
+  background: var(--paper-shade);
+  color: var(--ink-strong);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.panel-heading-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--card-edge);
+  border-radius: 4px;
+  background: var(--paper-shade);
+  color: var(--ops-steel);
+  transform: rotate(2deg);
+}
+
+.panel-heading-icon .pe-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.panel-intro {
+  max-width: 680px;
+  margin: 7px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/* Poste manuel : coque sombre, cadrans papier et feuille réellement animée. */
+.operations-deck .command-card {
+  overflow: hidden;
+  border-color: rgba(253, 248, 236, 0.22);
+  border-top: 5px solid var(--accent) !important;
+  background:
+    linear-gradient(rgba(253, 248, 236, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(253, 248, 236, 0.02) 1px, transparent 1px),
+    linear-gradient(145deg, var(--ops-panel), var(--ops-night));
+  background-size: 24px 24px, 24px 24px, auto;
+  color: var(--paper-bright);
+  box-shadow: 0 4px 0 rgba(3, 8, 16, 0.52), 0 20px 40px rgba(3, 8, 16, 0.38);
+}
+
+.command-card::after {
+  display: none;
+}
+
+.command-card .panel-kicker {
+  color: var(--accent);
+}
+
+.command-card .panel-heading h2 {
+  color: var(--paper-bright);
+}
+
+.command-card .panel-index,
+.command-card .panel-heading-icon {
+  border-color: rgba(253, 248, 236, 0.24);
+  background: rgba(253, 248, 236, 0.08);
+  color: var(--paper-bright);
+}
+
+.command-card .stats-main,
+.command-card .gauges {
+  border: 1px solid var(--card-edge);
+  border-radius: 4px;
+  background:
+    linear-gradient(rgba(51, 38, 26, 0.035) 1px, transparent 1px),
+    var(--paper-bright);
+  background-size: 100% 22px, auto;
+  color: var(--ink-strong);
+  box-shadow: inset 0 0 0 4px rgba(217, 194, 154, 0.19);
+}
+
+.command-card .stats-main {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 10px;
+}
+
+.command-card .stat-line {
+  min-width: 0;
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  padding: 9px 10px;
+  border-top: 1px solid var(--ops-paper-line);
+  border-left: 1px solid var(--ops-paper-line);
+}
+
+.command-card .stat-line:nth-child(2) {
+  border-left: 0;
+}
+
+.command-card .stat-line-primary {
+  grid-column: 1 / -1;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-top: 0;
+  border-left: 0;
+}
+
+.stat-label,
+.gauge-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.stat-label .pe-icon,
+.gauge-name .pe-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--ops-steel);
+}
+
+.command-card .stat-value {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ink-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-card .big-number {
+  color: var(--ops-signal-deep);
+  font-size: clamp(1.65rem, 3.2vw, 2.5rem);
+}
+
+.press-console {
+  position: relative;
+  isolation: isolate;
+  margin: 22px 0 20px;
+  padding: 18px 12px 12px;
+  border: 1px solid rgba(253, 248, 236, 0.18);
+  border-radius: 5px;
+  background: rgba(3, 8, 16, 0.32);
+  box-shadow: inset 0 10px 20px rgba(3, 8, 16, 0.28);
+}
+
+.press-slot {
+  position: absolute;
+  right: 24px;
+  left: 24px;
+  height: 5px;
+  border: 1px solid rgba(3, 8, 16, 0.86);
+  border-radius: 5px;
+  background: #02060d;
+  box-shadow: 0 1px 0 rgba(253, 248, 236, 0.15);
+  pointer-events: none;
+}
+
+.press-slot-in {
+  top: 8px;
+}
+
+.press-slot-out {
+  right: 42px;
+  bottom: 39px;
+  left: 42px;
+}
+
+.paper-sheet {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  bottom: 0;
+  width: min(72%, 210px);
+  height: 62px;
+  padding: 12px 16px;
+  border: 1px solid var(--card-edge);
+  background: var(--paper-bright);
+  box-shadow: 0 4px 10px rgba(3, 8, 16, 0.35);
+  transform: translate(-50%, 4px);
+  transform-origin: center bottom;
+}
+
+.paper-sheet i {
+  display: block;
+  width: 70%;
+  height: 2px;
+  margin-top: 7px;
+  background: rgba(51, 38, 26, 0.22);
+}
+
+.paper-sheet i:nth-child(2) {
+  width: 88%;
+}
+
+.press-console.is-feeding .paper-sheet {
+  animation: press-feed 430ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes press-feed {
+  0% { opacity: 1; transform: translate(-50%, 4px); }
+  42% { opacity: 1; transform: translate(-50%, 38px) scaleY(0.84); }
+  78% { opacity: 1; transform: translate(-50%, 90px) scaleY(0.5); }
+  100% { opacity: 0; transform: translate(-50%, 112px) scaleY(0.22); }
+}
+
+.press-console .click-button {
+  z-index: 2;
+  margin-top: 7px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 10px;
+  padding-inline: 14px;
+}
+
+.click-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(42, 26, 3, 0.38);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.click-button-icon .pe-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.click-button-copy {
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.click-button-gain {
+  padding: 4px 7px;
+  border: 1px solid rgba(42, 26, 3, 0.38);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.press-caption {
+  position: relative;
+  z-index: 2;
+  margin: 17px 0 0;
+  color: var(--ops-night-soft);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.command-card .gauges {
+  gap: 9px;
+  margin-top: 0;
+  padding: 12px;
+}
+
+.console-subheading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 8px;
+  border-bottom: 3px double var(--ink-strong);
+  color: var(--ink-strong);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.045em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.console-subheading .pe-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--ops-steel);
+}
+
+.command-card .gauge-bar {
+  height: 11px;
+}
+
+.command-card .chips-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.command-card .tag {
+  min-width: 0;
+  justify-content: center;
+  border-radius: 4px;
+  transform: none;
+  text-align: center;
+}
+
+.command-card .tag .pe-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--ops-signal-deep);
+}
+
+/* Catalogue : progression honnête vers le prochain plan et fiches machines. */
+.operations-deck .catalog-card {
+  border-top: 5px solid var(--ops-signal) !important;
+}
+
+.machine-unlock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 14px;
+  margin-bottom: 18px;
+  padding: 11px 13px 13px;
+  border: 1px solid var(--card-edge);
+  border-left: 4px solid var(--ops-steel);
+  background:
+    linear-gradient(90deg, rgba(40, 81, 106, 0.08), transparent),
+    var(--paper-shade);
+}
+
+.machine-unlock-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.machine-unlock-copy > span {
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.57rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.machine-unlock-copy strong {
+  overflow: hidden;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.machine-unlock-cost {
+  align-self: end;
+  color: var(--ops-signal-deep);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.machine-unlock-track {
+  appearance: none;
+  -webkit-appearance: none;
+  grid-column: 1 / -1;
+  width: 100%;
+  overflow: hidden;
+  height: 7px;
+  padding: 0;
+  border: 1px solid var(--card-edge);
+  background: var(--paper-bright);
+}
+
+.machine-unlock-track::-webkit-progress-bar {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 9%, rgba(51, 38, 26, 0.18) 9% 10%),
+    var(--paper-bright);
+}
+
+.machine-unlock-track::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--ops-steel), var(--ops-positive));
+  transition: width 220ms ease;
+}
+
+.machine-unlock-track::-moz-progress-bar {
+  background: linear-gradient(90deg, var(--ops-steel), var(--ops-positive));
+  transition: width 220ms ease;
+}
+
+.machine-unlock.is-complete {
+  border-left-color: var(--ops-positive);
+}
+
+.operations-deck .buildings-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+
+.operations-deck .building-row {
+  --afford-progress: 0%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 11px 10px 13px;
+  border: 1px solid rgba(107, 91, 69, 0.28);
+  border-left: 4px solid var(--card-edge);
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, rgba(217, 194, 154, 0.18), transparent 42%),
+    var(--paper-bright);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.operations-deck .building-row::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  bottom: 0;
+  left: 0;
+  width: var(--afford-progress);
+  height: 3px;
+  background: var(--ops-steel);
+  opacity: 0.65;
+  transition: width 180ms linear;
+}
+
+.operations-deck .building-row.is-affordable {
+  border-color: rgba(113, 151, 70, 0.68);
+  border-left-color: var(--ops-positive);
+  box-shadow: 0 3px 0 rgba(113, 151, 70, 0.2), 0 10px 18px rgba(51, 38, 26, 0.1);
+}
+
+.operations-deck .building-row.is-affordable::after {
+  background: var(--ops-positive);
+  opacity: 1;
+}
+
+.operations-deck .building-row.is-owned .building-sticker {
+  box-shadow: 0 0 0 2px rgba(113, 151, 70, 0.32);
+}
+
+.operations-deck .building-row.is-stamped {
+  animation: machine-stamp 360ms var(--ease-stamp);
+}
+
+@keyframes machine-stamp {
+  0% { transform: scale(1); }
+  34% { transform: scale(0.975) rotate(-0.25deg); }
+  72% { transform: scale(1.012) rotate(0.18deg); }
+  100% { transform: scale(1); }
+}
+
+.building-sequence {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  color: rgba(107, 91, 69, 0.42);
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.operations-deck .building-info {
+  min-width: 0;
+}
+
+.operations-deck .building-name-button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px 0 0;
+}
+
+.operations-deck .building-sticker,
+.operations-deck .building-emoji {
+  grid-row: 1;
+  width: 58px;
+  height: 58px;
+  border-radius: 4px;
+}
+
+.operations-deck .building-name-label {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.operations-deck .building-qty-chip {
+  align-self: start;
+  margin: 0;
+  border-radius: 3px;
+  background: var(--ops-panel);
+  color: var(--paper-bright);
+}
+
+.operations-deck .building-meta {
+  margin: 5px 0 0 69px;
+  color: var(--ops-steel);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.operations-deck .building-tooltip {
+  grid-column: 1 / -1;
+  margin: 8px 0 0 69px;
+  transform: none;
+  box-shadow: 0 2px 0 rgba(51, 38, 26, 0.18), 0 7px 12px rgba(51, 38, 26, 0.13);
+}
+
+.operations-deck .building-buy {
+  min-width: 104px;
+  align-items: stretch;
+  justify-content: center;
+  padding-top: 10px;
+  border-left: 1px dashed var(--card-edge);
+  padding-left: 10px;
+}
+
+.building-cost {
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.59rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.operations-deck .btn-buy {
+  width: 100%;
+  min-height: 44px;
+  padding-inline: 10px;
+  font-size: 0.68rem;
+}
+
+.operations-deck .btn-buy:disabled,
+.operations-deck .btn-upgrade:disabled {
+  --depth: 2px;
+  border-color: #8f8471;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 6px, rgba(11, 6, 23, 0.06) 6px 12px),
+    var(--disabled);
+  color: var(--disabled-foreground);
+  cursor: not-allowed;
+  filter: none;
+  opacity: 1;
+  transform: none;
+  box-shadow: 0 2px 0 #8f8471, 0 4px 8px rgba(11, 6, 23, 0.3);
+}
+
+/* Stratégie et expéditions : plans techniques + bons détachables. */
+.operations-deck .strategy-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+  gap: clamp(16px, 2vw, 24px);
+}
+
+.strategy-card {
+  border-top: 5px solid var(--ops-steel) !important;
+}
+
+.dispatch-card {
+  border-top: 5px solid var(--kraft-deep) !important;
+  background: var(--paper-shade) !important;
+}
+
+.operations-deck .upgrades-list {
+  gap: 9px;
+  padding: 0;
+}
+
+.operations-deck .upgrade-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-color: var(--card-edge);
+  border-left: 4px solid var(--ops-steel);
+  border-radius: 4px;
+  background:
+    linear-gradient(rgba(40, 81, 106, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(40, 81, 106, 0.055) 1px, transparent 1px),
+    var(--paper-bright);
+  background-size: 18px 18px, 18px 18px, auto;
+}
+
+.upgrade-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--card-edge);
+  background: var(--paper-shade);
+  color: var(--ops-steel);
+}
+
+.upgrade-mark .pe-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.upgrade-copy {
+  min-width: 0;
+}
+
+.operations-deck .upgrade-title {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.upgrade-description {
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.upgrade-action {
+  display: flex;
+  align-items: center;
+}
+
+.operations-deck .btn-upgrade {
+  min-height: 44px;
+}
+
+.upgrades-list.is-upgrade-filed {
+  animation: blueprint-filed 380ms var(--ease-stamp);
+}
+
+@keyframes blueprint-filed {
+  0%, 100% { transform: none; }
+  38% { transform: translateY(2px) scale(0.992); filter: saturate(1.2); }
+  74% { transform: translateY(-1px) scale(1.003); }
+}
+
+.prestige-card {
+  position: relative;
+  overflow: hidden;
+  margin-top: 14px;
+  padding: 14px;
+  border-width: 2px;
+  background:
+    radial-gradient(circle at 96% 12%, rgba(179, 37, 30, 0.13), transparent 7rem),
+    #f7e8d6;
+}
+
+.prestige-card::after {
+  content: "";
+  position: absolute;
+  right: -16px;
+  bottom: -18px;
+  width: 96px;
+  height: 96px;
+  background: url("../images/seal-crest.png") center / contain no-repeat;
+  opacity: 0.09;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+
+.prestige-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.prestige-heading .pe-icon {
+  width: 23px;
+  height: 23px;
+  color: var(--stamp-red);
+}
+
+.operations-deck .tabs-card {
+  gap: 0;
+}
+
+.dispatch-card .panel-heading {
+  margin-bottom: 12px;
+}
+
+.dispatch-card .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.dispatch-card .tab-btn .pe-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.operations-deck .contract-card {
+  position: relative;
+  border-radius: 3px;
+  border-left: 4px solid var(--ops-signal);
+  background: var(--paper-bright);
+}
+
+.operations-deck .active-contract {
+  margin: 10px 0;
+  padding: 10px;
+  border: 2px solid var(--ops-positive);
+  background: rgba(113, 151, 70, 0.1);
+  color: var(--ink-strong);
+}
+
+.operations-deck .log-panel {
+  max-height: 260px;
+  padding: 10px;
+  border: 1px solid var(--card-edge);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(51, 38, 26, 0.09) 22px 23px),
+    var(--paper-bright);
+}
+
+/* Archives : le classeur est sombre, chaque visa reste une fiche physique. */
+.operations-deck .progress-card {
+  margin-top: 0;
+  border-color: rgba(253, 248, 236, 0.2);
+  border-top: 5px solid var(--stamp-red);
+  background:
+    linear-gradient(rgba(253, 248, 236, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(253, 248, 236, 0.02) 1px, transparent 1px),
+    var(--ops-panel);
+  background-size: 28px 28px, 28px 28px, auto;
+  color: var(--paper-bright);
+}
+
+.progress-card::after {
+  display: none;
+}
+
+.progress-card .panel-kicker {
+  color: #f28b65;
+}
+
+.progress-card .panel-heading h2,
+.progress-card .panel-intro {
+  color: var(--paper-bright);
+}
+
+.progress-card .panel-index,
+.progress-card .panel-heading-icon {
+  border-color: rgba(253, 248, 236, 0.25);
+  background: rgba(253, 248, 236, 0.08);
+  color: var(--paper-bright);
+}
+
+.achievement-counter {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 110px;
+  min-height: 48px;
+  padding: 7px 11px;
+  border: 1px solid rgba(253, 248, 236, 0.26);
+  background: rgba(3, 8, 16, 0.3);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.achievement-counter .pe-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+}
+
+.progress-card .achievements-list {
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+
+.progress-card .achievement-item {
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 10px;
+  padding: 10px;
+  border-color: var(--card-edge);
+  border-radius: 4px;
+  background: var(--paper-bright);
+  color: var(--ink-strong);
+}
+
+.progress-card .achievement-badge {
+  grid-row: 1 / span 2;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  float: none;
+}
+
+.progress-card .achievement-title {
+  grid-column: 2;
+  gap: 8px;
+  font-size: 0.73rem;
+  line-height: 1.2;
+}
+
+.progress-card .achievement-item > div:last-child {
+  grid-column: 2;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.progress-card .achievement-item.unlocked {
+  padding: 10px 118px 10px 10px;
+}
+
+.progress-card .achievement-item.unlocked::after {
+  right: 10px;
+  font-size: 9px;
+}
+
+/* Indices matériels ponctuels, tous décoratifs et hors flux. */
+.paper-cue {
+  position: fixed;
+  z-index: 90;
+  width: 18px;
+  height: 25px;
+  border: 1px solid var(--card-edge);
+  border-radius: 1px;
+  background:
+    linear-gradient(var(--ink-soft), var(--ink-soft)) 4px 7px / 9px 1px no-repeat,
+    linear-gradient(var(--ink-soft), var(--ink-soft)) 4px 11px / 7px 1px no-repeat,
+    var(--paper-bright);
+  box-shadow: 0 3px 8px rgba(3, 8, 16, 0.28);
+  pointer-events: none;
+  animation: paper-cue-fall 520ms cubic-bezier(0.2, 0.75, 0.25, 1) forwards;
+}
+
+.paper-cue:nth-child(even) {
+  background-color: var(--paper-shade);
+}
+
+@keyframes paper-cue-fall {
+  0% { opacity: 0; transform: translate3d(0, -8px, 0) rotate(-3deg) scale(0.7); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(var(--cue-x, 18px), 42px, 0) rotate(var(--cue-r, 9deg)) scale(0.88); }
+}
+
+.dispatch-card.is-contract-stamped {
+  animation: contract-stamp 380ms var(--ease-stamp);
+}
+
+@keyframes contract-stamp {
+  0%, 100% { transform: none; }
+  35% { transform: translateY(2px) rotate(-0.2deg); filter: saturate(1.25); }
+  70% { transform: translateY(-1px) rotate(0.1deg); }
+}
+
+.ui-reveal-ready .reveal-target:not(.is-visible) {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.ui-reveal-ready .reveal-target.is-visible {
+  opacity: 1;
+  transform: none;
+  transition: opacity 480ms ease, transform 520ms var(--modal-ease);
+}
+
+/* Mode contraste élevé : la hiérarchie reste, les textures disparaissent. */
+.pref-high-contrast .operations-masthead,
+.pref-high-contrast .operations-jump,
+.pref-high-contrast .operations-deck .command-card,
+.pref-high-contrast .operations-deck .progress-card {
+  border-color: var(--hc-accent);
+  background: #000;
+  color: #fff;
+  box-shadow: none;
+}
+
+.pref-high-contrast .operations-masthead::before,
+.pref-high-contrast .prestige-card::after,
+.pref-high-contrast .building-row::after {
+  display: none;
+}
+
+.pref-high-contrast .operations-title-block h2,
+.pref-high-contrast .operations-title-block > p:last-child,
+.pref-high-contrast .operations-readout dt,
+.pref-high-contrast .operations-jump a,
+.pref-high-contrast .command-card .panel-heading h2,
+.pref-high-contrast .progress-card .panel-heading h2,
+.pref-high-contrast .progress-card .panel-intro {
+  color: #fff;
+}
+
+.pref-high-contrast .operations-eyebrow,
+.pref-high-contrast .operations-readout dd,
+.pref-high-contrast .operations-jump b,
+.pref-high-contrast .panel-kicker,
+.pref-high-contrast .big-number,
+.pref-high-contrast .machine-unlock-cost,
+.pref-high-contrast .command-card .panel-kicker,
+.pref-high-contrast .progress-card .panel-kicker,
+.pref-high-contrast .achievement-counter {
+  color: var(--hc-accent);
+}
+
+.pref-high-contrast .operations-deck .building-row,
+.pref-high-contrast .operations-deck .upgrade-item,
+.pref-high-contrast .progress-card .achievement-item,
+.pref-high-contrast .machine-unlock,
+.pref-high-contrast .command-card .stats-main,
+.pref-high-contrast .command-card .gauges,
+.pref-high-contrast .operations-deck .contract-card,
+.pref-high-contrast .operations-deck .log-panel {
+  border-color: var(--hc-accent);
+  background: #1a1230;
+  color: #fff;
+}
+
+.pref-high-contrast .operations-deck .building-meta,
+.pref-high-contrast .operations-deck .upgrade-description,
+.pref-high-contrast .progress-card .achievement-item > div:last-child,
+.pref-high-contrast .machine-unlock-copy > span {
+  color: #e5e7eb;
+}
+
+.pref-high-contrast .panel-heading-icon,
+.pref-high-contrast .stat-label .pe-icon,
+.pref-high-contrast .gauge-name .pe-icon,
+.pref-high-contrast .console-subheading .pe-icon,
+.pref-high-contrast .command-card .tag .pe-icon,
+.pref-high-contrast .upgrade-mark,
+.pref-high-contrast .prestige-heading .pe-icon,
+.pref-high-contrast .app-footer .footer-links a::after {
+  color: var(--hc-accent);
+}
+
+.pref-high-contrast .machine-unlock-track {
+  border-color: var(--hc-accent);
+  background: #000;
+}
+
+.pref-high-contrast .machine-unlock-track::-webkit-progress-bar {
+  border-color: var(--hc-accent);
+  background: #000;
+}
+
+.pref-high-contrast .machine-unlock-track::-webkit-progress-value {
+  background: var(--hc-accent);
+}
+
+.pref-high-contrast .machine-unlock-track::-moz-progress-bar {
+  background: var(--hc-accent);
+}
+
+/* Responsive : l'asymétrie reste lisible avant de céder à l'ordre naturel. */
+@media (max-width: 1180px) {
+  .operations-masthead {
+    grid-template-columns: minmax(0, 1fr) minmax(390px, 0.82fr);
+  }
+
+  .operations-deck > #printStation {
+    grid-column: span 5;
+  }
+
+  .operations-deck > #buildingsPanel {
+    grid-column: span 7;
+  }
+
+  .operations-deck .buildings-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 960px) {
+  .operations-deck {
+    width: min(100%, 800px);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    margin: 0 auto;
+    padding: 34px clamp(16px, 4vw, 28px) 56px;
+  }
+
+  .operations-masthead,
+  .operations-jump,
+  .operations-deck > #printStation,
+  .operations-deck > #buildingsPanel,
+  .operations-deck > #upgradesPanel,
+  .operations-deck > .progress-card {
+    grid-column: 1;
+  }
+
+  .operations-masthead {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operations-readout {
+    min-height: 112px;
+    border-top: 1px solid var(--ops-night-line);
+    border-left: 0;
+  }
+
+  .operations-deck > #printStation {
+    position: static;
+  }
+
+  .operations-deck .buildings-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operations-deck .strategy-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .operations-deck {
+    width: 100%;
+    padding: 26px 14px 46px;
+  }
+
+  .operations-title-block {
+    padding: 24px 20px;
+  }
+
+  .operations-title-block h2 {
+    font-size: clamp(1.45rem, 8vw, 2.2rem);
+  }
+
+  .operations-readout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operations-readout > div {
+    min-height: 70px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--ops-night-line);
+    border-left: 0;
+  }
+
+  .operations-readout > div:first-child {
+    border-top: 0;
+  }
+
+  .operations-jump {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operations-jump a:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid var(--ops-night-line);
+  }
+
+  .operations-jump a:nth-child(4) {
+    border-top: 1px solid var(--ops-night-line);
+  }
+
+  .operations-deck .buildings-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .progress-card .achievements-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .operations-deck .card {
+    padding: 15px;
+  }
+
+  .panel-heading {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .progress-card .panel-heading {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .panel-heading-icon {
+    display: none;
+  }
+
+  .panel-index {
+    width: 34px;
+  }
+
+  .command-card .stats-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .command-card .stat-line,
+  .command-card .stat-line-primary,
+  .command-card .stat-line:nth-child(2) {
+    grid-column: 1;
+    min-height: 58px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--ops-paper-line);
+    border-left: 0;
+  }
+
+  .command-card .stat-line-primary {
+    min-height: 72px;
+    border-top: 0;
+  }
+
+  .press-console .click-button {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .click-button-gain {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
+  .command-card .chips-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .machine-unlock {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .machine-unlock-cost,
+  .machine-unlock-track {
+    grid-column: 1;
+  }
+
+  .operations-deck .building-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operations-deck .building-buy {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(120px, 0.8fr);
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0 0;
+    border-top: 1px dashed var(--card-edge);
+    border-left: 0;
+  }
+
+  .building-cost {
+    text-align: left;
+  }
+
+  .operations-deck .upgrade-item {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .upgrade-action {
+    grid-column: 1 / -1;
+  }
+
+  .operations-deck .btn-upgrade {
+    width: 100%;
+  }
+
+  .achievement-counter {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-left: 44px;
+  }
+
+  .progress-card .achievement-item.unlocked {
+    padding: 10px 10px 48px;
+  }
+
+  .progress-card .achievement-item.unlocked::after {
+    top: auto;
+    right: 10px;
+    bottom: 9px;
+    transform: rotate(-5deg);
+    animation: none;
+  }
+
+  .settings-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-tab {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* iPhone et autres pointeurs tactiles : cibles franches, feedback visible,
+   safe areas consommées par le footer plutôt que doublées sur body. */
+@supports (padding: max(0px)) {
+  body {
+    padding-bottom: 0;
+  }
+
+  .footer-inner {
+    padding-right: max(clamp(12px, 4vw, 24px), calc(env(safe-area-inset-right) + 12px));
+    padding-bottom: max(18px, calc(env(safe-area-inset-bottom) + 12px));
+    padding-left: max(clamp(12px, 4vw, 24px), calc(env(safe-area-inset-left) + 12px));
+  }
+}
+
+@media (any-pointer: coarse) {
+  a,
+  button,
+  select,
+  summary {
+    -webkit-tap-highlight-color: var(--tap-highlight);
+    touch-action: manipulation;
+  }
+
+  .app-footer a,
+  .roadmap-proof a,
+  .roadmap-catalogue-link,
+  .hero-secondary,
+  .operations-jump a {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding-inline: 10px;
+  }
+
+  .app-header .header-play-link,
+  .app-header .nav-dash-link,
+  .app-header .icon-button,
+  .app-header .lang-select {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .event-banner-close,
+  .modal-close,
+  .icon-button,
+  .btn-slim,
+  .tab-btn,
+  .settings-tab,
+  .minigame-buttons button,
+  .btn-god-mode {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .modal-close {
+    display: grid;
+    place-items: center;
+    padding: 0;
+  }
+
+  .app-footer a:active,
+  .roadmap-proof a:active,
+  .roadmap-catalogue-link:active,
+  .hero-secondary:active {
+    background: rgba(215, 82, 27, 0.16);
+    color: var(--ops-signal-deep);
+  }
+
+  .pref-high-contrast .app-footer a:active,
+  .pref-high-contrast .roadmap-proof a:active,
+  .pref-high-contrast .roadmap-catalogue-link:active,
+  .pref-high-contrast .hero-secondary:active {
+    background: #000;
+    color: var(--hc-accent);
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-inner {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .footer-madeby {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .footer-links {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .app-footer .footer-links a {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: 12px;
+    border: 1px solid var(--card-edge);
+    background: rgba(253, 248, 236, 0.38);
+    text-decoration: none;
+  }
+
+  .app-footer .footer-links a::after {
+    content: "→";
+    color: var(--ops-signal-deep);
+    font-family: var(--font-mono);
+  }
+}
+
+:root.pref-large-text .operations-deck .buildings-list,
+:root.pref-large-text .operations-deck .strategy-column {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pref-reduce-motion .ui-reveal-ready .reveal-target,
+.pref-reduce-motion .reveal-target {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-reveal-ready .reveal-target,
+  .reveal-target {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .machine-unlock-track::-webkit-progress-value {
+    transition: none;
+  }
+
+  .machine-unlock-track::-moz-progress-bar {
+    transition: none;
+  }
+}

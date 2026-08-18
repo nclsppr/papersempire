@@ -30,6 +30,7 @@ const META = {
       "Grow a tiny print shop into a 4.0 omnichannel factory: buildings, premium contracts, strategic reorgs and paper jams. Free idle game in your browser.",
     ogTitle: "Papers Empire: print shop to Factory 4.0",
     ogDescription: "Click, print, automate: build your document empire in this free browser idle game.",
+    imageAlt: "3D diorama of the Papers Empire campus at dusk, with the game title",
   },
   de: {
     locale: "de_DE",
@@ -38,6 +39,7 @@ const META = {
       "Verwandle eine kleine Druckerei in eine 4.0-Omnichannel-Fabrik: Gebäude, Premium-Verträge, strategische Reorgs und Papierstaus. Gratis Idle Game im Browser.",
     ogTitle: "Papers Empire: von der Druckerei zur Fabrik 4.0",
     ogDescription: "Klicken, drucken, automatisieren: Bau dein Dokumenten-Imperium im kostenlosen Idle Game.",
+    imageAlt: "3D-Diorama des Papers-Empire-Campus in der Abenddämmerung mit dem Spieltitel",
   },
   lb: {
     locale: "lb_LU",
@@ -46,17 +48,26 @@ const META = {
       "Maach deng kleng Dréckerei zu enger 4.0 Omnichannel-Fabrick: Gebaier, Premium-Kontrakter, strategesch Reorgen a Pabeierstau. Gratis Idle Game am Browser.",
     ogTitle: "Papers Empire: vun der Dréckerei bis d'Fabrick 4.0",
     ogDescription: "Klicken, drécken, automatiséieren: Bau däin Dokumenten-Empire am gratis Idle Game.",
+    imageAlt: "3D-Diorama vum Papers-Empire-Campus an der Dämmerung mam Spilltitel",
   },
 };
 
 /** Clés data-i18n dont le HTML statique embarque le texte (SEO sans JS). */
 const PREFILLED_KEYS = [
   "actions.skipToContent",
+  "actions.openSettings",
+  "actions.close",
+  "actions.previous",
+  "actions.next",
+  "actions.skip",
   "sections.buildingsTitle",
   "sections.buildingsHint",
   "sections.upgradesTitle",
   "sections.prestigeTitle",
   "sections.progressTitle",
+  "sections.godModeTitle",
+  "settings.title",
+  "prestige.buttonLocked",
   "actions.printDocument",
   "actions.playNow",
   "actions.printNow",
@@ -104,6 +115,44 @@ const PREFILLED_KEYS = [
   "roadmap.proof.localSave",
   "roadmap.proof.languages",
   "roadmap.proof.source",
+  "operations.eyebrow",
+  "operations.title",
+  "operations.subtitle",
+  "operations.availableDocs",
+  "operations.cadence",
+  "operations.activeTypes",
+  "operations.navProduction",
+  "operations.navMachines",
+  "operations.navStrategy",
+  "operations.navArchives",
+  "operations.productionKicker",
+  "operations.productionTitle",
+  "operations.pressCaption",
+  "operations.barometers",
+  "operations.machinesKicker",
+  "operations.nextMachine",
+  "operations.strategyKicker",
+  "operations.dispatchKicker",
+  "operations.dispatchTitle",
+  "operations.archivesKicker",
+  "operations.archivesHint",
+  "operations.achievementsUnlocked",
+  "offline.title",
+  "offline.subtitle",
+  "offline.duration",
+  "offline.produced",
+  "offline.hint",
+  "offline.resume",
+  "stats.docBank",
+  "stats.docTotal",
+  "stats.ccTotal",
+  "stats.docPs",
+  "gauges.quality",
+  "gauges.footprint",
+  "gauges.image",
+  "sections.contractsTitle",
+  "sections.logTitle",
+  "actions.rerollContracts",
   "building.reproOperator.name",
   "building.reproWorkshop.name",
   "building.digitalPress.name",
@@ -159,6 +208,18 @@ function localize(html, lang) {
     /(<meta property="og:description" content=")[^"]*(">)/,
     `$1${escapeAttr(m.ogDescription)}$2`
   );
+  html = html.replace(
+    /(<meta property="og:image:alt" content=")[^"]*(">)/,
+    `$1${escapeAttr(m.imageAlt)}$2`
+  );
+  html = html.replace(
+    /(<meta name="twitter:image:alt" content=")[^"]*(">)/,
+    `$1${escapeAttr(m.imageAlt)}$2`
+  );
+  html = html.replace(
+    /("description": )"[^"]*"(,\n\s*"inLanguage")/,
+    `$1${JSON.stringify(m.description)}$2`
+  );
   // og:locale : la langue de la page devient principale, le fr passe en alternate
   html = html.replace('<meta property="og:locale" content="fr_FR">',
     `<meta property="og:locale" content="${m.locale}">`);
@@ -172,6 +233,12 @@ function localize(html, lang) {
     const re = new RegExp(`(data-i18n="${key.replace(".", "\\.")}"[^>]*>)[^<]*(<)`);
     html = html.replace(re, `$1${escapeHtml(value)}$2`);
   }
+  html = html.replace(
+    /aria-label="[^"]*" data-i18n-aria-label="([^"]+)"/g,
+    (match, key) => dict[key]
+      ? `aria-label="${escapeAttr(dict[key])}" data-i18n-aria-label="${key}"`
+      : match
+  );
   return html;
 }
 

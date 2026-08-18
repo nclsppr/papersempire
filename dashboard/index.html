@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard · Papers Empire</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <!-- Vue personnelle de la partie du joueur : rien à indexer ici. -->
   <meta name="robots" content="noindex, follow">
   <meta name="theme-color" content="#1a1230">
@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body class="dash-standalone">
-<header class="app-header" role="banner">
+<header class="app-header">
   <div class="header-inner">
     <div class="header-top">
       <a class="header-home-link" href="/"><span class="header-title">Papers Empire</span></a>
@@ -25,10 +25,10 @@
 </div>
 </header>
 
-<main id="mainContent" class="app" role="main">
+<main id="mainContent" class="app">
   <!-- Tableau de bord : KPIs et graphiques temps réel. Lecture seule via le
        pont window.__PE_DASH__ (app.js) ; rendu par assets/js/dashboard.js. -->
-  <section class="card dashboard-card" id="dashboardCard" role="region" aria-label="Tableau de bord">
+  <section class="card dashboard-card" id="dashboardCard" aria-label="Tableau de bord" data-i18n-aria-label="dashboard.regionLabel">
     <h2 data-i18n="dashboard.title">Tableau de bord 📊</h2>
     <div class="small" data-i18n="dashboard.hint">La direction adore les KPIs. Tout ton empire en chiffres, en direct.</div>
     <div class="dash-kpis">
@@ -105,14 +105,14 @@
 </main>
 
 
-<footer class="app-footer" role="contentinfo">
+<footer class="app-footer">
   <div class="footer-inner">
     <span class="footer-madeby">
       <span data-i18n="footer.madeBy">Créé par</span>
       <a href="https://nicolaspieper.com" rel="author">Nicolas Pieper</a>
 </span>
-    <nav class="footer-links" aria-label="Liens">
-      <a href="/dashboard/" data-i18n="nav.dashboard">Dashboard</a>
+    <nav class="footer-links" aria-label="Liens" data-i18n-aria-label="footer.linksLabel">
+      <a data-dashboard-link href="/dashboard/" data-i18n="nav.dashboard">Dashboard</a>
       <a href="/docs/" data-i18n="footer.docs">Documentation</a>
       <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Code source</a>
 </nav>

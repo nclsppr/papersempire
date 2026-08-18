@@ -1,5 +1,32 @@
 # Release Notes
 
+## 0.21 – « Operations Deck » : l'affiche devient un vrai poste de commande — 2026-08-18
+
+- Reconstruction complète du jeu sous le hero : plaque d'exploitation avec
+  données réelles, console de presse manuelle, catalogue dominant, bureau des
+  méthodes, expéditions et classeur de succès numérotés de 01 à 05.
+- Nouveau sprite SVG industriel inline pour la presse, les machines, les
+  réglages, contrats, journal, baromètres et culture ; les 11 stickers de
+  bâtiments et 16 badges de succès existants restent les illustrations de
+  référence, sans génération raster superflue.
+- États de gestion enrichis : prochaine machine et progression de coût réelles,
+  cartes achetables/possédées, rendement prioritaire, vrais boutons `disabled`,
+  compteurs de métiers et de succès alimentés par la sauvegarde.
+- Effets matériels sans boucle : feuille avalée par la presse, copeaux de papier
+  à l'installation, visa d'amélioration et bon de contrat ; aucun DOM d'effet
+  n'est créé en mouvement réduit ou lorsque l'onglet est masqué.
+- Fiabilité iPhone renforcée : `viewport-fit=cover`, safe areas consolidées,
+  liens du footer et actions structurantes à 44 px, retour tactile restauré et
+  voiles de modale incapables d'intercepter les taps pendant leur fermeture ;
+  les surfaces ne s'empilent plus, les ancres incluent l'encoche et le
+  Dashboard du footer conserve la langue.
+- Journal et contrats mémoïsés au lieu d'être détruits et reconstruits à chaque
+  frame ; le DOM continu est plafonné à 10 Hz sans ralentir la simulation et
+  les baromètres ne dépendent plus du framerate ni des lectures du dashboard.
+  Régions live resserrées sur un annonceur dédié, navigation des onglets
+  utilisable au clavier, focus restauré après achat et textes disponibles en
+  FR/EN/DE/LB jusque dans le rapport hors ligne statique.
+
 ## 0.20 – « Factory Key Art » : le monde devient l'affiche
 
 - Nouveau lockup illustré généré pour Papers Empire : plaque industrielle bleu
