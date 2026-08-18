@@ -71,8 +71,16 @@
       const value = d[key] || fr[key];
       if (value) el.textContent = value;
     });
+    document.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
+      const key = el.getAttribute("data-i18n-aria-label");
+      const value = d[key] || fr[key];
+      if (value) el.setAttribute("aria-label", value);
+    });
     const back = document.getElementById("backToGameLink");
     if (back) back.setAttribute("href", lang === "fr" ? "/" : "/?lang=" + lang);
+    document.querySelectorAll("[data-dashboard-link]").forEach(link => {
+      link.setAttribute("href", lang === "fr" ? "/dashboard/" : "/dashboard/?lang=" + lang);
+    });
 
     let lastSnapshot = null;
     try {

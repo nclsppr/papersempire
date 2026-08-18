@@ -15,6 +15,8 @@
   const TutorialEngine = window.Tutorial;
   const UIEffects = window.UIEffects || {
     playPurchaseEffect() {},
+    playUpgradeEffect() {},
+    playContractEffect() {},
     playCelebrationEffect() {},
     playClickEffect() {},
     playSound() {}
@@ -30,6 +32,10 @@
 
   const SUPPORTED_LANGS = ["fr", "en", "de", "lb"];
   const DEFAULT_LANG = "fr";
+  const DOM_RENDER_INTERVAL_MS = 100;
+  // Equivalent au rythme nominal historique à 60 Hz, mais désormais appliqué
+  // une seule fois par tick et proportionnel au temps simulé.
+  const INFRA_STAT_RATE_PER_SECOND = 0.024;
   const LOCALE_BY_LANG = { fr: "fr-FR", en: "en-US", de: "de-DE", lb: "lb-LU" };
   // Langue initiale, par priorité : ?lang=xx (bascule client partageable),
   // puis le préfixe de chemin des pages construites par langue (/en/, /de/,
@@ -53,7 +59,9 @@
   const uiState = {
     buildingsDirty: true,
     upgradesDirty: true,
-    detailTab: "contracts"
+    detailTab: "contracts",
+    logRenderSignature: "",
+    lastFrameRender: 0
   };
 
   /** Global model of the player progression. */
@@ -107,7 +115,9 @@
     available: [],
     rerollCount: 0,
     lastReroll: 0,
-    unlocked: false
+    unlocked: false,
+    listRenderSignature: "",
+    activeRenderSignature: ""
   };
   const CONTRACT_REROLL_COOLDOWN = 30000;
   const CONTRACTS_UNLOCK_DOC_TOTAL = 1500;
@@ -396,6 +406,14 @@
     DOM.heroDocPs = document.getElementById("heroDocPs");
     DOM.heroPrestige = document.getElementById("heroPrestige");
     DOM.heroCulture = document.getElementById("heroCulture");
+    DOM.opsDocBank = document.getElementById("opsDocBank");
+    DOM.opsDocPs = document.getElementById("opsDocPs");
+    DOM.opsBuildingCount = document.getElementById("opsBuildingCount");
+    DOM.manualGain = document.getElementById("manualGain");
+    DOM.machineUnlockPanel = document.getElementById("machineUnlockPanel");
+    DOM.nextBuildingName = document.getElementById("nextBuildingName");
+    DOM.nextBuildingCost = document.getElementById("nextBuildingCost");
+    DOM.nextBuildingTrack = document.getElementById("nextBuildingTrack");
     DOM.prestigeButton = document.getElementById("prestigeButton");
     DOM.prestigeInfo = document.getElementById("prestigeInfo");
     DOM.buildingsList = document.getElementById("buildingsList");
@@ -408,9 +426,13 @@
     DOM.rerollContractsBtn = document.getElementById("rerollContractsBtn");
     DOM.contractsList = document.getElementById("contractsList");
     DOM.activeContractPanel = document.getElementById("activeContractPanel");
+    DOM.dispatchPanel = document.getElementById("dispatchPanel");
     DOM.godModeCard = document.getElementById("godModeCard");
     DOM.godModeStatus = document.getElementById("godModeStatus");
     DOM.achievementsList = document.getElementById("achievementsList");
+    DOM.achievementUnlockedCount = document.getElementById("achievementUnlockedCount");
+    DOM.achievementTotalCount = document.getElementById("achievementTotalCount");
+    DOM.gameStatusAnnouncer = document.getElementById("gameStatusAnnouncer");
     DOM.exportSaveBtn = document.getElementById("exportSaveBtn");
     DOM.importSaveBtn = document.getElementById("importSaveBtn");
     DOM.resetSaveBtn = document.getElementById("resetSaveBtn");
@@ -428,6 +450,7 @@
     DOM.closeEventBanner = document.getElementById("closeEventBanner");
     DOM.eventModal = document.getElementById("eventModal");
     DOM.eventDialog = DOM.eventModal ? DOM.eventModal.querySelector(".event-dialog") : null;
+    DOM.offlineModal = document.getElementById("offlineModal");
     DOM.eventTitle = document.getElementById("eventTitle");
     DOM.eventDescription = document.getElementById("eventDescription");
     DOM.eventChoices = document.getElementById("eventChoices");
@@ -487,6 +510,7 @@
     if (DOM.settingsTabs && DOM.settingsTabs.length) {
       DOM.settingsTabs.forEach(tab => {
         tab.addEventListener("click", () => activateSettingsTab(tab.getAttribute("data-settings-tab")));
+        tab.addEventListener("keydown", handleSettingsTabKeydown);
       });
     }
     if (DOM.restartTutorialBtn) {
@@ -512,6 +536,16 @@
     if (DOM.journalTab) {
       DOM.journalTab.addEventListener("click", () => switchDetailTab("journal"));
     }
+    [DOM.contractsTab, DOM.journalTab].filter(Boolean).forEach(tab => {
+      tab.addEventListener("keydown", event => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const target = tab === DOM.contractsTab ? DOM.journalTab : DOM.contractsTab;
+        if (!target || target.classList.contains("hidden")) return;
+        switchDetailTab(target === DOM.contractsTab ? "contracts" : "journal");
+        target.focus();
+      });
+    });
     if (DOM.rerollContractsBtn) {
       DOM.rerollContractsBtn.addEventListener("click", handleContractsReroll);
     }
@@ -537,7 +571,11 @@
       event.preventDefault();
       return;
     }
-    if (closeEventModal(true)) {
+    const eventModalOpen = DOM.eventModal &&
+      !DOM.eventModal.classList.contains("hidden") &&
+      !DOM.eventModal.classList.contains("is-closing");
+    if (eventModalOpen) {
+      if (eventState.modalCanClose) closeEventModal();
       event.preventDefault();
       return;
     }
@@ -559,11 +597,53 @@
     return Number.isFinite(value) ? value : 150;
   }
 
+  function trapModalTab(event, dialog) {
+    if (event.key !== "Tab" || !dialog) return;
+    const selector = [
+      "a[href]",
+      "button:not([disabled])",
+      "select:not([disabled])",
+      "input:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])"
+    ].join(",");
+    const focusable = Array.from(dialog.querySelectorAll(selector)).filter(element => {
+      return !element.closest(".hidden") && element.getClientRects().length > 0;
+    });
+    if (!focusable.length) {
+      event.preventDefault();
+      if (!dialog.hasAttribute("tabindex")) dialog.setAttribute("tabindex", "-1");
+      dialog.focus({ preventScroll: true });
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!dialog.contains(document.activeElement) || document.activeElement === dialog) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll: true });
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
+
   function openModalSurface(overlay, dialog) {
     if (overlay.__peCloseTimer) {
       clearTimeout(overlay.__peCloseTimer);
       overlay.__peCloseTimer = null;
     }
+    const activeElement = document.activeElement;
+    if (activeElement && !overlay.contains(activeElement)) {
+      overlay.__peReturnFocus = activeElement;
+    }
+    if (overlay.__peFocusTrap) overlay.removeEventListener("keydown", overlay.__peFocusTrap);
+    overlay.__peFocusTrap = event => trapModalTab(event, dialog);
+    overlay.addEventListener("keydown", overlay.__peFocusTrap);
+    overlay.inert = false;
+    overlay.setAttribute("aria-hidden", "false");
     overlay.classList.remove("hidden", "is-closing");
     if (dialog) dialog.classList.remove("is-closing");
     // Reflow forcé pour que la transition d'entrée parte de l'état repos.
@@ -573,6 +653,12 @@
   }
 
   function closeModalSurface(overlay, dialog) {
+    if (overlay.__peFocusTrap) {
+      overlay.removeEventListener("keydown", overlay.__peFocusTrap);
+      overlay.__peFocusTrap = null;
+    }
+    overlay.inert = true;
+    overlay.setAttribute("aria-hidden", "true");
     overlay.classList.remove("is-open");
     overlay.classList.add("is-closing");
     if (dialog) {
@@ -585,6 +671,30 @@
       if (dialog) dialog.classList.remove("is-closing");
       overlay.__peCloseTimer = null;
     }, modalCloseMs());
+  }
+
+  function restoreModalFocus(overlay, preferredTarget) {
+    const storedTarget = overlay && overlay.__peReturnFocus;
+    if (overlay) overlay.__peReturnFocus = null;
+    const candidates = [preferredTarget, storedTarget, DOM.clickButton, DOM.heroClickButton];
+    const target = candidates.find(candidate => {
+      return candidate && candidate !== document.body && candidate !== document.documentElement &&
+        candidate.isConnected && !candidate.disabled &&
+        (!overlay || !overlay.contains(candidate));
+    });
+    if (target && typeof target.focus === "function") {
+      target.focus({ preventScroll: true });
+    }
+  }
+
+  function isModalSurfaceOpen(overlay) {
+    return !!overlay && overlay.classList.contains("is-open") &&
+      !overlay.classList.contains("is-closing");
+  }
+
+  function schedulePendingOfflineReport() {
+    if (!offlineReport) return;
+    setTimeout(() => showOfflineReport(), modalCloseMs() + 20);
   }
 
   function openSettingsModal(section) {
@@ -617,10 +727,9 @@
     closeModalSurface(DOM.settingsModal, DOM.settingsDialog);
     DOM.settingsModal.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open");
-    if (restoreFocus && settingsState.lastTrigger && typeof settingsState.lastTrigger.focus === "function") {
-      settingsState.lastTrigger.focus();
-      settingsState.lastTrigger = null;
-    }
+    if (restoreFocus) restoreModalFocus(DOM.settingsModal, settingsState.lastTrigger);
+    settingsState.lastTrigger = null;
+    schedulePendingOfflineReport();
     return true;
   }
 
@@ -632,6 +741,7 @@
         const match = tab.getAttribute("data-settings-tab") === section;
         tab.classList.toggle("active", match);
         tab.setAttribute("aria-selected", match ? "true" : "false");
+        tab.tabIndex = match ? 0 : -1;
       });
     }
     if (DOM.settingsSections && DOM.settingsSections.length) {
@@ -640,6 +750,27 @@
         sectionEl.classList.toggle("hidden", !match);
       });
     }
+  }
+
+  function handleSettingsTabKeydown(event) {
+    const tabs = Array.from(DOM.settingsTabs || []);
+    const currentIndex = tabs.indexOf(event.currentTarget);
+    if (currentIndex < 0) return;
+    let nextIndex = null;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+    if (nextIndex === null) return;
+    event.preventDefault();
+    const target = tabs[nextIndex];
+    activateSettingsTab(target.getAttribute("data-settings-tab"));
+    target.focus({ preventScroll: true });
   }
 
   function switchDetailTab(tab) {
@@ -654,10 +785,12 @@
       DOM.contractsTab.classList.toggle("active", showContracts);
       DOM.contractsTab.setAttribute("aria-selected", showContracts ? "true" : "false");
       DOM.contractsTab.setAttribute("aria-hidden", unlocked ? "false" : "true");
+      DOM.contractsTab.tabIndex = showContracts ? 0 : -1;
     }
     if (DOM.journalTab) {
       DOM.journalTab.classList.toggle("active", !showContracts);
       DOM.journalTab.setAttribute("aria-selected", !showContracts ? "true" : "false");
+      DOM.journalTab.tabIndex = showContracts ? -1 : 0;
     }
     if (!showContracts && TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
       TutorialEngine.markMilestone("journal");
@@ -668,7 +801,11 @@
     if (!Settings || !TutorialEngine) return;
     Settings.setPreference("tutorialEnabled", true);
     Settings.setPreference("tutorialCompleted", false);
-    if (typeof TutorialEngine.restart === "function") {
+    if (typeof TutorialEngine.restart !== "function") return;
+    const didCloseSettings = closeSettingsModal();
+    if (didCloseSettings) {
+      setTimeout(() => TutorialEngine.restart(), modalCloseMs() + 20);
+    } else {
       TutorialEngine.restart();
     }
   }
@@ -698,16 +835,19 @@
       const key = el.getAttribute("data-i18n");
       el.textContent = t(key);
     });
+    document.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
+      const key = el.getAttribute("data-i18n-aria-label");
+      el.setAttribute("aria-label", t(key));
+    });
     if (DOM.langSelect) {
       DOM.langSelect.setAttribute("aria-label", t("actions.languageLabel"));
     }
-    const dashLink = document.getElementById("dashboardLink");
-    if (dashLink) {
+    document.querySelectorAll("[data-dashboard-link]").forEach(dashLink => {
       dashLink.setAttribute(
         "href",
         currentLang === DEFAULT_LANG ? "/dashboard/" : "/dashboard/?lang=" + currentLang
       );
-    }
+    });
     if (DOM.closeEventBanner) {
       DOM.closeEventBanner.setAttribute("aria-label", t("actions.closeBanner"));
     }
@@ -1051,6 +1191,9 @@
       queueSave(true);
       return;
     }
+    if (isModalSurfaceOpen(DOM.settingsModal) || isModalSurfaceOpen(DOM.eventModal)) {
+      return;
+    }
     // Ne pas concurrencer le tutoriel : le rapport attendra la prochaine
     // visite (les documents sont crédités dans tous les cas).
     if (window.Settings && Settings.getPreference("tutorialEnabled") &&
@@ -1059,7 +1202,7 @@
       queueSave(true);
       return;
     }
-    const modal = document.getElementById("offlineModal");
+    const modal = DOM.offlineModal;
     if (!modal) return;
     const dialog = modal.querySelector(".offline-dialog");
     if (dialog) {
@@ -1080,6 +1223,7 @@
     if (docs) docs.textContent = "+" + formatNumber(offlineReport.gain) + " DOC";
     const close = () => {
       closeModalSurface(modal, dialog);
+      restoreModalFocus(modal);
       document.removeEventListener("keydown", onKey);
     };
     const onKey = event => {
@@ -1171,19 +1315,19 @@
     const parts = [];
 
     if (Math.abs(impact.docMultiplierBonus) > EPSILON) {
-      parts.push("⚙️ " + t("impact.doc") + " " + formatPercent(impact.docMultiplierBonus));
+      parts.push(t("impact.doc") + " " + formatPercent(impact.docMultiplierBonus));
     }
     if (Math.abs(impact.ccMultiplierBonus) > EPSILON) {
-      parts.push("⭐ " + t("impact.cc") + " " + formatPercent(impact.ccMultiplierBonus));
+      parts.push(t("impact.cc") + " " + formatPercent(impact.ccMultiplierBonus));
     }
     if (Math.abs(impact.qualityBonus) > EPSILON) {
-      parts.push("✅ " + t("impact.quality") + " " + formatPercent(impact.qualityBonus));
+      parts.push(t("impact.quality") + " " + formatPercent(impact.qualityBonus));
     }
     if (Math.abs(impact.footprintBonus) > EPSILON) {
-      parts.push("🌳 " + t("impact.footprint") + " " + formatPercent(impact.footprintBonus));
+      parts.push(t("impact.footprint") + " " + formatPercent(impact.footprintBonus));
     }
     if (Math.abs(impact.imageBonus) > EPSILON) {
-      parts.push("🏅 " + t("impact.image") + " " + formatPercent(impact.imageBonus));
+      parts.push(t("impact.image") + " " + formatPercent(impact.imageBonus));
     }
 
     return parts.join(" • ");
@@ -1194,6 +1338,10 @@
     document.querySelectorAll(".building-tooltip").forEach(el => {
       if (!el.classList.contains("hidden")) {
         el.classList.add("hidden");
+      }
+      if (el.id) {
+        const controller = document.querySelector(`[aria-controls="${el.id}"]`);
+        if (controller) controller.setAttribute("aria-expanded", "false");
       }
     });
   }
@@ -1245,6 +1393,10 @@
     if (gameState.log.length > 50) {
       gameState.log.pop();
     }
+    uiState.logRenderSignature = "";
+    if (DOM.gameStatusAnnouncer) {
+      setTextIfChanged(DOM.gameStatusAnnouncer, t(key, params));
+    }
     renderLog();
   }
 
@@ -1255,11 +1407,6 @@
     let ccMult = buildingEffects.ccMult;
     let clickMult = 1;
     let baseQualityOffset = 0;
-
-    // Passive stat nudge from infrastructure.
-    gameState.stats.quality += buildingEffects.qualityBonus * 0.0001;
-    gameState.stats.footprint -= buildingEffects.footprintBonus * 0.0001;
-    gameState.stats.brandImage += buildingEffects.imageBonus * 0.0001;
 
     for (const upg of gameState.upgrades) {
       if (!upg.purchased) continue;
@@ -1278,13 +1425,14 @@
       docMult,
       ccMult,
       clickMult,
-      baseQualityOffset
+      baseQualityOffset,
+      buildingEffects
     };
   }
 
   /** Computes automatic production per second. */
-  function computeDocPerSecond() {
-    const mults = computeMultipliers();
+  function computeDocPerSecond(multipliers) {
+    const mults = multipliers || computeMultipliers();
     let DOCps = 0;
 
     for (const b of gameState.buildings) {
@@ -1323,7 +1471,9 @@
 
     const scaledDt = Math.min(dt, 5) * currentTimeScale();
     update(scaledDt);
-    renderAll();
+    if (timestamp - uiState.lastFrameRender >= DOM_RENDER_INTERVAL_MS) {
+      renderAll();
+    }
     gameState.time.lastUpdate = timestamp;
     requestAnimationFrame(gameLoop);
   }
@@ -1331,8 +1481,19 @@
   /** Applies resource gains, drifts and unlock checks for a time delta. */
   function update(dt) {
     syncEventsPreference();
-    const DOCps = computeDocPerSecond();
     const mults = computeMultipliers();
+    const DOCps = computeDocPerSecond(mults);
+    const infrastructureStep = INFRA_STAT_RATE_PER_SECOND * dt;
+
+    gameState.stats.quality = clamp01(
+      gameState.stats.quality + mults.buildingEffects.qualityBonus * infrastructureStep
+    );
+    gameState.stats.footprint = clamp01(
+      gameState.stats.footprint + mults.buildingEffects.footprintBonus * infrastructureStep
+    );
+    gameState.stats.brandImage = clamp01(
+      gameState.stats.brandImage + mults.buildingEffects.imageBonus * infrastructureStep
+    );
 
     const docGain = DOCps * dt;
     gameState.resources.docBank += docGain;
@@ -1358,7 +1519,7 @@
     gameState.stats.footprint = clamp01(gameState.stats.footprint);
 
     refreshUpgradeUnlocks();
-    maybeSpawnSmallEvents(dt);
+    maybeSpawnSmallEvents(dt, DOCps);
     checkDynamicEvents(dt);
     tickContracts(dt);
     checkAchievements();
@@ -1366,10 +1527,9 @@
   }
 
   /** introduces occasional incidents/optimisations to keep gauges dynamic. */
-  function maybeSpawnSmallEvents(dt) {
+  function maybeSpawnSmallEvents(dt, docPerSecond) {
     if (!eventState.eventsEnabled) return;
-    const DOCps = computeDocPerSecond();
-    const risk = Math.min(0.0005 * DOCps, 0.05);
+    const risk = Math.min(0.0005 * docPerSecond, 0.05);
     if (Math.random() < risk * dt) {
       const r = Math.random();
       if (r < 0.5) {
@@ -1388,7 +1548,7 @@
   }
 
   /** Handles manual clicks to print documents immediately. */
-  function handleClick() {
+  function handleClick(event) {
     const mults = computeMultipliers();
     const base = gameState.config.docPerClickBase;
     const docGain = base * mults.clickMult * prestigeMultiplier();
@@ -1398,11 +1558,12 @@
     checkAchievements();
     queueSave();
     renderAll();
-    if (DOM.clickButton) {
-      DOM.clickButton.classList.add("pulse");
-      setTimeout(() => DOM.clickButton && DOM.clickButton.classList.remove("pulse"), 350);
+    const sourceButton = event && event.currentTarget ? event.currentTarget : DOM.clickButton;
+    if (sourceButton) {
+      sourceButton.classList.add("pulse");
+      setTimeout(() => sourceButton.isConnected && sourceButton.classList.remove("pulse"), 350);
     }
-    UIEffects.playClickEffect(DOM.clickButton);
+    UIEffects.playClickEffect(sourceButton, { value: docGain });
     if (TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
       TutorialEngine.markMilestone("click");
     }
@@ -1415,6 +1576,7 @@
     const cost = buildingCost(b);
     if (gameState.resources.docBank < cost) return;
 
+    const shouldRestoreFocus = document.activeElement === sourceEl;
     gameState.resources.docBank -= cost;
     const previousQuantity = b.quantity;
     b.quantity += 1;
@@ -1425,7 +1587,17 @@
     checkAchievements();
     queueSave();
     renderAll();
-    UIEffects.playPurchaseEffect(sourceEl || DOM.buildingsList);
+    const installedRow = DOM.buildingsList
+      ? DOM.buildingsList.querySelector(`[data-building-id="${id}"]`)
+      : null;
+    if (shouldRestoreFocus && installedRow) {
+      const replacementButton = installedRow.querySelector(`[data-building-btn="${id}"]`);
+      const focusTarget = replacementButton && !replacementButton.disabled
+        ? replacementButton
+        : installedRow.querySelector(".building-name-button");
+      if (focusTarget) focusTarget.focus({ preventScroll: true });
+    }
+    UIEffects.playPurchaseEffect(installedRow || sourceEl || DOM.buildingsList);
     if (TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
       TutorialEngine.markMilestone("building");
     }
@@ -1436,12 +1608,13 @@
   }
 
   /** Purchases an upgrade if affordable and unlocked. */
-  function buyUpgrade(id) {
+  function buyUpgrade(id, sourceEl) {
     const upg = gameState.upgrades.find(x => x.id === id);
     if (!upg || upg.purchased) return;
     if (gameState.resources.docBank < upg.cost) return;
     if (gameState.resources.docTotal < (upg.unlockDocTotal || 0)) return;
 
+    const shouldRestoreFocus = document.activeElement === sourceEl;
     gameState.resources.docBank -= upg.cost;
     upg.purchased = true;
     uiState.upgradesDirty = true;
@@ -1449,6 +1622,15 @@
     checkAchievements();
     queueSave();
     renderAll();
+    if (shouldRestoreFocus) {
+      const nextAction = DOM.upgradesList && DOM.upgradesList.querySelector("[data-upgrade-btn]:not(:disabled)");
+      const prestigeAction = DOM.prestigeButton && !DOM.prestigeButton.disabled
+        ? DOM.prestigeButton
+        : null;
+      const focusTarget = nextAction || prestigeAction || document.getElementById("upgradesPanelTitle");
+      if (focusTarget) focusTarget.focus({ preventScroll: true });
+    }
+    UIEffects.playUpgradeEffect(DOM.upgradesList || sourceEl);
   }
 
   /** Whether the prestige reset is currently available. */
@@ -1496,35 +1678,87 @@
     renderAll(true);
   }
 
-  /** Renders the live stats ribbons and gauges. */
+  function setTextIfChanged(element, value) {
+    if (!element) return;
+    const next = String(value);
+    if (element.textContent !== next) element.textContent = next;
+  }
+
+  function setWidthIfChanged(element, value) {
+    if (!element || element.style.width === value) return;
+    element.style.width = value;
+  }
+
+  /** Updates the real progression strip above the machine catalogue. */
+  function renderOperationsStatus() {
+    const activeTypes = gameState.buildings.filter(building => building.quantity > 0).length;
+    setTextIfChanged(DOM.opsBuildingCount, activeTypes);
+
+    if (!DOM.machineUnlockPanel) return;
+    const nextBuilding = gameState.buildings.find(building => !building.isUnlocked);
+    if (!nextBuilding) {
+      DOM.machineUnlockPanel.classList.add("is-complete");
+      setTextIfChanged(DOM.nextBuildingName, t("operations.allMachinesUnlocked"));
+      setTextIfChanged(DOM.nextBuildingCost, t("operations.catalogueComplete"));
+      if (DOM.nextBuildingTrack) {
+        if (DOM.nextBuildingTrack.value !== 100) DOM.nextBuildingTrack.value = 100;
+        setTextIfChanged(DOM.nextBuildingTrack, "100 %");
+        DOM.nextBuildingTrack.setAttribute("aria-label", t("operations.catalogueComplete"));
+      }
+      return;
+    }
+
+    DOM.machineUnlockPanel.classList.remove("is-complete");
+    const nextCost = buildingCost(nextBuilding);
+    const progress = Math.max(0, Math.min(100, gameState.resources.docBank / Math.max(1, nextCost) * 100));
+    setTextIfChanged(DOM.nextBuildingName, getBuildingName(nextBuilding));
+    setTextIfChanged(DOM.nextBuildingCost, t("operations.nextMachineCost", { amount: formatNumber(nextCost) }));
+    if (DOM.nextBuildingTrack) {
+      const progressValue = Number(progress.toFixed(1));
+      if (DOM.nextBuildingTrack.value !== progressValue) DOM.nextBuildingTrack.value = progressValue;
+      setTextIfChanged(DOM.nextBuildingTrack, Math.round(progress) + " %");
+      DOM.nextBuildingTrack.setAttribute("aria-label", t("operations.nextMachineProgress", {
+        name: getBuildingName(nextBuilding),
+        percent: Math.round(progress)
+      }));
+    }
+  }
+
+  /** Renders the live stats ribbons and gauges without rewriting unchanged DOM. */
   function renderStats() {
-    const DOCps = computeDocPerSecond();
+    const mults = computeMultipliers();
+    const DOCps = computeDocPerSecond(mults);
     const formattedBank = formatNumber(gameState.resources.docBank);
     const formattedDocPs = t("stats.docPsValue", { amount: formatNumber(DOCps) });
     const formattedPrestige = prestigeMultiplier().toFixed(2);
-    if (DOM.docBank) DOM.docBank.textContent = formattedBank;
-    if (DOM.docTotal) DOM.docTotal.textContent = formatNumber(gameState.resources.docTotal);
-    if (DOM.ccTotal) DOM.ccTotal.textContent = formatNumber(gameState.resources.ccTotal);
-    if (DOM.docPs) DOM.docPs.textContent = formattedDocPs;
-    if (DOM.heroDocBank) DOM.heroDocBank.textContent = formattedBank;
-    if (DOM.heroDocPs) DOM.heroDocPs.textContent = formattedDocPs;
-    if (DOM.heroPrestige) DOM.heroPrestige.textContent = formattedPrestige;
-    if (DOM.heroCulture) DOM.heroCulture.textContent = gameState.resources.culturePoints;
+    const manualGain = gameState.config.docPerClickBase * mults.clickMult * prestigeMultiplier();
+    setTextIfChanged(DOM.docBank, formattedBank);
+    setTextIfChanged(DOM.docTotal, formatNumber(gameState.resources.docTotal));
+    setTextIfChanged(DOM.ccTotal, formatNumber(gameState.resources.ccTotal));
+    setTextIfChanged(DOM.docPs, formattedDocPs);
+    setTextIfChanged(DOM.heroDocBank, formattedBank);
+    setTextIfChanged(DOM.heroDocPs, formattedDocPs);
+    setTextIfChanged(DOM.heroPrestige, formattedPrestige);
+    setTextIfChanged(DOM.heroCulture, gameState.resources.culturePoints);
+    setTextIfChanged(DOM.opsDocBank, formattedBank);
+    setTextIfChanged(DOM.opsDocPs, formattedDocPs);
+    setTextIfChanged(DOM.manualGain, t("stats.manualGainValue", { amount: formatNumber(manualGain) }));
 
     const q = clamp01(gameState.stats.quality);
     const f = clamp01(gameState.stats.footprint);
     const img = clamp01(gameState.stats.brandImage);
 
-    if (DOM.qualityLabel) DOM.qualityLabel.textContent = Math.round(q * 100) + " %";
-    if (DOM.footprintLabel) DOM.footprintLabel.textContent = Math.round(f * 100) + " %";
-    if (DOM.imageLabel) DOM.imageLabel.textContent = Math.round(img * 100) + " %";
+    setTextIfChanged(DOM.qualityLabel, Math.round(q * 100) + " %");
+    setTextIfChanged(DOM.footprintLabel, Math.round(f * 100) + " %");
+    setTextIfChanged(DOM.imageLabel, Math.round(img * 100) + " %");
 
-    if (DOM.qualityFill) DOM.qualityFill.style.width = (q * 100).toFixed(1) + "%";
-    if (DOM.footprintFill) DOM.footprintFill.style.width = (f * 100).toFixed(1) + "%";
-    if (DOM.imageFill) DOM.imageFill.style.width = (img * 100).toFixed(1) + "%";
+    setWidthIfChanged(DOM.qualityFill, (q * 100).toFixed(1) + "%");
+    setWidthIfChanged(DOM.footprintFill, (f * 100).toFixed(1) + "%");
+    setWidthIfChanged(DOM.imageFill, (img * 100).toFixed(1) + "%");
 
-    if (DOM.culturePoints) DOM.culturePoints.textContent = gameState.resources.culturePoints;
-    if (DOM.prestigeMult) DOM.prestigeMult.textContent = formattedPrestige;
+    setTextIfChanged(DOM.culturePoints, gameState.resources.culturePoints);
+    setTextIfChanged(DOM.prestigeMult, formattedPrestige);
+    renderOperationsStatus();
   }
 
   /** Updates the prestige card state and CTA messaging. */
@@ -1535,7 +1769,11 @@
     const locale = LOCALE_BY_LANG[currentLang] || "fr-FR";
     const minValue = gameState.config.prestigeRequirement.toLocaleString(locale);
 
-    if (!can || gain <= 0) {
+    const unavailable = !can || gain <= 0;
+    DOM.prestigeButton.disabled = unavailable;
+    DOM.prestigeButton.setAttribute("aria-disabled", unavailable ? "true" : "false");
+
+    if (unavailable) {
       DOM.prestigeButton.classList.add("disabled");
       DOM.prestigeButton.textContent = t("prestige.buttonLocked");
       DOM.prestigeInfo.textContent = t("prestige.infoLocked", { min: minValue });
@@ -1549,8 +1787,14 @@
   /** Shows the latest entries in the activity log. */
   function renderLog() {
     if (!DOM.logPanel) return;
-    DOM.logPanel.innerHTML = "";
     const locale = LOCALE_BY_LANG[currentLang] || "fr-FR";
+    const signature = currentLang + "|" + gameState.log.map(entry => {
+      const time = entry.time instanceof Date ? entry.time.getTime() : entry.time;
+      return time + ":" + (entry.key || entry.text || "") + ":" + JSON.stringify(entry.params || {});
+    }).join(";");
+    if (signature === uiState.logRenderSignature) return;
+    uiState.logRenderSignature = signature;
+    DOM.logPanel.innerHTML = "";
     for (const entry of gameState.log) {
       const div = document.createElement("div");
       div.className = "log-entry";
@@ -1649,6 +1893,9 @@
   function checkDynamicEvents(dt) {
     if (!eventState.eventsEnabled) return;
     if (!window.Events) return;
+    if (TutorialEngine && typeof TutorialEngine.isActive === "function" && TutorialEngine.isActive()) return;
+    if (offlineReport || isModalSurfaceOpen(DOM.settingsModal) ||
+        isModalSurfaceOpen(DOM.offlineModal)) return;
     const newEvent = Events.tick(gameState, dt);
     if (newEvent) {
       logMessage("log.event", { name: t(newEvent.titleKey) });
@@ -1691,6 +1938,7 @@
       DOM.minigameContainer.classList.add("hidden");
       for (const choice of eventDef.choices) {
         const btn = document.createElement("button");
+        btn.type = "button";
         btn.className = "event-choice-btn";
         btn.dataset.choice = choice.id;
         btn.textContent = t(choice.labelKey);
@@ -1721,6 +1969,8 @@
     if (!eventState.modalCanClose && !force) return false;
     closeModalSurface(DOM.eventModal, DOM.eventDialog);
     DOM.eventModal.setAttribute("aria-hidden", "true");
+    restoreModalFocus(DOM.eventModal);
+    schedulePendingOfflineReport();
     return true;
   }
 
@@ -1746,11 +1996,21 @@
     if (!window.EndgameModule) return;
     if (!DOM.contractsList || !DOM.activeContractPanel) return;
     if (!contractsState.unlocked) {
-      DOM.contractsList.innerHTML = "";
-      DOM.activeContractPanel.classList.add("hidden");
+      if (contractsState.listRenderSignature !== "locked") {
+        DOM.contractsList.innerHTML = "";
+        DOM.activeContractPanel.classList.add("hidden");
+        contractsState.listRenderSignature = "locked";
+        contractsState.activeRenderSignature = "locked";
+      }
       return;
     }
     contractsState.available = window.EndgameModule.availableContracts(gameState);
+    const listSignature = currentLang + "|" + contractsState.available.map(contract => contract.id).join(",");
+    if (listSignature === contractsState.listRenderSignature) {
+      renderActiveContract();
+      return;
+    }
+    contractsState.listRenderSignature = listSignature;
     DOM.contractsList.innerHTML = "";
     if (!contractsState.available.length) {
       const empty = document.createElement("div");
@@ -1773,6 +2033,7 @@
         const actions = document.createElement("div");
         actions.className = "contract-actions";
         const btn = document.createElement("button");
+        btn.type = "button";
         btn.className = "btn-slim";
         btn.dataset.contract = contract.id;
         btn.textContent = t("contracts.start");
@@ -1796,14 +2057,21 @@
       return;
     }
     logMessage("log.contractStart", { name: t(result.contract.nameKey) });
-    renderActiveContract();
     queueSave(true);
+    contractsState.listRenderSignature = "";
+    contractsState.activeRenderSignature = "";
     renderContractsPanel();
+    UIEffects.playContractEffect(DOM.dispatchPanel || DOM.activeContractPanel);
   }
 
   function renderActiveContract() {
     if (!window.EndgameModule || !DOM.activeContractPanel) return;
     const { activeContract } = window.EndgameModule;
+    const activeSignature = activeContract.current
+      ? currentLang + "|" + activeContract.current.id + "|" + Math.ceil(activeContract.timer)
+      : currentLang + "|none";
+    if (activeSignature === contractsState.activeRenderSignature) return;
+    contractsState.activeRenderSignature = activeSignature;
     if (!activeContract.current) {
       DOM.activeContractPanel.classList.add("hidden");
       DOM.activeContractPanel.innerHTML = "";
@@ -1828,8 +2096,9 @@
       logMessage("log.contractComplete", { name: t(result.nameKey) });
       showEventBanner("contracts.banner.completed", "positive", { name: t(result.nameKey) });
       if (UIEffects && typeof UIEffects.playHorn === "function") UIEffects.playHorn();
-      renderActiveContract();
       queueSave(true);
+      contractsState.listRenderSignature = "";
+      contractsState.activeRenderSignature = "";
       renderContractsPanel();
     } else {
       renderActiveContract();
@@ -1841,6 +2110,7 @@
     window.EndgameModule.rerollContracts(gameState);
     contractsState.lastReroll = performance.now();
     contractsState.rerollCount += 1;
+    contractsState.listRenderSignature = "";
     renderContractsPanel();
   }
 
@@ -1852,20 +2122,20 @@
   function updateRerollButton() {
     if (!DOM.rerollContractsBtn) return;
     if (!window.EndgameModule) {
-      DOM.rerollContractsBtn.disabled = true;
+      if (!DOM.rerollContractsBtn.disabled) DOM.rerollContractsBtn.disabled = true;
       return;
     }
     if (canRerollContracts()) {
-      DOM.rerollContractsBtn.disabled = false;
-      DOM.rerollContractsBtn.textContent = t("actions.rerollContracts");
+      if (DOM.rerollContractsBtn.disabled) DOM.rerollContractsBtn.disabled = false;
+      setTextIfChanged(DOM.rerollContractsBtn, t("actions.rerollContracts"));
       return;
     }
     const elapsed = performance.now() - contractsState.lastReroll;
     const remaining = Math.max(0, CONTRACT_REROLL_COOLDOWN - elapsed);
-    DOM.rerollContractsBtn.disabled = true;
-    DOM.rerollContractsBtn.textContent = t("contracts.rerollCountdown", {
+    if (!DOM.rerollContractsBtn.disabled) DOM.rerollContractsBtn.disabled = true;
+    setTextIfChanged(DOM.rerollContractsBtn, t("contracts.rerollCountdown", {
       seconds: Math.max(1, Math.ceil(remaining / 1000))
-    });
+    }));
   }
 
   function handleMinigameResponse(event) {
@@ -1888,6 +2158,11 @@
   function renderAchievementsPanel() {
     const container = DOM.achievementsList;
     if (!container || !window.Achievements) return;
+    const unlockedCount = Achievements.definitions.reduce((count, definition) => {
+      return count + (achievementsState.unlocked[definition.id] ? 1 : 0);
+    }, 0);
+    setTextIfChanged(DOM.achievementUnlockedCount, unlockedCount);
+    setTextIfChanged(DOM.achievementTotalCount, Achievements.definitions.length);
     // Garde de vue (aucun effet de jeu) : renderAll() repasse ici à chaque
     // frame ; sans mémo, le innerHTML serait reconstruit 60 fois/s, les
     // animations d'apparition (paper-pop, visa stamp-slam) redémarreraient
@@ -1960,14 +2235,20 @@
       if (!building) return;
       const cost = buildingCost(building);
       const canAfford = bank >= cost;
+      const affordability = Math.max(0, Math.min(100, bank / Math.max(1, cost) * 100));
+      row.classList.toggle("is-affordable", canAfford);
+      row.classList.toggle("is-owned", building.quantity > 0);
+      row.style.setProperty("--afford-progress", affordability.toFixed(1) + "%");
       const btn = row.querySelector(`[data-building-btn="${id}"]`);
       if (btn) {
         btn.classList.toggle("disabled", !canAfford);
-        btn.textContent = t(canAfford ? "actions.buy" : "actions.tooExpensive");
+        if (btn.disabled !== !canAfford) btn.disabled = !canAfford;
+        btn.setAttribute("aria-disabled", canAfford ? "false" : "true");
+        setTextIfChanged(btn, t(canAfford ? "actions.buy" : "actions.tooExpensive"));
       }
       const costEl = row.querySelector(`[data-building-cost="${id}"]`);
       if (costEl) {
-        costEl.textContent = t("label.costDoc", { amount: formatNumber(cost) });
+        setTextIfChanged(costEl, t("label.costDoc", { amount: formatNumber(cost) }));
       }
     });
   }
@@ -1983,14 +2264,26 @@
       if (!upgrade) return;
       const canAfford = bank >= upgrade.cost;
       btn.classList.toggle("disabled", !canAfford);
-      btn.textContent = t(canAfford ? "actions.buy" : "actions.tooExpensive");
+      if (btn.disabled !== !canAfford) btn.disabled = !canAfford;
+      btn.setAttribute("aria-disabled", canAfford ? "false" : "true");
+      setTextIfChanged(btn, t(canAfford ? "actions.buy" : "actions.tooExpensive"));
     });
     container.querySelectorAll("[data-upgrade-cost]").forEach(costEl => {
       const id = costEl.getAttribute("data-upgrade-cost");
       const upgrade = gameState.upgrades.find(x => x.id === id);
       if (!upgrade) return;
-      costEl.textContent = t("label.costDoc", { amount: formatNumber(upgrade.cost) });
+      setTextIfChanged(costEl, t("label.costDoc", { amount: formatNumber(upgrade.cost) }));
     });
+  }
+
+  function createPeIcon(name) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    svg.setAttribute("class", "pe-icon");
+    svg.setAttribute("aria-hidden", "true");
+    use.setAttribute("href", "#pe-icon-" + name);
+    svg.appendChild(use);
+    return svg;
   }
 
   /** Renders the list of available buildings, descriptions and stats. */
@@ -2001,7 +2294,7 @@
     container.innerHTML = "";
     let hasVisible = false;
 
-    for (const b of gameState.buildings) {
+    for (const [buildingIndex, b] of gameState.buildings.entries()) {
       if (!b.isUnlocked) continue;
       hasVisible = true;
       const cost = buildingCost(b);
@@ -2010,8 +2303,14 @@
       const totalImpactText = b.quantity > 0 ? formatBuildingImpactText(b) : "";
 
       const row = document.createElement("div");
-      row.className = "building-row";
+      row.className = "building-row" + (b.quantity > 0 ? " is-owned" : "");
       row.dataset.buildingId = b.id;
+
+      const sequence = document.createElement("span");
+      sequence.className = "building-sequence";
+      sequence.setAttribute("aria-hidden", "true");
+      sequence.textContent = "PLAN " + String(buildingIndex + 1).padStart(2, "0");
+      row.appendChild(sequence);
 
       const info = document.createElement("div");
       info.className = "building-info";
@@ -2019,6 +2318,7 @@
       const nameButton = document.createElement("button");
       nameButton.type = "button";
       nameButton.className = "building-name-button";
+      nameButton.setAttribute("aria-expanded", "false");
       const emoji = b.emoji || "🏗️";
       const emojiSpan = document.createElement("span");
       emojiSpan.className = "building-emoji";
@@ -2042,6 +2342,8 @@
 
       const tooltip = document.createElement("div");
       tooltip.className = "building-tooltip hidden";
+      tooltip.id = "building-details-" + b.id;
+      nameButton.setAttribute("aria-controls", tooltip.id);
       const tooltipLines = [];
       if (perUnitImpact) {
         tooltipLines.push(t("label.modifierPerUnit", { impact: perUnitImpact }));
@@ -2061,8 +2363,10 @@
         hideAllTooltips();
         if (wasHidden) {
           tooltip.classList.remove("hidden");
+          nameButton.setAttribute("aria-expanded", "true");
         } else {
           tooltip.classList.add("hidden");
+          nameButton.setAttribute("aria-expanded", "false");
         }
       });
 
@@ -2089,11 +2393,12 @@
       buy.className = "building-buy";
 
       const costEl = document.createElement("div");
-      costEl.className = "small";
+      costEl.className = "building-cost";
       costEl.dataset.buildingCost = b.id;
       costEl.textContent = t("label.costDoc", { amount: formatNumber(cost) });
 
       const btn = document.createElement("button");
+      btn.type = "button";
       btn.className = "btn-buy";
       btn.dataset.buildingBtn = b.id;
       btn.textContent = t("actions.buy");
@@ -2126,24 +2431,38 @@
       const div = document.createElement("div");
       div.className = "upgrade-item";
 
+      const mark = document.createElement("span");
+      mark.className = "upgrade-mark";
+      mark.appendChild(createPeIcon("upgrade"));
+
       const left = document.createElement("div");
-      left.innerHTML = `
-        <div class="upgrade-title">${getUpgradeName(u)}</div>
-        <div>${getUpgradeDesc(u)}</div>
-        <div class="small" data-upgrade-cost="${u.id}">${t("label.costDoc", { amount: formatNumber(u.cost) })}</div>
-      `;
+      left.className = "upgrade-copy";
+      const title = document.createElement("div");
+      title.className = "upgrade-title";
+      title.textContent = getUpgradeName(u);
+      const description = document.createElement("div");
+      description.className = "upgrade-description";
+      description.textContent = getUpgradeDesc(u);
+      const cost = document.createElement("div");
+      cost.className = "small";
+      cost.dataset.upgradeCost = u.id;
+      cost.textContent = t("label.costDoc", { amount: formatNumber(u.cost) });
+      left.appendChild(title);
+      left.appendChild(description);
+      left.appendChild(cost);
 
       const right = document.createElement("div");
-      right.style.display = "flex";
-      right.style.alignItems = "center";
+      right.className = "upgrade-action";
 
       const btn = document.createElement("button");
+      btn.type = "button";
       btn.className = "btn-upgrade";
       btn.dataset.upgradeBtn = u.id;
       btn.textContent = t("actions.buy");
-      btn.addEventListener("click", () => buyUpgrade(u.id));
+      btn.addEventListener("click", () => buyUpgrade(u.id, btn));
 
       right.appendChild(btn);
+      div.appendChild(mark);
       div.appendChild(left);
       div.appendChild(right);
       container.appendChild(div);
@@ -2172,13 +2491,13 @@
   /** Draws all UI sections, honouring the dirty flags for heavy lists. */
   function renderAll(forceFull = false) {
     ensureContractsUnlockState();
+    syncBuildingUnlocks();
     renderStats();
     renderPrestige();
     renderLog();
     renderContractsPanel();
     renderAchievementsPanel();
     renderGodModePanel();
-    syncBuildingUnlocks();
 
     if (forceFull || uiState.buildingsDirty) {
       renderBuildings();
@@ -2191,6 +2510,7 @@
       uiState.upgradesDirty = false;
     }
     updateUpgradeButtons();
+    uiState.lastFrameRender = performance.now();
   }
 
   function ensureContractsUnlockState() {
@@ -2269,6 +2589,7 @@
     if (!godModeState.unlocked) {
       card.classList.add("hidden");
       card.setAttribute("aria-hidden", "true");
+      card.inert = true;
       return;
     }
     if (!force && !godModeState.dirty) {
@@ -2277,6 +2598,7 @@
 
     card.classList.remove("hidden");
     card.setAttribute("aria-hidden", "false");
+    card.inert = false;
     if (DOM.godModeStatus) {
       DOM.godModeStatus.textContent = t("godMode.status", { scale: godModeState.timeScale });
     }
@@ -2323,7 +2645,7 @@
       const mults = computeMultipliers();
       const prestige = prestigeMultiplier();
       return {
-        docPerSecond: computeDocPerSecond(),
+        docPerSecond: computeDocPerSecond(mults),
         docBank: gameState.resources.docBank,
         docTotal: gameState.resources.docTotal,
         ccTotal: gameState.resources.ccTotal,

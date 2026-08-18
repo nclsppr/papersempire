@@ -14,7 +14,8 @@
     started: false,
     highlightEl: null,
     onComplete: null,
-    pendingAutoStart: false
+    pendingAutoStart: false,
+    returnFocus: null
   };
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -26,6 +27,7 @@
     state.nextBtn = document.getElementById("tutorialNext");
     state.prevBtn = document.getElementById("tutorialPrev");
     state.skipBtn = document.getElementById("tutorialSkip");
+    document.addEventListener("keydown", trapTutorialTab, true);
 
     if (state.nextBtn) {
       state.nextBtn.addEventListener("click", () => advanceStep(1));
@@ -71,10 +73,21 @@
   function start(force = false) {
     if (!state.overlay || !state.steps.length) return;
     if (!force && !shouldRun()) return;
+    const activeElement = document.activeElement;
+    if (activeElement && activeElement !== document.body && !state.overlay.contains(activeElement)) {
+      state.returnFocus = activeElement;
+    }
     state.started = true;
     state.activeIndex = -1;
+    state.overlay.inert = false;
+    state.overlay.setAttribute("aria-hidden", "false");
     state.overlay.classList.remove("hidden");
     goToStep(0);
+    requestAnimationFrame(() => {
+      if (state.started && state.nextBtn && state.nextBtn.isConnected) {
+        state.nextBtn.focus({ preventScroll: true });
+      }
+    });
   }
 
   function restart() {
@@ -89,7 +102,10 @@
     if (!state.overlay) return;
     removeHighlight();
     state.started = false;
+    state.overlay.inert = true;
+    state.overlay.setAttribute("aria-hidden", "true");
     state.overlay.classList.add("hidden");
+    restoreFocus();
     if (markCompleted && state.settings) {
       state.settings.setPreference("tutorialCompleted", true);
     }
@@ -99,6 +115,39 @@
     if (!state.started) return;
     const nextIndex = state.activeIndex + direction;
     goToStep(nextIndex);
+  }
+
+  function trapTutorialTab(event) {
+    if (event.key !== "Tab" || !state.started) return;
+    const controls = [state.prevBtn, state.nextBtn, state.skipBtn].filter(element => {
+      return element && !element.disabled && element.getClientRects().length > 0;
+    });
+    if (!controls.length) return;
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (!state.overlay.contains(document.activeElement)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll: true });
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
+
+  function restoreFocus() {
+    const target = state.returnFocus;
+    state.returnFocus = null;
+    const current = document.activeElement;
+    if (current && current !== document.body && current !== document.documentElement &&
+        !state.overlay.contains(current)) {
+      return;
+    }
+    if (target && target.isConnected && !target.disabled && typeof target.focus === "function") {
+      target.focus({ preventScroll: true });
+    }
   }
 
   function goToStep(index) {
@@ -171,8 +220,11 @@
   function complete() {
     if (!state.overlay) return;
     state.started = false;
+    state.overlay.inert = true;
+    state.overlay.setAttribute("aria-hidden", "true");
     state.overlay.classList.add("hidden");
     removeHighlight();
+    restoreFocus();
     if (state.settings) {
       state.settings.setPreference("tutorialCompleted", true);
     }

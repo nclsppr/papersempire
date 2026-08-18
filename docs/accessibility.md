@@ -1,6 +1,6 @@
 # Accessibility
 
-Papers Empire targets WCAG 2.1 AA and RGAA recommendations. The client now exposes a dedicated settings drawer, richer feedback, and automated tests to keep the experience inclusive.
+Papers Empire targets WCAG 2.1 AA and RGAA recommendations. The client exposes a dedicated settings drawer and richer feedback; syntax, CSS and multilingual static-build checks complement the manual browser/device review.
 
 ## Settings Drawer
 The ⚙️ button opens a modal built with four sections. All controls are native checkboxes/buttons, receive focus styles, and persist via `pe-accessibility` in `localStorage`.
@@ -11,19 +11,51 @@ The ⚙️ button opens a modal built with four sections. All controls are nativ
 - **Save tab:** houses export/import/reset buttons so keyboard users can access them without scrolling through the right column.
 
 ## Visual & Audio Feedback
-`ui-effects.js` centralises particles and minimal Web Audio beeps:
+`ui-effects.js` centralises paper cues and minimal Web Audio beeps:
 
-- Clicks trigger a subtle pulse while purchases spawn particles around the pressed button.
+- Manual printing feeds a decorative sheet through the press; validated
+  purchases, upgrades and contracts emit a short paper/stamp cue around the
+  surface that actually changed.
 - Buying the most expensive building kicks off a confetti celebration + celebration tone.
-- All effects bail out automatically when either `pref-reduce-motion` is active or the “Particles” toggle is disabled.
+- All generated motion bails out when `pref-reduce-motion`, the system reduced
+  motion preference, the “Particles” toggle or a hidden browser tab requires it.
+- Audio is unlocked only after a real pointer/keyboard interaction, so a
+  background contract completion cannot start a new audio session by itself.
+
+## Touch and iPhone reliability
+
+- `viewport-fit=cover` enables the safe-area insets used by the sticky header
+  and footer; the bottom inset is consumed once by the footer.
+- Anchor and sticky offsets include the top safe area, so navigation does not
+  land underneath the expanded header on notched iPhones or in standalone mode.
+- Under a coarse pointer, footer links and other structural links expose a
+  minimum 44 px target and retain a visible active/tap state.
+- Modal overlays use `pointer-events: auto` only while `.is-open`; the
+  transparent closing frame cannot swallow a following tap.
+- Settings, events and offline reports cannot stack; pending reports wait for
+  the active surface to close. Tab stays inside the visible dialog, Escape
+  cannot abandon an unresolved event, and focus returns to a durable action.
+- The contracts list and activity log use render signatures instead of being
+  destroyed and rebuilt on every animation frame. This preserves keyboard
+  focus and reduces main-thread/garbage-collection pressure on mobile Safari.
+- Continuous DOM refreshes are capped at 10 Hz while the simulation keeps its
+  own animation-frame clock; multiplier reads are pure and cannot change a
+  gauge merely because Three.js or the dashboard requested a snapshot.
+- A machine or upgrade purchase restores focus to the corresponding rebuilt
+  action (or the next logical action), instead of dropping keyboard and voice
+  control back onto the document body.
+- Continuous counters are not live regions. A dedicated atomic announcer only
+  receives meaningful new activity messages.
 
 ## Guided Tutorial
 `assets/js/tutorial.js` orchestrates a first-run overlay that highlights important modules (print button → buildings → journal → settings). It hooks into `Settings` to know whether the user already finished the flow, and exposes `markMilestone()` so `app.js` can advance steps when the player actually completes each action.
 
 ## Testing & Tooling
-- `tests/settings.test.js` validates that the Settings API toggles classes/datasets correctly and that returned preference objects are copies.
-- `tests/playwright/tutorial.spec.ts` drives a full tutorial playthrough plus a regression that ensures high-contrast toggles persist across reloads.
-- Layout spec `layout.spec.ts` still guards the iPhone 15 Pro Max centring requirement.
+
+The repository intentionally has no automated browser suite. Each visual
+release runs syntax checks, CSS validation, i18n key/reference alignment and a
+static multilingual build. iPhone/Safari interaction still requires a manual
+device pass before declaring device-specific rendering fully verified.
 
 ## Preference Flow
 ```mermaid
