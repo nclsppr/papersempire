@@ -2847,7 +2847,7 @@
   --factory-orange: #d7521b;
   --factory-orange-deep: #8f2f11;
   --factory-green: #719746;
-  --hero-width: 1600px;
+  --hero-width: 1920px;
 }
 
 html {
@@ -2928,6 +2928,10 @@ body {
   height: 100%;
   object-fit: contain;
   object-position: center;
+}
+
+.brand-app-mark {
+  display: none;
 }
 
 .primary-nav {
@@ -3047,7 +3051,8 @@ body {
   isolation: isolate;
   width: 100%;
   max-width: var(--hero-width);
-  height: clamp(500px, 39vw, 560px);
+  height: clamp(540px, 42vw, 680px);
+  height: clamp(540px, min(42vw, 70svh), 680px);
   margin: 0 auto;
   aspect-ratio: auto;
   border: 0;
@@ -3283,7 +3288,7 @@ body {
   z-index: 4;
   top: 18px;
   right: max(24px, calc((100% - 1340px) / 2));
-  width: 190px;
+  width: 250px;
   padding: 12px 13px 10px;
   border: 1px solid rgba(251, 191, 36, 0.5);
   border-radius: 7px;
@@ -3332,9 +3337,9 @@ body {
 
 .empire-hud-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 4px;
   min-width: 0;
   padding: 8px 0;
 }
@@ -3359,7 +3364,7 @@ body {
   min-width: 0;
   margin: 0;
   color: #bfc9d5;
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   font-weight: 750;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -3372,16 +3377,16 @@ body {
 }
 
 .empire-hud dd {
-  overflow: hidden;
-  margin: 1px 0 0;
+  overflow: visible;
+  margin: 1px 0 0 39px;
   color: var(--paper-bright);
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .empire-hud-row:first-child dd,
@@ -3427,6 +3432,50 @@ body {
   background: rgba(7, 17, 31, 0.74);
   color: #e2e7ed;
   backdrop-filter: blur(8px);
+}
+
+.stage-live-copy {
+  position: absolute;
+  z-index: 4;
+  right: max(26px, calc((100% - 1340px) / 2));
+  bottom: 28px;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  max-width: min(350px, calc(100% - 52px));
+  pointer-events: none;
+}
+
+.stage-live-copy .stage-status,
+.stage-live-copy .stage-flavor {
+  position: static;
+  inset: auto;
+  max-width: 100%;
+}
+
+.stage-live-copy .stage-flavor {
+  order: 1;
+}
+
+.stage-live-copy .stage-status {
+  order: 2;
+}
+
+.stage:not(.scene-active) .stage-live-copy {
+  display: none;
+}
+
+.stage-fallback-text {
+  max-width: min(360px, 78%);
+  margin-bottom: 28px;
+  padding: 8px 12px;
+  border: 1px solid rgba(253, 248, 236, 0.28);
+  border-radius: 4px;
+  background: rgba(7, 17, 31, 0.82);
+  color: var(--paper-bright);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .paper-tear {
@@ -3521,7 +3570,7 @@ body {
 
 .roadmap-content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 360px);
   align-items: stretch;
   gap: clamp(18px, 2.5vw, 34px);
 }
@@ -3610,15 +3659,15 @@ body {
 .roadmap-step p {
   margin: 5px auto 0;
   color: #c2ccd6;
-  font-size: clamp(0.58rem, 0.62vw, 0.67rem);
-  line-height: 1.32;
+  font-size: clamp(0.66rem, 0.7vw, 0.76rem);
+  line-height: 1.4;
   text-wrap: pretty;
 }
 
 .roadmap-catalogue {
   position: relative;
   align-self: start;
-  min-height: 168px;
+  min-height: 270px;
   padding: 14px 14px 12px;
   border: 1px solid #c6aa73;
   background:
@@ -3663,8 +3712,8 @@ body {
 
 .roadmap-catalogue-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px 7px;
 }
 
 .roadmap-catalogue figure {
@@ -3676,6 +3725,7 @@ body {
 .roadmap-catalogue figure img {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 1;
   border: 1px solid rgba(107, 91, 69, 0.28);
   background: rgba(217, 194, 154, 0.28);
@@ -3683,22 +3733,20 @@ body {
 }
 
 .roadmap-catalogue figcaption {
-  overflow: hidden;
-  margin-top: 2px;
+  margin-top: 4px;
   color: var(--ink-soft);
   font-family: var(--font-mono);
-  font-size: 0.4rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  line-height: 1.12;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .roadmap-catalogue-link {
   display: inline-block;
   margin-top: 8px;
   color: var(--factory-orange-deep);
-  font-size: 0.59rem;
+  font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.04em;
   text-decoration-thickness: 2px;
@@ -4148,7 +4196,7 @@ body {
   }
 
   .empire-hud-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     padding: 7px 0;
   }
 
@@ -4539,7 +4587,7 @@ html {
 }
 
 .operations-readout dd {
-  overflow: hidden;
+  overflow: visible;
   margin: 0;
   color: var(--accent);
   font-family: var(--font-mono);
@@ -4547,8 +4595,8 @@ html {
   font-variant-numeric: tabular-nums;
   font-weight: 850;
   line-height: 1.1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .operations-jump {
@@ -4611,9 +4659,8 @@ html {
 
 .operations-deck > #printStation {
   grid-column: span 4;
-  position: sticky;
-  top: calc(var(--header-offset) + 20px);
-  z-index: 2;
+  position: static;
+  align-self: start;
 }
 
 .operations-deck > #buildingsPanel {
@@ -4623,6 +4670,16 @@ html {
 .operations-deck > #upgradesPanel,
 .operations-deck > .progress-card {
   grid-column: 1 / -1;
+}
+
+@media (min-width: 1181px) {
+  .operations-deck > #printStation {
+    grid-row: span 2;
+  }
+
+  .operations-deck > #upgradesPanel {
+    grid-column: 5 / -1;
+  }
 }
 
 .operations-deck .card {
@@ -5720,10 +5777,6 @@ html {
     min-height: 112px;
     border-top: 1px solid var(--ops-night-line);
     border-left: 0;
-  }
-
-  .operations-deck > #printStation {
-    position: static;
   }
 
   .operations-deck .buildings-list {

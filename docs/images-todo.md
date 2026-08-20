@@ -94,10 +94,15 @@ flat 2D, slightly uneven ink coverage`. Le visa rouge « débloqué » reste en 
 
 ## Priorité 4 — headers et key art
 
-- [x] `key-art` — livré : recadré en 1200×630 et installé comme `social-card.jpg` (les balises og/JSON-LD pointaient déjà dessus)
-      Wide key art: the lowpoly printing campus diorama at dusk seen from above, purple night sky #271c40 fading to #0b0617, warm golden windows, in the foreground a giant cream paper sheet and a red rubber stamp mid-air about to stamp, dramatic but playful, no characters' faces, flat lowpoly 3D style matching a three.js diorama
-- [x] `docs-header.webp` (1600×400, stocké dans assets/images/ — intégration au site docs à faire)
-      Wide banner: a flat lay of cream and kraft paper sheets, a rubber stamp, paper clips and a golden coin scattered on a dusk-purple desk surface #271c40, top-down scan aesthetic, calm composition with empty space in the middle for overlaid text
+- [x] `assets/images/social-card.jpg` — remplacé en 0.23.1 par une capture
+      déterministe 1200×630 de la landing Production Twin courante ; les balises
+      Open Graph, Twitter et JSON-LD conservent la même URL publique.
+- [x] Ancien `key-art` violet / low-poly / tampon — retiré de la surface active
+      en 0.23.1 et conservé uniquement dans l'historique Git.
+- [ ] `docs-header.webp` historique (1600×400, stocké mais non intégré) — ne pas
+      publier dans sa direction violette « Atelier tamponné ». Si un hero docs
+      devient nécessaire, produire un asset V5 versionné au moment de son
+      intégration, avec son contexte réel.
 
 ## Factory Key Art — 0.20
 
@@ -111,6 +116,11 @@ déterministe pour rester nettes et accessibles :
 - [x] `assets/brand/sources/data-science-zone-concept.png` — master d'exploration
       peint conservé comme source de direction, exclu de l'archive publique et
       jamais chargé par le site.
+
+- [x] `assets/brand/papers-empire-app-mark-v2.svg` — master vectoriel
+      déterministe de l'icône Production Twin : couronne de papier, presse
+      orange, tuyaux or, acier bleu nuit et fond plein. Il pilote le favicon et
+      les dérivés PNG navigateur, iOS et PWA.
 
 - [x] `assets/brand/papers-empire-logo-v2.png` + `.webp` — lockup exact
       « PAPERS EMPIRE / IDLE GAME », plaque d'usine bleu nuit, lettres crème

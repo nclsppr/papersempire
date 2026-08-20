@@ -1,6 +1,6 @@
 # Design system V5 — « Production Twin · Precision Pass »
 
-Ce document formalise la direction de Papers Empire 0.23.0. Il remplace le
+Ce document formalise la direction de Papers Empire 0.23.1. Il remplace le
 gel « Atelier tamponné » par un système **révocable et challengé** : une règle
 visuelle est un choix de produit tant qu'elle améliore la lisibilité, le plaisir
 de jeu et la cohérence du monde, jamais une vérité à préserver pour elle-même.

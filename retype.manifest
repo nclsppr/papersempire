@@ -1,6 +1,6 @@
 {
   "version": "4.6.0",
-  "created": "2026-07-17T21:13:12Z",
+  "created": "2026-08-20T01:18:27Z",
   "files": [
     {
       "path": ".nojekyll"
@@ -15,10 +15,12 @@
       "path": "accessibility/index.html"
     },
     {
-      "path": "agents.md"
+      "path": "agents.md",
+      "old": true
     },
     {
-      "path": "agents/index.html"
+      "path": "agents/index.html",
+      "old": true
     },
     {
       "path": "architecture.md"
@@ -27,10 +29,12 @@
       "path": "architecture/index.html"
     },
     {
-      "path": "balance.md"
+      "path": "balance.md",
+      "old": true
     },
     {
-      "path": "balance/index.html"
+      "path": "balance/index.html",
+      "old": true
     },
     {
       "path": "CNAME"
@@ -42,10 +46,18 @@
       "path": "codex-is-thinking/index.html"
     },
     {
-      "path": "documentation.md"
+      "path": "design-system.md"
     },
     {
-      "path": "documentation/index.html"
+      "path": "design-system/index.html"
+    },
+    {
+      "path": "documentation.md",
+      "old": true
+    },
+    {
+      "path": "documentation/index.html",
+      "old": true
     },
     {
       "path": "events.md"
@@ -58,6 +70,12 @@
     },
     {
       "path": "game-design/index.html"
+    },
+    {
+      "path": "images-todo.md"
+    },
+    {
+      "path": "images-todo/index.html"
     },
     {
       "path": "index.html"
@@ -120,16 +138,24 @@
       "path": "resources/retype.LICENSE.txt"
     },
     {
+      "path": "roadmap.md"
+    },
+    {
+      "path": "roadmap/index.html"
+    },
+    {
       "path": "robots.txt"
     },
     {
       "path": "sitemap.xml"
     },
     {
-      "path": "web-success-plan.md"
+      "path": "web-success-plan.md",
+      "old": true
     },
     {
-      "path": "web-success-plan/index.html"
+      "path": "web-success-plan/index.html",
+      "old": true
     }
   ]
 }

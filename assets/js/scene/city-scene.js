@@ -1942,7 +1942,7 @@
       shadowsEnabled = finePointerEffects();
       renderer.shadowMap.enabled = shadowsEnabled;
       if (shadowsEnabled) {
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
         renderer.shadowMap.autoUpdate = false;
         renderer.shadowMap.needsUpdate = true;
       }

@@ -30,7 +30,7 @@ const META = {
       "Grow a tiny print shop into a 4.0 omnichannel factory: buildings, premium contracts, strategic reorgs and paper jams. Free idle game in your browser.",
     ogTitle: "Papers Empire: print shop to Factory 4.0",
     ogDescription: "Click, print, automate: build your document empire in this free browser idle game.",
-    imageAlt: "3D diorama of the Papers Empire campus at dusk, with the game title",
+    imageAlt: "Papers Empire interface showing the automated printworks, industrial campus, and live game counters",
   },
   de: {
     locale: "de_DE",
@@ -39,7 +39,7 @@ const META = {
       "Verwandle eine kleine Druckerei in eine 4.0-Omnichannel-Fabrik: Gebäude, Premium-Verträge, strategische Reorgs und Papierstaus. Gratis Idle Game im Browser.",
     ogTitle: "Papers Empire: von der Druckerei zur Fabrik 4.0",
     ogDescription: "Klicken, drucken, automatisieren: Bau dein Dokumenten-Imperium im kostenlosen Idle Game.",
-    imageAlt: "3D-Diorama des Papers-Empire-Campus in der Abenddämmerung mit dem Spieltitel",
+    imageAlt: "Papers-Empire-Oberfläche mit automatisierter Druckerei, Industriecampus und Live-Spielwerten",
   },
   lb: {
     locale: "lb_LU",
@@ -48,7 +48,7 @@ const META = {
       "Maach deng kleng Dréckerei zu enger 4.0 Omnichannel-Fabrick: Gebaier, Premium-Kontrakter, strategesch Reorgen a Pabeierstau. Gratis Idle Game am Browser.",
     ogTitle: "Papers Empire: vun der Dréckerei bis d'Fabrick 4.0",
     ogDescription: "Klicken, drécken, automatiséieren: Bau däin Dokumenten-Empire am gratis Idle Game.",
-    imageAlt: "3D-Diorama vum Papers-Empire-Campus an der Dämmerung mam Spilltitel",
+    imageAlt: "Papers-Empire-Interface mat automatiséierter Dréckerei, Industriecampus a Live-Spillwäerter",
   },
 };
 

@@ -1,5 +1,27 @@
 # Release Notes
 
+## 0.23.1 — « Quality Pass V5 » : chaque pixel compte — 2026-08-20
+
+- Sur MacBook et grand écran, la scène Three.js gagne en hauteur et peut
+  occuper jusqu'à 1920 px de large. Le renderer conserve son DPR borné et son
+  redimensionnement piloté par `ResizeObserver` ; seule la surface CSS limitante
+  a été corrigée.
+- La console d'impression n'est plus `sticky` sur toute l'Operations Deck : sa
+  grande carte reprend le flux normal et ne recouvre plus Stratégie ni
+  Progression. Les valeurs de production restent wrappables.
+- Le HUD empile libellé et valeur dans chaque métrique, sur la landing comme en
+  jeu. Le statut du campus et la phrase d'ambiance partagent désormais une pile
+  ancrée avec un espacement réel, sans superposition.
+- Le catalogue desktop passe de six colonnes microscopiques à une grille 3×2 :
+  légendes plus grandes, retour à la ligne et miniatures contenues. Les KPI et
+  recommandations de la Data Science Zone ne rognent plus leurs glyphes ni les
+  valeurs longues.
+- La carte Open Graph/Twitter est une capture 1200×630 de la landing Production
+  Twin actuelle. Le favicon et les icônes iOS/PWA dérivent d'un nouveau master
+  vectoriel navy, ivoire, or et orange, avec fond plein compatible `maskable`.
+  Les miniatures V4, badges de succès, sceau de prestige et fallbacks historiques
+  restent intacts lorsqu'ils sont déjà cohérents ou sémantiquement justifiés.
+
 ## 0.23.0 — « Precision Pass V5 » : l'usine tient aussi dans la poche — 2026-08-18
 
 - Safari ne peut plus restaurer indéfiniment une ancienne combinaison

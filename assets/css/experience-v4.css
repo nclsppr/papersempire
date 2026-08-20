@@ -58,7 +58,8 @@ html[data-experience="landing"] .stage {
 }
 
 html[data-experience="playing"] .stage {
-  height: clamp(300px, 26vw, 390px);
+  height: clamp(430px, 38vw, 620px);
+  height: clamp(430px, min(38vw, 60svh), 620px);
   min-height: 0;
   border-bottom: 1px solid rgba(217, 168, 77, 0.38);
   box-shadow: inset 0 -30px 70px rgba(7, 19, 31, 0.28), 0 18px 54px rgba(0, 5, 12, 0.36);
@@ -82,7 +83,8 @@ html[data-experience="playing"] .hero-horizon img {
 html[data-experience="playing"] .empire-hud {
   top: 50%;
   right: max(18px, calc((100% - 1380px) / 2));
-  width: min(280px, 23vw);
+  width: clamp(340px, 27vw, 400px);
+  max-width: calc(100% - 36px);
   padding: 10px 12px;
   transform: translateY(-50%);
 }
@@ -90,11 +92,33 @@ html[data-experience="playing"] .empire-hud {
 html[data-experience="playing"] .empire-hud-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 12px;
+  gap: 0;
 }
 
 html[data-experience="playing"] .empire-hud-row:nth-child(2) {
   border-top: 0;
+}
+
+html[data-experience="playing"] .empire-hud-row {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 4px;
+  padding: 9px 10px;
+}
+
+html[data-experience="playing"] .empire-hud-row:nth-child(even) {
+  border-left: 1px solid rgba(253, 248, 236, 0.12);
+}
+
+html[data-experience="playing"] .empire-hud dd {
+  overflow: visible;
+  margin-left: 34px;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+html[data-experience="playing"] .empire-hud dt {
+  font-size: 0.66rem;
 }
 
 html[data-experience="playing"] .empire-hud-icon {
@@ -107,16 +131,19 @@ html[data-experience="playing"] .empire-hud-icon svg {
   height: 17px;
 }
 
-html[data-experience="playing"] .stage-flavor {
+html[data-experience="playing"] .stage-live-copy {
   right: auto;
   bottom: 42px;
   left: max(18px, calc((100% - 1380px) / 2));
+  justify-items: start;
 }
 
-html[data-experience="playing"] .stage-status {
-  right: auto;
-  bottom: 78px;
-  left: max(18px, calc((100% - 1380px) / 2));
+html[data-experience="playing"] .stage-live-copy .stage-status {
+  order: 1;
+}
+
+html[data-experience="playing"] .stage-live-copy .stage-flavor {
+  order: 2;
 }
 
 html[data-experience="playing"] .paper-tear {
@@ -126,6 +153,23 @@ html[data-experience="playing"] .paper-tear {
 /* Le header sait qu'une partie est en cours. */
 html[data-experience="playing"] .primary-nav {
   justify-content: flex-start;
+}
+
+html[data-experience="playing"] .header-brand {
+  align-self: center;
+  justify-content: center;
+  width: 52px;
+}
+
+html[data-experience="playing"] .brand-picture {
+  display: none;
+}
+
+html[data-experience="playing"] .brand-app-mark {
+  display: block;
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.32));
 }
 
 html[data-experience="playing"] .app-header .nav-dash-link {
@@ -266,7 +310,7 @@ html[data-experience="playing"] body {
 .roadmap-catalogue-grid img {
   object-fit: contain;
   filter: drop-shadow(0 7px 7px rgba(7, 19, 31, 0.23));
-  transform: scale(1.12);
+  transform: scale(1);
 }
 
 /* --- Data Science Zone --------------------------------------------------- */
@@ -658,15 +702,15 @@ html[data-experience="playing"] body {
 }
 
 .data-kpi-value {
-  overflow: hidden;
+  overflow: visible;
   color: #fff7e6;
   font-family: var(--font-mono);
   font-size: clamp(1.4rem, 2.6vw, 2.25rem);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.04em;
-  line-height: 1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .data-kpi.is-primary .data-kpi-value {
@@ -915,14 +959,15 @@ html[data-experience="playing"] body {
 }
 
 .recommendation-metrics dd {
-  overflow: hidden;
+  overflow: visible;
   margin: 7px 0 0;
   color: #fff7e6;
   font-family: var(--font-mono);
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .recommendation-projection {
@@ -1297,8 +1342,7 @@ html[data-experience="playing"] body {
     right: max(24px, calc((100% - 1340px) / 2), calc(env(safe-area-inset-right) + 12px));
   }
 
-  .stage-flavor,
-  .stage-status {
+  .stage-live-copy {
     right: max(26px, calc((100% - 1340px) / 2), calc(env(safe-area-inset-right) + 12px));
   }
 
@@ -1306,8 +1350,7 @@ html[data-experience="playing"] body {
     right: max(18px, calc((100% - 1380px) / 2), calc(env(safe-area-inset-right) + 12px));
   }
 
-  html[data-experience="playing"] .stage-flavor,
-  html[data-experience="playing"] .stage-status {
+  html[data-experience="playing"] .stage-live-copy {
     left: max(18px, calc((100% - 1380px) / 2), calc(env(safe-area-inset-left) + 12px));
   }
 }
@@ -1364,7 +1407,7 @@ html[data-experience="playing"] body {
   html[data-experience="playing"] .empire-hud {
     top: 12px;
     right: max(12px, calc(env(safe-area-inset-right) + 10px));
-    width: min(260px, calc(100% - 24px));
+    width: min(330px, calc(100% - 24px));
     transform: none;
   }
 
@@ -1487,6 +1530,10 @@ html[data-experience="playing"] body {
   }
 
   html[data-experience="playing"] .stage-status {
+    position: static;
+  }
+
+  html[data-experience="playing"] .stage-live-copy {
     top: 12px;
     bottom: auto;
     left: max(12px, calc(env(safe-area-inset-left) + 8px));
@@ -1701,6 +1748,19 @@ html[data-experience="playing"] body {
   .data-state-dot {
     box-shadow: none;
   }
+}
+
+html.pref-large-text[data-experience="playing"] .empire-hud {
+  width: min(440px, calc(100% - 36px));
+}
+
+html.pref-large-text[data-experience="playing"] .empire-hud-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.pref-large-text[data-experience="playing"] .empire-hud-row:nth-child(even) {
+  border-left: 0;
+  border-top: 1px solid rgba(253, 248, 236, 0.12);
 }
 
 .pref-high-contrast .data-zone-shell,

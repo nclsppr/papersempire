@@ -1,4 +1,4 @@
-# Balance & Metrics — 0.23.0
+# Balance & Metrics — 0.23.1
 
 Ce document recense les hypothèses de calcul et le contrat analytique de la
 Data Science Zone. Il sépare les règles de jeu des projections d'aide à la
