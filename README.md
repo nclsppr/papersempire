@@ -2,7 +2,7 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
-Current release contract: **0.23.0 — Precision Pass V5**.
+Current release contract: **0.23.1 — Quality Pass V5**.
 
 ## Quick Links
 - [Docs Overview](docs/README.md)

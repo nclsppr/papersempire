@@ -68,14 +68,14 @@
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Diorama 3D du campus Papers Empire au crépuscule, avec le titre du jeu">
+  <meta property="og:image:alt" content="Interface de Papers Empire montrant l'imprimerie automatisée, le campus industriel et les compteurs du jeu">
   <meta property="og:locale" content="fr_FR">
   <meta property="og:locale:alternate" content="en_US">
   <meta property="og:locale:alternate" content="de_DE">
   <meta property="og:locale:alternate" content="lb_LU">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://papersempire.com/assets/images/social-card.jpg">
-  <meta name="twitter:image:alt" content="Diorama 3D du campus Papers Empire au crépuscule, avec le titre du jeu">
+  <meta name="twitter:image:alt" content="Interface de Papers Empire montrant l'imprimerie automatisée, le campus industriel et les compteurs du jeu">
   <script>
   // Confort humain des liens ?lang=xx : ajuste très tôt la langue du
   // document et le title/description pour éviter tout flash en français.
@@ -214,6 +214,7 @@
           <source srcset="/assets/brand/papers-empire-logo-v2.webp" type="image/webp">
           <img class="brand-lockup" src="/assets/brand/papers-empire-logo-v2.png" alt="" width="700" height="560" decoding="async" fetchpriority="high">
 </picture>
+        <img class="brand-app-mark" src="/favicon.svg" alt="" width="48" height="48" decoding="async">
         <span class="sr-only">Papers Empire</span>
 </a>
       <nav class="primary-nav" aria-label="Navigation principale" data-i18n-aria-label="nav.primaryLabel">
@@ -330,11 +331,13 @@
 </dl>
 </aside>
 
-    <div class="stage-status" aria-hidden="true">
-      <span></span>
-      <strong data-i18n="scene.liveCampus">Campus en direct</strong>
-</div>
-    <div class="stage-flavor" id="flavorLine"></div>
+    <div class="stage-live-copy">
+      <div class="stage-status" aria-hidden="true">
+        <span></span>
+        <strong data-i18n="scene.liveCampus">Campus en direct</strong>
+      </div>
+      <div class="stage-flavor" id="flavorLine"></div>
+    </div>
     <div class="paper-tear" aria-hidden="true"></div>
 </section>
 

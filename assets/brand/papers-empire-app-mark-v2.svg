@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256" role="img" aria-labelledby="favicon-title favicon-desc">
-  <title id="favicon-title">Papers Empire</title>
-  <desc id="favicon-desc">Une couronne de papier posée sur une presse industrielle.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256" role="img" aria-labelledby="app-mark-title app-mark-desc">
+  <title id="app-mark-title">Papers Empire</title>
+  <desc id="app-mark-desc">Une couronne de papier posée sur une presse industrielle.</desc>
 
   <rect width="256" height="256" fill="#07111f"/>
   <rect x="8" y="8" width="240" height="240" rx="54" fill="#0c1b2d" stroke="#28516a" stroke-width="4"/>

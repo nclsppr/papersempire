@@ -33,6 +33,15 @@ et les données racontent la même usine : le **production twin**.
 - **0.21.1 — Branche canonique `main`** : workflows, Pages et réconciliation
   Atlas alignés.
 
+## 0.23.1 — Quality Pass V5
+
+- [x] Scène desktop agrandie sans relever le DPR ni le budget de rendu.
+- [x] HUD landing/jeu, statut live et phrase d'ambiance sans collision.
+- [x] Console d'impression replacée dans le flux de l'Operations Deck.
+- [x] Catalogue desktop 3×2, légendes lisibles et miniatures contenues.
+- [x] Valeurs longues et glyphes de la Data Science Zone non rognés.
+- [x] Carte sociale et famille d'icônes actives alignées sur Production Twin.
+
 ## 0.23 — Precision Pass V5
 
 - [x] Rechargement unique des pages restaurées par le BFCache Safari.
