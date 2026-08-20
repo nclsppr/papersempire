@@ -29,7 +29,6 @@ revision=$(git -C "$REPOSITORY_ROOT" rev-parse --verify "${2}^{commit}")
 
 mkdir -p "$output_directory/docs"
 cp "$REPOSITORY_ROOT/index.html" "$output_directory/index.html"
-cp "$REPOSITORY_ROOT/favicon.svg" "$output_directory/favicon.svg"
 cp "$REPOSITORY_ROOT/robots.txt" "$output_directory/robots.txt"
 cp "$REPOSITORY_ROOT/404.html" "$output_directory/404.html"
 cp "$REPOSITORY_ROOT/site.webmanifest" "$output_directory/site.webmanifest"

@@ -1,6 +1,6 @@
 # Design system V5 — « Production Twin · Precision Pass »
 
-Ce document formalise la direction de Papers Empire 0.23.1. Il remplace le
+Ce document formalise la direction de Papers Empire 0.23.2. Il remplace le
 gel « Atelier tamponné » par un système **révocable et challengé** : une règle
 visuelle est un choix de produit tant qu'elle améliore la lisibilité, le plaisir
 de jeu et la cohérence du monde, jamais une vérité à préserver pour elle-même.
@@ -161,24 +161,29 @@ rentabilité comptable. La télémétrie reste locale au navigateur, partielle a
 migration ou effacement du stockage, et ne permet aucune comparaison entre
 joueurs. Aucun indicateur synthétique ne doit masquer ces limites.
 
-### Sous-marque « Crown Analyzer »
+### Une signature analytique, pas une seconde marque
 
-La Data Science Zone possède une signature propre sans devenir une marque
-indépendante. Son emblème conserve la couronne de feuilles de Papers Empire et
-la monte sur un analyseur de production : rouleaux, feuille alimentée et une
-unique courbe cyan. Le cyan signale la mesure ; le laiton, l'ivoire, l'orange
-sécurité et l'acier nuit maintiennent la filiation avec l'usine.
+La source canonique de Papers Empire est le lockup peint visible sur la page
+d'accueil : `assets/brand/papers-empire-logo-v2.png`, avec son dérivé WebP. Il
+reste visible dans le jeu ; les favicons et icônes installables sont uniquement
+des recadrages et redimensionnements de cette image, jamais une reconstruction
+vectorielle simplifiée.
 
-- source vectorielle livrée : `assets/brand/data-science-zone-mark.svg` ;
-- exploration peinte conservée :
+La Data Science Zone possède un emblème contextuel sans devenir une marque
+indépendante. Il conserve la couronne dorée, la matière peinte, les rouleaux,
+le papier ivoire, l'acier nuit et la lumière du lockup canonique. Une unique
+courbe cyan signale la mesure sans introduire un autre vocabulaire graphique.
+
+- master peint conservé :
+  `assets/brand/sources/data-science-zone-emblem-v2-master.png` ;
+- dérivés actifs : `assets/brand/data-science-zone-emblem-v2.png` et `.webp` ;
+- exploration initiale conservée :
   `assets/brand/sources/data-science-zone-concept.png` ;
 - les répertoires `sources/` restent versionnés dans le dépôt mais sont exclus
   de l'archive publique ; seuls les dérivés utilisés partent en production ;
-- le nom « Data Science Zone » reste du texte HTML déterministe et le sous-titre
-  reste localisable ;
-- le favicon et la marque produit globale restent Papers Empire ;
+- le nom « Data Science Zone » reste du texte HTML déterministe et localisable ;
 - pas de cerveau, atome, base de données ou histogramme générique : le signe
-  doit raconter la mesure d'une production de papier.
+  raconte la mesure d'une production de papier.
 
 ## Ce qui est invariant, ce qui est révocable
 

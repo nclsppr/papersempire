@@ -9,7 +9,7 @@ exclude:
   - "web-success-plan.md"
 branding:
   title: Papers Empire Docs
-  label: v0.23.1
+  label: v0.23.2
 navigation:
   - Overview: README.md
   - Architecture: architecture.md

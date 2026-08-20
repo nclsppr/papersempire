@@ -1,6 +1,6 @@
 ````markdown
 # Papers Empire 📄🖨️🏭  
-Game Design Document (GDD) – version développeur 0.23.1
+Game Design Document (GDD) – version développeur 0.23.2
 
 ---
 

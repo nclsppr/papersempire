@@ -110,7 +110,6 @@ function verifyStaticContracts() {
   const css = read("assets/css/style.css");
   const experienceCss = read("assets/css/experience-v4.css");
   const manifest = read("site.webmanifest");
-  const favicon = read("favicon.svg");
   const build = read("scripts/build-lang-pages.mjs");
   const siteBuild = read("scripts/build-site.sh");
   const workflows = read(".github/workflows/docs.yml") + read(".github/workflows/vps-release.yml");
@@ -141,16 +140,22 @@ function verifyStaticContracts() {
     "the print console must never cover later cards while scrolling");
   assert.match(experienceCss, /\.data-kpi-value\s*\{[^}]*overflow:\s*visible[^}]*white-space:\s*normal/,
     "Data Science KPI values must remain unclipped and wrappable");
-  assert.match(dashboard, /assets\/brand\/data-science-zone-mark\.svg/,
-    "the Data Science Zone must expose its sub-brand mark");
-  assert.match(index, /class="brand-app-mark" src="\/favicon\.svg"/,
-    "the in-game compact header must use the Production Twin app mark");
+  assert.match(index, /papers-empire-logo-v2\.webp[\s\S]*papers-empire-logo-v2\.png/,
+    "the interface must retain the painted homepage logo as its canonical brand source");
+  assert.doesNotMatch(index, /brand-app-mark|favicon\.svg/,
+    "the in-game header must not replace the painted logo with a flat app mark");
+  assert.match(experienceCss, /html\[data-experience="playing"\] \.brand-picture\s*\{[^}]*display:\s*block/,
+    "the painted homepage logo must remain visible after entering the game");
+  assert.match(dashboard, /data-science-zone-emblem-v2\.webp[\s\S]*data-science-zone-emblem-v2\.png/,
+    "the Data Science Zone must expose its painted industrial emblem");
+  assert.doesNotMatch(dashboard + experienceCss, /data-science-zone-mark\.svg/,
+    "the Data Science Zone must not fall back to the flat vector mark");
   assert.equal((manifest.match(/"purpose":\s*"any maskable"/g) || []).length, 2,
     "both installable icon sizes must support full-bleed maskable use");
-  assert.match(favicon, /#07111f[\s\S]*#d7521b/,
-    "the app mark must retain the navy and safety-orange Production Twin palette");
   assert.deepEqual(readJpegSize("assets/images/social-card.jpg"), { width: 1200, height: 630 },
     "the social card must remain a 1200x630 JPEG");
+  assert.deepEqual(readPngSize("assets/brand/data-science-zone-emblem-v2.png"), { width: 512, height: 512 },
+    "the Data Science Zone fallback emblem must remain a 512x512 PNG");
   for (const [path, size] of [
     ["assets/images/favicon-32.png", 32],
     ["assets/images/apple-touch-icon.png", 180],

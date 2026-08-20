@@ -1,6 +1,6 @@
 # Architecture
 
-Cette page décrit le contrat technique de Papers Empire 0.23.1. Elle résume les
+Cette page décrit le contrat technique de Papers Empire 0.23.2. Elle résume les
 modules clés, les deux états de l'expérience, les flux locaux de données et les
 limites de la Data Science Zone.
 
