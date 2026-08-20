@@ -2930,10 +2930,6 @@ body {
   object-position: center;
 }
 
-.brand-app-mark {
-  display: none;
-}
-
 .primary-nav {
   display: flex;
   align-items: stretch;

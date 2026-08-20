@@ -69,8 +69,9 @@ flowchart LR
 - **Static UI:** validate HTML, CSS, identifiers, ARIA references and all four
   i18n catalogs before publication.
 - **Résilience UI:** `npm run ui:check` vérifie les contrats BFCache, fallback
-  contraste élevé/première frame, fente de presse, cache runtime et sous-marque
-  analytique. Pages et la release VPS l'exécutent avant leur build.
+  contraste élevé/première frame, fente de presse, cache runtime, source de
+  marque canonique et emblème analytique peint. Pages et la release VPS
+  l'exécutent avant leur build.
 - **Docs:** `npm run docs:build` generates the Retype site into `docs-site/` so CI/GitHub Pages can publish it.
 - **Limite actuelle:** le dépôt ne contient pas de suite navigateur complète.
   Les parcours clavier, Safari/iPhone et WebGL doivent donc encore être

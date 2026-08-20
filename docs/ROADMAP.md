@@ -33,6 +33,13 @@ et les données racontent la même usine : le **production twin**.
 - **0.21.1 — Branche canonique `main`** : workflows, Pages et réconciliation
   Atlas alignés.
 
+## 0.23.2 — Canonical Brand Pass V5
+
+- [x] Logo peint de la landing conservé après l'entrée dans le jeu.
+- [x] Favicons et icônes installables dérivés du même master peint.
+- [x] Emblème Data Science Zone aligné sur la matière et la profondeur du logo.
+- [x] Marks SVG plats retirés des surfaces actives et des contrats de test.
+
 ## 0.23.1 — Quality Pass V5
 
 - [x] Scène desktop agrandie sans relever le DPR ni le budget de rendu.
@@ -40,7 +47,8 @@ et les données racontent la même usine : le **production twin**.
 - [x] Console d'impression replacée dans le flux de l'Operations Deck.
 - [x] Catalogue desktop 3×2, légendes lisibles et miniatures contenues.
 - [x] Valeurs longues et glyphes de la Data Science Zone non rognés.
-- [x] Carte sociale et famille d'icônes actives alignées sur Production Twin.
+- [x] Carte sociale alignée sur Production Twin ; famille d'icônes corrigée à
+      partir du master peint canonique en 0.23.2.
 
 ## 0.23 — Precision Pass V5
 
@@ -49,7 +57,8 @@ et les données racontent la même usine : le **production twin**.
 - [x] Fallback visible en contraste élevé, perte de contexte et échec WebGL.
 - [x] Versionnement commun des CSS, JS, images, polices, imports Three.js,
       ressources runtime et icônes installables.
-- [x] Sous-marque vectorielle « Crown Analyzer » pour la Data Science Zone.
+- [x] Exploration « Crown Analyzer » livrée, puis remplacée en 0.23.2 par un
+      emblème peint cohérent avec le logo d'accueil.
 - [x] Admission papier masquée par une vraie fente et animation sans reflow.
 - [x] Rail de progression restructuré en liste lisible sur iPhone.
 - [x] Contrat de résilience exécuté dans les validations Pages et VPS.

@@ -1,5 +1,20 @@
 # Release Notes
 
+## 0.23.2 — « Canonical Brand Pass V5 » : une seule source de marque — 2026-08-20
+
+- Le pictogramme vectoriel plat introduit dans le header de jeu, le favicon et
+  les icônes installables est retiré. La landing et le jeu affichent désormais
+  le même lockup peint `papers-empire-logo-v2` ; les PNG navigateur, iOS et PWA
+  sont des recadrages et redimensionnements fidèles de ce master.
+- La Data Science Zone abandonne son interprétation SVG simplifiée. Son nouvel
+  emblème reprend la couronne dorée, les rouleaux, l'acier travaillé, le papier
+  ivoire et la lumière du logo d'accueil ; seul le signal cyan distingue la
+  lecture analytique. Le master 1254 px reste hors build et les dérivés 512 px
+  PNG/WebP alimentent l'interface.
+- Les contrats de résilience interdisent maintenant le retour des anciens marks
+  plats, garantissent le logo peint en mode jeu et vérifient les dimensions du
+  fallback Data Science. Aucun comportement de simulation n'est modifié.
+
 ## 0.23.1 — « Quality Pass V5 » : chaque pixel compte — 2026-08-20
 
 - Sur MacBook et grand écran, la scène Three.js gagne en hauteur et peut

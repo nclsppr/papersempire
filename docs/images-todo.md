@@ -107,24 +107,25 @@ flat 2D, slightly uneven ink coverage`. Le visa rouge « débloqué » reste en 
 ## Factory Key Art — 0.20
 
 Assets générés avec le skill ImageGen intégré. Les illustrations peintes sont
-conservées en masters raster ; les marques simples sont reconstruites en SVG
-déterministe pour rester nettes et accessibles :
+conservées en masters raster ; les dérivés actifs restent rattachés à une source
+canonique explicite :
 
-- [x] `assets/brand/data-science-zone-mark.svg` — sous-marque « Crown Analyzer »
-      reconstruite en vectoriel déterministe après exploration ImageGen ;
-      couronne de papier, analyseur à rouleaux et signal cyan.
+- [x] `assets/brand/data-science-zone-emblem-v2.png` + `.webp` — emblème peint
+      512×512 aligné sur le lockup d'accueil : couronne dorée, analyseur à
+      rouleaux, papier ivoire et unique signal cyan.
+- [x] `assets/brand/sources/data-science-zone-emblem-v2-master.png` — master
+      1254×1254 conservé hors archive publique.
 - [x] `assets/brand/sources/data-science-zone-concept.png` — master d'exploration
       peint conservé comme source de direction, exclu de l'archive publique et
       jamais chargé par le site.
 
-- [x] `assets/brand/papers-empire-app-mark-v2.svg` — master vectoriel
-      déterministe de l'icône Production Twin : couronne de papier, presse
-      orange, tuyaux or, acier bleu nuit et fond plein. Il pilote le favicon et
-      les dérivés PNG navigateur, iOS et PWA.
-
 - [x] `assets/brand/papers-empire-logo-v2.png` + `.webp` — lockup exact
       « PAPERS EMPIRE / IDLE GAME », plaque d'usine bleu nuit, lettres crème
       extrudées, tuyaux, couronne de papier dorée et ruban orange, fond navy.
+- [x] `assets/images/{favicon-32,apple-touch-icon,icon-192,icon-512}.png` —
+      recadrages et redimensionnements directs de ce lockup peint. Les marks SVG
+      plats introduits en 0.23.0/0.23.1 ont été retirés des surfaces actives en
+      0.23.2.
 - [x] `assets/images/hero-horizon-wide.webp` — horizon panoramique peint,
       lumière matinale à gauche, ville européenne distante, cour industrielle
       libre pour accueillir la scène Three.js.
