@@ -38,7 +38,7 @@
     "analytics.status.live": "Relevé à l'instant",
     "analytics.status.fresh": "Données récentes",
     "analytics.status.stale": "Données anciennes",
-    "analytics.status.legacy": "Snapshot V1 · date inconnue",
+    "analytics.status.legacy": "Ancien relevé V1 · date inconnue",
     "analytics.status.invalid": "Données illisibles",
     "analytics.common.now": "à l'instant",
     "analytics.common.unavailable": "Indisponible",
@@ -48,8 +48,8 @@
     "analytics.common.locked": "Verrouillé",
     "analytics.common.current": "En cours",
     "analytics.common.completed": "Prestige",
-    "analytics.common.samples": "{count} mesures",
-    "analytics.common.buildings": "{count} unités actives",
+    "analytics.common.samples": "Mesures : {count}",
+    "analytics.common.buildings": "Unités actives : {count}",
     "analytics.duration.lessSecond": "< 1 s",
     "analytics.duration.second": "{value} s",
     "analytics.duration.minute": "{value} min",
@@ -60,11 +60,11 @@
     "analytics.trend.flat": "Stable sur {duration}",
     "analytics.trend.single": "Une mesure horodatée",
     "analytics.trend.none": "Chronologie indisponible",
-    "analytics.trend.gaps": "{count} interruption(s) visible(s)",
-    "analytics.recommendation.reason": "Retour DOC estimé le plus court parmi les actifs débloqués.",
-    "analytics.recommendation.saving": "Meilleur retour estimé; il reste des DOC à produire avant l'achat.",
-    "analytics.recommendation.none": "Aucun actif débloqué avec un gain DOC positif n'est calculable.",
-    "analytics.recommendation.waiting": "Calcul indisponible",
+    "analytics.trend.gaps": "Interruptions visibles : {count}",
+    "analytics.recommendation.reason": "Retour DOC estimé le plus court parmi les unités débloquées.",
+    "analytics.recommendation.saving": "Meilleur retour estimé ; il reste des DOC à produire avant l'achat.",
+    "analytics.recommendation.none": "Aucune unité débloquée ne produit encore un gain DOC comparable.",
+    "analytics.recommendation.waiting": "Aucun achat à comparer",
     "analytics.projection.base": "{value} DOC automatiques estimés",
     "analytics.projection.delta": "+{value} DOC si l'actif était ajouté maintenant",
     "analytics.flow.autoDoc": "Production automatique",
@@ -75,15 +75,15 @@
     "analytics.flow.autoCc": "Confiance automatique",
     "analytics.flow.contractCc": "Contrats",
     "analytics.flow.eventCc": "Événements (net)",
-    "analytics.flow.empty": "Flux instrumentés indisponibles dans ce snapshot.",
+    "analytics.flow.empty": "Joue dans l'atelier pour faire apparaître l'origine des ressources.",
     "analytics.gauge.noHistory": "Pas encore de recul",
     "analytics.gauge.delta": "{value} pt depuis la première mesure",
     "analytics.runs.current": "Cycle courant",
     "analytics.runs.archived": "Cycle du {date}",
     "analytics.runs.prestige": "+{value} culture",
-    "analytics.investment.analyzed": "{count} / 11 actifs",
+    "analytics.investment.analyzed": "{count} / 11 unités",
     "analytics.investment.imageFallback": "Illustration indisponible",
-    "analytics.raw.schema": "Schéma snapshot",
+    "analytics.raw.schema": "Version du relevé",
     "analytics.raw.generatedAt": "Généré le",
     "analytics.raw.runId": "Identifiant du cycle",
     "analytics.raw.historySamples": "Mesures temporelles",
@@ -92,21 +92,22 @@
     "analytics.raw.ccRate": "Cadence CC/s",
     "analytics.raw.docBank": "DOC disponibles",
     "analytics.raw.docTotal": "DOC produits",
-    "analytics.raw.ccTotal": "Confiance cumulée",
+    "analytics.raw.ccTotal": "Confiance actuelle",
     "analytics.raw.yes": "Oui",
     "analytics.raw.no": "Non",
     "analytics.raw.unknownDate": "Date inconnue",
-    "analytics.coverage.legacy": "V1 · non instrumentée",
+    "analytics.meta.modelValue": "V{schema} · calcul {model}",
+    "analytics.coverage.legacy": "V1 · historique non suivi",
     "analytics.prestige.gain": "+{value} culture disponible",
-    "analytics.prestige.eta": "Prestige estimé dans {duration}",
-    "analytics.prestige.gap": "{value} CC avant prestige",
-    "analytics.prestige.legacy": "Snapshot V1",
+    "analytics.prestige.eta": "Au rythme actuel : réorganisation dans ≈ {duration}",
+    "analytics.prestige.gap": "{value} CC avant le prestige",
+    "analytics.prestige.legacy": "Ancien relevé V1",
     "analytics.role.producer": "Production directe",
     "analytics.role.multiplier": "Effet de réseau",
     "analytics.role.ccMultiplier": "Confiance",
-    "analytics.contract.boundaryV1": "Snapshot V1 compatible: investissements, flux et archives ne sont pas instrumentés.",
-    "analytics.contract.boundaryContinuous": "Instrumentation locale active depuis {date} ; la courbe peut contenir des interruptions.",
-    "analytics.contract.coverageOrigin": "le début de l'instrumentation"
+    "analytics.contract.boundaryV1": "Ancien relevé V1 : investissements, flux et archives indisponibles.",
+    "analytics.contract.boundaryContinuous": "Suivi local actif depuis {date} ; la courbe peut contenir des interruptions.",
+    "analytics.contract.coverageOrigin": "le début du suivi local"
   };
 
   const state = {
@@ -119,6 +120,7 @@
     lastSnapshotRaw: null,
     lastHistoryRaw: null,
     lastRecommendedId: null,
+    recommendationImageToken: 0,
     chartGeometry: null,
     pollTimer: null,
     statusTimer: null,
@@ -542,7 +544,9 @@
   }
 
   function setText(element, value) {
-    if (element) element.textContent = value;
+    if (!element) return;
+    const next = String(value);
+    if (element.textContent !== next) element.textContent = next;
   }
 
   function renderFreshness() {
@@ -583,7 +587,9 @@
       setText(els.dataCoverage, snapshot.schemaVersion === 1 ? t("analytics.coverage.legacy") : "—");
     }
 
-    const model = snapshot.modelVersion ? "V" + snapshot.schemaVersion + " · formule " + snapshot.modelVersion : "V" + snapshot.schemaVersion;
+    const model = snapshot.modelVersion
+      ? t("analytics.meta.modelValue", null, { schema: snapshot.schemaVersion, model: snapshot.modelVersion })
+      : "V" + snapshot.schemaVersion;
     setText(els.dataModelVersion, model);
   }
 
@@ -863,30 +869,55 @@
     const id = row && BUILDING_IDS.has(row.id) ? row.id : null;
     if (id === state.lastRecommendedId) return;
     state.lastRecommendedId = id;
-    els.recommendationImage.onerror = null;
+    const requestToken = ++state.recommendationImageToken;
+    const visual = els.recommendationImage.closest(".recommendation-visual");
+    const animateVisual = function () {
+      if (!visual || prefersReducedMotion()) return;
+      visual.classList.remove("is-updating");
+      void visual.offsetWidth;
+      requestAnimationFrame(function () {
+        if (requestToken !== state.recommendationImageToken) return;
+        visual.classList.add("is-updating");
+        window.setTimeout(function () { visual.classList.remove("is-updating"); }, 300);
+      });
+    };
 
     if (!id) {
       els.recommendationImage.hidden = true;
       els.recommendationImage.removeAttribute("src");
       els.recommendationPlaceholder.hidden = false;
+      animateVisual();
       return;
     }
 
-    let triedFallback = false;
-    els.recommendationImage.hidden = false;
-    els.recommendationPlaceholder.hidden = true;
-    els.recommendationImage.onerror = function () {
-      if (!triedFallback) {
-        triedFallback = true;
-        els.recommendationImage.src = assetUrl("/assets/images/building-" + id + ".webp");
-        return;
-      }
-      els.recommendationImage.hidden = true;
-      els.recommendationPlaceholder.hidden = false;
-      els.recommendationPlaceholder.textContent = id.slice(0, 2).toUpperCase();
-      els.recommendationPlaceholder.title = t("analytics.investment.imageFallback");
+    const candidates = [
+      assetUrl("/assets/images/building-" + id + "-v4.webp"),
+      assetUrl("/assets/images/building-" + id + ".webp")
+    ];
+    const loadCandidate = function (index) {
+      const preload = new Image();
+      preload.onload = function () {
+        if (requestToken !== state.recommendationImageToken) return;
+        els.recommendationImage.src = preload.src;
+        els.recommendationImage.hidden = false;
+        els.recommendationPlaceholder.hidden = true;
+        animateVisual();
+      };
+      preload.onerror = function () {
+        if (requestToken !== state.recommendationImageToken) return;
+        if (index + 1 < candidates.length) {
+          loadCandidate(index + 1);
+          return;
+        }
+        els.recommendationImage.hidden = true;
+        els.recommendationPlaceholder.hidden = false;
+        els.recommendationPlaceholder.textContent = id.slice(0, 2).toUpperCase();
+        els.recommendationPlaceholder.title = t("analytics.investment.imageFallback");
+        animateVisual();
+      };
+      preload.src = candidates[index];
     };
-    els.recommendationImage.src = assetUrl("/assets/images/building-" + id + "-v4.webp");
+    loadCandidate(0);
   }
 
   function renderRecommendation() {
@@ -1322,11 +1353,33 @@
     }, { passive: true });
   }
 
+  function prefersReducedMotion() {
+    return document.documentElement.classList.contains("pref-reduce-motion") ||
+      !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  function initDataZoneMotion() {
+    const intro = document.querySelector(".data-zone-intro");
+    const nav = document.querySelector(".data-zone-nav");
+    const targets = [intro, nav].filter(Boolean);
+    if (!targets.length) return;
+    if (prefersReducedMotion() || !("IntersectionObserver" in window)) {
+      targets.forEach(function (target) { target.classList.add("is-visible"); });
+      return;
+    }
+    document.documentElement.classList.add("data-zone-motion-ready");
+    requestAnimationFrame(function () {
+      if (intro) intro.classList.add("is-visible");
+      if (nav) nav.classList.add("is-visible");
+    });
+  }
+
   function boot() {
     els = collectElements();
     if (!els.dataStateChip || !els.analyticsTrendChart || !els.investmentTable) return;
     state.lang = detectLanguage();
     applyTranslations();
+    initDataZoneMotion();
     bindInteractions();
     refreshSources(true);
     state.pollTimer = window.setInterval(function () { refreshSources(false); }, POLL_MS);

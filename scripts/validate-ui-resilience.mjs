@@ -127,7 +127,19 @@ function verifyStaticContracts() {
   assert.match(index, /class="press-intake"[\s\S]*class="paper-sheet"[\s\S]*class="press-slot press-slot-in"/,
     "the paper sheet and intake lip must share one clipping viewport");
   assert.match(index, /class="stage-live-copy"[\s\S]*class="stage-status"[\s\S]*class="stage-flavor"/,
-    "the live status and flavor text must share one non-overlapping stack");
+    "the live campus status lines must share one non-overlapping stack");
+  assert.doesNotMatch(app, /FLAVOR_KEYS|initFlavorTicker|flavor\.paperJam/,
+    "the campus status must come from game state, not invented random anecdotes");
+  assert.match(index, /id="activeContractPanel"[\s\S]*id="contractsList"/,
+    "the active contract must appear before available offers");
+  assert.match(app, /playContractEffect\(DOM\.activeContractPanel\)/,
+    "contract activation feedback must target the active work order");
+  assert.match(app, /data-active-contract-progress[\s\S]*contracts\.progress/,
+    "the active contract must expose real elapsed-time progress");
+  assert.match(dashboardJs, /function setText\(element, value\)[\s\S]*element\.textContent !== next/,
+    "Data Science live regions must not be rewritten with identical text on every poll");
+  assert.doesNotMatch(css + experienceCss, /transition\s*:\s*all\b/,
+    "UI motion must continue to name the properties it changes");
   assert.match(css, /--hero-width:\s*1920px/,
     "the desktop production twin must retain its large-screen canvas budget");
   assert.match(experienceCss, /html\[data-experience="playing"\] \.stage\s*\{[^}]*clamp\(430px,[^;]+620px\)/,
