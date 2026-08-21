@@ -219,7 +219,7 @@
         <a class="landing-nav-only active" href="#sceneStage" data-i18n="nav.factory">Usine 3D</a>
         <a class="landing-nav-only" href="#roadmapTitle" data-i18n="nav.gameOverview">Le jeu</a>
         <a class="game-nav-only" href="#printStation" data-i18n="nav.production">Production</a>
-        <a class="game-nav-only" href="#buildingsPanel" data-i18n="nav.buildings">Bâtiments</a>
+        <a class="game-nav-only" href="#buildingsPanel" data-i18n="nav.buildings">Unités</a>
         <a class="game-nav-only" href="#upgradesPanel" data-i18n="nav.upgrades">Améliorations</a>
 </nav>
       <div class="header-actions">
@@ -240,15 +240,17 @@
 </div>
 </header>
 
-  <div class="event-banner hidden" id="eventBanner" aria-live="polite">
-    <div class="event-banner-icon" id="eventBannerEmoji" aria-hidden="true">🔔</div>
+  <aside class="event-banner hidden" id="eventBanner" aria-label="Notification de l'atelier" data-i18n-aria-label="events.notificationLabel">
+    <div class="event-banner-icon" aria-hidden="true">
+      <svg class="pe-icon"><use id="eventBannerIconUse" href="#pe-icon-journal"></use></svg>
+    </div>
     <div class="event-banner-body">
       <div id="eventBannerText"></div>
-</div>
+    </div>
     <button class="event-banner-close" id="closeEventBanner" type="button" aria-label="Fermer" data-i18n-aria-label="actions.closeBanner">
       <span aria-hidden="true">×</span>
-</button>
-</div>
+    </button>
+  </aside>
 
   <!-- Le canvas est décoratif ; le HUD et les actions superposés restent
        des éléments DOM accessibles et reflètent l'état réel du jeu. -->
@@ -272,14 +274,14 @@
         <span data-i18n="hero.line2">AUTOMATISE.</span>
         <span class="hero-title-accent" data-i18n="hero.line3">RÈGNE.</span>
 </h1>
-      <p class="hero-lede" data-i18n="hero.lede">Pars d'un atelier minuscule et bâtis un empire du document, machine après machine.</p>
+      <p class="hero-lede" data-i18n="hero.lede">Lance la presse, déploie onze unités de production et automatise jusqu'à l'usine 4.0.</p>
       <div class="hero-actions">
         <button class="hero-primary" id="heroClickButton" type="button" data-start-game data-i18n="actions.enterFactory">Entrer dans l'atelier</button>
         <a class="hero-secondary" href="#buildingsPanel" data-start-game data-i18n="actions.exploreFactory">Explorer l'usine</a>
 </div>
       <ul class="hero-benefits">
-        <li data-i18n="hero.benefitIdle">Production même hors ligne</li>
-        <li data-i18n="hero.benefitGrow">Machines qui évoluent en direct</li>
+        <li data-i18n="hero.benefitIdle">Jusqu'à 8 h de production hors ligne</li>
+        <li data-i18n="hero.benefitGrow">Le campus évolue avec ton parc</li>
         <li data-i18n="hero.benefitFree">Gratuit dans le navigateur</li>
 </ul>
 </div>
@@ -341,50 +343,50 @@
 
 <section class="empire-roadmap" data-landing-only aria-labelledby="roadmapTitle">
   <div class="empire-roadmap-inner">
-    <header class="roadmap-heading">
+    <header class="roadmap-heading reveal-target">
       <p class="roadmap-eyebrow" data-i18n="roadmap.eyebrow">DE L'ATELIER À L'EMPIRE</p>
-      <h2 id="roadmapTitle" data-i18n="roadmap.title">UN IDLE GAME COMPLET, VIVANT ET GRATUIT</h2>
-      <p data-i18n="roadmap.subtitle">Six étapes, onze bâtiments et un campus qui grandit avec ta sauvegarde.</p>
+      <h2 id="roadmapTitle" data-i18n="roadmap.title">DU PREMIER CLIC À L'USINE 4.0</h2>
+      <p data-i18n="roadmap.subtitle">Six étapes, onze unités de production et un campus qui grandit avec ta sauvegarde.</p>
 </header>
 
     <div class="roadmap-content">
       <ol class="roadmap-steps">
-        <li class="roadmap-step">
+        <li class="roadmap-step reveal-target">
           <img src="/assets/images/progression/step-print.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
           <div>
             <h3 data-i18n="roadmap.step.print.title">Imprime</h3>
             <p data-i18n="roadmap.step.print.body">Produis tes premiers documents d'un clic.</p>
 </div>
 </li>
-        <li class="roadmap-step">
+        <li class="roadmap-step reveal-target">
           <img src="/assets/images/progression/step-automate.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
           <div>
             <h3 data-i18n="roadmap.step.automate.title">Automatise</h3>
-            <p data-i18n="roadmap.step.automate.body">Débloque des bâtiments qui produisent sans interruption.</p>
+            <p data-i18n="roadmap.step.automate.body">Débloque des unités qui produisent sans interruption.</p>
 </div>
 </li>
-        <li class="roadmap-step">
+        <li class="roadmap-step reveal-target">
           <img src="/assets/images/progression/step-research.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
           <div>
             <h3 data-i18n="roadmap.step.research.title">Recherche</h3>
-            <p data-i18n="roadmap.step.research.body">Achète des améliorations et affine tes baromètres.</p>
+            <p data-i18n="roadmap.step.research.body">Achète des améliorations de clic, de cadence et de qualité.</p>
 </div>
 </li>
-        <li class="roadmap-step">
+        <li class="roadmap-step reveal-target">
           <img src="/assets/images/progression/step-produce.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
           <div>
             <h3 data-i18n="roadmap.step.produce.title">Produis</h3>
-            <p data-i18n="roadmap.step.produce.body">Développe onze métiers, de la reprographie à l'IA.</p>
+            <p data-i18n="roadmap.step.produce.body">Développe onze unités, de la reprographie à l'IA.</p>
 </div>
 </li>
-        <li class="roadmap-step">
+        <li class="roadmap-step reveal-target">
           <img src="/assets/images/progression/step-expand.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
           <div>
             <h3 data-i18n="roadmap.step.expand.title">Développe</h3>
-            <p data-i18n="roadmap.step.expand.body">Fais grandir un campus qui reflète réellement tes achats.</p>
+            <p data-i18n="roadmap.step.expand.body">Fais grandir un campus qui évolue avec ton parc.</p>
 </div>
 </li>
-        <li class="roadmap-step">
+        <li class="roadmap-step reveal-target">
           <img src="/assets/images/progression/step-prestige.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
           <div>
             <h3 data-i18n="roadmap.step.prestige.title">Réorganise</h3>
@@ -393,9 +395,9 @@
 </li>
 </ol>
 
-      <aside class="roadmap-catalogue" aria-labelledby="roadmapCatalogueTitle">
+      <aside class="roadmap-catalogue reveal-target" aria-labelledby="roadmapCatalogueTitle">
         <p class="roadmap-catalogue-eyebrow" data-i18n="roadmap.catalogue.eyebrow">CATALOGUE DE L'ATELIER</p>
-        <h3 id="roadmapCatalogueTitle" data-i18n="roadmap.catalogue.title">Onze bâtiments à débloquer</h3>
+        <h3 id="roadmapCatalogueTitle" data-i18n="roadmap.catalogue.title">Onze unités à débloquer</h3>
         <div class="roadmap-catalogue-grid">
           <figure>
             <img src="/assets/images/building-reproOperator-v4.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
@@ -422,11 +424,11 @@
             <figcaption data-i18n="building.logistics.name">Logistique et tri postal</figcaption>
 </figure>
 </div>
-        <a class="roadmap-catalogue-link" href="#buildingsPanel" data-start-game data-i18n="roadmap.catalogue.cta">Découvrir tous les bâtiments</a>
+        <a class="roadmap-catalogue-link" href="#buildingsPanel" data-start-game data-i18n="roadmap.catalogue.cta">Découvrir toutes les unités</a>
 </aside>
 </div>
 
-    <section class="roadmap-proof" aria-labelledby="roadmapProofTitle">
+    <section class="roadmap-proof reveal-target" aria-labelledby="roadmapProofTitle">
       <h3 class="sr-only" id="roadmapProofTitle" data-i18n="roadmap.proof.title">Joue comme tu veux</h3>
       <ul>
         <li data-i18n="roadmap.proof.free">Gratuit</li>
@@ -456,7 +458,7 @@
         <dd id="opsDocPs">0 DOC/s</dd>
       </div>
       <div>
-        <dt data-i18n="operations.activeTypes">Métiers actifs</dt>
+        <dt data-i18n="operations.activeTypes">Unités actives</dt>
         <dd><span id="opsBuildingCount">0</span><span aria-hidden="true"> / 11</span></dd>
       </div>
     </dl>
@@ -469,7 +471,7 @@
     </a>
     <a href="#buildingsPanel">
       <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-factory"></use></svg>
-      <span><b>02</b> <span data-i18n="operations.navMachines">Machines</span></span>
+      <span><b>02</b> <span data-i18n="operations.navMachines">Unités</span></span>
     </a>
     <a href="#upgradesPanel">
       <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-upgrade"></use></svg>
@@ -504,7 +506,7 @@
         <div class="stat-line">
           <span class="stat-label">
             <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-stack"></use></svg>
-            <span data-i18n="stats.docTotal">Total documents</span>
+            <span data-i18n="stats.docTotal">Documents du cycle</span>
           </span>
           <span class="stat-value" id="docTotal">0</span>
         </div>
@@ -585,9 +587,9 @@
     <header class="panel-heading panel-heading-wide">
       <span class="panel-index" aria-hidden="true">02</span>
       <div>
-        <p class="panel-kicker" data-i18n="operations.machinesKicker">PARC MACHINES</p>
-        <h2 id="buildingsPanelTitle" tabindex="-1" data-i18n="sections.buildingsTitle">Bâtiments de production</h2>
-        <p class="panel-intro" data-i18n="sections.buildingsHint">Achète des paliers pour automatiser tes documents traités.</p>
+        <p class="panel-kicker" data-i18n="operations.machinesKicker">PARC DE PRODUCTION</p>
+        <h2 id="buildingsPanelTitle" tabindex="-1" data-i18n="sections.buildingsTitle">Unités de production</h2>
+        <p class="panel-intro" data-i18n="sections.buildingsHint">Déploie des unités pour augmenter ta production automatique.</p>
       </div>
       <span class="panel-heading-icon" aria-hidden="true">
         <svg class="pe-icon"><use href="#pe-icon-factory"></use></svg>
@@ -595,7 +597,7 @@
     </header>
     <div class="machine-unlock" id="machineUnlockPanel">
       <div class="machine-unlock-copy">
-        <span data-i18n="operations.nextMachine">Prochain plan à débloquer</span>
+        <span data-i18n="operations.nextMachine">Prochaine unité à débloquer</span>
         <strong id="nextBuildingName">—</strong>
       </div>
       <span class="machine-unlock-cost" id="nextBuildingCost">0 DOC</span>
@@ -641,12 +643,12 @@
         </span>
       </header>
       <div class="tabs-header" role="tablist">
-        <button class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="contractsPanel" data-tab="contracts" id="contractsTab"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-contract"></use></svg><span data-i18n="sections.contractsTitle">Contrats premium</span></button>
+        <button class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="contractsPanel" data-tab="contracts" id="contractsTab"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-contract"></use></svg><span data-i18n="sections.contractsTitle">Contrats premium</span><span class="tab-active-badge" data-i18n="contracts.runningBadge">EN COURS</span></button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="journalPanel" data-tab="journal" id="journalTab"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-journal"></use></svg><span data-i18n="sections.logTitle">Journal d'activité</span></button>
       </div>
       <div class="tab-panel" id="contractsPanel" role="tabpanel" aria-labelledby="contractsTab">
+        <section class="active-contract hidden" id="activeContractPanel" aria-labelledby="activeContractTitle" tabindex="-1"></section>
         <div class="contracts-list" id="contractsList"></div>
-        <div class="active-contract hidden" id="activeContractPanel"></div>
         <button class="btn-slim" type="button" id="rerollContractsBtn" data-i18n="actions.rerollContracts">Rafraîchir les offres</button>
       </div>
       <div class="tab-panel hidden" id="journalPanel" role="tabpanel" aria-labelledby="journalTab">
@@ -813,18 +815,33 @@
 
 
 <footer class="app-footer">
+  <div class="footer-conveyor" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+  </div>
   <div class="footer-inner">
-    <span class="footer-madeby">
-      <span data-i18n="footer.madeBy">Créé par</span>
-      <a href="https://nicolaspieper.com" rel="author">Nicolas Pieper</a>
-</span>
+    <div class="footer-brand">
+      <a class="footer-brand-mark" href="?welcome=1#sceneStage" data-show-intro aria-label="Papers Empire">
+        <picture>
+          <source srcset="/assets/brand/papers-empire-logo-v2.webp" type="image/webp">
+          <img src="/assets/brand/papers-empire-logo-v2.png" alt="" width="700" height="560" loading="lazy" decoding="async">
+        </picture>
+      </a>
+      <div class="footer-copy">
+        <p class="footer-kicker" data-i18n="footer.kicker">QUAI DE FIN DE POSTE</p>
+        <p class="footer-tagline" data-i18n="footer.tagline">Ta partie reste sauvegardée dans ce navigateur.</p>
+        <p class="footer-madeby">
+          <span data-i18n="footer.madeBy">Atelier imaginé par</span>
+          <a href="https://nicolaspieper.com" rel="author">Nicolas Pieper</a>
+        </p>
+      </div>
+    </div>
     <nav class="footer-links" aria-label="Liens" data-i18n-aria-label="footer.linksLabel">
-      <a href="?welcome=1#sceneStage" data-show-intro data-i18n="nav.gameOverview">Le jeu</a>
+      <a class="footer-link-primary" href="?welcome=1#sceneStage" data-show-intro data-i18n="footer.intro">Revoir l'introduction</a>
       <a data-dashboard-link href="/dashboard/" data-i18n="nav.dashboard">Data Science Zone</a>
-      <a href="/docs/" data-i18n="footer.docs">Documentation</a>
-      <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Code source</a>
-</nav>
-</div>
+      <a href="/docs/" data-i18n="footer.docs">Manuel de l'atelier</a>
+      <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Plans ouverts sur GitHub</a>
+    </nav>
+  </div>
 </footer>
 
   <script src="/assets/js/asset-url.js" defer></script>

@@ -74,6 +74,30 @@
     toggleWatchers.forEach(fn => fn());
   }
 
+  /** Runs the decorative footer conveyor only while it can actually be seen. */
+  function initFooterMotion() {
+    const footer = document.querySelector(".app-footer");
+    if (!footer) return;
+
+    let isInView = false;
+    const refresh = () => {
+      footer.classList.toggle("footer-in-view", isInView && !document.hidden);
+    };
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(entries => {
+        isInView = entries.some(entry => entry.isIntersecting);
+        refresh();
+      }, { rootMargin: "80px 0px" });
+      observer.observe(footer);
+    } else {
+      isInView = true;
+      refresh();
+    }
+
+    document.addEventListener("visibilitychange", refresh);
+  }
+
   const initialPrefs = loadPrefs();
   applyPrefs(initialPrefs);
   window.Settings = {
@@ -93,5 +117,8 @@
       refreshToggles();
     }
   };
-  window.addEventListener("DOMContentLoaded", () => init(initialPrefs));
+  window.addEventListener("DOMContentLoaded", () => {
+    init(initialPrefs);
+    initFooterMotion();
+  });
 })();

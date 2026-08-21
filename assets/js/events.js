@@ -12,7 +12,7 @@
           id: "premium",
           labelKey: "events.paperShortage.choice.premium",
           resultKey: "events.paperShortage.result.premium",
-          tone: "positive",
+          tone: "mixed",
           effect(gameState) {
             const cost = gameState.resources.docBank * 0.15;
             gameState.resources.docBank = Math.max(0, gameState.resources.docBank - cost);
@@ -42,7 +42,7 @@
           id: "redCarpet",
           labelKey: "events.influencerVisit.choice.redCarpet",
           resultKey: "events.influencerVisit.result.redCarpet",
-          tone: "positive",
+          tone: "mixed",
           effect(gameState) {
             const cost = gameState.resources.docBank * 0.15;
             gameState.resources.docBank = Math.max(0, gameState.resources.docBank - cost);
@@ -71,7 +71,7 @@
           id: "invest",
           labelKey: "events.greenAudit.choice.invest",
           resultKey: "events.greenAudit.result.invest",
-          tone: "positive",
+          tone: "mixed",
           effect(gameState) {
             const cost = gameState.resources.docBank * 0.2;
             gameState.resources.docBank = Math.max(0, gameState.resources.docBank - cost);
@@ -100,7 +100,7 @@
           id: "fix",
           labelKey: "events.machineBreakdown.choice.fix",
           resultKey: "events.machineBreakdown.result.fix",
-          tone: "positive",
+          tone: "mixed",
           effect(gameState) {
             const cost = Math.min(50, gameState.resources.docBank * 0.2);
             gameState.resources.docBank = Math.max(0, gameState.resources.docBank - cost);

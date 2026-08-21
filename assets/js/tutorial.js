@@ -198,7 +198,9 @@
     state.highlightEl = target;
     target.classList.add("tutorial-highlight");
     if (typeof target.scrollIntoView === "function") {
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      const reduceMotion = document.documentElement.classList.contains("pref-reduce-motion") ||
+        (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
     }
   }
 

@@ -6,7 +6,7 @@
       "contracts.requirementsNotMet": "You don't meet the premium contract requirements yet.",
       "contracts.rerollCountdown": "Refresh in {{seconds}} s",
       "contracts.expressFlyer.name": "Express mailshot",
-      "contracts.expressFlyer.desc": "1 200 customised flyers with finishing before tomorrow's board meeting.",
+      "contracts.expressFlyer.desc": "An urgent batch of customised flyers with finishing before tomorrow's board meeting.",
       "contracts.onboardingKit.name": "Onboarding kit automation",
       "contracts.onboardingKit.desc": "Bundle contracts, welcome letters and badges into an overnight courier batch.",
       "contracts.crossMedia.name": "Cross-media campaign",
@@ -26,7 +26,7 @@
       "contracts.requirementsNotMet": "Tu ne respectes pas encore les exigences de ce contrat premium.",
       "contracts.rerollCountdown": "Rafraîchir dans {{seconds}} s",
       "contracts.expressFlyer.name": "Mailing express",
-      "contracts.expressFlyer.desc": "1 200 flyers personnalisés + finition avant le comité de demain.",
+      "contracts.expressFlyer.desc": "Un lot urgent de flyers personnalisés avec finition avant le comité de demain.",
       "contracts.onboardingKit.name": "Kit d'onboarding automatisé",
       "contracts.onboardingKit.desc": "Assembler contrats, lettres de bienvenue et badges pour une livraison de nuit.",
       "contracts.crossMedia.name": "Campagne cross-média",
@@ -46,7 +46,7 @@
       "contracts.requirementsNotMet": "Die Anforderungen für diesen Premium-Vertrag sind noch nicht erfüllt.",
       "contracts.rerollCountdown": "Neu laden in {{seconds}} s",
       "contracts.expressFlyer.name": "Express-Mailing",
-      "contracts.expressFlyer.desc": "1.200 personalisierte Flyer samt Veredelung bis zur morgigen Vorstandssitzung.",
+      "contracts.expressFlyer.desc": "Eine eilige Charge personalisierter Flyer samt Veredelung bis zur morgigen Vorstandssitzung.",
       "contracts.onboardingKit.name": "Onboarding-Kit-Automation",
       "contracts.onboardingKit.desc": "Verträge, Begrüßungsbriefe und Badges bündeln und über Nacht zustellen.",
       "contracts.crossMedia.name": "Cross-Media-Kampagne",
@@ -66,7 +66,7 @@
       "contracts.requirementsNotMet": "D'Ufuerderunge fir dëse Premium-Kontrakt sinn nach net erfëllt.",
       "contracts.rerollCountdown": "Nei Offeren an {{seconds}} s",
       "contracts.expressFlyer.name": "Express-Mailshot",
-      "contracts.expressFlyer.desc": "1 200 personaliséiert Flyer mat Finish virum Mueres-Comité.",
+      "contracts.expressFlyer.desc": "Eng dréngend Charge personaliséiert Flyer mat Finish virum Mueres-Comité.",
       "contracts.onboardingKit.name": "Automatiséiert Welcome-Kit",
       "contracts.onboardingKit.desc": "Kontrakter, Begréissungsbréiwer a Badgen an engem Owend-Liwwerpak zesummesetzen.",
       "contracts.crossMedia.name": "Cross-Media-Campagne",
@@ -98,8 +98,7 @@
       },
       reward: {
         doc: 600,
-        cc: 120,
-        cards: 1
+        cc: 120
       }
     },
     {
@@ -115,8 +114,7 @@
       },
       reward: {
         doc: 2200,
-        cc: 420,
-        cards: 2
+        cc: 420
       }
     },
     {
@@ -132,8 +130,7 @@
       },
       reward: {
         doc: 5200,
-        cc: 900,
-        cards: 3
+        cc: 900
       }
     },
     {
@@ -149,8 +146,7 @@
       },
       reward: {
         doc: 12000,
-        cc: 1800,
-        cards: 5
+        cc: 1800
       }
     }
 ,
@@ -161,7 +157,7 @@
       minDocTotal: 40000,
       duration: 180,
       requirements: { quality: 0.78, image: 0.72, volume: 45000 },
-      reward: { doc: 40000, cc: 6000, cards: 7 }
+      reward: { doc: 40000, cc: 6000 }
     },
     {
       id: "electionPack",
@@ -170,7 +166,7 @@
       minDocTotal: 120000,
       duration: 220,
       requirements: { quality: 0.8, image: 0.74, volume: 140000 },
-      reward: { doc: 120000, cc: 18000, cards: 9 }
+      reward: { doc: 120000, cc: 18000 }
     },
     {
       id: "annualReports",
@@ -179,7 +175,7 @@
       minDocTotal: 400000,
       duration: 260,
       requirements: { quality: 0.82, image: 0.77, volume: 450000 },
-      reward: { doc: 400000, cc: 55000, cards: 12 }
+      reward: { doc: 400000, cc: 55000 }
     },
     {
       id: "nationalCensus",
@@ -188,7 +184,7 @@
       minDocTotal: 1000000,
       duration: 300,
       requirements: { quality: 0.85, image: 0.8, volume: 1100000 },
-      reward: { doc: 1000000, cc: 130000, cards: 15 }
+      reward: { doc: 1000000, cc: 130000 }
     }
   ];
 

@@ -131,6 +131,9 @@
 
   let saveTimer = null;
   let bannerHideTimer = null;
+  let bannerTransitionEndHandler = null;
+  let bannerTransitionId = 0;
+  let statusAnnouncementToken = 0;
   let persistenceDisabled = false;
   let experienceStarted = false;
   let experienceStartedAt = null;
@@ -364,7 +367,6 @@
     initExperienceMode();
     initGodModeControls();
     initTutorialGuidance();
-    initFlavorTicker();
     applyTimeOfDaySky();
     setInterval(applyTimeOfDaySky, 10 * 60 * 1000);
     greetConsoleVisitors();
@@ -509,47 +511,6 @@
       !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
 
-  /* Ticker d'ambiance : une ligne de vie d'atelier tourne en bas de
-     la scène 3D (décorative, la scène est aria-hidden). L'index de
-     départ est aléatoire pour que chaque session ouvre sur une
-     anecdote différente. */
-  const FLAVOR_KEYS = [
-    "flavor.paperJam",
-    "flavor.tonerLow",
-    "flavor.coffee",
-    "flavor.a4",
-    "flavor.recto",
-    "flavor.stapler"
-  ];
-  const FLAVOR_INTERVAL_MS = 22000;
-  let flavorIndex = 0;
-
-  function showFlavorLine(immediate = false) {
-    const el = DOM.flavorLine;
-    if (!el) return;
-    const key = FLAVOR_KEYS[flavorIndex % FLAVOR_KEYS.length];
-    el.dataset.i18nKey = key;
-    if (immediate) {
-      el.textContent = t(key);
-      return;
-    }
-    el.classList.add("flavor-fading");
-    setTimeout(() => {
-      el.textContent = t(key);
-      el.classList.remove("flavor-fading");
-    }, 300);
-  }
-
-  function initFlavorTicker() {
-    if (!DOM.flavorLine) return;
-    flavorIndex = Math.floor(Math.random() * FLAVOR_KEYS.length);
-    showFlavorLine(true);
-    setInterval(() => {
-      flavorIndex += 1;
-      showFlavorLine();
-    }, FLAVOR_INTERVAL_MS);
-  }
-
   /* Ciel selon l'heure locale : ne décale que la teinte du dégradé
      (classes sky-* dans style.css). 17 h - 22 h garde le crépuscule,
      la teinte par défaut de la marque. */
@@ -645,7 +606,7 @@
     DOM.flavorLine = document.getElementById("flavorLine");
     DOM.eventBanner = document.getElementById("eventBanner");
     DOM.eventBannerText = document.getElementById("eventBannerText");
-    DOM.eventBannerEmoji = document.getElementById("eventBannerEmoji");
+    DOM.eventBannerIconUse = document.getElementById("eventBannerIconUse");
     DOM.closeEventBanner = document.getElementById("closeEventBanner");
     DOM.eventModal = document.getElementById("eventModal");
     DOM.eventDialog = DOM.eventModal ? DOM.eventModal.querySelector(".event-dialog") : null;
@@ -1066,9 +1027,6 @@
     }
     if (DOM.closeEventModal) {
       DOM.closeEventModal.setAttribute("aria-label", t("actions.close"));
-    }
-    if (DOM.flavorLine && DOM.flavorLine.dataset.i18nKey) {
-      DOM.flavorLine.textContent = t(DOM.flavorLine.dataset.i18nKey);
     }
     applyGameTitle();
     renderGodModePanel(true);
@@ -1846,10 +1804,20 @@
       gameState.log.pop();
     }
     uiState.logRenderSignature = "";
-    if (DOM.gameStatusAnnouncer) {
-      setTextIfChanged(DOM.gameStatusAnnouncer, t(key, params));
-    }
+    announceStatus(t(key, params));
     renderLog();
+  }
+
+  /** Re-announces repeated outcomes while collapsing log + banner races. */
+  function announceStatus(message) {
+    if (!DOM.gameStatusAnnouncer) return;
+    const token = ++statusAnnouncementToken;
+    DOM.gameStatusAnnouncer.textContent = "";
+    requestAnimationFrame(() => {
+      if (token === statusAnnouncementToken && DOM.gameStatusAnnouncer) {
+        DOM.gameStatusAnnouncer.textContent = message;
+      }
+    });
   }
 
   /** Aggregates all multiplicative bonuses currently active. */
@@ -2231,6 +2199,7 @@
     setTextIfChanged(DOM.opsDocBank, formattedBank);
     setTextIfChanged(DOM.opsDocPs, formattedDocPs);
     setTextIfChanged(DOM.manualGain, t("stats.manualGainValue", { amount: formatNumber(manualGain) }));
+    renderStageStatus(DOCps);
 
     const q = clamp01(gameState.stats.quality);
     const f = clamp01(gameState.stats.footprint);
@@ -2247,6 +2216,36 @@
     setTextIfChanged(DOM.culturePoints, gameState.resources.culturePoints);
     setTextIfChanged(DOM.prestigeMult, formattedPrestige);
     renderOperationsStatus();
+  }
+
+  /** Keeps the line under the campus tied to real game state. */
+  function renderStageStatus(docPerSecond) {
+    if (!DOM.flavorLine) return;
+    const active = window.EndgameModule && window.EndgameModule.activeContract
+      ? window.EndgameModule.activeContract.current
+      : null;
+    if (active) {
+      setTextIfChanged(DOM.flavorLine, t("scene.status.contract", {
+        name: t(active.nameKey),
+        seconds: Math.max(0, Math.ceil(window.EndgameModule.activeContract.timer || 0))
+      }));
+      return;
+    }
+    if (!experienceStarted) {
+      setTextIfChanged(DOM.flavorLine, t("scene.status.awaiting"));
+      return;
+    }
+    const machineCount = gameState.buildings.reduce((sum, building) => sum + Math.max(0, building.quantity || 0), 0);
+    if (machineCount === 0) {
+      setTextIfChanged(DOM.flavorLine, t("scene.status.manual", {
+        bank: formatNumber(gameState.resources.docBank)
+      }));
+      return;
+    }
+    setTextIfChanged(DOM.flavorLine, t("scene.status.production", {
+      count: formatNumber(machineCount),
+      rate: t("stats.docPsValue", { amount: formatNumber(docPerSecond) })
+    }));
   }
 
   /** Updates the prestige card state and CTA messaging. */
@@ -2295,17 +2294,24 @@
 
   function showEventBanner(key, tone = "mixed", params = {}) {
     if (!DOM.eventBanner) return;
+    const transitionId = ++bannerTransitionId;
     eventState.bannerTone = tone;
     eventState.bannerKey = key;
     eventState.bannerParams = params || {};
     refreshEventBanner();
+    announceStatus(t(key, params));
     if (bannerHideTimer) {
       clearTimeout(bannerHideTimer);
       bannerHideTimer = null;
     }
-    DOM.eventBanner.classList.remove("hidden");
+    if (bannerTransitionEndHandler) {
+      DOM.eventBanner.removeEventListener("transitionend", bannerTransitionEndHandler);
+      bannerTransitionEndHandler = null;
+    }
+    DOM.eventBanner.classList.remove("banner-visible", "hidden");
+    void DOM.eventBanner.offsetWidth;
     requestAnimationFrame(() => {
-      if (DOM.eventBanner) {
+      if (DOM.eventBanner && transitionId === bannerTransitionId && !DOM.eventBanner.classList.contains("hidden")) {
         DOM.eventBanner.classList.add("banner-visible");
       }
     });
@@ -2313,19 +2319,31 @@
 
   function hideEventBanner() {
     if (!DOM.eventBanner || DOM.eventBanner.classList.contains("hidden")) return;
+    const transitionId = ++bannerTransitionId;
     DOM.eventBanner.classList.remove("banner-visible");
-    eventState.bannerKey = null;
-    eventState.bannerParams = null;
-    eventState.bannerTone = "mixed";
-    refreshEventBanner();
     if (bannerHideTimer) {
       clearTimeout(bannerHideTimer);
     }
-    bannerHideTimer = setTimeout(() => {
-      if (DOM.eventBanner && !DOM.eventBanner.classList.contains("banner-visible")) {
-        DOM.eventBanner.classList.add("hidden");
+    let finalized = false;
+    const finalize = () => {
+      if (bannerTransitionEndHandler) {
+        DOM.eventBanner.removeEventListener("transitionend", bannerTransitionEndHandler);
+        bannerTransitionEndHandler = null;
       }
-    }, 280);
+      if (finalized || transitionId !== bannerTransitionId || !DOM.eventBanner || DOM.eventBanner.classList.contains("banner-visible")) return;
+      finalized = true;
+      bannerHideTimer = null;
+      DOM.eventBanner.classList.add("hidden");
+      eventState.bannerKey = null;
+      eventState.bannerParams = null;
+      eventState.bannerTone = "mixed";
+      refreshEventBanner();
+    };
+    bannerTransitionEndHandler = event => {
+      if (event.target === DOM.eventBanner && event.propertyName === "opacity") finalize();
+    };
+    DOM.eventBanner.addEventListener("transitionend", bannerTransitionEndHandler);
+    bannerHideTimer = setTimeout(finalize, reduceMotionPreferred() ? 0 : 320);
   }
 
   function refreshEventBanner() {
@@ -2333,7 +2351,6 @@
     DOM.eventBanner.classList.remove("banner-positive", "banner-mixed", "banner-negative");
     if (!eventState.bannerKey) {
       if (DOM.eventBannerText) DOM.eventBannerText.textContent = "";
-      if (DOM.eventBannerEmoji) DOM.eventBannerEmoji.textContent = "";
       return;
     }
     const tone = eventState.bannerTone || "mixed";
@@ -2343,15 +2360,10 @@
     if (DOM.eventBannerText) {
       DOM.eventBannerText.textContent = text;
     }
-    if (DOM.eventBannerEmoji) {
-      DOM.eventBannerEmoji.textContent = getBannerEmoji(tone);
+    if (DOM.eventBannerIconUse) {
+      const iconId = tone === "positive" ? "#pe-icon-trophy" : tone === "negative" ? "#pe-icon-quality" : "#pe-icon-journal";
+      DOM.eventBannerIconUse.setAttribute("href", iconId);
     }
-  }
-
-  function getBannerEmoji(tone) {
-    if (tone === "positive") return "✨";
-    if (tone === "negative") return "⚠️";
-    return "🔔";
   }
 
   function areContractsUnlocked() {
@@ -2501,6 +2513,7 @@
     if (!window.EndgameModule) return;
     if (!DOM.contractsList || !DOM.activeContractPanel) return;
     if (!contractsState.unlocked) {
+      DOM.contractsTab.classList.remove("has-active-contract");
       if (contractsState.listRenderSignature !== "locked") {
         DOM.contractsList.innerHTML = "";
         DOM.activeContractPanel.classList.add("hidden");
@@ -2510,7 +2523,10 @@
       return;
     }
     contractsState.available = window.EndgameModule.availableContracts(gameState);
-    const listSignature = currentLang + "|" + contractsState.available.map(contract => contract.id).join(",");
+    const runningContract = window.EndgameModule.activeContract && window.EndgameModule.activeContract.current;
+    DOM.contractsTab.classList.toggle("has-active-contract", !!runningContract);
+    const listSignature = currentLang + "|" + contractsState.available.map(contract => contract.id).join(",") +
+      "|active:" + (runningContract ? runningContract.id : "none");
     if (listSignature === contractsState.listRenderSignature) {
       renderActiveContract();
       return;
@@ -2534,6 +2550,13 @@
             image: Math.round((contract.requirements.image || 0) * 100),
             volume: formatNumber(contract.requirements.volume || 0)
           })}</div>
+          <div class="contract-terms">
+            <span>${t("contracts.duration", { seconds: contract.duration })}</span>
+            <span>${t("contracts.reward", {
+              doc: formatNumber(contract.reward.doc || 0),
+              cc: formatNumber(contract.reward.cc || 0)
+            })}</span>
+          </div>
         `;
         const actions = document.createElement("div");
         actions.className = "contract-actions";
@@ -2542,6 +2565,7 @@
         btn.className = "btn-slim";
         btn.dataset.contract = contract.id;
         btn.textContent = t("contracts.start");
+        btn.disabled = !!runningContract;
         actions.appendChild(btn);
         card.appendChild(actions);
         DOM.contractsList.appendChild(card);
@@ -2558,7 +2582,7 @@
     const result = window.EndgameModule.startContract(contractId, gameState);
     if (!result || !result.ok) {
       const key = result && result.error === "requirements" ? "contracts.requirementsNotMet" : "contracts.alreadyRunning";
-      alert(t(key));
+      showEventBanner(key, "negative");
       return;
     }
     logMessage("log.contractStart", { name: t(result.contract.nameKey) });
@@ -2566,32 +2590,55 @@
     contractsState.listRenderSignature = "";
     contractsState.activeRenderSignature = "";
     renderContractsPanel();
-    UIEffects.playContractEffect(DOM.dispatchPanel || DOM.activeContractPanel);
+    DOM.activeContractPanel.focus();
+    showEventBanner("contracts.banner.started", "positive", { name: t(result.contract.nameKey) });
+    requestAnimationFrame(() => UIEffects.playContractEffect(DOM.activeContractPanel));
   }
 
   function renderActiveContract() {
     if (!window.EndgameModule || !DOM.activeContractPanel) return;
     const { activeContract } = window.EndgameModule;
-    const activeSignature = activeContract.current
-      ? currentLang + "|" + activeContract.current.id + "|" + Math.ceil(activeContract.timer)
-      : currentLang + "|none";
-    if (activeSignature === contractsState.activeRenderSignature) return;
-    contractsState.activeRenderSignature = activeSignature;
     if (!activeContract.current) {
+      contractsState.activeRenderSignature = currentLang + "|none";
       DOM.activeContractPanel.classList.add("hidden");
       DOM.activeContractPanel.innerHTML = "";
       return;
     }
+    const activeSignature = currentLang + "|" + activeContract.current.id;
     DOM.activeContractPanel.classList.remove("hidden");
-    DOM.activeContractPanel.innerHTML = `
-      <div><strong>${t(activeContract.current.nameKey)}</strong></div>
-      <div>${t("contracts.remaining", { seconds: Math.ceil(activeContract.timer) })}</div>
-      <div>${t("contracts.reward", {
-        doc: formatNumber(activeContract.current.reward.doc || 0),
-        cc: formatNumber(activeContract.current.reward.cc || 0),
-        cards: activeContract.current.reward.cards || 0
-      })}</div>
-    `;
+    if (activeSignature !== contractsState.activeRenderSignature) {
+      contractsState.activeRenderSignature = activeSignature;
+      DOM.activeContractPanel.innerHTML = `
+        <div class="active-contract-head">
+          <span class="active-contract-status" id="activeContractTitle">${t("contracts.active")}</span>
+          <span class="active-contract-countdown" data-active-contract-countdown></span>
+        </div>
+        <strong class="active-contract-name">${t(activeContract.current.nameKey)}</strong>
+        <progress class="active-contract-progress" data-active-contract-progress max="${activeContract.current.duration}" value="0"></progress>
+        <div class="active-contract-reward">${t("contracts.reward", {
+          doc: formatNumber(activeContract.current.reward.doc || 0),
+          cc: formatNumber(activeContract.current.reward.cc || 0)
+        })}</div>
+      `;
+    }
+    const duration = Math.max(1, activeContract.current.duration || 1);
+    const remaining = Math.max(0, activeContract.timer || 0);
+    const elapsed = Math.max(0, Math.min(duration, duration - remaining));
+    const percent = Math.round(elapsed / duration * 100);
+    setTextIfChanged(
+      DOM.activeContractPanel.querySelector("[data-active-contract-countdown]"),
+      t("contracts.remaining", { seconds: Math.ceil(remaining) })
+    );
+    const progress = DOM.activeContractPanel.querySelector("[data-active-contract-progress]");
+    if (progress) {
+      if (progress.max !== duration) progress.max = duration;
+      if (progress.value !== elapsed) progress.value = elapsed;
+      setTextIfChanged(progress, percent + " %");
+      const progressLabel = t("contracts.progress", { percent });
+      if (progress.getAttribute("aria-label") !== progressLabel) {
+        progress.setAttribute("aria-label", progressLabel);
+      }
+    }
   }
 
   function tickContracts(dt) {
@@ -2599,6 +2646,8 @@
     const before = captureResourceTotals();
     const result = window.EndgameModule.tickContract(dt, gameState);
     if (result) {
+      const restoreContractFocus = DOM.activeContractPanel &&
+        (document.activeElement === DOM.activeContractPanel || DOM.activeContractPanel.contains(document.activeElement));
       const docGain = Math.max(0, gameState.resources.docTotal - before.docTotal);
       const ccGain = Math.max(0, gameState.resources.ccTotal - before.ccTotal);
       analyticsState.currentRun.contractDocs += docGain;
@@ -2613,8 +2662,10 @@
       contractsState.listRenderSignature = "";
       contractsState.activeRenderSignature = "";
       renderContractsPanel();
-    } else {
-      renderActiveContract();
+      if (restoreContractFocus) {
+        const nextOffer = DOM.contractsList && DOM.contractsList.querySelector("[data-contract]:not(:disabled)");
+        (nextOffer || DOM.contractsTab).focus();
+      }
     }
   }
 
@@ -2824,7 +2875,9 @@
       const sequence = document.createElement("span");
       sequence.className = "building-sequence";
       sequence.setAttribute("aria-hidden", "true");
-      sequence.textContent = "PLAN " + String(buildingIndex + 1).padStart(2, "0");
+      sequence.textContent = t("building.planLabel", {
+        number: String(buildingIndex + 1).padStart(2, "0")
+      });
       row.appendChild(sequence);
 
       const info = document.createElement("div");

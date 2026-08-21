@@ -150,7 +150,7 @@
   }
 
   function playContractEffect(target) {
-    retriggerClass(target, "is-contract-stamped", 430);
+    retriggerClass(target, "is-contract-stamped", 300);
     emitPaperCues(target, 3);
     playSound("contract");
   }
