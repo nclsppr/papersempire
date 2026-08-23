@@ -1,6 +1,6 @@
 (function () {
-  const BASE_INTERVAL = 30;
-  const MIN_COOLDOWN = 45;
+  const BASE_INTERVAL = 90;
+  const MIN_COOLDOWN = 180;
   const definitions = [
     {
       id: "paperShortage",
@@ -239,7 +239,7 @@
 
   let activeEvent = null;
   let timer = 0;
-  let cooldown = 20;
+  let cooldown = 60;
   let minigameCode = null;
 
   function tick(gameState, dt = 1) {
@@ -250,7 +250,8 @@
     }
     timer += dt;
     const productionFactor = Math.min(0.2, gameState.resources.docTotal / 5000);
-    const spawnChance = 0.01 + productionFactor;
+    const spawnChancePerSecond = 0.01 + productionFactor;
+    const spawnChance = 1 - Math.pow(1 - spawnChancePerSecond, Math.max(0, dt));
     if (timer >= BASE_INTERVAL && Math.random() < spawnChance) {
       activeEvent = definitions[Math.floor(Math.random() * definitions.length)];
       timer = 0;

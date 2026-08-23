@@ -1,6 +1,6 @@
 # Papers Empire
 
-Papers Empire is a browser-based incremental game that runs entirely in the browser. You modernise an industrial print shop through eleven production units, contracts and a prestige loop. Current version: **0.23.3**.
+Papers Empire is a browser-based incremental game that runs entirely in the browser. You modernise an industrial print shop through eleven production units, contracts and a prestige loop. Current version: **0.24.0**.
 
 The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier maintenance. Additional helper modules power the modifier builder math and god-mode utilities so they can be unit-tested in isolation.
 
@@ -74,6 +74,11 @@ Track meaningful milestones in the project:
   en gardant les images opaques pour les icônes installables. Le header Retype
   réutilise le même asset public et la documentation interne sort de la
   navigation publiée.
+- **0.24.0** — « Dossier du moment » : un objectif unique montre la prochaine
+  étape de l'atelier ou le contrat client actif, sa progression et la récompense
+  attendue. Les achats détaillent leur effet réel. Les incidents aléatoires
+  deviennent plus rares, peuvent être ignorés ou désactivés durablement, et les
+  feuilles CSS publiées portent la révision dans leur nom de fichier.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 

@@ -347,6 +347,7 @@
     loadData,
     availableContracts: getAvailableContracts,
     rerollContracts,
+    meetsRequirements,
     startContract,
     tickContract,
     exportActiveContract,

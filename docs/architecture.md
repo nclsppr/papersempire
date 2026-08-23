@@ -1,6 +1,6 @@
 # Architecture
 
-Cette page décrit le contrat technique de Papers Empire 0.23.2. Elle résume les
+Cette page décrit le contrat technique de Papers Empire 0.24.0. Elle résume les
 modules clés, les deux états de l'expérience, les flux locaux de données et les
 limites de la Data Science Zone.
 
@@ -10,7 +10,9 @@ limites de la Data Science Zone.
   `dashboard/index.html` porte la Data Science Zone autonome.
 - **CSS** : `assets/css/style.css` conserve les fondations historiques et la
   couche V4 applique le monde « Production Twin », le passage landing/jeu, le
-  responsive et les préférences `pref-*`.
+  responsive et les préférences `pref-*`. La release les publie sous
+  `style.<sha>.css` et `experience-v4.<sha>.css` afin que chaque révision utilise
+  une nouvelle clé de cache.
 - **JavaScript** :
   - `app.js` : boucle de jeu, projection DOM, contrôleur d'expérience et
     snapshots analytiques ;
@@ -142,6 +144,14 @@ ouvrir la Data Science Zone dans le même onglet ne détruit donc plus la missio
 Une réorganisation annule explicitement ce contrat et régénère les offres selon
 le nouveau cycle.
 
+`app.js` projette la prochaine étape interne et le contrat actif dans un seul
+« Dossier du moment ». Le contrat ne remplace pas le système d'offres : il prend
+seulement la priorité dans cette synthèse pendant son exécution. La préférence
+`eventsEnabled`, gérée par `accessibility.js`, persiste l'autorisation des
+interruptions aléatoires. Fermer une modale annule l'incident sans appliquer de
+choix ; désactiver les interruptions annule aussi l'incident et le bandeau en
+cours.
+
 Les calculs sont explicables et déterministes : coût suivant, gain marginal
 DOC/s et CC/s, temps d'accès et retour en DOC à cadence constante. Ils ne sont
 pas une simulation prédictive complète. L'historique ne commence qu'après
@@ -153,7 +163,6 @@ n'est envoyée et aucune synchronisation entre appareils n'est promise.
 
 - Extraire la boucle `requestAnimationFrame` dans un module `loop.js` pour faciliter le throttling et les tests.
 - Ajouter des tests Playwright + axe-core pour vérifier l’accessibilité.
-- Formaliser un `events.js` pour les futurs mini-jeux + events scénarisés.
 - Si un historique multi-appareil est un jour requis, concevoir explicitement
   consentement, schéma, rétention et confidentialité avant d'ajouter un backend.
 

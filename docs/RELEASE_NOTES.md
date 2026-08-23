@@ -1,5 +1,28 @@
 # Release Notes
 
+## 0.24.0 — « Dossier du moment » : progression lisible — 2026-08-23
+
+- Le poste de commande présente un seul dossier prioritaire. Sans commande
+  active, il indique la prochaine unité ou la réorganisation à préparer, les
+  ressources manquantes et un délai quand la cadence permet de l'estimer.
+- Les contrats restent dans Expéditions. Lorsqu'un contrat est accepté, il
+  prend temporairement la place du dossier interne et affiche son temps écoulé,
+  son temps restant et sa récompense exacte. La livraison rend ensuite le
+  prochain objectif de l'atelier.
+- Les achats de machines et d'améliorations indiquent le coût, l'effet avant et
+  après, puis confirment localement l'action réussie. Les offres impossibles
+  restent désactivées et exposent leurs prérequis.
+- Chaque incident aléatoire peut être ignoré avec le bouton de fermeture ou
+  `Échap`, sans appliquer de conséquence. Un bouton coupe durablement ces
+  interruptions ; le réglage Interface permet de les réactiver.
+- Le premier incident ne peut pas arriver avant 2 min 30, puis deux incidents
+  sont séparés d'au moins 4 min 30. Leur cadence suit le temps réel, même en
+  mode accéléré. Les bandeaux de résultat disparaissent après six secondes.
+- Les CSS sont publiées sous `style.<sha>.css` et
+  `experience-v4.<sha>.css`. Les quatre langues, le contraste élevé, le
+  mouvement réduit, le clavier et les petits écrans conservent les mêmes
+  contrats de résilience.
+
 ## 0.23.3 : logos détourés, 2026-08-23
 
 - Papers Empire et Data Science Zone disposent de dérivés PNG et WebP avec

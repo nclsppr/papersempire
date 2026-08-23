@@ -115,6 +115,7 @@ function verifyStaticContracts() {
   const loader = read("assets/js/scene/scene-loader.js");
   const city = read("assets/js/scene/city-scene.js");
   const app = read("assets/js/app.js");
+  const events = read("assets/js/events.js");
   const dashboardJs = read("assets/js/dashboard.js");
   const assetHelper = read("assets/js/asset-url.js");
   const css = read("assets/css/style.css");
@@ -144,12 +145,34 @@ function verifyStaticContracts() {
     "the live campus status lines must share one non-overlapping stack");
   assert.doesNotMatch(app, /FLAVOR_KEYS|initFlavorTicker|flavor\.paperJam/,
     "the campus status must come from game state, not invented random anecdotes");
-  assert.match(index, /id="activeContractPanel"[\s\S]*id="contractsList"/,
-    "the active contract must appear before available offers");
-  assert.match(app, /playContractEffect\(DOM\.activeContractPanel\)/,
-    "contract activation feedback must target the active work order");
-  assert.match(app, /data-active-contract-progress[\s\S]*contracts\.progress/,
-    "the active contract must expose real elapsed-time progress");
+  assert.match(index, /id="currentObjective"[\s\S]*id="contractsList"/,
+    "one current job must appear before client offers");
+  assert.doesNotMatch(index, /id="(?:activeContractPanel|machineUnlockPanel)"/,
+    "legacy objective panels must not duplicate the current job");
+  assert.match(app, /playContractEffect\(DOM\.currentObjective\)/,
+    "contract activation feedback must target the current job");
+  assert.match(index, /id="disableEventInterruptions"[\s\S]*data-i18n="events\.optOut"/,
+    "every random interruption must expose its persistent opt-out");
+  assert.match(index, /id="eventModal"[^>]*aria-describedby="eventDescription"/,
+    "random interruption dialogs must describe themselves to assistive technology");
+  assert.match(css, /\.event-dialog\s*\{[^}]*max-height:\s*calc\(100dvh - 24px\)[^}]*overflow-y:\s*auto/,
+    "interruption controls must remain reachable on short mobile viewports");
+  assert.match(app, /function disableEventInterruptions\([\s\S]*setPreference\("eventsEnabled", false\)[\s\S]*syncEventsPreference\(\)/,
+    "the interruption opt-out must reuse the persistent interface preference");
+  assert.match(app, /function closeEventModal\([\s\S]*cancelActive\(\)[\s\S]*eventState\.active = null/,
+    "dismissing an interruption must cancel it without applying a choice");
+  assert.match(app, /function showEventBanner\([\s\S]*setTimeout\([\s\S]*hideEventBanner\(\)[\s\S]*6000/,
+    "event result banners must leave the screen automatically");
+  assert.match(events, /BASE_INTERVAL = 90[\s\S]*MIN_COOLDOWN = 180[\s\S]*spawnChancePerSecond[\s\S]*Math\.pow/,
+    "random interruptions must be sparse and frame-rate independent");
+  assert.match(app, /const frameDt = Math\.min\(dt, 5\)[\s\S]*update\(scaledDt, frameDt\)[\s\S]*function update\(dt, realDt = dt\)[\s\S]*maybeSpawnSmallEvents\(realDt, DOCps\)[\s\S]*checkDynamicEvents\(realDt\)/,
+    "God mode must not accelerate interruption timing or fill the journal with incidents");
+  assert.match(css, /--ops-positive:\s*#4f712e/,
+    "small positive-status text must keep sufficient contrast on paper surfaces");
+  assert.match(app, /function renderWorkOrder\([\s\S]*activeContract\.timer[\s\S]*progressValue: elapsed/,
+    "the client job must expose real elapsed-time progress");
+  assert.match(index, /role="progressbar"[^>]*aria-valuenow="50"/,
+    "workshop gauges must expose their current value accessibly");
   assert.match(dashboardJs, /function setText\(element, value\)[\s\S]*element\.textContent !== next/,
     "Data Science live regions must not be rewritten with identical text on every poll");
   assert.doesNotMatch(css + experienceCss, /transition\s*:\s*all\b/,
@@ -211,6 +234,8 @@ function verifyStaticContracts() {
   }
   assert.match(build, /function stampCssAssetUrls[\s\S]*url\\\(/,
     "CSS-owned images and fonts must share the release stamp");
+  assert.match(build, /CSS_FILES[\s\S]*replaceAll[\s\S]*renameSync\(cssPath, versionedPath\)/,
+    "published CSS must use revisioned filenames instead of stable cache keys");
   assert.match(build, /function stampJavaScriptAssetUrls[\s\S]*three\.core\.min\.js/,
     "JavaScript imports and static assets must share the release stamp");
   assert.match(build, /function stampManifestAssets/,

@@ -1,6 +1,6 @@
 # Design system V5 : Production Twin
 
-Ce document décrit la direction de Papers Empire 0.23.3. Les règles visuelles
+Ce document décrit la direction de Papers Empire 0.24.0. Les règles visuelles
 servent la lisibilité, le plaisir de jeu et la cohérence du monde. Si elles
 cessent de le faire, elles changent.
 
