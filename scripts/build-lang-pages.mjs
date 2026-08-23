@@ -3,14 +3,14 @@
  * Génère les pages statiques par langue (/en/, /de/, /lb/) à partir
  * d'index.html, avec head entièrement localisé (title, description, og:*,
  * canonical auto-référent) et textes pré-remplis traduits via les
- * dictionnaires du jeu. Optionnellement, estampille les URLs d'assets
- * (?v=<sha>) de toutes les pages produites pour le cache-busting.
+ * dictionnaires du jeu. Optionnellement, versionne les noms des CSS avec le
+ * SHA de release et estampille les autres URLs d'assets (?v=<sha>).
  *
  * Usage : node scripts/build-lang-pages.mjs <dossier-site> [sha]
  *   <dossier-site> : racine du site déployé (contient index.html)
- *   [sha]          : version pour ?v= (ex. ${GITHUB_SHA::8}) — optionnel
+ *   [sha]          : version des CSS et des ?v= (ex. ${GITHUB_SHA::8}) — optionnel
  */
-import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { join } from "node:path";
 
 const [siteDir, stamp] = process.argv.slice(2);
@@ -21,6 +21,7 @@ if (!siteDir) {
 
 const CANON = "https://papersempire.com";
 const LANGS = ["en", "de", "lb"];
+const CSS_FILES = ["style.css", "experience-v4.css"];
 
 const META = {
   en: {
@@ -127,7 +128,12 @@ const PREFILLED_KEYS = [
   "operations.navProduction",
   "operations.navMachines",
   "operations.navStrategy",
+  "operations.navDispatch",
   "operations.navArchives",
+  "objective.title",
+  "objective.internal",
+  "objective.initialInstruction",
+  "objective.status.inProgress",
   "operations.productionKicker",
   "operations.productionTitle",
   "operations.pressCaption",
@@ -146,6 +152,9 @@ const PREFILLED_KEYS = [
   "offline.produced",
   "offline.hint",
   "offline.resume",
+  "offline.viewObjective",
+  "events.optOutHint",
+  "events.optOut",
   "stats.docBank",
   "stats.docTotal",
   "stats.ccTotal",
@@ -154,6 +163,7 @@ const PREFILLED_KEYS = [
   "gauges.footprint",
   "gauges.image",
   "sections.contractsTitle",
+  "contracts.runningBadge",
   "sections.logTitle",
   "actions.rerollContracts",
   "building.reproOperator.name",
@@ -247,12 +257,16 @@ function localize(html, lang) {
 
 function stampAssets(html) {
   if (!stamp) return html;
+  for (const cssName of CSS_FILES) {
+    const versionedName = cssName.replace(/\.css$/, `.${stamp}.css`);
+    html = html.replaceAll(`/assets/css/${cssName}`, `/assets/css/${versionedName}`);
+  }
   // Toutes les ressources locales portent la révision, pas seulement CSS/JS.
   // Safari peut sinon combiner un HTML neuf avec une image, une police ou un
   // srcset conservé pendant la durée du cache partagé.
   return html.replace(
     /(\/(?:assets\/[^"'()<>,\s?]+|favicon\.svg|site\.webmanifest))/g,
-    `$1?v=${stamp}`
+    assetPath => assetPath.endsWith(`.${stamp}.css`) ? assetPath : `${assetPath}?v=${stamp}`
   );
 }
 
@@ -307,11 +321,14 @@ if (stamp) {
     console.log(`dashboard/index.html estampillé ?v=${stamp}`);
   }
 
-  for (const cssName of ["style.css", "experience-v4.css"]) {
+  for (const cssName of CSS_FILES) {
     const cssPath = join(siteDir, "assets", "css", cssName);
     if (!existsSync(cssPath)) continue;
-    writeFileSync(cssPath, stampCssAssetUrls(readFileSync(cssPath, "utf8")));
-    console.log(`${cssName} : assets internes estampillés ?v=${stamp}`);
+    const versionedName = cssName.replace(/\.css$/, `.${stamp}.css`);
+    const versionedPath = join(siteDir, "assets", "css", versionedName);
+    renameSync(cssPath, versionedPath);
+    writeFileSync(versionedPath, stampCssAssetUrls(readFileSync(versionedPath, "utf8")));
+    console.log(`${versionedName} : nom versionné, assets internes estampillés ?v=${stamp}`);
   }
 
   visitJavaScriptFiles(join(siteDir, "assets"), jsPath => {

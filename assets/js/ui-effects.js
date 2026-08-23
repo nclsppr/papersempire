@@ -21,12 +21,6 @@
       classes: ["confetti confetti-gold", "confetti confetti-paper"],
       sound: "celebration",
       lifetime: 2700
-    },
-    achievement: {
-      count: 18,
-      classes: ["confetti confetti-gold", "confetti confetti-violet"],
-      sound: "achievement",
-      lifetime: 2000
     }
   };
 
@@ -138,34 +132,37 @@
   }
 
   function playPurchaseEffect(target) {
-    retriggerClass(target, "is-stamped", 420);
-    emitPaperCues(target, 5);
+    retriggerClass(target, "is-stamped", 240);
+    emitPaperCues(target, 1);
     playSound("purchase");
   }
 
   function playUpgradeEffect(target) {
-    retriggerClass(target, "is-upgrade-filed", 420);
-    emitPaperCues(target, 4);
+    retriggerClass(target, "is-upgrade-filed", 280);
+    emitPaperCues(target, 1);
     playSound("upgrade");
   }
 
   function playContractEffect(target) {
-    retriggerClass(target, "is-contract-stamped", 300);
-    emitPaperCues(target, 3);
+    retriggerClass(target, "is-contract-stamped", 340);
+    emitPaperCues(target, 2);
     playSound("contract");
+  }
+
+  function playAchievementEffect() {
+    playSound("achievement");
   }
 
   function animatePressFeed(press) {
     if (!press || !canCreateMotion()) return;
     const sheet = press.querySelector(".paper-sheet");
     const lip = press.querySelector(".press-slot-in");
-    if (!sheet || typeof sheet.animate !== "function") {
-      retriggerClass(press, "is-feeding", 540);
-      return;
-    }
+    if (!sheet || typeof sheet.animate !== "function") return;
 
-    const previous = pressAnimations.get(press);
-    if (previous) previous.forEach(function (animation) { animation.cancel(); });
+    const currentAnimations = pressAnimations.get(press);
+    if (currentAnimations) {
+      currentAnimations.forEach(function (animation) { animation.cancel(); });
+    }
 
     const sheetAnimation = sheet.animate([
       { opacity: 1, transform: "translate3d(-50%, 0, 0)", offset: 0 },
@@ -175,7 +172,7 @@
       { opacity: 0, transform: "translate3d(-50%, -5px, 0)", offset: 0.73 },
       { opacity: 1, transform: "translate3d(-50%, 0, 0)", offset: 1 }
     ], {
-      duration: 510,
+      duration: 160,
       easing: "cubic-bezier(0.2, 0.72, 0.2, 1)"
     });
     const lipAnimation = lip && typeof lip.animate === "function"
@@ -183,7 +180,7 @@
           { filter: "brightness(1)", transform: "translateY(0)" },
           { filter: "brightness(1.55)", transform: "translateY(1px)", offset: 0.56 },
           { filter: "brightness(1)", transform: "translateY(0)" }
-        ], { duration: 350, easing: "ease-out" })
+        ], { duration: 100, easing: "ease-out" })
       : null;
     const animations = lipAnimation ? [sheetAnimation, lipAnimation] : [sheetAnimation];
     pressAnimations.set(press, animations);
@@ -244,6 +241,7 @@
     playPurchaseEffect,
     playUpgradeEffect,
     playContractEffect,
+    playAchievementEffect,
     playCelebrationEffect,
     playClickEffect,
     playSound,

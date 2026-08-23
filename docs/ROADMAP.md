@@ -32,6 +32,17 @@ et les données racontent la même usine : le **production twin**.
 - **0.21 — Operations Deck** : poste de commande et fiabilité tactile iPhone.
 - **0.21.1 — Branche canonique `main`** : workflows, Pages et réconciliation
   Atlas alignés.
+- **0.24 — Dossier du moment** : objectif unique, retours d'achat explicites et
+  interruptions aléatoires maîtrisées.
+
+## 0.24 — Dossier du moment
+
+- [x] Prochaine étape interne et contrat actif réunis dans une seule synthèse.
+- [x] Progression, ressources manquantes, délai et récompense rendus explicites.
+- [x] Effets avant/après et confirmation locale sur les achats structurants.
+- [x] Incidents rares, annulables sans effet et désactivables durablement.
+- [x] Bandeaux temporaires et cadence indépendante du framerate ou du mode test.
+- [x] Noms de fichiers CSS versionnés par la révision de release.
 
 ## 0.23.2 — Canonical Brand Pass V5
 

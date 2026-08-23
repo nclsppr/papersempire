@@ -1,5 +1,5 @@
 # Papers Empire
-Game Design Document (GDD), version développeur 0.23.3
+Game Design Document (GDD), version développeur 0.24.0
 
 ---
 
@@ -375,69 +375,50 @@ function buildingCost(b: Building): number {
 ### 6.1 Modèle de données
 
 ```ts
-type EventId =
-  | "machineBreakdown"
-  | "paperShortage"
-  | "volumePeak"
-  | "qualityAudit"
-  | "envAudit";
-
 type GameEvent = {
-  id: EventId;
-  name: string;
-  description: string;
-  durationSec: number;
-  choices: EventChoice[];
-  active: boolean;
+  id: string;
+  type: "choice" | "minigame";
+  titleKey: string;
+  descriptionKey: string;
+  choices?: EventChoice[];
+  resultWinKey?: string;
+  resultLoseKey?: string;
 };
 
 type EventChoice = {
   id: string;
-  label: string;
-  // effet appliqué une fois la réponse choisie
-  apply: (state: GameState) => GameState;
+  labelKey: string;
+  resultKey: string;
+  tone: "positive" | "neutral" | "mixed" | "negative";
+  effect: (state: GameState) => void;
 };
 ```
+
+Une seule définition peut être active. La fermer l'annule sans effet et lance
+le même délai de garde qu'une résolution. Les définitions, résultats exacts et
+règles de cadence sont détaillés dans [`events.md`](events.md).
 
 ### 6.2 Exemples
 
 #### Panne machine
 
 * Id: `machineBreakdown`
-* Trigger: probabilité par minute, augmentée si DOCps est élevé et peu de maintenance.
+* « Réparer maintenant » retire 20 % des DOC disponibles, avec un plafond de
+  50 DOC, puis ajoute jusqu'à 5 points de qualité.
+* « Espérer que ça tienne » retire jusqu'à 8 points de qualité.
 
-Effets possibles:
+#### Pénurie de papier
 
-* Option 1: "Réparer immédiatement"
+* « Acheter du papier premium » retire 15 % des DOC disponibles, ajoute jusqu'à
+  6 points de qualité et 5 points d'empreinte.
+* « Passer au recyclé » retire jusqu'à 8 points d'empreinte et jusqu'à 4 points
+  de qualité.
 
-  * Coût: `docBank -= DOCps * 30` (30 secondes de production perdues)
-  * Qualité ne bouge pas
-* Option 2: "Continuer à produire comme ça"
+#### Défi calibrage
 
-  * Gain DOC normal pendant `durationSec`
-  * Mais:
-
-    * `quality -= 0.1`
-    * Augmentation de `footprint` (gâchis)
-
-#### Rupture de papier
-
-* Option 1: "Commande urgente"
-
-  * `docBank -= baseCostUrgent`
-  * Production continue
-* Option 2: "Ralentir la production"
-
-  * DOCps réduit de 50 % pendant `durationSec`
-  * Pas de malus de qualité
-
-#### Pic de volumes (gros client)
-
-* Bonus de DOCps pendant une période
-* Si `quality > 0.8` et aucun incident pendant la durée:
-
-  * `ccTotal += bigBonus`
-  * Unlock upgrade spéciale "Contrat majeur signé"
+* Le jeu affiche un code de 1 à 3 et attend le bouton correspondant.
+* Une réussite ajoute 80 DOC et jusqu'à 4 points de qualité ; un échec retire
+  jusqu'à 5 points de qualité.
 
 ---
 
@@ -559,6 +540,8 @@ const defaultConfig: GameConfig = {
 Le jeu présente un poste d'exploitation hiérarchisé :
 
 * une console de presse manuelle avec DOC, CC et cadence ;
+* un dossier prioritaire qui montre la prochaine étape interne ou le contrat
+  client en cours, sans dupliquer ces informations ailleurs ;
 * un catalogue de machines avec quantité, coût suivant, contribution et action
   d'achat ;
 * le bureau des méthodes pour les améliorations ;
@@ -576,8 +559,9 @@ tous les contrôles.
 * Un clic ou un achat produit un feedback court, causal et interruptible.
 * Qualité et image de marque montent visuellement avec leur valeur ; l'empreinte
   est explicitement inversée, car une valeur basse est favorable.
-* Les événements restent des modales à choix, avec durée et conséquences
-  compréhensibles.
+* Les événements restent des modales à choix, avec conséquences
+  compréhensibles. Ils peuvent être ignorés sans effet ou désactivés durablement
+  depuis la modale, puis réactivés dans les paramètres.
 * Le panneau prestige affiche la culture actuelle et le gain potentiel de la
   réorganisation avant confirmation.
 * Le mouvement n'est jamais requis pour comprendre un état et s'arrête selon
