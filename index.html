@@ -499,11 +499,37 @@
       <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-upgrade"></use></svg>
       <span><b>03</b> <span data-i18n="operations.navStrategy">Stratégie</span></span>
     </a>
+    <a href="#dispatchPanel">
+      <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-contract"></use></svg>
+      <span><b>04</b> <span data-i18n="operations.navDispatch">Expéditions</span></span>
+    </a>
     <a href="#progressPanel">
       <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-trophy"></use></svg>
       <span><b>05</b> <span data-i18n="operations.navArchives">Archives</span></span>
     </a>
   </nav>
+
+  <section class="work-order reveal-target" id="currentObjective" aria-labelledby="currentObjectiveTitle" tabindex="-1">
+    <div class="work-order-head">
+      <div>
+        <p class="work-order-eyebrow" id="currentObjectiveTitle" data-i18n="objective.title">Dossier du moment</p>
+        <span class="work-order-type" data-work-order-type data-i18n="objective.internal">Dossier atelier</span>
+      </div>
+      <span class="work-order-status" data-work-order-status data-i18n="objective.status.inProgress">EN PRÉPARATION</span>
+    </div>
+    <div class="work-order-main">
+      <div>
+        <strong class="work-order-name" data-work-order-name data-i18n="building.reproOperator.name">Opérateur repro</strong>
+        <p class="work-order-instruction" data-work-order-instruction data-i18n="objective.initialInstruction">Installer la première unité.</p>
+      </div>
+      <span class="work-order-meta" data-work-order-meta>0 / 15 DOC</span>
+    </div>
+    <progress class="work-order-progress" data-work-order-progress max="15" value="0" aria-label="Progression du dossier" data-i18n-aria-label="objective.progressLabel">0 %</progress>
+    <div class="work-order-details">
+      <span data-work-order-last-action hidden></span>
+      <span data-work-order-next></span>
+    </div>
+  </section>
 
   <div class="layout-column" id="printStation">
     <section class="card command-card reveal-target" aria-labelledby="printStationTitle">
@@ -574,16 +600,16 @@
             <span class="gauge-name"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-quality"></use></svg><span data-i18n="gauges.quality">Qualité</span></span>
             <span id="qualityLabel">50 %</span>
           </div>
-          <div class="gauge-bar">
-            <div class="gauge-fill" id="qualityFill"></div>
-          </div>
+        <div class="gauge-bar" role="progressbar" aria-label="Qualité" data-i18n-aria-label="gauges.quality" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="gauge-fill" id="qualityFill"></div>
+        </div>
         </div>
         <div class="gauge">
           <div class="gauge-label-row">
             <span class="gauge-name"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-footprint"></use></svg><span data-i18n="gauges.footprint">Empreinte papier</span></span>
             <span id="footprintLabel">50 %</span>
           </div>
-          <div class="gauge-bar">
+          <div class="gauge-bar" role="progressbar" aria-label="Empreinte papier" data-i18n-aria-label="gauges.footprint" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
             <div class="gauge-fill bad" id="footprintFill"></div>
           </div>
         </div>
@@ -592,7 +618,7 @@
             <span class="gauge-name"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-brand"></use></svg><span data-i18n="gauges.image">Image de marque</span></span>
             <span id="imageLabel">50 %</span>
           </div>
-          <div class="gauge-bar">
+          <div class="gauge-bar" role="progressbar" aria-label="Image de marque" data-i18n-aria-label="gauges.image" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
             <div class="gauge-fill" id="imageFill"></div>
           </div>
         </div>
@@ -617,14 +643,6 @@
         <svg class="pe-icon"><use href="#pe-icon-factory"></use></svg>
       </span>
     </header>
-    <div class="machine-unlock" id="machineUnlockPanel">
-      <div class="machine-unlock-copy">
-        <span data-i18n="operations.nextMachine">Prochaine unité à débloquer</span>
-        <strong id="nextBuildingName">—</strong>
-      </div>
-      <span class="machine-unlock-cost" id="nextBuildingCost">0 DOC</span>
-      <progress class="machine-unlock-track" id="nextBuildingTrack" max="100" value="0">0 %</progress>
-    </div>
     <div class="buildings-list" id="buildingsList"></div>
   </section>
 
@@ -669,7 +687,6 @@
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="journalPanel" data-tab="journal" id="journalTab"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-journal"></use></svg><span data-i18n="sections.logTitle">Journal d'activité</span></button>
       </div>
       <div class="tab-panel" id="contractsPanel" role="tabpanel" aria-labelledby="contractsTab">
-        <section class="active-contract hidden" id="activeContractPanel" aria-labelledby="activeContractTitle" tabindex="-1"></section>
         <div class="contracts-list" id="contractsList"></div>
         <button class="btn-slim" type="button" id="rerollContractsBtn" data-i18n="actions.rerollContracts">Rafraîchir les offres</button>
       </div>
@@ -712,9 +729,9 @@
 
 </main>
 
-<div class="event-modal hidden" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventTitle" aria-hidden="true" inert>
+<div class="event-modal hidden" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="eventTitle" aria-describedby="eventDescription" aria-hidden="true" inert>
   <div class="event-dialog t-modal">
-    <button class="modal-close" id="closeEventModal" type="button" aria-label="Fermer" data-i18n-aria-label="actions.close">×</button>
+    <button class="modal-close" id="closeEventModal" type="button" aria-label="Ignorer cet incident" data-i18n-aria-label="events.dismiss">×</button>
     <div class="event-header">
       <h3 id="eventTitle">Événement</h3>
       <p id="eventDescription"></p>
@@ -729,6 +746,10 @@
 </div>
 </div>
     <div class="event-result" id="eventResult"></div>
+    <div class="event-interruption-control">
+      <p id="eventOptOutHint" data-i18n="events.optOutHint">Réactivable dans Paramètres → Interface.</p>
+      <button class="btn-slim" id="disableEventInterruptions" type="button" aria-describedby="eventOptOutHint" data-i18n="events.optOut">Stopper ces interruptions</button>
+</div>
 </div>
 </div>
 
@@ -752,7 +773,10 @@
 </div>
 </dl>
     <p class="offline-hint" data-i18n="offline.hint">L'équipe de nuit tourne à 50 % du rendement, plafonné à 8 heures.</p>
-    <button class="click-button" id="offlineResume" type="button" data-i18n="offline.resume">Reprendre le travail</button>
+    <div class="offline-actions">
+      <button class="click-button" id="offlineResume" type="button" data-i18n="offline.resume">Reprendre le travail</button>
+      <button class="btn-slim" id="offlineObjective" type="button" data-i18n="offline.viewObjective">Voir le dossier du moment</button>
+    </div>
 </div>
 </div>
 

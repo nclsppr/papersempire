@@ -280,12 +280,22 @@ html[data-experience="playing"] body {
 }
 
 .operations-deck .building-meta,
+.operations-deck .building-effect-preview,
+.operations-deck .building-feedback,
 .operations-deck .building-tooltip {
   margin-left: 91px;
 }
 
 .operations-deck .building-meta {
   color: var(--world-steel);
+}
+
+@media (min-width: 821px) {
+  .operations-deck .building-meta,
+  .operations-deck .building-effect-preview,
+  .operations-deck .building-feedback {
+    margin-left: 0;
+  }
 }
 
 .operations-deck .building-qty-chip {
@@ -1460,6 +1470,8 @@ html[data-experience="playing"] body {
   }
 
   .operations-deck .building-meta,
+  .operations-deck .building-effect-preview,
+  .operations-deck .building-feedback,
   .operations-deck .building-tooltip {
     margin-left: 81px;
   }
@@ -1579,6 +1591,11 @@ html[data-experience="playing"] body {
 
   html[data-experience="playing"] .empire-hud-row {
     padding: 5px 0;
+  }
+
+  .operations-deck .building-effect-preview,
+  .operations-deck .building-feedback {
+    margin-left: 0;
   }
 
   .operations-title-block h1 {
@@ -1762,6 +1779,10 @@ html[data-experience="playing"] body {
 }
 
 @media (any-pointer: coarse) {
+  .operations-deck .building-row:hover {
+    transform: none;
+  }
+
   .data-zone-nav a,
   .segmented-control button,
   .data-table th button,
@@ -1777,6 +1798,18 @@ html[data-experience="playing"] body {
 @media (prefers-reduced-motion: reduce) {
   .stage,
   .operations-deck .building-row {
+    transition: none;
+  }
+
+  .work-order-progress::-webkit-progress-value {
+    transition: none;
+  }
+
+  .work-order-progress::-moz-progress-bar {
+    transition: none;
+  }
+
+  .operations-deck .building-feedback {
     transition: none;
   }
 

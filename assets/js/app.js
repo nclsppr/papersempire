@@ -19,6 +19,7 @@
     playPurchaseEffect() {},
     playUpgradeEffect() {},
     playContractEffect() {},
+    playAchievementEffect() {},
     playCelebrationEffect() {},
     playClickEffect() {},
     playSound() {}
@@ -68,7 +69,10 @@
     upgradesDirty: true,
     detailTab: "contracts",
     logRenderSignature: "",
-    lastFrameRender: 0
+    lastFrameRender: 0,
+    lastAction: null,
+    completionReceipt: null,
+    initialRenderComplete: false
   };
 
   /** Global model of the player progression. */
@@ -123,11 +127,11 @@
     rerollCount: 0,
     lastReroll: 0,
     unlocked: false,
-    listRenderSignature: "",
-    activeRenderSignature: ""
+    listRenderSignature: ""
   };
   const CONTRACT_REROLL_COOLDOWN = 30000;
   const CONTRACTS_UNLOCK_DOC_TOTAL = 1500;
+  const buildingFeedbackTimers = new WeakMap();
 
   let saveTimer = null;
   let bannerHideTimer = null;
@@ -568,10 +572,18 @@
     DOM.opsDocPs = document.getElementById("opsDocPs");
     DOM.opsBuildingCount = document.getElementById("opsBuildingCount");
     DOM.manualGain = document.getElementById("manualGain");
-    DOM.machineUnlockPanel = document.getElementById("machineUnlockPanel");
-    DOM.nextBuildingName = document.getElementById("nextBuildingName");
-    DOM.nextBuildingCost = document.getElementById("nextBuildingCost");
-    DOM.nextBuildingTrack = document.getElementById("nextBuildingTrack");
+    DOM.currentObjective = document.getElementById("currentObjective");
+    DOM.workOrderType = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-type]");
+    DOM.workOrderStatus = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-status]");
+    DOM.workOrderName = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-name]");
+    DOM.workOrderInstruction = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-instruction]");
+    DOM.workOrderMeta = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-meta]");
+    DOM.workOrderProgress = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-progress]");
+    DOM.workOrderLastAction = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-last-action]");
+    DOM.workOrderNext = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-next]");
+    DOM.qualityGauge = DOM.qualityFill && DOM.qualityFill.closest('[role="progressbar"]');
+    DOM.footprintGauge = DOM.footprintFill && DOM.footprintFill.closest('[role="progressbar"]');
+    DOM.imageGauge = DOM.imageFill && DOM.imageFill.closest('[role="progressbar"]');
     DOM.prestigeButton = document.getElementById("prestigeButton");
     DOM.prestigeInfo = document.getElementById("prestigeInfo");
     DOM.buildingsList = document.getElementById("buildingsList");
@@ -583,7 +595,6 @@
     DOM.journalPanel = document.getElementById("journalPanel");
     DOM.rerollContractsBtn = document.getElementById("rerollContractsBtn");
     DOM.contractsList = document.getElementById("contractsList");
-    DOM.activeContractPanel = document.getElementById("activeContractPanel");
     DOM.dispatchPanel = document.getElementById("dispatchPanel");
     DOM.godModeCard = document.getElementById("godModeCard");
     DOM.godModeStatus = document.getElementById("godModeStatus");
@@ -616,6 +627,7 @@
     DOM.minigameContainer = document.getElementById("minigameContainer");
     DOM.minigamePrompt = document.getElementById("minigamePrompt");
     DOM.closeEventModal = document.getElementById("closeEventModal");
+    DOM.disableEventInterruptions = document.getElementById("disableEventInterruptions");
   }
 
   /** Hooks click events to the main CTAs. */
@@ -696,6 +708,9 @@
     }
     if (DOM.closeEventModal) {
       DOM.closeEventModal.addEventListener("click", () => closeEventModal());
+    }
+    if (DOM.disableEventInterruptions) {
+      DOM.disableEventInterruptions.addEventListener("click", disableEventInterruptions);
     }
     if (DOM.closeEventBanner) {
       DOM.closeEventBanner.addEventListener("click", hideEventBanner);
@@ -1024,7 +1039,7 @@
       DOM.closeEventBanner.setAttribute("aria-label", t("actions.closeBanner"));
     }
     if (DOM.closeEventModal) {
-      DOM.closeEventModal.setAttribute("aria-label", t("actions.close"));
+      DOM.closeEventModal.setAttribute("aria-label", t("events.dismiss"));
     }
     applyGameTitle();
     renderGodModePanel(true);
@@ -1141,6 +1156,8 @@
     }
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
+    uiState.lastAction = null;
+    uiState.completionReceipt = null;
     renderAll(true);
   }
 
@@ -1329,6 +1346,7 @@
         : null;
       window.EndgameModule.loadData(gameState, savedContract).then(() => {
         renderContractsPanel();
+        renderWorkOrder();
       });
     }
 
@@ -1337,6 +1355,7 @@
     refreshUpgradeUnlocks(true);
     logMessage("log.welcome");
     renderAll(true);
+    uiState.initialRenderComplete = true;
     showOfflineReport();
     gameState.time.lastUpdate = performance.now();
     requestAnimationFrame(gameLoop);
@@ -1353,7 +1372,11 @@
       meta: { startedAt: experienceStartedAt },
       resources: { ...gameState.resources },
       stats: { ...gameState.stats },
-      buildings: gameState.buildings.map(b => ({ id: b.id, quantity: b.quantity })),
+      buildings: gameState.buildings.map(b => ({
+        id: b.id,
+        quantity: b.quantity,
+        isUnlocked: !!b.isUnlocked
+      })),
       upgrades: gameState.upgrades.map(u => ({ id: u.id, purchased: !!u.purchased })),
       achievements: achievementsState.unlocked,
       endgame: {
@@ -1404,9 +1427,9 @@
         const target = gameState.buildings.find(b => b.id === buildingId);
         if (target && Number.isSafeInteger(entry.quantity) && entry.quantity >= 0) {
           target.quantity = entry.quantity;
-          // isUnlocked is not persisted: keep owned buildings visible even
-          // when the current bank is below their (grown) next-unit cost.
-          if (target.quantity > 0) {
+          // Older saves do not expose isUnlocked; owned buildings still
+          // migrate as visible, while newer saves retain opened blueprints.
+          if (entry.isUnlocked === true || target.quantity > 0) {
             target.isUnlocked = true;
           }
         }
@@ -1512,22 +1535,38 @@
       duration.textContent = text;
     }
     if (docs) docs.textContent = "+" + formatNumber(offlineReport.gain) + " DOC";
-    const close = () => {
+    const listeners = new AbortController();
+    const close = (restoreFocus = true) => {
       closeModalSurface(modal, dialog);
-      restoreModalFocus(modal);
-      document.removeEventListener("keydown", onKey);
+      if (restoreFocus) restoreModalFocus(modal);
+      listeners.abort();
     };
     const onKey = event => {
       if (event.key === "Escape") close();
     };
     openModalSurface(modal, dialog);
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, { signal: listeners.signal });
     const closeBtn = document.getElementById("closeOfflineModal");
     const resumeBtn = document.getElementById("offlineResume");
-    if (closeBtn) closeBtn.addEventListener("click", close, { once: true });
+    const objectiveBtn = document.getElementById("offlineObjective");
+    const once = { once: true, signal: listeners.signal };
+    if (closeBtn) closeBtn.addEventListener("click", () => close(), once);
     if (resumeBtn) {
-      resumeBtn.addEventListener("click", close, { once: true });
+      resumeBtn.addEventListener("click", () => close(), once);
       resumeBtn.focus();
+    }
+    if (objectiveBtn) {
+      objectiveBtn.addEventListener("click", () => {
+        close(false);
+        setTimeout(() => {
+          if (!DOM.currentObjective) return;
+          DOM.currentObjective.scrollIntoView({
+            block: "center",
+            behavior: reduceMotionPreferred() ? "auto" : "smooth"
+          });
+          DOM.currentObjective.focus({ preventScroll: true });
+        }, modalCloseMs() + 20);
+      }, once);
     }
     offlineReport = null;
     queueSave(true);
@@ -1706,6 +1745,15 @@
     return sign + formatted + " %";
   }
 
+  /** Formats completion percentages with the active language's spacing. */
+  function formatProgressPercent(value) {
+    const locale = LOCALE_BY_LANG[currentLang] || LOCALE_BY_LANG.fr;
+    return new Intl.NumberFormat(locale, {
+      style: "percent",
+      maximumFractionDigits: 0
+    }).format(Math.max(0, Math.min(1, value)));
+  }
+
   /** Returns the current god mode multiplier (defaults to 1). */
   function currentTimeScale() {
     return godModeState.timeScale || 1;
@@ -1756,22 +1804,81 @@
 
   /** Unlocks buildings once the player holds enough DOC to buy the next unit. */
   function syncBuildingUnlocks() {
-    let unlockedAny = false;
+    const unlocked = [];
     const bank = gameState.resources.docBank;
     for (const b of gameState.buildings) {
       if (!b.isUnlocked && bank >= buildingCost(b)) {
         b.isUnlocked = true;
-        unlockedAny = true;
+        unlocked.push(b);
       }
     }
-    if (unlockedAny) {
+    if (unlocked.length) {
       uiState.buildingsDirty = true;
+      if (uiState.initialRenderComplete) {
+        for (const building of unlocked) {
+          logMessage("feedback.unitAvailable", { name: getBuildingName(building) });
+        }
+        const latest = unlocked[unlocked.length - 1];
+        setLastAction("feedback.unitAvailable", { name: getBuildingName(latest) });
+        showEventBanner("feedback.unitAvailable", "positive", { name: getBuildingName(latest) });
+      }
     }
+    return unlocked;
   }
 
   /** Returns the current cost of buying the next unit of a building. */
   function buildingCost(building) {
     return Math.floor(building.baseCost * Math.pow(building.costMultiplier, building.quantity));
+  }
+
+  /** Finds the real next locked plan, independent of catalogue order. */
+  function getNextLockedBuilding() {
+    return gameState.buildings.reduce((next, building) => {
+      if (building.isUnlocked) return next;
+      if (!next) return building;
+      return buildingCost(building) < buildingCost(next) ? building : next;
+    }, null);
+  }
+
+  /** Chooses one workshop objective when no client order is running. */
+  function getInternalObjective() {
+    if (canPrestige()) {
+      return {
+        kind: "prestige",
+        target: gameState.config.prestigeRequirement
+      };
+    }
+    const installable = gameState.buildings.reduce((next, building) => {
+      if (!building.isUnlocked || building.quantity > 0) return next;
+      if (!next) return building;
+      return buildingCost(building) < buildingCost(next) ? building : next;
+    }, null);
+    if (installable) {
+      return { kind: "install", building: installable, target: buildingCost(installable) };
+    }
+    const locked = getNextLockedBuilding();
+    if (locked) {
+      return { kind: "unlock", building: locked, target: buildingCost(locked) };
+    }
+    return {
+      kind: "prestige",
+      target: gameState.config.prestigeRequirement
+    };
+  }
+
+  /** Projects the exact automatic rate after buying one unit. */
+  function projectedDocPerSecond(building) {
+    const quantity = building.quantity;
+    building.quantity = quantity + 1;
+    try {
+      return computeDocPerSecond();
+    } finally {
+      building.quantity = quantity;
+    }
+  }
+
+  function setLastAction(key, params = {}, detailKey = null, detailParams = {}, detailText = "") {
+    uiState.lastAction = { key, params, detailKey, detailParams, detailText };
   }
 
   /** Localises the display name for a building. */
@@ -1802,7 +1909,6 @@
       gameState.log.pop();
     }
     uiState.logRenderSignature = "";
-    announceStatus(t(key, params));
     renderLog();
   }
 
@@ -1896,8 +2002,9 @@
       return;
     }
 
-    const scaledDt = Math.min(dt, 5) * currentTimeScale();
-    update(scaledDt);
+    const frameDt = Math.min(dt, 5);
+    const scaledDt = frameDt * currentTimeScale();
+    update(scaledDt, frameDt);
     if (timestamp - uiState.lastFrameRender >= DOM_RENDER_INTERVAL_MS) {
       renderAll();
     }
@@ -1906,7 +2013,7 @@
   }
 
   /** Applies resource gains, drifts and unlock checks for a time delta. */
-  function update(dt) {
+  function update(dt, realDt = dt) {
     syncEventsPreference();
     const mults = computeMultipliers();
     const DOCps = computeDocPerSecond(mults);
@@ -1952,8 +2059,8 @@
 
     refreshUpgradeUnlocks();
     if (experienceMode === "playing") {
-      maybeSpawnSmallEvents(dt, DOCps);
-      checkDynamicEvents(dt);
+      maybeSpawnSmallEvents(realDt, DOCps);
+      checkDynamicEvents(realDt);
       tickContracts(dt);
     }
     checkAchievements();
@@ -1996,10 +2103,6 @@
     queueSave();
     renderAll();
     const sourceButton = event && event.currentTarget ? event.currentTarget : DOM.clickButton;
-    if (sourceButton) {
-      sourceButton.classList.add("pulse");
-      setTimeout(() => sourceButton.isConnected && sourceButton.classList.remove("pulse"), 350);
-    }
     UIEffects.playClickEffect(sourceButton, { value: docGain });
     if (TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
       TutorialEngine.markMilestone("click");
@@ -2014,15 +2117,26 @@
     if (gameState.resources.docBank < cost) return;
 
     const shouldRestoreFocus = document.activeElement === sourceEl;
+    const beforeRate = computeDocPerSecond();
     gameState.resources.docBank -= cost;
     analyticsState.currentRun.buildingSpend += cost;
     const previousQuantity = b.quantity;
     b.quantity += 1;
+    const afterRate = computeDocPerSecond();
+    const primaryParams = { name: getBuildingName(b) };
+    const rateChanged = Math.abs(afterRate - beforeRate) > 1e-9;
+    const detailKey = rateChanged ? "feedback.cadenceChange" : null;
+    const detailParams = rateChanged ? {
+      before: formatNumber(beforeRate),
+      after: formatNumber(afterRate)
+    } : {};
+    const detailText = rateChanged ? "" : formatBuildingImpactText(b, 1);
+    setLastAction("feedback.unitInstalled", primaryParams, detailKey, detailParams, detailText);
     uiState.buildingsDirty = true;
     notifyScene("purchase", b.id);
     logMessage("log.buyBuilding", { name: getBuildingName(b), total: b.quantity });
     refreshUpgradeUnlocks();
-    checkAchievements();
+    const unlockedAchievement = checkAchievements();
     queueSave();
     renderAll();
     const installedRow = DOM.buildingsList
@@ -2035,6 +2149,14 @@
         : installedRow.querySelector(".building-name-button");
       if (focusTarget) focusTarget.focus({ preventScroll: true });
     }
+    const primaryText = t("feedback.unitInstalled", primaryParams);
+    const detailTextValue = rateChanged ? t(detailKey, detailParams) : detailText;
+    showBuildingFeedback(id, primaryText, detailTextValue);
+    let purchaseAnnouncement = detailTextValue ? primaryText + ". " + detailTextValue : primaryText;
+    if (unlockedAchievement) {
+      purchaseAnnouncement += ". " + t("log.achievement", { name: t(unlockedAchievement.nameKey) });
+    }
+    announceStatus(purchaseAnnouncement);
     UIEffects.playPurchaseEffect(installedRow || sourceEl || DOM.buildingsList);
     if (TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
       TutorialEngine.markMilestone("building");
@@ -2053,12 +2175,23 @@
     if (gameState.resources.docTotal < (upg.unlockDocTotal || 0)) return;
 
     const shouldRestoreFocus = document.activeElement === sourceEl;
+    const beforeRate = computeDocPerSecond();
     gameState.resources.docBank -= upg.cost;
     analyticsState.currentRun.upgradeSpend += upg.cost;
     upg.purchased = true;
+    const afterRate = computeDocPerSecond();
+    const rateChanged = Math.abs(afterRate - beforeRate) > 1e-9;
+    const primaryParams = { name: getUpgradeName(upg) };
+    const detailKey = rateChanged ? "feedback.cadenceChange" : null;
+    const detailParams = rateChanged ? {
+      before: formatNumber(beforeRate),
+      after: formatNumber(afterRate)
+    } : {};
+    const detailText = rateChanged ? "" : getUpgradeDesc(upg);
+    setLastAction("feedback.upgradeInstalled", primaryParams, detailKey, detailParams, detailText);
     uiState.upgradesDirty = true;
     logMessage("log.buyUpgrade", { name: getUpgradeName(upg) });
-    checkAchievements();
+    const unlockedAchievement = checkAchievements();
     queueSave();
     renderAll();
     if (shouldRestoreFocus) {
@@ -2069,6 +2202,13 @@
       const focusTarget = nextAction || prestigeAction || document.getElementById("upgradesPanelTitle");
       if (focusTarget) focusTarget.focus({ preventScroll: true });
     }
+    const primaryText = t("feedback.upgradeInstalled", primaryParams);
+    const detail = rateChanged ? t(detailKey, detailParams) : detailText;
+    let upgradeAnnouncement = detail ? primaryText + ". " + detail : primaryText;
+    if (unlockedAchievement) {
+      upgradeAnnouncement += ". " + t("log.achievement", { name: t(unlockedAchievement.nameKey) });
+    }
+    announceStatus(upgradeAnnouncement);
     UIEffects.playUpgradeEffect(DOM.upgradesList || sourceEl);
   }
 
@@ -2087,6 +2227,7 @@
     if (!canPrestige()) return;
     const gain = computePotentialCultureGain();
     if (gain <= 0) return;
+    const multiplierBefore = prestigeMultiplier();
 
     notifyScene("prestige");
     const completedAt = Date.now();
@@ -2102,6 +2243,7 @@
     analyticsState.currentRun = createAnalyticsState(false).currentRun;
     analyticsState.currentRun.startedAt = completedAt;
     gameState.resources.culturePoints += gain;
+    const multiplierAfter = prestigeMultiplier();
     gameState.resources.docBank = 0;
     gameState.resources.docTotal = 0;
     gameState.resources.ccTotal = 0;
@@ -2114,7 +2256,9 @@
 
     for (const upg of gameState.upgrades) {
       upg.purchased = false;
+      upg.unlocked = false;
     }
+    refreshUpgradeUnlocks(true);
 
     gameState.stats.quality = 0.5;
     gameState.stats.footprint = 0.5;
@@ -2125,11 +2269,31 @@
 
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
+    const receiptParams = {
+      gain,
+      before: multiplierBefore.toFixed(2),
+      after: multiplierAfter.toFixed(2)
+    };
+    uiState.completionReceipt = {
+      kind: "prestige-receipt",
+      name: t("objective.prestigeComplete"),
+      detailKey: "feedback.prestigeReceipt",
+      detailParams: receiptParams,
+      expiresAt: Date.now() + 2800
+    };
+    setLastAction("objective.prestigeComplete", {}, "feedback.prestigeReceipt", receiptParams);
     logMessage("log.prestige", { amount: gain });
     UIEffects.playCelebrationEffect("prestige");
     checkAchievements();
+    showEventBanner("feedback.prestigeReceipt", "positive", receiptParams);
     queueSave(true);
     renderAll(true);
+    setTimeout(() => {
+      if (uiState.completionReceipt && uiState.completionReceipt.expiresAt <= Date.now()) {
+        uiState.completionReceipt = null;
+        renderWorkOrder();
+      }
+    }, 2850);
   }
 
   function setTextIfChanged(element, value) {
@@ -2143,39 +2307,148 @@
     element.style.width = value;
   }
 
-  /** Updates the real progression strip above the machine catalogue. */
-  function renderOperationsStatus() {
-    const activeTypes = gameState.buildings.filter(building => building.quantity > 0).length;
-    setTextIfChanged(DOM.opsBuildingCount, activeTypes);
+  function describeLastAction() {
+    const action = uiState.lastAction;
+    if (!action) return "";
+    const primary = t(action.key, action.params || {});
+    const detail = action.detailKey
+      ? t(action.detailKey, action.detailParams || {})
+      : action.detailText || "";
+    return t("objective.lastAction", {
+      action: detail ? primary + " · " + detail : primary
+    });
+  }
 
-    if (!DOM.machineUnlockPanel) return;
-    const nextBuilding = gameState.buildings.find(building => !building.isUnlocked);
-    if (!nextBuilding) {
-      DOM.machineUnlockPanel.classList.add("is-complete");
-      setTextIfChanged(DOM.nextBuildingName, t("operations.allMachinesUnlocked"));
-      setTextIfChanged(DOM.nextBuildingCost, t("operations.catalogueComplete"));
-      if (DOM.nextBuildingTrack) {
-        if (DOM.nextBuildingTrack.value !== 100) DOM.nextBuildingTrack.value = 100;
-        setTextIfChanged(DOM.nextBuildingTrack, "100 %");
-        DOM.nextBuildingTrack.setAttribute("aria-label", t("operations.catalogueComplete"));
-      }
+  function internalObjectiveName(objective) {
+    if (objective && objective.building) return getBuildingName(objective.building);
+    return t("objective.prestigeName");
+  }
+
+  function renderWorkOrderState({ kind, type, status, name, instruction, meta, progressMax, progressValue, next }) {
+    if (!DOM.currentObjective) return;
+    DOM.currentObjective.dataset.kind = kind;
+    DOM.currentObjective.classList.toggle("is-client", kind === "client" || kind === "delivery");
+    DOM.currentObjective.classList.toggle("is-complete", kind === "delivery" || kind === "prestige-receipt");
+    setTextIfChanged(DOM.workOrderType, type);
+    setTextIfChanged(DOM.workOrderStatus, status);
+    setTextIfChanged(DOM.workOrderName, name);
+    setTextIfChanged(DOM.workOrderInstruction, instruction);
+    setTextIfChanged(DOM.workOrderMeta, meta);
+    if (DOM.workOrderProgress) {
+      const max = Math.max(1, Number(progressMax) || 1);
+      const value = Math.max(0, Math.min(max, Number(progressValue) || 0));
+      if (DOM.workOrderProgress.max !== max) DOM.workOrderProgress.max = max;
+      if (DOM.workOrderProgress.value !== value) DOM.workOrderProgress.value = value;
+      setTextIfChanged(DOM.workOrderProgress, formatProgressPercent(value / max));
+    }
+    const lastAction = kind === "delivery" || kind === "prestige-receipt" ? "" : describeLastAction();
+    if (DOM.workOrderLastAction) {
+      DOM.workOrderLastAction.hidden = !lastAction;
+      setTextIfChanged(DOM.workOrderLastAction, lastAction);
+    }
+    setTextIfChanged(DOM.workOrderNext, t("objective.next", { next }));
+  }
+
+  /** Renders one persistent job, with client work taking priority. */
+  function renderWorkOrder() {
+    if (!DOM.currentObjective) return;
+    const receipt = uiState.completionReceipt;
+    if (receipt && receipt.expiresAt <= Date.now()) {
+      uiState.completionReceipt = null;
+    }
+    if (uiState.completionReceipt) {
+      const completed = uiState.completionReceipt;
+      const nextObjective = getInternalObjective();
+      renderWorkOrderState({
+        kind: completed.kind,
+        type: t(completed.kind === "delivery" ? "objective.client" : "objective.internal"),
+        status: t(completed.kind === "delivery" ? "objective.status.delivered" : "objective.status.validated"),
+        name: completed.name,
+        instruction: t(completed.detailKey, completed.detailParams),
+        meta: formatProgressPercent(1),
+        progressMax: 100,
+        progressValue: 100,
+        next: internalObjectiveName(nextObjective)
+      });
       return;
     }
 
-    DOM.machineUnlockPanel.classList.remove("is-complete");
-    const nextCost = buildingCost(nextBuilding);
-    const progress = Math.max(0, Math.min(100, gameState.resources.docBank / Math.max(1, nextCost) * 100));
-    setTextIfChanged(DOM.nextBuildingName, getBuildingName(nextBuilding));
-    setTextIfChanged(DOM.nextBuildingCost, t("operations.nextMachineCost", { amount: formatNumber(nextCost) }));
-    if (DOM.nextBuildingTrack) {
-      const progressValue = Number(progress.toFixed(1));
-      if (DOM.nextBuildingTrack.value !== progressValue) DOM.nextBuildingTrack.value = progressValue;
-      setTextIfChanged(DOM.nextBuildingTrack, Math.round(progress) + " %");
-      DOM.nextBuildingTrack.setAttribute("aria-label", t("operations.nextMachineProgress", {
-        name: getBuildingName(nextBuilding),
-        percent: Math.round(progress)
-      }));
+    const activeContract = window.EndgameModule && window.EndgameModule.activeContract
+      ? window.EndgameModule.activeContract
+      : null;
+    if (activeContract && activeContract.current) {
+      const duration = Math.max(1, activeContract.current.duration || 1);
+      const remaining = Math.max(0, activeContract.timer || 0);
+      const elapsed = Math.max(0, Math.min(duration, duration - remaining));
+      renderWorkOrderState({
+        kind: "client",
+        type: t("objective.client"),
+        status: t("contracts.runningBadge"),
+        name: t(activeContract.current.nameKey),
+        instruction: t(activeContract.current.descKey),
+        meta: t("contracts.remaining", { seconds: Math.ceil(remaining) }),
+        progressMax: duration,
+        progressValue: elapsed,
+        next: t("contracts.reward", {
+          doc: formatNumber(activeContract.current.reward.doc || 0),
+          cc: formatNumber(activeContract.current.reward.cc || 0)
+        })
+      });
+      return;
     }
+
+    const objective = getInternalObjective();
+    if (objective.kind === "prestige") {
+      const current = gameState.resources.ccTotal;
+      const target = objective.target;
+      renderWorkOrderState({
+        kind: "internal",
+        type: t("objective.internal"),
+        status: t(canPrestige() ? "objective.status.available" : "objective.status.inProgress"),
+        name: t("objective.prestigeName"),
+        instruction: t("objective.prestigeInstruction", { amount: formatNumber(target) }),
+        meta: t("objective.progressTrust", { current: formatNumber(current), target: formatNumber(target) }),
+        progressMax: target,
+        progressValue: current,
+        next: t(canPrestige() ? "objective.nextPrestige" : "objective.missingTrust", {
+          amount: formatNumber(Math.max(0, target - current))
+        })
+      });
+      return;
+    }
+
+    const current = gameState.resources.docBank;
+    const missing = Math.max(0, objective.target - current);
+    const rate = computeDocPerSecond();
+    let next = t(objective.kind === "install" && missing <= 0 ? "objective.nextInstall" : "feedback.missingDocs", {
+      name: getBuildingName(objective.building),
+      amount: formatNumber(missing)
+    });
+    if (missing > 0 && rate > 0) {
+      next += " · " + t("feedback.affordEta", { seconds: Math.max(1, Math.ceil(missing / rate)) });
+    }
+    renderWorkOrderState({
+      kind: "internal",
+      type: t("objective.internal"),
+      status: t(missing <= 0 ? "objective.status.available" : "objective.status.inProgress"),
+      name: getBuildingName(objective.building),
+      instruction: t(objective.kind === "install" ? "objective.installInstruction" : "objective.unlockInstruction", {
+        amount: formatNumber(objective.target)
+      }),
+      meta: t("objective.progressDocs", {
+        current: formatNumber(current),
+        target: formatNumber(objective.target)
+      }),
+      progressMax: objective.target,
+      progressValue: current,
+      next
+    });
+  }
+
+  /** Updates the compact workshop readout. */
+  function renderOperationsStatus() {
+    const activeTypes = gameState.buildings.filter(building => building.quantity > 0).length;
+    setTextIfChanged(DOM.opsBuildingCount, activeTypes);
   }
 
   /** Renders the live stats ribbons and gauges without rewriting unchanged DOM. */
@@ -2210,25 +2483,19 @@
     setWidthIfChanged(DOM.qualityFill, (q * 100).toFixed(1) + "%");
     setWidthIfChanged(DOM.footprintFill, (f * 100).toFixed(1) + "%");
     setWidthIfChanged(DOM.imageFill, (img * 100).toFixed(1) + "%");
+    if (DOM.qualityGauge) DOM.qualityGauge.setAttribute("aria-valuenow", String(Math.round(q * 100)));
+    if (DOM.footprintGauge) DOM.footprintGauge.setAttribute("aria-valuenow", String(Math.round(f * 100)));
+    if (DOM.imageGauge) DOM.imageGauge.setAttribute("aria-valuenow", String(Math.round(img * 100)));
 
     setTextIfChanged(DOM.culturePoints, gameState.resources.culturePoints);
     setTextIfChanged(DOM.prestigeMult, formattedPrestige);
     renderOperationsStatus();
+    renderWorkOrder();
   }
 
   /** Keeps the line under the campus tied to real game state. */
   function renderStageStatus(docPerSecond) {
     if (!DOM.flavorLine) return;
-    const active = window.EndgameModule && window.EndgameModule.activeContract
-      ? window.EndgameModule.activeContract.current
-      : null;
-    if (active) {
-      setTextIfChanged(DOM.flavorLine, t("scene.status.contract", {
-        name: t(active.nameKey),
-        seconds: Math.max(0, Math.ceil(window.EndgameModule.activeContract.timer || 0))
-      }));
-      return;
-    }
     if (!experienceStarted) {
       setTextIfChanged(DOM.flavorLine, t("scene.status.awaiting"));
       return;
@@ -2304,6 +2571,10 @@
     DOM.eventBanner.classList.remove("banner-visible", "hidden");
     void DOM.eventBanner.offsetWidth;
     DOM.eventBanner.classList.add("banner-visible");
+    bannerHideTimer = setTimeout(() => {
+      bannerHideTimer = null;
+      hideEventBanner();
+    }, 6000);
   }
 
   function hideEventBanner() {
@@ -2361,9 +2632,16 @@
       if (window.Events && typeof window.Events.cancelActive === "function") {
         window.Events.cancelActive();
       }
+      eventState.active = null;
       closeEventModal(true);
       hideEventBanner();
     }
+  }
+
+  function disableEventInterruptions() {
+    if (!Settings || typeof Settings.setPreference !== "function") return;
+    Settings.setPreference("eventsEnabled", false);
+    syncEventsPreference();
   }
 
   function checkDynamicEvents(dt) {
@@ -2382,7 +2660,7 @@
   function handleEventSpawn(eventDef) {
     if (!eventState.eventsEnabled) return;
     eventState.active = eventDef;
-    eventState.modalCanClose = false;
+    eventState.modalCanClose = true;
     notifyScene("event", eventDef.id);
     showEventModal(eventDef);
   }
@@ -2407,8 +2685,8 @@
     DOM.eventDescription.textContent = t(eventDef.descriptionKey);
     DOM.eventResult.textContent = "";
     DOM.eventChoices.innerHTML = "";
-    DOM.closeEventModal.disabled = true;
-    DOM.closeEventModal.setAttribute("aria-disabled", "true");
+    DOM.closeEventModal.disabled = false;
+    DOM.closeEventModal.removeAttribute("aria-disabled");
     if (eventDef.type === "choice") {
       DOM.eventChoices.classList.remove("hidden");
       DOM.minigameContainer.classList.add("hidden");
@@ -2443,6 +2721,12 @@
       return false;
     }
     if (!eventState.modalCanClose && !force) return false;
+    if (eventState.active) {
+      if (window.Events && typeof window.Events.cancelActive === "function") {
+        window.Events.cancelActive();
+      }
+      eventState.active = null;
+    }
     closeModalSurface(DOM.eventModal, DOM.eventDialog);
     DOM.eventModal.setAttribute("aria-hidden", "true");
     restoreModalFocus(DOM.eventModal);
@@ -2487,14 +2771,12 @@
   function renderContractsPanel() {
     updateRerollButton();
     if (!window.EndgameModule) return;
-    if (!DOM.contractsList || !DOM.activeContractPanel) return;
+    if (!DOM.contractsList) return;
     if (!contractsState.unlocked) {
       DOM.contractsTab.classList.remove("has-active-contract");
       if (contractsState.listRenderSignature !== "locked") {
         DOM.contractsList.innerHTML = "";
-        DOM.activeContractPanel.classList.add("hidden");
         contractsState.listRenderSignature = "locked";
-        contractsState.activeRenderSignature = "locked";
       }
       return;
     }
@@ -2504,7 +2786,7 @@
     const listSignature = currentLang + "|" + contractsState.available.map(contract => contract.id).join(",") +
       "|active:" + (runningContract ? runningContract.id : "none");
     if (listSignature === contractsState.listRenderSignature) {
-      renderActiveContract();
+      updateContractCards(runningContract);
       return;
     }
     contractsState.listRenderSignature = listSignature;
@@ -2518,14 +2800,16 @@
       for (const contract of contractsState.available) {
         const card = document.createElement("div");
         card.className = "contract-card";
+        card.dataset.contractCard = contract.id;
+        const requirementsId = "contract-requirements-" + contract.id;
         card.innerHTML = `
           <strong>${t(contract.nameKey)}</strong>
           <div>${t(contract.descKey)}</div>
-          <div class="contract-requirements">${t("contracts.requirements", {
-            quality: Math.round((contract.requirements.quality || 0) * 100),
-            image: Math.round((contract.requirements.image || 0) * 100),
-            volume: formatNumber(contract.requirements.volume || 0)
-          })}</div>
+          <ul class="contract-requirements" id="${requirementsId}">
+            <li data-contract-quality><span aria-hidden="true"></span><b></b></li>
+            <li data-contract-image><span aria-hidden="true"></span><b></b></li>
+            <li data-contract-volume><span aria-hidden="true"></span><b></b></li>
+          </ul>
           <div class="contract-terms">
             <span>${t("contracts.duration", { seconds: contract.duration })}</span>
             <span>${t("contracts.reward", {
@@ -2541,7 +2825,7 @@
         btn.className = "btn-slim";
         btn.dataset.contract = contract.id;
         btn.textContent = t("contracts.start");
-        btn.disabled = !!runningContract;
+        btn.setAttribute("aria-describedby", requirementsId);
         actions.appendChild(btn);
         card.appendChild(actions);
         DOM.contractsList.appendChild(card);
@@ -2550,7 +2834,67 @@
         btn.addEventListener("click", () => startContract(btn.dataset.contract));
       });
     }
-    renderActiveContract();
+    updateContractCards(runningContract);
+  }
+
+  function updateContractCards(runningContract) {
+    if (!DOM.contractsList || !window.EndgameModule) return;
+    for (const contract of contractsState.available) {
+      const card = DOM.contractsList.querySelector(`[data-contract-card="${contract.id}"]`);
+      if (!card) continue;
+      const requirementRows = [
+        {
+          selector: "[data-contract-quality]",
+          met: gameState.stats.quality >= (contract.requirements.quality || 0),
+          key: "contracts.requirementQuality",
+          params: {
+            current: Math.round(gameState.stats.quality * 100),
+            required: Math.round((contract.requirements.quality || 0) * 100)
+          }
+        },
+        {
+          selector: "[data-contract-image]",
+          met: gameState.stats.brandImage >= (contract.requirements.image || 0),
+          key: "contracts.requirementImage",
+          params: {
+            current: Math.round(gameState.stats.brandImage * 100),
+            required: Math.round((contract.requirements.image || 0) * 100)
+          }
+        },
+        {
+          selector: "[data-contract-volume]",
+          met: gameState.resources.docTotal >= (contract.requirements.volume || 0),
+          key: "contracts.requirementVolume",
+          params: {
+            current: formatNumber(gameState.resources.docTotal),
+            required: formatNumber(contract.requirements.volume || 0)
+          }
+        }
+      ];
+      for (const requirement of requirementRows) {
+        const row = card.querySelector(requirement.selector);
+        if (!row) continue;
+        row.classList.toggle("is-met", requirement.met);
+        setTextIfChanged(row.querySelector("span"), requirement.met ? "✓" : "×");
+        setTextIfChanged(row.querySelector("b"), t(requirement.key, requirement.params));
+      }
+      const canStart = typeof window.EndgameModule.meetsRequirements === "function"
+        ? window.EndgameModule.meetsRequirements(contract, gameState)
+        : requirementRows.every(requirement => requirement.met);
+      const btn = card.querySelector(`[data-contract="${contract.id}"]`);
+      if (!btn) continue;
+      const disabled = !!runningContract || !canStart;
+      btn.disabled = disabled;
+      btn.setAttribute("aria-disabled", disabled ? "true" : "false");
+      btn.setAttribute("aria-label", runningContract
+        ? t("contracts.alreadyRunning")
+        : canStart
+          ? t("contracts.startNamed", { name: t(contract.nameKey) })
+          : t(contract.nameKey) + " · " + t("contracts.startLocked"));
+      setTextIfChanged(btn, t(runningContract
+        ? "contracts.runningBadge"
+        : canStart ? "contracts.start" : "contracts.startLocked"));
+    }
   }
 
   function startContract(contractId) {
@@ -2562,59 +2906,21 @@
       return;
     }
     logMessage("log.contractStart", { name: t(result.contract.nameKey) });
+    setLastAction("contracts.banner.started", { name: t(result.contract.nameKey) });
+    uiState.completionReceipt = null;
     queueSave(true);
     contractsState.listRenderSignature = "";
-    contractsState.activeRenderSignature = "";
     renderContractsPanel();
-    DOM.activeContractPanel.focus();
+    renderWorkOrder();
+    if (DOM.currentObjective) {
+      DOM.currentObjective.focus({ preventScroll: true });
+      DOM.currentObjective.scrollIntoView({
+        behavior: reduceMotionPreferred() ? "auto" : "smooth",
+        block: "center"
+      });
+    }
     showEventBanner("contracts.banner.started", "positive", { name: t(result.contract.nameKey) });
-    requestAnimationFrame(() => UIEffects.playContractEffect(DOM.activeContractPanel));
-  }
-
-  function renderActiveContract() {
-    if (!window.EndgameModule || !DOM.activeContractPanel) return;
-    const { activeContract } = window.EndgameModule;
-    if (!activeContract.current) {
-      contractsState.activeRenderSignature = currentLang + "|none";
-      DOM.activeContractPanel.classList.add("hidden");
-      DOM.activeContractPanel.innerHTML = "";
-      return;
-    }
-    const activeSignature = currentLang + "|" + activeContract.current.id;
-    DOM.activeContractPanel.classList.remove("hidden");
-    if (activeSignature !== contractsState.activeRenderSignature) {
-      contractsState.activeRenderSignature = activeSignature;
-      DOM.activeContractPanel.innerHTML = `
-        <div class="active-contract-head">
-          <span class="active-contract-status" id="activeContractTitle">${t("contracts.active")}</span>
-          <span class="active-contract-countdown" data-active-contract-countdown></span>
-        </div>
-        <strong class="active-contract-name">${t(activeContract.current.nameKey)}</strong>
-        <progress class="active-contract-progress" data-active-contract-progress max="${activeContract.current.duration}" value="0"></progress>
-        <div class="active-contract-reward">${t("contracts.reward", {
-          doc: formatNumber(activeContract.current.reward.doc || 0),
-          cc: formatNumber(activeContract.current.reward.cc || 0)
-        })}</div>
-      `;
-    }
-    const duration = Math.max(1, activeContract.current.duration || 1);
-    const remaining = Math.max(0, activeContract.timer || 0);
-    const elapsed = Math.max(0, Math.min(duration, duration - remaining));
-    const percent = Math.round(elapsed / duration * 100);
-    setTextIfChanged(
-      DOM.activeContractPanel.querySelector("[data-active-contract-countdown]"),
-      t("contracts.remaining", { seconds: Math.ceil(remaining) })
-    );
-    const progress = DOM.activeContractPanel.querySelector("[data-active-contract-progress]");
-    if (progress) {
-      if (progress.max !== duration) progress.max = duration;
-      if (progress.value !== elapsed) progress.value = elapsed;
-      setTextIfChanged(progress, percent + " %");
-      const progressLabel = t("contracts.progress", { percent });
-      if (progress.getAttribute("aria-label") !== progressLabel) {
-        progress.setAttribute("aria-label", progressLabel);
-      }
-    }
+    requestAnimationFrame(() => UIEffects.playContractEffect(DOM.currentObjective));
   }
 
   function tickContracts(dt) {
@@ -2622,8 +2928,7 @@
     const before = captureResourceTotals();
     const result = window.EndgameModule.tickContract(dt, gameState);
     if (result) {
-      const restoreContractFocus = DOM.activeContractPanel &&
-        (document.activeElement === DOM.activeContractPanel || DOM.activeContractPanel.contains(document.activeElement));
+      const restoreContractFocus = DOM.currentObjective && document.activeElement === DOM.currentObjective;
       const docGain = Math.max(0, gameState.resources.docTotal - before.docTotal);
       const ccGain = Math.max(0, gameState.resources.ccTotal - before.ccTotal);
       analyticsState.currentRun.contractDocs += docGain;
@@ -2631,13 +2936,34 @@
       analyticsState.currentRun.contractsCompleted += 1;
       analyticsState.lifetimeObserved.docs += docGain;
       analyticsState.lifetimeObserved.cc += ccGain;
-      logMessage("log.contractComplete", { name: t(result.nameKey) });
+      const contractName = t(result.nameKey);
+      const receiptParams = { doc: formatNumber(docGain), cc: formatNumber(ccGain) };
+      uiState.completionReceipt = {
+        kind: "delivery",
+        name: contractName,
+        detailKey: "feedback.deliveryReceipt",
+        detailParams: receiptParams,
+        expiresAt: Date.now() + 1200
+      };
+      setLastAction("feedback.contractDelivered", { name: contractName }, "feedback.deliveryReceipt", receiptParams);
+      logMessage("log.contractComplete", { name: contractName });
       showEventBanner("contracts.banner.completed", "positive", { name: t(result.nameKey) });
+      announceStatus(
+        t("feedback.contractDelivered", { name: contractName }) + ". " +
+        t("feedback.deliveryReceipt", receiptParams)
+      );
       if (UIEffects && typeof UIEffects.playHorn === "function") UIEffects.playHorn();
       queueSave(true);
       contractsState.listRenderSignature = "";
-      contractsState.activeRenderSignature = "";
       renderContractsPanel();
+      renderWorkOrder();
+      requestAnimationFrame(() => UIEffects.playContractEffect(DOM.currentObjective));
+      setTimeout(() => {
+        if (uiState.completionReceipt && uiState.completionReceipt.expiresAt <= Date.now()) {
+          uiState.completionReceipt = null;
+          renderWorkOrder();
+        }
+      }, 1250);
       if (restoreContractFocus) {
         const nextOffer = DOM.contractsList && DOM.contractsList.querySelector("[data-contract]:not(:disabled)");
         (nextOffer || DOM.contractsTab).focus();
@@ -2749,21 +3075,27 @@
   }
 
   function checkAchievements() {
-    if (!window.Achievements) return;
+    if (!window.Achievements) return null;
     const unlockedMap = achievementsState.unlocked;
     const newly = Achievements.evaluate(gameState, unlockedMap);
-    if (!newly.length) return;
+    if (!newly.length) return null;
     const now = Date.now();
+    let firstDefinition = null;
     for (const id of newly) {
       unlockedMap[id] = now;
       const def = Achievements.definitions.find(d => d.id === id);
       if (def) {
+        if (!firstDefinition) firstDefinition = def;
         logMessage("log.achievement", { name: t(def.nameKey) });
       }
     }
-    UIEffects.playCelebrationEffect("achievement");
+    if (firstDefinition) {
+      showEventBanner("log.achievement", "positive", { name: t(firstDefinition.nameKey) });
+      UIEffects.playAchievementEffect(DOM.eventBanner);
+    }
     renderAchievementsPanel();
     queueSave(true);
+    return firstDefinition;
   }
 
   /** Toggles the affordability state for each building action button. */
@@ -2771,12 +3103,14 @@
     const container = DOM.buildingsList;
     if (!container) return;
     const bank = gameState.resources.docBank;
+    const currentRate = computeDocPerSecond();
     container.querySelectorAll("[data-building-id]").forEach(row => {
       const id = row.getAttribute("data-building-id");
       const building = gameState.buildings.find(x => x.id === id);
       if (!building) return;
       const cost = buildingCost(building);
       const canAfford = bank >= cost;
+      const missing = Math.max(0, cost - bank);
       const affordability = Math.max(0, Math.min(100, bank / Math.max(1, cost) * 100));
       row.classList.toggle("is-affordable", canAfford);
       row.classList.toggle("is-owned", building.quantity > 0);
@@ -2787,12 +3121,66 @@
         if (btn.disabled !== !canAfford) btn.disabled = !canAfford;
         btn.setAttribute("aria-disabled", canAfford ? "false" : "true");
         setTextIfChanged(btn, t(canAfford ? "actions.buy" : "actions.tooExpensive"));
+        btn.setAttribute("aria-label", t("feedback.buyBuildingLabel", {
+          name: getBuildingName(building),
+          cost: formatNumber(cost)
+        }));
       }
       const costEl = row.querySelector(`[data-building-cost="${id}"]`);
       if (costEl) {
         setTextIfChanged(costEl, t("label.costDoc", { amount: formatNumber(cost) }));
       }
+      const projectedRate = projectedDocPerSecond(building);
+      const rateChanged = Math.abs(projectedRate - currentRate) > 1e-9;
+      const effectEl = row.querySelector(`[data-building-effect="${id}"]`);
+      if (effectEl) {
+        const impact = formatBuildingImpactText(building, 1);
+        setTextIfChanged(effectEl, rateChanged
+          ? t("feedback.purchaseRatePreview", { amount: formatNumber(projectedRate) })
+          : t("feedback.purchaseImpactPreview", { impact: impact || getBuildingDesc(building) }));
+      }
+      const readiness = row.querySelector(`[data-building-readiness="${id}"]`);
+      if (readiness) {
+        let message = canAfford
+          ? t("feedback.readyToInstall")
+          : t("feedback.missingDocs", { amount: formatNumber(missing) });
+        if (!canAfford && currentRate > 0) {
+          message += " · " + t("feedback.affordEta", {
+            seconds: Math.max(1, Math.ceil(missing / currentRate))
+          });
+        }
+        setTextIfChanged(readiness, message);
+      }
     });
+  }
+
+  function showBuildingFeedback(id, primary, detail) {
+    const row = DOM.buildingsList && DOM.buildingsList.querySelector(`[data-building-id="${id}"]`);
+    const feedback = row && row.querySelector(`[data-building-feedback="${id}"]`);
+    if (!feedback) return;
+    const primaryEl = feedback.querySelector("strong");
+    const detailEl = feedback.querySelector("span");
+    const pending = buildingFeedbackTimers.get(feedback);
+    if (pending) {
+      if (pending.hide) clearTimeout(pending.hide);
+      if (pending.cleanup) clearTimeout(pending.cleanup);
+    }
+    setTextIfChanged(primaryEl, primary);
+    setTextIfChanged(detailEl, detail || "");
+    feedback.classList.remove("is-visible");
+    feedback.classList.remove("hidden");
+    void feedback.offsetWidth;
+    feedback.classList.add("is-visible");
+    const hide = setTimeout(() => {
+      if (!feedback.isConnected) return;
+      feedback.classList.remove("is-visible");
+      const cleanup = setTimeout(() => {
+        if (feedback.isConnected) feedback.classList.add("hidden");
+        buildingFeedbackTimers.delete(feedback);
+      }, 160);
+      buildingFeedbackTimers.set(feedback, { hide: null, cleanup });
+    }, 2000);
+    buildingFeedbackTimers.set(feedback, { hide, cleanup: null });
   }
 
   /** Toggles the affordability state for each upgrade action button. */
@@ -2937,6 +3325,21 @@
           formatNumber(totalProd || 0) + " DOC/s"
         : t("label.modifierOnly");
       info.appendChild(productionMeta);
+
+      const effectPreview = document.createElement("div");
+      effectPreview.className = "building-effect-preview";
+      effectPreview.dataset.buildingEffect = b.id;
+      effectPreview.id = "building-effect-" + b.id;
+      info.appendChild(effectPreview);
+
+      const purchaseFeedback = document.createElement("div");
+      purchaseFeedback.className = "building-feedback hidden";
+      purchaseFeedback.dataset.buildingFeedback = b.id;
+      const feedbackTitle = document.createElement("strong");
+      const feedbackDetail = document.createElement("span");
+      purchaseFeedback.appendChild(feedbackTitle);
+      purchaseFeedback.appendChild(feedbackDetail);
+      info.appendChild(purchaseFeedback);
       info.appendChild(tooltip);
 
       const buy = document.createElement("div");
@@ -2947,14 +3350,21 @@
       costEl.dataset.buildingCost = b.id;
       costEl.textContent = t("label.costDoc", { amount: formatNumber(cost) });
 
+      const readiness = document.createElement("div");
+      readiness.className = "building-readiness";
+      readiness.dataset.buildingReadiness = b.id;
+      readiness.id = "building-readiness-" + b.id;
+
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "btn-buy";
       btn.dataset.buildingBtn = b.id;
+      btn.setAttribute("aria-describedby", effectPreview.id + " " + readiness.id);
       btn.textContent = t("actions.buy");
       btn.addEventListener("click", () => buyBuilding(b.id, btn));
 
       buy.appendChild(costEl);
+      buy.appendChild(readiness);
       buy.appendChild(btn);
 
       row.appendChild(info);
