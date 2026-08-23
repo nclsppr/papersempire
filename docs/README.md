@@ -1,6 +1,6 @@
 # Papers Empire
 
-Papers Empire is a browser-based incremental game that runs entirely on the client side. The experience is intentionally light-hearted: you're modernising an industrial print shop while channeling the vibe of workplace sitcoms. The current release contract is **0.23.2 — Canonical Brand Pass V5**.
+Papers Empire is a browser-based incremental game that runs entirely in the browser. You modernise an industrial print shop through eleven production units, contracts and a prestige loop. Current version: **0.23.3**.
 
 The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier maintenance. Additional helper modules power the modifier builder math and god-mode utilities so they can be unit-tested in isolation.
 
@@ -69,6 +69,11 @@ Track meaningful milestones in the project:
   devient l'unique source Papers Empire dans la landing, le jeu et les icônes
   installables. Les pictogrammes vectoriels plats sont retirés ; la Data Science
   Zone reçoit un emblème peint construit dans la même matière industrielle.
+- **0.23.3** : les logos Papers Empire et Data Science Zone gagnent des
+  dérivés avec alpha réel. L'interface les pose sans fond ni cadre ajouté, tout
+  en gardant les images opaques pour les icônes installables. Le header Retype
+  réutilise le même asset public et la documentation interne sort de la
+  navigation publiée.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
@@ -93,5 +98,4 @@ When you make notable changes (new features, mechanics, UI improvements), append
 - Lire [`architecture.md`](architecture.md) pour les flux techniques, la description des modules et les diagrammes Mermaid (autosave, achievements, etc.).
 - Consulte [`events.md`](events.md) pour le catalogue d’événements et le mini-jeu de calibrage.
 - Pour la vision gameplay, continuer avec [`game-design.md`](game-design.md).
-- Le carnet de réflexions ouvert se trouve dans [`codex-is-thinking.md`](codex-is-thinking.md).
-- La feuille de route UX/branding/conversion reste disponible dans le [dossier de travail du dépôt](https://github.com/nclsppr/papersempire/blob/main/docs/web-success-plan.md).
+- Le plan web introduit avec la version 0.8 est archivé dans le [dépôt source](https://github.com/nclsppr/papersempire/blob/main/docs/web-success-plan.md).

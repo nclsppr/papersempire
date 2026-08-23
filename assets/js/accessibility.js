@@ -79,23 +79,14 @@
     const footer = document.querySelector(".app-footer");
     if (!footer) return;
 
-    let isInView = false;
-    const refresh = () => {
-      footer.classList.toggle("footer-in-view", isInView && !document.hidden);
-    };
-
     if ("IntersectionObserver" in window) {
-      const observer = new IntersectionObserver(entries => {
-        isInView = entries.some(entry => entry.isIntersecting);
-        refresh();
+      const observer = new IntersectionObserver(([entry]) => {
+        footer.classList.toggle("footer-in-view", entry.isIntersecting);
       }, { rootMargin: "80px 0px" });
       observer.observe(footer);
     } else {
-      isInView = true;
-      refresh();
+      footer.classList.add("footer-in-view");
     }
-
-    document.addEventListener("visibilitychange", refresh);
   }
 
   const initialPrefs = loadPrefs();

@@ -4,12 +4,17 @@ output: docs-site
 url: https://papersempire.com/docs/
 exclude:
   - "AGENTS.md"
+  - "codex-is-thinking.md"
   - "DOCUMENTATION.md"
   - "balance.md"
   - "web-success-plan.md"
 branding:
-  title: Papers Empire Docs
-  label: v0.23.2
+  title: Papers Empire
+  label: Docs
+  logo: ../assets/brand/papers-empire-logo-v2-cutout.webp
+  logoDark: ../assets/brand/papers-empire-logo-v2-cutout.webp
+  logoWidth: 40
+  logoHeight: 32
 navigation:
   - Overview: README.md
   - Architecture: architecture.md
@@ -17,7 +22,6 @@ navigation:
   - Accessibility: accessibility.md
   - Game Design: game-design.md
   - Release Notes: RELEASE_NOTES.md
-  - Codex is thinking: codex-is-thinking.md
 links:
   - text: Game Repo
     link: https://github.com/nclsppr/papersempire

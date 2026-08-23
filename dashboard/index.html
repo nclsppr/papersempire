@@ -9,6 +9,21 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
   <link rel="preload" href="/assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+  // Applique les préférences visuelles avant le chargement du CSS.
+  (function () {
+    try {
+      var prefs = JSON.parse(localStorage.getItem("pe-accessibility") || "null");
+      if (!prefs) return;
+      var root = document.documentElement;
+      if (prefs.highContrast) root.classList.add("pref-high-contrast");
+      if (prefs.largeText) root.classList.add("pref-large-text");
+      if (prefs.reduceMotion) root.classList.add("pref-reduce-motion");
+    } catch (error) {
+      // Les réglages par défaut seront appliqués plus tard.
+    }
+  })();
+  </script>
   <link rel="stylesheet" href="/assets/css/style.css">
   <link rel="stylesheet" href="/assets/css/experience-v4.css">
   <script>
@@ -27,8 +42,8 @@
       <div class="header-top">
         <a class="header-home-link data-zone-brand" href="/" aria-label="Data Science Zone · Papers Empire">
           <picture class="data-zone-brand-picture">
-            <source srcset="/assets/brand/papers-empire-logo-v2.webp" type="image/webp">
-            <img class="data-zone-brand-mark" src="/assets/brand/papers-empire-logo-v2.png" alt="" width="700" height="560" decoding="async">
+            <source srcset="/assets/brand/data-science-zone-emblem-v2-cutout.webp" type="image/webp">
+            <img class="data-zone-brand-mark" src="/assets/brand/data-science-zone-emblem-v2-cutout.png" alt="" width="512" height="512" decoding="async">
           </picture>
           <span class="data-zone-brand-copy">
             <span class="data-zone-brand-parent">Papers Empire</span>
@@ -50,12 +65,12 @@
     <section class="data-zone-intro" id="analyticsHero" aria-labelledby="dataZoneTitle">
       <div class="data-zone-intro-copy">
         <picture class="data-zone-intro-emblem" aria-hidden="true">
-          <source srcset="/assets/brand/data-science-zone-emblem-v2.webp" type="image/webp">
-          <img src="/assets/brand/data-science-zone-emblem-v2.png" alt="" width="512" height="512" decoding="async">
+          <source srcset="/assets/brand/data-science-zone-emblem-v2-cutout.webp" type="image/webp">
+          <img src="/assets/brand/data-science-zone-emblem-v2-cutout.png" alt="" width="512" height="512" decoding="async">
         </picture>
         <span class="data-zone-kicker" data-i18n="analytics.kicker">MESURES DE TON ATELIER</span>
         <h1 id="dataZoneTitle" tabindex="-1" data-i18n="analytics.title">Data Science Zone</h1>
-        <p class="data-zone-lede" data-i18n="analytics.lede">Repère ce qui accélère l'atelier, compare le prochain achat et prépare ta prochaine réorganisation.</p>
+        <p class="data-zone-lede" data-i18n="analytics.lede">Compare le coût et le gain de chaque unité avant d'acheter. Les projections indiquent aussi le temps d'attente.</p>
       </div>
       <dl class="data-zone-meta">
         <div>
@@ -174,10 +189,10 @@
         <div class="recommendation-copy">
           <span class="recommendation-label" data-i18n="analytics.recommendation.label">Meilleur retour DOC estimé</span>
           <h3 id="recommendationTitle" data-i18n="analytics.recommendation.waiting">Aucun achat à comparer</h3>
-          <p id="recommendationReason" data-i18n="analytics.recommendation.method">Classement des unités débloquées selon le temps de retour estimé.</p>
+          <p id="recommendationReason" data-i18n="analytics.recommendation.method">Classement des unités débloquées selon leur temps de retour estimé.</p>
           <dl class="recommendation-metrics">
             <div>
-              <dt data-i18n="analytics.investment.cost">Coût prochain</dt>
+              <dt data-i18n="analytics.investment.cost">Coût du prochain</dt>
               <dd id="recommendationCost">—</dd>
             </div>
             <div>
@@ -203,7 +218,7 @@
           </select>
           <strong id="projectionValue">—</strong>
           <span id="projectionDelta">—</span>
-          <small data-i18n="analytics.projection.assumption">Estimation: cadence constante, sans autre achat, clic, contrat ni événement.</small>
+          <small data-i18n="analytics.projection.assumption">Estimation : cadence constante, sans autre achat, clic, contrat ni événement.</small>
         </div>
       </article>
 
@@ -334,10 +349,10 @@
           </ul>
         </article>
         <article class="data-zone-panel is-estimate">
-          <h3 data-i18n="analytics.contract.estimateTitle">Estimé sous hypothèses</h3>
+          <h3 data-i18n="analytics.contract.estimateTitle">Estimé selon des hypothèses</h3>
           <ul>
-            <li data-i18n="analytics.contract.estimatePayback">Retour DOC: coût divisé par le gain automatique, à cadence constante.</li>
-            <li data-i18n="analytics.contract.estimateAfford">Temps avant achat: aucun autre achat, clic, contrat ou événement.</li>
+            <li data-i18n="analytics.contract.estimatePayback">Retour DOC : coût divisé par le gain automatique, à cadence constante.</li>
+            <li data-i18n="analytics.contract.estimateAfford">Temps avant achat : aucun autre achat, clic, contrat ou événement.</li>
             <li data-i18n="analytics.contract.estimateSpend">Investissement historique reconstruit avec le modèle de coût actuel.</li>
           </ul>
         </article>
@@ -345,7 +360,7 @@
           <h3 data-i18n="analytics.contract.boundaryTitle">Limites</h3>
           <ul>
             <li data-i18n="analytics.contract.boundaryCurrency">DOC est une ressource de jeu, pas une monnaie réelle.</li>
-            <li data-i18n="analytics.contract.boundaryNoProfit">Aucun chiffre ne représente revenu, marge ou profit financier.</li>
+            <li data-i18n="analytics.contract.boundaryNoProfit">Aucun chiffre ne représente un revenu, une marge ou un bénéfice financier.</li>
             <li id="dataCoverageCaveat" data-i18n="analytics.contract.boundaryPartial">L'historique peut être partiel après migration ou effacement du stockage.</li>
           </ul>
         </article>
@@ -371,10 +386,10 @@
     </div>
     <div class="footer-inner">
       <div class="footer-brand">
-        <a class="footer-brand-mark" href="/" aria-label="Papers Empire">
+        <a class="footer-brand-mark footer-brand-mark-data-zone" href="/" aria-label="Data Science Zone · Papers Empire">
           <picture>
-            <source srcset="/assets/brand/papers-empire-logo-v2.webp" type="image/webp">
-            <img src="/assets/brand/papers-empire-logo-v2.png" alt="" width="700" height="560" loading="lazy" decoding="async">
+            <source srcset="/assets/brand/data-science-zone-emblem-v2-cutout.webp" type="image/webp">
+            <img src="/assets/brand/data-science-zone-emblem-v2-cutout.png" alt="" width="512" height="512" loading="lazy" decoding="async">
           </picture>
         </a>
         <div class="footer-copy">

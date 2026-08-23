@@ -1,48 +1,77 @@
-# Repository Guidelines
+# Repository guidelines
 
-## Project Structure & Module Organization
+Papers Empire is a static browser game. It has no application bundler or backend.
 
-- `index.html`: Main game entry point (HTML, CSS, JS in one file).
-- `game-design.md`: Design notes, mechanics, and future ideas.
-- `README.md`: High‑level overview and setup notes (now housed in `docs/`).
-- Keep any new assets (images, audio, data) in a clearly named folder at the repo root (e.g., `assets/`, `data/`).
+## Repository map
 
-## Work Log & Versioning Expectations
+- `index.html` contains the landing page and the game.
+- `dashboard/index.html` contains the Data Science Zone.
+- `assets/css/style.css` contains the shared CSS foundations. `assets/css/experience-v4.css` contains the current interface layer.
+- `assets/js/` contains the game, dashboard, persistence, accessibility, events, tutorial, analytics, and Three.js modules.
+- `assets/i18n/{fr,en,de,lb}.js` contains every translated interface string.
+- `assets/brand/` contains the active Papers Empire logo and Data Science Zone emblem. Source masters stay under `assets/brand/sources/`.
+- `docs/` contains the Retype sources. Retype generates `docs-site/`; do not edit that directory.
+- `scripts/` builds and validates the static release.
+- `.github/workflows/` validates pull requests and publishes releases from `main`.
 
-- Each time you work on the project, record what you did and bump the version in the "Versioned Change History" section of `docs/README.md` when the change is meaningful.
-- Use short, clear entries (e.g., `0.2 – add new character events`, `0.3 – balance printing jobs and rewards`).
-- If you touch multiple areas, summarize them together in one version entry instead of creating many tiny versions.
-- When a change represents a proper release (e.g., multiple features, major UX updates, or refactors), add a matching entry in `RELEASE_NOTES.md`. Document the release number, date, and a concise bullet list of highlights. Keep `README.md`’s history in sync with the same release number for quick reference.
+## Editing rules
 
-## Build, Test, and Development Commands
+- Keep runtime JavaScript in `assets/js/`. Do not move application logic back into `index.html`.
+- Preserve the script order declared in the HTML entry points.
+- When visible copy changes, update all four i18n catalogs. Update the matching static French fallback in the HTML too.
+- Do not rename building IDs, storage keys, or saved fields without a migration.
+- Read `docs/design-system.md` before changing the interface or brand assets.
+- Keep keyboard focus, reduced motion, high contrast, and 44 px touch targets working.
+- Do not invent product claims, financial metrics, social proof, or future work.
+- Write interface and documentation copy in direct, concrete sentences. Remove generic marketing language, decorative emoji, and filler headings.
+- Keep image masters in a `sources/` directory. The public release excludes these directories.
 
-- Open `index.html` directly in a browser for quick manual testing.
-- For local static hosting, use any simple HTTP server (for example: `python -m http.server` from the repo root).
-- Prefer testing in at least two browsers (e.g., Chrome + Firefox) when changing core gameplay or layout.
+## Local checks
 
-## Coding Style & Naming Conventions
+Install the locked dependencies in a fresh checkout:
 
-- Use 2‑space indentation for HTML, CSS, and JavaScript.
-- Favor descriptive names: `feedAnimalButton`, `habitatGrid`, `scoreDisplay` rather than `btn1` or `x`.
-- Group related functions and logic together inside `index.html`; keep DOM queries near the top of the script section.
-- When adding external files (e.g., `script.js`, `styles.css`), mirror the existing inline style and structure.
+```sh
+npm ci
+```
 
-## Testing Guidelines
+Run the resilience and documentation checks:
 
-- Run `npm run ui:check` for the automated resilience contracts; there is no
-  full browser suite yet.
-- Before committing, also verify: page loads without console errors,
-  interactions respond as expected, and layout works at common viewport sizes.
+```sh
+npm run ui:check
+npm run docs:build
+git diff --check
+```
 
-## Commit Guidelines
+Run `node --check` on each changed JavaScript file. For example:
 
-- Use short, imperative commit messages (e.g., `feat: add habitat selector`, `fix: prevent negative food count`).
-- Create a feature branch and open a pull request to `main`.
-- Merge only after the required checks pass. Do not push directly to the
-  protected default branch.
-- Link to any relevant design notes in `game-design.md` and include screenshots or short clips for UI changes when possible.
+```sh
+node --check assets/js/app.js
+```
 
-## Understand the game design
+Serve the repository over HTTP for browser checks:
 
-- Each time you work on the project, if you need more details about the game design and its principles you can find it in `game-design.md` 
-- If you have to change the principles of the game or you want to work on it, always document it there in `game-design.md` 
+```sh
+python3 -m http.server 8000
+```
+
+Test visual changes at desktop and mobile widths. Check normal and reduced motion, keyboard use, console errors, and horizontal overflow. The repository has no full browser suite.
+
+## Documentation
+
+- `docs/README.md` gives the current overview and release history.
+- `docs/RELEASE_NOTES.md` is the canonical changelog.
+- `docs/ROADMAP.md` contains current and planned product work.
+- `docs/architecture.md` documents runtime behavior.
+- `docs/game-design.md` documents mechanics.
+- `docs/balance.md` documents the economy and Data Science Zone assumptions.
+- `docs/design-system.md` documents interface and brand rules.
+
+Write what the current code does. Put future work in the roadmap instead of copying speculative lists into several documents. Update the release notes and version history only for a release-sized change.
+
+## Git and release rules
+
+- `main` is protected. Work on a branch such as `codex/<topic>` and open a pull request to `main`.
+- Follow the existing commit style: `feat:`, `fix:`, `docs:`, or `chore:` followed by a short imperative subject.
+- Do not push directly to `main`.
+- Merge only after `Validate VPS release` passes and review comments are resolved.
+- A successful producer workflow publishes a candidate. Atlas activation is separate. Follow the Atlas procedure in the root `README.md` when publication is part of the task.

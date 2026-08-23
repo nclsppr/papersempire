@@ -164,9 +164,8 @@ html[data-experience="playing"] .header-brand {
 html[data-experience="playing"] .brand-picture {
   display: block;
   position: static;
-  width: 86px;
-  height: 58px;
-  clip-path: none;
+  width: 88px;
+  height: 70px;
   filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.32));
 }
 
@@ -363,11 +362,9 @@ html[data-experience="playing"] body {
 
 .data-zone-brand-picture {
   display: block;
-  width: 86px;
+  width: 64px;
   height: 64px;
-  flex: 0 0 86px;
-  overflow: hidden;
-  border-radius: 10px;
+  flex: 0 0 64px;
   filter: drop-shadow(0 7px 12px rgba(0, 4, 9, 0.38));
 }
 
@@ -494,13 +491,10 @@ html[data-experience="playing"] body {
   z-index: 1;
   top: 50%;
   right: 0;
-  width: clamp(88px, 9vw, 126px);
+  width: clamp(112px, 10vw, 148px);
   aspect-ratio: 1;
   display: block;
-  padding: 7px;
-  border: 1px solid rgba(217, 168, 77, 0.38);
-  background: rgba(2, 11, 19, 0.44);
-  box-shadow: 0 11px 0 rgba(0, 5, 12, 0.16), 0 22px 35px rgba(0, 5, 12, 0.25);
+  filter: drop-shadow(0 18px 24px rgba(0, 5, 12, 0.32));
   transform: translateY(-50%);
 }
 
@@ -1292,9 +1286,6 @@ html[data-experience="playing"] body {
 
 .data-zone-footer {
   border-top: 4px solid var(--world-orange);
-  background:
-    radial-gradient(circle at 12% 120%, rgba(49, 92, 114, 0.32), transparent 26rem),
-    linear-gradient(180deg, #0b1b29, #06111d 72%);
   color: #bdcbd1;
 }
 
@@ -1302,11 +1293,6 @@ html[data-experience="playing"] body {
 .data-zone-footer .footer-links,
 .data-zone-footer a {
   color: #eef4ef;
-}
-
-.data-zone-footer .footer-links a {
-  border-color: rgba(248, 240, 220, 0.24);
-  background: rgba(248, 240, 220, 0.055);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1322,26 +1308,25 @@ html[data-experience="playing"] body {
   color: var(--world-orange);
 }
 
-.data-zone-motion-ready .data-zone-intro:not(.is-visible),
-.data-zone-motion-ready .data-zone-nav:not(.is-visible) {
-  opacity: 0;
-  transform: translate3d(0, 18px, 0);
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.pref-reduce-motion) .data-zone-intro,
+  html:not(.pref-reduce-motion) .data-zone-nav {
+    animation: data-zone-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  html:not(.pref-reduce-motion) .data-zone-nav {
+    animation-delay: 90ms;
+  }
+
+  html:not(.pref-reduce-motion) .recommendation-visual.is-updating img,
+  html:not(.pref-reduce-motion) .recommendation-visual.is-updating .recommendation-placeholder {
+    animation: recommendation-file 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
-.data-zone-motion-ready .data-zone-intro.is-visible,
-.data-zone-motion-ready .data-zone-nav.is-visible {
-  opacity: 1;
-  transform: none;
-  transition: opacity 240ms ease-out, transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.data-zone-motion-ready .data-zone-nav.is-visible {
-  transition-delay: 90ms;
-}
-
-.recommendation-visual.is-updating img,
-.recommendation-visual.is-updating .recommendation-placeholder {
-  animation: recommendation-file 260ms cubic-bezier(0.16, 1, 0.3, 1);
+@keyframes data-zone-enter {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes recommendation-file {
@@ -1485,9 +1470,9 @@ html[data-experience="playing"] body {
   }
 
   .data-zone-brand-picture {
-    width: 58px;
-    height: 58px;
-    flex-basis: 58px;
+    width: 60px;
+    height: 60px;
+    flex-basis: 60px;
   }
 
   .data-zone-header-actions {
@@ -1641,7 +1626,7 @@ html[data-experience="playing"] body {
   .data-zone-intro-emblem {
     top: 46%;
     right: 0;
-    width: 76px;
+    width: 84px;
   }
 
   .data-zone-meta {
@@ -1749,7 +1734,7 @@ html[data-experience="playing"] body {
     top: 0;
     right: auto;
     left: 0;
-    width: 64px;
+    width: 72px;
     transform: none;
   }
 }
@@ -1807,25 +1792,6 @@ html[data-experience="playing"] body {
     box-shadow: none;
   }
 
-  .data-zone-motion-ready .data-zone-intro,
-  .data-zone-motion-ready .data-zone-nav,
-  .recommendation-visual.is-updating img,
-  .recommendation-visual.is-updating .recommendation-placeholder {
-    opacity: 1;
-    animation: none;
-    transform: none;
-    transition: none;
-  }
-}
-
-.pref-reduce-motion .data-zone-motion-ready .data-zone-intro,
-.pref-reduce-motion .data-zone-motion-ready .data-zone-nav,
-.pref-reduce-motion .recommendation-visual.is-updating img,
-.pref-reduce-motion .recommendation-visual.is-updating .recommendation-placeholder {
-  opacity: 1;
-  animation: none;
-  transform: none;
-  transition: none;
 }
 
 html.pref-large-text[data-experience="playing"] .empire-hud {

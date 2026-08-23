@@ -652,7 +652,7 @@
   function addFactoryLogo(THREE, landmark) {
     let plane = null;
     const texture = new THREE.TextureLoader().load(
-      assetUrl("/assets/brand/papers-empire-logo-v2.webp"),
+      assetUrl("/assets/brand/papers-empire-logo-v2-cutout.webp"),
       loaded => {
         if (disposed) {
           loaded.dispose();
@@ -679,6 +679,8 @@
     decorativeTextures.add(texture);
     const material = new THREE.MeshBasicMaterial({
       map: texture,
+      transparent: true,
+      alphaTest: 0.04,
       toneMapped: false
     });
     plane = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 0.945), material);

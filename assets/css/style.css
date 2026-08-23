@@ -2919,14 +2919,11 @@
     }
 
     .footer-brand-mark {
-      width: 112px;
-      height: 90px;
-      flex: 0 0 112px;
+      width: 132px;
+      height: 106px;
+      flex: 0 0 132px;
       display: grid;
       place-items: center;
-      padding: 4px;
-      border: 1px solid rgba(248, 240, 220, 0.18);
-      background: rgba(2, 9, 16, 0.3);
     }
 
     .footer-brand-mark picture,
@@ -2936,9 +2933,18 @@
       height: 100%;
     }
 
+    .footer-brand-mark picture {
+      filter: drop-shadow(0 7px 10px rgba(0, 0, 0, 0.28));
+    }
+
     .footer-brand-mark img {
       object-fit: contain;
-      filter: drop-shadow(0 7px 10px rgba(0, 0, 0, 0.28));
+    }
+
+    .footer-brand-mark-data-zone {
+      width: 108px;
+      height: 108px;
+      flex-basis: 108px;
     }
 
     .footer-copy {
@@ -3120,12 +3126,11 @@ body {
 .brand-picture {
   position: absolute;
   z-index: 2;
-  top: -23px;
+  top: -12px;
   left: -11px;
   display: block;
   width: clamp(164px, 15vw, 194px);
   height: clamp(130px, 12vw, 154px);
-  clip-path: polygon(50% 7%, 64% 23%, 74% 23%, 78% 28%, 87% 31%, 90% 36%, 92% 37%, 94% 43%, 94% 73%, 91% 79%, 83% 81%, 81% 88%, 70% 89%, 67% 96%, 33% 96%, 30% 89%, 19% 88%, 17% 81%, 9% 79%, 6% 73%, 6% 43%, 8% 37%, 10% 36%, 13% 31%, 22% 28%, 26% 23%, 36% 23%);
   filter: drop-shadow(0 6px 7px rgba(0, 0, 0, 0.38));
   pointer-events: none;
 }
@@ -3231,11 +3236,38 @@ body {
 
 .app-header .nav-dash-link {
   min-height: 37px;
-  padding-inline: 12px;
+  gap: 8px;
+  padding: 4px 12px 4px 7px;
   border-color: rgba(217, 194, 154, 0.4);
   background: rgba(253, 248, 236, 0.08);
   color: var(--paper-bright);
   box-shadow: none;
+}
+
+.nav-brand-emblem,
+.footer-link-brand-mark {
+  flex: 0 0 auto;
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0, 4, 9, 0.32));
+}
+
+.nav-brand-emblem {
+  width: 34px;
+  height: 34px;
+}
+
+.nav-brand-emblem img,
+.footer-link-brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.footer-link-brand-mark {
+  width: 38px;
+  height: 38px;
+  margin-block: -5px;
 }
 
 .app-header .icon-button,
@@ -4222,7 +4254,7 @@ body {
   }
 
   .brand-picture {
-    top: -22px;
+    top: -10px;
     width: 168px;
     height: 134px;
   }
@@ -4290,7 +4322,7 @@ body {
 
 @media (max-width: 700px) {
   .app-header {
-    min-height: 62px;
+    min-height: 74px;
     padding-inline: 12px;
   }
 
@@ -4306,14 +4338,14 @@ body {
   }
 
   .header-brand {
-    width: 120px;
+    width: 100px;
   }
 
   .brand-picture {
-    top: -18px;
-    left: -12px;
-    width: 144px;
-    height: 115px;
+    top: -3px;
+    left: 0;
+    width: 100px;
+    height: 80px;
   }
 
   .header-play-link {
@@ -6416,7 +6448,6 @@ html {
 @media (max-width: 640px) {
   .footer-inner {
     align-items: stretch;
-    grid-template-columns: minmax(0, 1fr);
     gap: 22px;
     padding-top: 76px;
   }
@@ -6424,7 +6455,6 @@ html {
   .footer-madeby {
     min-height: 0;
     align-items: center;
-    gap: 5px;
   }
 
   .footer-brand {
@@ -6432,13 +6462,18 @@ html {
   }
 
   .footer-brand-mark {
-    width: 88px;
-    height: 72px;
-    flex-basis: 88px;
+    width: 108px;
+    height: 86px;
+    flex-basis: 108px;
+  }
+
+  .footer-brand-mark-data-zone {
+    width: 86px;
+    height: 86px;
+    flex-basis: 86px;
   }
 
   .footer-links {
-    display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
   }
@@ -6446,19 +6481,7 @@ html {
   .app-footer .footer-links a {
     width: 100%;
     min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
     padding-inline: 12px;
-    border: 1px solid rgba(248, 240, 220, 0.24);
-    background: rgba(248, 240, 220, 0.055);
-    text-decoration: none;
-  }
-
-  .app-footer .footer-links a::after {
-    content: "→";
-    color: var(--factory-orange, #ef6d2c);
-    font-family: var(--font-mono);
   }
 }
 
@@ -6471,15 +6494,6 @@ html {
 .pref-reduce-motion .reveal-target {
   opacity: 1;
   transform: none;
-}
-
-.pref-reduce-motion .event-banner,
-.pref-reduce-motion .event-banner-icon,
-.pref-reduce-motion .active-contract,
-.pref-reduce-motion .tab-active-badge,
-.pref-reduce-motion .footer-conveyor span {
-  animation: none;
-  transition: none;
 }
 
 .pref-reduce-motion .footer-conveyor span {
@@ -6496,15 +6510,6 @@ html {
   .reveal-target {
     opacity: 1;
     transform: none;
-    transition: none;
-  }
-
-  .event-banner,
-  .event-banner-icon,
-  .active-contract,
-  .tab-active-badge,
-  .footer-conveyor span {
-    animation: none;
     transition: none;
   }
 
