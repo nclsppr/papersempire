@@ -94,6 +94,9 @@ flat 2D, slightly uneven ink coverage`. Le visa rouge « débloqué » reste en 
 
 ## Priorité 4 — headers et key art
 
+- [x] Le header Retype charge
+      `assets/brand/papers-empire-logo-v2-cutout.webp` depuis l'asset public
+      racine. La documentation ne conserve pas de copie du fichier.
 - [x] `assets/images/social-card.jpg` — remplacé en 0.23.1 par une capture
       déterministe 1200×630 de la landing Production Twin courante ; les balises
       Open Graph, Twitter et JSON-LD conservent la même URL publique.
@@ -112,7 +115,11 @@ canonique explicite :
 
 - [x] `assets/brand/data-science-zone-emblem-v2.png` + `.webp` — emblème peint
       512×512 aligné sur le lockup d'accueil : couronne dorée, analyseur à
-      rouleaux, papier ivoire et unique signal cyan.
+      rouleaux, papier ivoire et unique signal cyan. Ces fichiers conservent
+      leur fond navy pour les usages qui réclament une image opaque.
+- [x] `assets/brand/data-science-zone-emblem-v2-cutout.png` + `.webp` : dérivés
+      512×512 avec alpha réel pour les headers, footers et autres surfaces qui
+      ont déjà leur propre fond.
 - [x] `assets/brand/sources/data-science-zone-emblem-v2-master.png` — master
       1254×1254 conservé hors archive publique.
 - [x] `assets/brand/sources/data-science-zone-concept.png` — master d'exploration
@@ -122,6 +129,9 @@ canonique explicite :
 - [x] `assets/brand/papers-empire-logo-v2.png` + `.webp` — lockup exact
       « PAPERS EMPIRE / IDLE GAME », plaque d'usine bleu nuit, lettres crème
       extrudées, tuyaux, couronne de papier dorée et ruban orange, fond navy.
+- [x] `assets/brand/papers-empire-logo-v2-cutout.png` + `.webp` : dérivés
+      700×560 avec alpha réel pour le header, le footer, la documentation et
+      les enseignes qui possèdent déjà leur support.
 - [x] `assets/images/{favicon-32,apple-touch-icon,icon-192,icon-512}.png` —
       recadrages et redimensionnements directs de ce lockup peint. Les marks SVG
       plats introduits en 0.23.0/0.23.1 ont été retirés des surfaces actives en

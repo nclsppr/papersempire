@@ -1,9 +1,8 @@
-# Design system V5 — « Production Twin · Precision Pass »
+# Design system V5 : Production Twin
 
-Ce document formalise la direction de Papers Empire 0.23.2. Il remplace le
-gel « Atelier tamponné » par un système **révocable et challengé** : une règle
-visuelle est un choix de produit tant qu'elle améliore la lisibilité, le plaisir
-de jeu et la cohérence du monde, jamais une vérité à préserver pour elle-même.
+Ce document décrit la direction de Papers Empire 0.23.3. Les règles visuelles
+servent la lisibilité, le plaisir de jeu et la cohérence du monde. Si elles
+cessent de le faire, elles changent.
 
 ## Concept
 
@@ -161,13 +160,19 @@ rentabilité comptable. La télémétrie reste locale au navigateur, partielle a
 migration ou effacement du stockage, et ne permet aucune comparaison entre
 joueurs. Aucun indicateur synthétique ne doit masquer ces limites.
 
-### Une signature analytique, pas une seconde marque
+### Logos peints sur fond transparent
 
-La source canonique de Papers Empire est le lockup peint visible sur la page
-d'accueil : `assets/brand/papers-empire-logo-v2.png`, avec son dérivé WebP. Il
-reste visible dans le jeu ; les favicons et icônes installables sont uniquement
-des recadrages et redimensionnements de cette image, jamais une reconstruction
-vectorielle simplifiée.
+La source canonique de Papers Empire reste le lockup peint
+`assets/brand/papers-empire-logo-v2.png`. Son fond navy fait partie du fichier
+source. Les surfaces qui ont déjà leur propre fond utilisent les dérivés
+`papers-empire-logo-v2-cutout.png` et `.webp`. Ces fichiers conservent les
+pixels peints et retirent seulement le fond autour du signe.
+
+Les favicons et les icônes installables restent opaques. Leur fond plein évite
+les défauts de recadrage des icônes `maskable`. Une surface HTML ou une plaque
+Three.js suit la règle inverse : elle affiche le dérivé détouré directement,
+sans carte arrondie, bordure ou second fond sous l'image. Une ombre portée peut
+séparer le signe de son support, mais elle ne doit pas recréer un cadre.
 
 La Data Science Zone possède un emblème contextuel sans devenir une marque
 indépendante. Il conserve la couronne dorée, la matière peinte, les rouleaux,
@@ -176,12 +181,17 @@ courbe cyan signale la mesure sans introduire un autre vocabulaire graphique.
 
 - master peint conservé :
   `assets/brand/sources/data-science-zone-emblem-v2-master.png` ;
-- dérivés actifs : `assets/brand/data-science-zone-emblem-v2.png` et `.webp` ;
+- dérivés opaques conservés : `assets/brand/data-science-zone-emblem-v2.png`
+  et `.webp` ;
+- dérivés détourés pour l'interface :
+  `assets/brand/data-science-zone-emblem-v2-cutout.png` et `.webp` ;
 - exploration initiale conservée :
   `assets/brand/sources/data-science-zone-concept.png` ;
 - les répertoires `sources/` restent versionnés dans le dépôt mais sont exclus
   de l'archive publique ; seuls les dérivés utilisés partent en production ;
 - le nom « Data Science Zone » reste du texte HTML déterministe et localisable ;
+- les headers, footers et liens de la Data Science Zone utilisent son emblème,
+  pas le lockup Papers Empire répété dans un cadre ;
 - pas de cerveau, atome, base de données ou histogramme générique : le signe
   raconte la mesure d'une production de papier.
 

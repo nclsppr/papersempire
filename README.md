@@ -2,7 +2,7 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
-Current release contract: **0.23.2 — Canonical Brand Pass V5**.
+Current version: **0.23.3**.
 
 ## Quick Links
 - [Docs Overview](docs/README.md)

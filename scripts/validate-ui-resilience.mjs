@@ -14,6 +14,16 @@ function readPngSize(path) {
   return { width: image.readUInt32BE(16), height: image.readUInt32BE(20) };
 }
 
+function readPngMetadata(path) {
+  const image = readBuffer(path);
+  assert.equal(image.subarray(1, 4).toString("ascii"), "PNG", `${path} must remain a PNG`);
+  return {
+    width: image.readUInt32BE(16),
+    height: image.readUInt32BE(20),
+    colorType: image[25]
+  };
+}
+
 function readJpegSize(path) {
   const image = readBuffer(path);
   assert.equal(image.readUInt16BE(0), 0xffd8, `${path} must remain a JPEG`);
@@ -115,6 +125,10 @@ function verifyStaticContracts() {
   const workflows = read(".github/workflows/docs.yml") + read(".github/workflows/vps-release.yml");
 
   for (const [name, html] of [["game", index], ["data zone", dashboard]]) {
+    assert.ok(
+      html.indexOf('localStorage.getItem("pe-accessibility")') < html.indexOf('rel="stylesheet"'),
+      `${name} must apply saved visual preferences before loading CSS`
+    );
     assert.match(html, /pageshow[\s\S]*event\.persisted[\s\S]*location\.reload/,
       `${name} must refresh versioned assets after a BFCache restore`);
   }
@@ -152,14 +166,16 @@ function verifyStaticContracts() {
     "the print console must never cover later cards while scrolling");
   assert.match(experienceCss, /\.data-kpi-value\s*\{[^}]*overflow:\s*visible[^}]*white-space:\s*normal/,
     "Data Science KPI values must remain unclipped and wrappable");
-  assert.match(index, /papers-empire-logo-v2\.webp[\s\S]*papers-empire-logo-v2\.png/,
-    "the interface must retain the painted homepage logo as its canonical brand source");
+  assert.match(index, /papers-empire-logo-v2-cutout\.webp[\s\S]*papers-empire-logo-v2-cutout\.png/,
+    "the interface must use the transparent derivative of the painted homepage logo");
   assert.doesNotMatch(index, /brand-app-mark|favicon\.svg/,
     "the in-game header must not replace the painted logo with a flat app mark");
   assert.match(experienceCss, /html\[data-experience="playing"\] \.brand-picture\s*\{[^}]*display:\s*block/,
     "the painted homepage logo must remain visible after entering the game");
-  assert.match(dashboard, /data-science-zone-emblem-v2\.webp[\s\S]*data-science-zone-emblem-v2\.png/,
-    "the Data Science Zone must expose its painted industrial emblem");
+  assert.match(dashboard, /data-science-zone-emblem-v2-cutout\.webp[\s\S]*data-science-zone-emblem-v2-cutout\.png/,
+    "the Data Science Zone must use the transparent derivative of its painted industrial emblem");
+  assert.match(city, /papers-empire-logo-v2-cutout\.webp[\s\S]*transparent:\s*true[\s\S]*alphaTest:\s*0\.04/,
+    "the 3D printworks sign must place a transparent painted mark on its physical backplate");
   assert.doesNotMatch(dashboard + experienceCss, /data-science-zone-mark\.svg/,
     "the Data Science Zone must not fall back to the flat vector mark");
   assert.equal((manifest.match(/"purpose":\s*"any maskable"/g) || []).length, 2,
@@ -168,6 +184,16 @@ function verifyStaticContracts() {
     "the social card must remain a 1200x630 JPEG");
   assert.deepEqual(readPngSize("assets/brand/data-science-zone-emblem-v2.png"), { width: 512, height: 512 },
     "the Data Science Zone fallback emblem must remain a 512x512 PNG");
+  assert.deepEqual(
+    readPngMetadata("assets/brand/papers-empire-logo-v2-cutout.png"),
+    { width: 700, height: 560, colorType: 6 },
+    "the Papers Empire UI derivative must remain a 700x560 RGBA PNG"
+  );
+  assert.deepEqual(
+    readPngMetadata("assets/brand/data-science-zone-emblem-v2-cutout.png"),
+    { width: 512, height: 512, colorType: 6 },
+    "the Data Science Zone UI derivative must remain a 512x512 RGBA PNG"
+  );
   for (const [path, size] of [
     ["assets/images/favicon-32.png", 32],
     ["assets/images/apple-touch-icon.png", 180],

@@ -19,6 +19,22 @@
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin>
   <script>
+  // Applique les préférences visuelles avant le chargement du CSS. Une
+  // préférence de mouvement réduit ne doit jamais laisser démarrer une
+  // animation pendant que le reste des scripts se charge.
+  (function () {
+    try {
+      var prefs = JSON.parse(localStorage.getItem("pe-accessibility") || "null");
+      if (!prefs) return;
+      var root = document.documentElement;
+      if (prefs.highContrast) root.classList.add("pref-high-contrast");
+      if (prefs.largeText) root.classList.add("pref-large-text");
+      if (prefs.reduceMotion) root.classList.add("pref-reduce-motion");
+    } catch (error) {
+      // Les réglages par défaut seront appliqués plus tard.
+    }
+  })();
+
   // Le marketing est un sas, pas une couche permanente du jeu. Détermine
   // l'état avant le premier rendu pour éviter un flash de landing chez les
   // joueurs déjà engagés. `?welcome=1` reste une porte de retour volontaire.
@@ -210,8 +226,8 @@
     <div class="header-top">
       <a class="header-brand" href="?welcome=1#sceneStage" data-show-intro aria-label="Papers Empire">
         <picture class="brand-picture">
-          <source srcset="/assets/brand/papers-empire-logo-v2.webp" type="image/webp">
-          <img class="brand-lockup" src="/assets/brand/papers-empire-logo-v2.png" alt="" width="700" height="560" decoding="async" fetchpriority="high">
+          <source srcset="/assets/brand/papers-empire-logo-v2-cutout.webp" type="image/webp">
+          <img class="brand-lockup" src="/assets/brand/papers-empire-logo-v2-cutout.png" alt="" width="700" height="560" decoding="async" fetchpriority="high">
 </picture>
         <span class="sr-only">Papers Empire</span>
 </a>
@@ -223,7 +239,13 @@
         <a class="game-nav-only" href="#upgradesPanel" data-i18n="nav.upgrades">Améliorations</a>
 </nav>
       <div class="header-actions">
-        <a class="nav-dash-link" id="dashboardLink" data-dashboard-link href="/dashboard/" data-i18n="nav.dashboard">Data Science Zone</a>
+        <a class="nav-dash-link" id="dashboardLink" data-dashboard-link href="/dashboard/">
+          <picture class="nav-brand-emblem" aria-hidden="true">
+            <source srcset="/assets/brand/data-science-zone-emblem-v2-cutout.webp" type="image/webp">
+            <img src="/assets/brand/data-science-zone-emblem-v2-cutout.png" alt="" width="512" height="512" decoding="async">
+          </picture>
+          <span data-i18n="nav.dashboard">Data Science Zone</span>
+        </a>
         <a class="header-play-link" href="#printStation" data-start-game data-i18n="actions.playNow">Jouer maintenant</a>
         <button class="icon-button" type="button" data-open-settings id="settingsGearButton">
           <svg class="icon-gear" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm9.4 5.3-1.9-.4a7.6 7.6 0 0 0 0-2.8l1.9-.4a.9.9 0 0 0 .6-1.2l-.9-2.2a.9.9 0 0 0-1.2-.5l-1.8.8a7.6 7.6 0 0 0-2-2l.8-1.8a.9.9 0 0 0-.5-1.2l-2.2-.9a.9.9 0 0 0-1.2.6l-.4 1.9a7.6 7.6 0 0 0-2.8 0l-.4-1.9a.9.9 0 0 0-1.2-.6l-2.2.9a.9.9 0 0 0-.5 1.2l.8 1.8a7.6 7.6 0 0 0-2 2l-1.8-.8a.9.9 0 0 0-1.2.5l-.9 2.2a.9.9 0 0 0 .6 1.2l1.9.4a7.6 7.6 0 0 0 0 2.8l-1.9.4a.9.9 0 0 0-.6 1.2l.9 2.2a.9.9 0 0 0 1.2.5l1.8-.8a7.6 7.6 0 0 0 2 2l-.8 1.8a.9.9 0 0 0 .5 1.2l2.2.9a.9.9 0 0 0 1.2-.6l.4-1.9a7.6 7.6 0 0 0 2.8 0l.4 1.9a.9.9 0 0 0 1.2.6l2.2-.9a.9.9 0 0 0 .5-1.2l-.8-1.8a7.6 7.6 0 0 0 2-2l1.8.8a.9.9 0 0 0 1.2-.5l.9-2.2a.9.9 0 0 0-.6-1.2Z"/></svg>
@@ -390,7 +412,7 @@
           <img src="/assets/images/progression/step-prestige.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
           <div>
             <h3 data-i18n="roadmap.step.prestige.title">Réorganise</h3>
-            <p data-i18n="roadmap.step.prestige.body">Convertis ta progression en culture et repars plus fort.</p>
+            <p data-i18n="roadmap.step.prestige.body">Conserve ta culture, puis relance l'atelier à zéro.</p>
 </div>
 </li>
 </ol>
@@ -675,7 +697,7 @@
       <div>
         <p class="panel-kicker" data-i18n="operations.archivesKicker">ARCHIVES &amp; VISAS</p>
         <h2 id="progressPanelTitle" tabindex="-1" data-i18n="sections.progressTitle">Progression</h2>
-        <p class="panel-intro" data-i18n="operations.archivesHint">Chaque jalon devient une pièce officielle de l'histoire de ton empire.</p>
+        <p class="panel-intro" data-i18n="operations.archivesHint">Chaque succès débloqué est conservé ici.</p>
       </div>
       <div class="achievement-counter">
         <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-trophy"></use></svg>
@@ -822,8 +844,8 @@
     <div class="footer-brand">
       <a class="footer-brand-mark" href="?welcome=1#sceneStage" data-show-intro aria-label="Papers Empire">
         <picture>
-          <source srcset="/assets/brand/papers-empire-logo-v2.webp" type="image/webp">
-          <img src="/assets/brand/papers-empire-logo-v2.png" alt="" width="700" height="560" loading="lazy" decoding="async">
+          <source srcset="/assets/brand/papers-empire-logo-v2-cutout.webp" type="image/webp">
+          <img src="/assets/brand/papers-empire-logo-v2-cutout.png" alt="" width="700" height="560" loading="lazy" decoding="async">
         </picture>
       </a>
       <div class="footer-copy">
@@ -837,7 +859,13 @@
     </div>
     <nav class="footer-links" aria-label="Liens" data-i18n-aria-label="footer.linksLabel">
       <a class="footer-link-primary" href="?welcome=1#sceneStage" data-show-intro data-i18n="footer.intro">Revoir l'introduction</a>
-      <a data-dashboard-link href="/dashboard/" data-i18n="nav.dashboard">Data Science Zone</a>
+      <a class="footer-data-zone-link" data-dashboard-link href="/dashboard/">
+        <picture class="footer-link-brand-mark" aria-hidden="true">
+          <source srcset="/assets/brand/data-science-zone-emblem-v2-cutout.webp" type="image/webp">
+          <img src="/assets/brand/data-science-zone-emblem-v2-cutout.png" alt="" width="512" height="512" loading="lazy" decoding="async">
+        </picture>
+        <span data-i18n="nav.dashboard">Data Science Zone</span>
+      </a>
       <a href="/docs/" data-i18n="footer.docs">Manuel de l'atelier</a>
       <a href="https://github.com/nclsppr/papersempire" data-i18n="footer.source">Plans ouverts sur GitHub</a>
     </nav>

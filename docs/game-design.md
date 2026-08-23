@@ -1,10 +1,9 @@
-````markdown
-# Papers Empire 📄🖨️🏭  
-Game Design Document (GDD) – version développeur 0.23.2
+# Papers Empire
+Game Design Document (GDD), version développeur 0.23.3
 
 ---
 
-## 1. Vision générale 🎯
+## 1. Vision générale
 
 ### 1.1 Pitch
 
@@ -41,7 +40,7 @@ l'interface de production.
 
 ---
 
-## 2. Modèle de données principal 🧠
+## 2. Modèle de données
 
 ### 2.1 Ressources
 
@@ -52,7 +51,7 @@ type Resources = {
   ccTotal: number;        // Confiance client cumulée
   culturePoints: number;  // Points de prestige persistants entre run
 };
-````
+```
 
 ### 2.2 Jauges globales
 
@@ -105,7 +104,7 @@ type Building = {
 };
 ```
 
-### 2.4 Upgrades
+### 2.4 Améliorations
 
 ```ts
 type UpgradeId = string;
@@ -133,7 +132,7 @@ type UnlockCondition =
   | { type: "achievement"; achievementId: string };
 ```
 
-### 2.6 Effets d’upgrade
+### 2.6 Effets des améliorations
 
 ```ts
 type UpgradeEffect =
@@ -149,7 +148,7 @@ type UpgradeEffect =
   | { type: "special"; key: string; value?: any };   // pour règles custom
 ```
 
-### 2.7 Achievements 🏆
+### 2.7 Succès
 
 ```ts
 type Achievement = {
@@ -177,7 +176,7 @@ type AchievementReward =
 
 ---
 
-## 3. Boucle de jeu et logique de production 🔁
+## 3. Boucle de jeu et production
 
 ### 3.1 Clic manuel
 
@@ -274,7 +273,7 @@ Les upgrades changent `qualityTarget`, `footprintDrift`, `imageTarget`, etc.
 
 ---
 
-## 4. Bâtiments en détail 🏗️
+## 4. Unités détaillées
 
 ### 4.1 Résumé des paliers
 
@@ -297,7 +296,7 @@ Remarque:
 
 * Certains bâtiments ne produisent pas directement des DOC, mais modifient des multiplicateurs ou des jauges.
 
-### 4.2 Exemple complet: Opérateur repro 👨‍🏭
+### 4.2 Exemple complet : opérateur repro
 
 ```ts
 const reproOperator: Building = {
@@ -354,7 +353,7 @@ Tu peux appliquer la même logique à chaque building.
 
 ---
 
-## 5. Formules de coût et scaling 💰
+## 5. Formules de coût et progression
 
 ### 5.1 Coût d'achat d'un bâtiment
 
@@ -364,14 +363,14 @@ function buildingCost(b: Building): number {
 }
 ```
 
-### 5.2 Coût d’un upgrade
+### 5.2 Coût d'une amélioration
 
 * Fixe dans cette V1 (`Upgrade.cost`).
 * Peut être modulé par des paramètres global (ex: réduction de coûts via prestige).
 
 ---
 
-## 6. Events dynamiques 🎲
+## 6. Événements
 
 ### 6.1 Modèle de données
 
@@ -442,7 +441,7 @@ Effets possibles:
 
 ---
 
-## 7. Achievements détaillés 🏅
+## 7. Succès détaillés
 
 Exemples:
 
@@ -477,7 +476,7 @@ const achievements: Achievement[] = [
 
 ---
 
-## 8. Prestige et réorganisation stratégique 🔄
+## 8. Prestige et réorganisation
 
 ### 8.1 Principe
 
@@ -519,7 +518,7 @@ qualityBase = 0.3 + culturePoints * 0.02;  // clamp à 1
 
 ---
 
-## 9. Hooks de balancing et paramètres tunables ⚙️
+## 9. Paramètres d'équilibrage
 
 Pour faciliter les tests, prévoir un fichier de config:
 
@@ -553,7 +552,7 @@ const defaultConfig: GameConfig = {
 
 ---
 
-## 10. UI et feedback joueur 🎨
+## 10. Interface et retours au joueur
 
 ### 10.1 Poste de production
 
@@ -572,7 +571,7 @@ stickers bristol. Les badges tamponnés sont conservés quand ils signifient une
 validation ou un haut fait. La métaphore de papeterie n'est plus appliquée à
 tous les contrôles.
 
-### 10.2 Feedback
+### 10.2 Retours au joueur
 
 * Un clic ou un achat produit un feedback court, causal et interruptible.
 * Qualité et image de marque montent visuellement avec leur valeur ; l'empreinte

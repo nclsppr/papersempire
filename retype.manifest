@@ -1,6 +1,6 @@
 {
   "version": "4.6.0",
-  "created": "2026-08-20T11:44:22Z",
+  "created": "2026-08-23T13:38:57Z",
   "files": [
     {
       "path": ".nojekyll"
@@ -40,10 +40,12 @@
       "path": "CNAME"
     },
     {
-      "path": "codex-is-thinking.md"
+      "path": "codex-is-thinking.md",
+      "old": true
     },
     {
-      "path": "codex-is-thinking/index.html"
+      "path": "codex-is-thinking/index.html",
+      "old": true
     },
     {
       "path": "design-system.md"

@@ -166,4 +166,3 @@ statique et les contrôles navigateur/appareil.
 Voir aussi :
 - [`accessibility.md`](accessibility.md)
 - [`game-design.md`](game-design.md)
-- [`codex-is-thinking.md`](codex-is-thinking.md)

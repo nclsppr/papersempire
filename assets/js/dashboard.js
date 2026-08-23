@@ -120,7 +120,6 @@
     lastSnapshotRaw: null,
     lastHistoryRaw: null,
     lastRecommendedId: null,
-    recommendationImageToken: 0,
     chartGeometry: null,
     pollTimer: null,
     statusTimer: null,
@@ -869,55 +868,47 @@
     const id = row && BUILDING_IDS.has(row.id) ? row.id : null;
     if (id === state.lastRecommendedId) return;
     state.lastRecommendedId = id;
-    const requestToken = ++state.recommendationImageToken;
-    const visual = els.recommendationImage.closest(".recommendation-visual");
-    const animateVisual = function () {
-      if (!visual || prefersReducedMotion()) return;
+    const image = els.recommendationImage;
+    const placeholder = els.recommendationPlaceholder;
+    const visual = image.closest(".recommendation-visual");
+    const retriggerVisual = function () {
+      if (!visual) return;
       visual.classList.remove("is-updating");
       void visual.offsetWidth;
-      requestAnimationFrame(function () {
-        if (requestToken !== state.recommendationImageToken) return;
-        visual.classList.add("is-updating");
-        window.setTimeout(function () { visual.classList.remove("is-updating"); }, 300);
-      });
+      visual.classList.add("is-updating");
     };
 
     if (!id) {
-      els.recommendationImage.hidden = true;
-      els.recommendationImage.removeAttribute("src");
-      els.recommendationPlaceholder.hidden = false;
-      animateVisual();
+      image.onload = null;
+      image.onerror = null;
+      image.hidden = true;
+      image.removeAttribute("src");
+      placeholder.hidden = false;
+      retriggerVisual();
       return;
     }
 
-    const candidates = [
-      assetUrl("/assets/images/building-" + id + "-v4.webp"),
-      assetUrl("/assets/images/building-" + id + ".webp")
-    ];
-    const loadCandidate = function (index) {
-      const preload = new Image();
-      preload.onload = function () {
-        if (requestToken !== state.recommendationImageToken) return;
-        els.recommendationImage.src = preload.src;
-        els.recommendationImage.hidden = false;
-        els.recommendationPlaceholder.hidden = true;
-        animateVisual();
-      };
-      preload.onerror = function () {
-        if (requestToken !== state.recommendationImageToken) return;
-        if (index + 1 < candidates.length) {
-          loadCandidate(index + 1);
-          return;
-        }
-        els.recommendationImage.hidden = true;
-        els.recommendationPlaceholder.hidden = false;
-        els.recommendationPlaceholder.textContent = id.slice(0, 2).toUpperCase();
-        els.recommendationPlaceholder.title = t("analytics.investment.imageFallback");
-        animateVisual();
-      };
-      preload.src = candidates[index];
+    const primarySrc = assetUrl("/assets/images/building-" + id + "-v4.webp");
+    const fallbackSrc = assetUrl("/assets/images/building-" + id + ".webp");
+    let usingFallback = false;
+    image.onload = function () {
+      image.hidden = false;
+      placeholder.hidden = true;
+      retriggerVisual();
     };
-    loadCandidate(0);
+    image.onerror = function () {
+      if (!usingFallback) {
+        usingFallback = true;
+        image.src = fallbackSrc;
+        return;
+      }
+      image.hidden = true;
+      placeholder.hidden = false;
+      placeholder.textContent = id.slice(0, 2).toUpperCase();
+      placeholder.title = t("analytics.investment.imageFallback");
+      retriggerVisual();
+    };
+    image.src = primarySrc;
   }
 
   function renderRecommendation() {
@@ -1353,33 +1344,11 @@
     }, { passive: true });
   }
 
-  function prefersReducedMotion() {
-    return document.documentElement.classList.contains("pref-reduce-motion") ||
-      !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }
-
-  function initDataZoneMotion() {
-    const intro = document.querySelector(".data-zone-intro");
-    const nav = document.querySelector(".data-zone-nav");
-    const targets = [intro, nav].filter(Boolean);
-    if (!targets.length) return;
-    if (prefersReducedMotion() || !("IntersectionObserver" in window)) {
-      targets.forEach(function (target) { target.classList.add("is-visible"); });
-      return;
-    }
-    document.documentElement.classList.add("data-zone-motion-ready");
-    requestAnimationFrame(function () {
-      if (intro) intro.classList.add("is-visible");
-      if (nav) nav.classList.add("is-visible");
-    });
-  }
-
   function boot() {
     els = collectElements();
     if (!els.dataStateChip || !els.analyticsTrendChart || !els.investmentTable) return;
     state.lang = detectLanguage();
     applyTranslations();
-    initDataZoneMotion();
     bindInteractions();
     refreshSources(true);
     state.pollTimer = window.setInterval(function () { refreshSources(false); }, POLL_MS);

@@ -131,8 +131,6 @@
 
   let saveTimer = null;
   let bannerHideTimer = null;
-  let bannerTransitionEndHandler = null;
-  let bannerTransitionId = 0;
   let statusAnnouncementToken = 0;
   let persistenceDisabled = false;
   let experienceStarted = false;
@@ -2294,7 +2292,6 @@
 
   function showEventBanner(key, tone = "mixed", params = {}) {
     if (!DOM.eventBanner) return;
-    const transitionId = ++bannerTransitionId;
     eventState.bannerTone = tone;
     eventState.bannerKey = key;
     eventState.bannerParams = params || {};
@@ -2304,46 +2301,25 @@
       clearTimeout(bannerHideTimer);
       bannerHideTimer = null;
     }
-    if (bannerTransitionEndHandler) {
-      DOM.eventBanner.removeEventListener("transitionend", bannerTransitionEndHandler);
-      bannerTransitionEndHandler = null;
-    }
     DOM.eventBanner.classList.remove("banner-visible", "hidden");
     void DOM.eventBanner.offsetWidth;
-    requestAnimationFrame(() => {
-      if (DOM.eventBanner && transitionId === bannerTransitionId && !DOM.eventBanner.classList.contains("hidden")) {
-        DOM.eventBanner.classList.add("banner-visible");
-      }
-    });
+    DOM.eventBanner.classList.add("banner-visible");
   }
 
   function hideEventBanner() {
     if (!DOM.eventBanner || DOM.eventBanner.classList.contains("hidden")) return;
-    const transitionId = ++bannerTransitionId;
     DOM.eventBanner.classList.remove("banner-visible");
     if (bannerHideTimer) {
       clearTimeout(bannerHideTimer);
     }
-    let finalized = false;
-    const finalize = () => {
-      if (bannerTransitionEndHandler) {
-        DOM.eventBanner.removeEventListener("transitionend", bannerTransitionEndHandler);
-        bannerTransitionEndHandler = null;
-      }
-      if (finalized || transitionId !== bannerTransitionId || !DOM.eventBanner || DOM.eventBanner.classList.contains("banner-visible")) return;
-      finalized = true;
+    bannerHideTimer = setTimeout(() => {
       bannerHideTimer = null;
       DOM.eventBanner.classList.add("hidden");
       eventState.bannerKey = null;
       eventState.bannerParams = null;
       eventState.bannerTone = "mixed";
       refreshEventBanner();
-    };
-    bannerTransitionEndHandler = event => {
-      if (event.target === DOM.eventBanner && event.propertyName === "opacity") finalize();
-    };
-    DOM.eventBanner.addEventListener("transitionend", bannerTransitionEndHandler);
-    bannerHideTimer = setTimeout(finalize, reduceMotionPreferred() ? 0 : 320);
+    }, reduceMotionPreferred() ? 0 : 320);
   }
 
   function refreshEventBanner() {

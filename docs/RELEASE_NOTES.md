@@ -1,5 +1,20 @@
 # Release Notes
 
+## 0.23.3 : logos détourés, 2026-08-23
+
+- Papers Empire et Data Science Zone disposent de dérivés PNG et WebP avec
+  alpha réel. Les pixels peints restent ceux des images canoniques. Les icônes
+  PWA conservent leur fond plein.
+- Les headers, footers et enseignes utilisent le bon signe sans ajouter de
+  carte, bordure ou second fond. La Data Science Zone affiche son emblème au
+  lieu de répéter le logo Papers Empire.
+- La revue Ponytail simplifie le chargement des images, les observateurs du
+  footer et les transitions d'état. Elle retire aussi les règles et traductions
+  en double sans changer les mécaniques du jeu.
+- Le header Retype réutilise le logo détouré depuis l'asset public. La
+  documentation retire le journal interne de la navigation et archive l'ancien
+  plan web.
+
 ## 0.23.2 — « Canonical Brand Pass V5 » : une seule source de marque — 2026-08-20
 
 - Le pictogramme vectoriel plat introduit dans le header de jeu, le favicon et
