@@ -4,6 +4,7 @@ output: docs-site
 url: https://papersempire.com/docs/
 exclude:
   - "AGENTS.md"
+  - "agents/**"
   - "codex-is-thinking.md"
   - "DOCUMENTATION.md"
   - "balance.md"
