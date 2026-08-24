@@ -62,7 +62,7 @@ The repository intentionally has no full automated browser suite. Each visual
 release runs syntax checks, CSS validation, i18n key/reference alignment, a
 static multilingual build and `npm run ui:check` for the critical BFCache,
 fallback, print-feed, cache-runtime and sub-brand contracts. This gate is
-enforced by the Pages and VPS workflows. iPhone/Safari interaction still
+enforced by the Cloudflare validation workflow. iPhone/Safari interaction still
 requires a manual device pass before declaring device-specific rendering fully
 verified.
 

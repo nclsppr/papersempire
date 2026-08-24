@@ -1,5 +1,6 @@
 node_modules/
 .DS_Store
 docs-site/
+site/
 test-results/
 .claude/settings.local.json

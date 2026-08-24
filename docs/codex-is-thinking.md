@@ -18,7 +18,7 @@ Un carnet de bord libre pour noter idées, questions et réflexions autour de Pa
 - Mode “coop light” : envoyer un boost à un ami via code, ou partager un achievement. Besoin de backend ou simple share URL encodée ?
 
 ## Questions ouvertes
-1. Sauvegarde cloud ? (GitHub Pages donc pas d’API par défaut). Solutions : Supabase? Firebase? À voir selon priorités.
+1. Sauvegarde cloud ? (le Worker ne propose pas encore d’API de sauvegarde). Solutions : D1, Supabase ou Firebase, à évaluer selon les priorités.
 2. Monétisation / support : inscriptions newsletter, ou c’est purement un jeu vitrine ?
 3. Documenter plus le game design : docs existante = MVP, besoin d’un GDD plus structuré ?
 

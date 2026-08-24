@@ -1,5 +1,18 @@
 # Release Notes
 
+## 0.24.1 — Livraison Cloudflare Workers — 2026-08-24
+
+- Cloudflare Workers devient l'unique plateforme de production. Le Worker sert
+  le site statique complet sur `papersempire.com` et redirige définitivement
+  `www.papersempire.com` vers le domaine canonique en conservant chemin et
+  paramètres.
+- `wrangler.jsonc` décrit les assets, les domaines personnalisés,
+  l'observabilité et la date de compatibilité. Le Worker réapplique les en-têtes
+  de sécurité sur les pages, les assets, les erreurs et les redirections.
+- Le contrôle requis construit la documentation et les quatre variantes de
+  langue, teste le Worker, puis exécute un déploiement Wrangler à blanc. Les
+  pushes sur `main` sont construits et déployés par Cloudflare Workers Builds.
+
 ## 0.24.0 — « Dossier du moment » : progression lisible — 2026-08-23
 
 - Le poste de commande présente un seul dossier prioritaire. Sans commande
@@ -96,7 +109,7 @@
   sur grand écran.
 - `npm run ui:check` verrouille les contrats BFCache, contraste élevé, première
   frame Three.js, fente de presse, cache runtime et présence du sous-logo ; le
-  contrôle est exécuté par les workflows Pages et VPS.
+  contrôle est exécuté par la validation Cloudflare.
 
 ## 0.22.0 — « Production Twin V4 » : le monde, le jeu et la donnée ne font plus qu'un — 2026-08-18
 

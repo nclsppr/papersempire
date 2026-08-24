@@ -168,7 +168,7 @@ n'est envoyée et aucune synchronisation entre appareils n'est promise.
 
 Le dépôt ne suit actuellement aucune suite navigateur complète. Le check Node
 `npm run ui:check` verrouille néanmoins les contrats de résilience iPhone les
-plus fragiles et est exécuté dans les workflows Pages et VPS ; les validations
+plus fragiles et est exécuté dans la validation Cloudflare ; les validations
 finales reposent encore sur ce check, la syntaxe JavaScript, l'assemblage
 statique et les contrôles navigateur/appareil.
 

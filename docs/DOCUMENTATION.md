@@ -70,9 +70,12 @@ flowchart LR
   i18n catalogs before publication.
 - **Résilience UI:** `npm run ui:check` vérifie les contrats BFCache, fallback
   contraste élevé/première frame, fente de presse, cache runtime, source de
-  marque canonique et emblème analytique peint. Pages et la release VPS
-  l'exécutent avant leur build.
-- **Docs:** `npm run docs:build` generates the Retype site into `docs-site/` so CI/GitHub Pages can publish it.
+  marque canonique et emblème analytique peint. La validation Cloudflare
+  l'exécute avant le build.
+- **Docs:** `npm run docs:build` generates the Retype site into `docs-site/`; the canonical site build publishes it below `/docs/`.
+- **Delivery:** `npm run cloudflare:check` assembles the full site, validates the
+  Worker and performs a Wrangler dry run. Cloudflare Workers Builds deploys
+  `main` with `npm run cloudflare:build` followed by `npm exec wrangler deploy`.
 - **Limite actuelle:** le dépôt ne contient pas de suite navigateur complète.
   Les parcours clavier, Safari/iPhone et WebGL doivent donc encore être
   contrôlés dans de vrais navigateurs avant de déclarer une release validée.
