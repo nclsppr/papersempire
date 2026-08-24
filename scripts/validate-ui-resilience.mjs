@@ -123,7 +123,7 @@ function verifyStaticContracts() {
   const manifest = read("site.webmanifest");
   const build = read("scripts/build-lang-pages.mjs");
   const siteBuild = read("scripts/build-site.sh");
-  const workflows = read(".github/workflows/docs.yml") + read(".github/workflows/vps-release.yml");
+  const workflow = read(".github/workflows/validate.yml");
 
   for (const [name, html] of [["game", index], ["data zone", dashboard]]) {
     assert.ok(
@@ -244,8 +244,8 @@ function verifyStaticContracts() {
     "HTML images, srcsets, fonts, scripts and styles must share the release stamp");
   assert.match(siteBuild, /-name sources -prune/,
     "production masters must stay out of the public site archive");
-  assert.equal((workflows.match(/npm run ui:check/g) || []).length, 3,
-    "Pages, VPS validation and VPS publication must enforce the UI resilience gate");
+  assert.match(workflow, /npm run cloudflare:check/,
+    "Cloudflare validation must enforce the complete release gate");
 }
 
 verifyHighContrastDoesNotBootWebGL();

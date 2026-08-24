@@ -30,10 +30,12 @@ et les données racontent la même usine : le **production twin**.
 - **0.19 / 0.20 — Empire World / Factory Key Art** : marque, hero hybride et
   rail narratif.
 - **0.21 — Operations Deck** : poste de commande et fiabilité tactile iPhone.
-- **0.21.1 — Branche canonique `main`** : workflows, Pages et réconciliation
-  Atlas alignés.
+- **0.21.1 — Branche canonique `main`** : workflows, protection, hébergement et
+  documentation alignés.
 - **0.24 — Dossier du moment** : objectif unique, retours d'achat explicites et
   interruptions aléatoires maîtrisées.
+- **0.24.1 — Livraison Cloudflare** : Worker, domaines personnalisés et build
+  continu depuis `main`.
 
 ## 0.24 — Dossier du moment
 
@@ -72,7 +74,7 @@ et les données racontent la même usine : le **production twin**.
       emblème peint cohérent avec le logo d'accueil.
 - [x] Admission papier masquée par une vraie fente et animation sans reflow.
 - [x] Rail de progression restructuré en liste lisible sur iPhone.
-- [x] Contrat de résilience exécuté dans les validations Pages et VPS.
+- [x] Contrat de résilience exécuté dans la validation Cloudflare.
 
 ## 0.22 — Production Twin V4
 

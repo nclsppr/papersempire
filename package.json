@@ -1,12 +1,19 @@
 {
-  "name": "victorzoo",
+  "name": "papersempire",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "docs:build": "node node_modules/retypeapp/retype.js build --output docs-site",
-    "ui:check": "node scripts/validate-ui-resilience.mjs"
+    "ui:check": "node scripts/validate-ui-resilience.mjs",
+    "worker:check": "node scripts/validate-cloudflare-worker.mjs",
+    "cloudflare:build": "./scripts/build-cloudflare-site.sh",
+    "cloudflare:check": "npm run ui:check && npm run worker:check && npm run cloudflare:build && wrangler deploy --dry-run",
+    "cloudflare:deploy": "npm run cloudflare:build && wrangler deploy"
   },
   "devDependencies": {
-    "retypeapp": "^4.6.0"
+    "@types/node": "^26.2.0",
+    "retypeapp": "^4.6.0",
+    "wrangler": "^4.125.0"
   }
 }

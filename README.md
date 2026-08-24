@@ -2,7 +2,7 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
-Current version: **0.24.0**.
+Current version: **0.24.1**.
 
 ## Quick Links
 - [Docs Overview](docs/README.md)
@@ -10,40 +10,29 @@ Current version: **0.24.0**.
 - [Release Notes](docs/RELEASE_NOTES.md)
 - [Game Design](docs/game-design.md)
 
-## Deploy to Atlas
+## Deploy to Cloudflare Workers
 
-A normal game or documentation release does not require a `vps-infra` code or contract
-change:
+Cloudflare is the only production delivery platform. The Worker serves the generated static
+site on `papersempire.com`; `www.papersempire.com` returns a permanent redirect to the
+canonical hostname.
 
-1. create a branch in this repository and open a pull request to `main`;
-2. wait for `Validate VPS release`, then merge the pull request;
-3. verify that the merged commit's
-   [`VPS release`](https://github.com/nclsppr/papersempire/actions/workflows/vps-release.yml)
-   run succeeds;
-4. wait for the next central reconciliation. It is scheduled every ten minutes, but GitHub
-   Actions can delay scheduled runs. Atlas activates the new digest only while the canonical
-   HEAD, required checks, attestations, and probes remain valid.
+1. create a branch and open a pull request to `main`;
+2. wait for `Validate Cloudflare Worker`, then merge the pull request;
+3. verify the Cloudflare build for the merged commit;
+4. probe the canonical domain and a versioned asset before declaring the release active.
 
-After the producer release is green, request an immediate reconciliation without changing a
-file or supplying a SHA or digest:
-
-```sh
-gh workflow run deploy-static-releases.yml \
-  --repo nclsppr/vps-infra \
-  --ref main
-```
-
-That dispatch checks Papers Empire, Personal, and the static Parkventory demo. Unchanged
-tuples are no-ops. Edit `vps-infra` only to change deployment policy, required checks, Caddy
-integration, or a profile's enablement, never for a normal content release. See the
-[central runbook](https://github.com/nclsppr/vps-infra/blob/main/docs/operations/static-release-reconciliation.md)
-for incident diagnosis, rollback, quarantine, and key rotation.
+`wrangler.jsonc` is the source of truth for assets, custom domains, observability and Worker
+compatibility. Cloudflare Workers Builds listens to `main`, runs
+`npm run cloudflare:build`, then `npm exec wrangler deploy`.
 
 ## Development
 - `python3 -m http.server 8000` – serve the static game locally.
-- `npm install` – install the Retype documentation tool.
+- `npm ci` – install the locked documentation and Cloudflare tools.
 - `npm run ui:check` – validate Safari/WebGL/cache and interaction resilience contracts.
+- `npm run worker:check` – validate canonical redirects and security headers.
 - `npm run docs:build` – build the static docs site with Retype (output in `docs-site/`).
+- `npm run cloudflare:check` – run all release checks and a local Wrangler dry run.
+- `npm run cloudflare:deploy` – build and deploy the current commit with Wrangler.
 
 The repository has a focused Node resilience gate but no full browser suite;
 also validate visual changes in a browser and run `node --check` on modified

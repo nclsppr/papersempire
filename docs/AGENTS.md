@@ -73,5 +73,5 @@ Write what the current code does. Put future work in the roadmap instead of copy
 - `main` is protected. Work on a branch such as `codex/<topic>` and open a pull request to `main`.
 - Follow the existing commit style: `feat:`, `fix:`, `docs:`, or `chore:` followed by a short imperative subject.
 - Do not push directly to `main`.
-- Merge only after `Validate VPS release` passes and review comments are resolved.
-- A successful producer workflow publishes a candidate. Atlas activation is separate. Follow the Atlas procedure in the root `README.md` when publication is part of the task.
+- Merge only after `Validate Cloudflare Worker` passes and review comments are resolved.
+- Cloudflare Workers Builds publishes the canonical `main` branch. Verify its build and the public domain before claiming that a release is active.

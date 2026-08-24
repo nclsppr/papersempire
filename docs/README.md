@@ -33,16 +33,16 @@ Track meaningful milestones in the project:
 - **0.18.1** – Palette de la scène 3D raccordée à « Atelier tamponné » : murs cardstock crème, toits sépia, fenêtres en or ambré émissif (fini les bleus tech froids), métal taupe, éclairage réchauffé (hémisphérique + rim), pelouse mutée, asphalte et arbres sépia, ciel crépuscule. Le diorama lit désormais comme le monde des stickers ; prochaine étape : régénérer les stickers depuis les rendus isométriques pour verrouiller la cohérence.
 - **0.18.3** – Vie ambiante de la scène : fumées lowpoly qui montent des cheminées des bâtiments industriels possédés (un `InstancedMesh`, 1 draw call, animées hors reduce-motion et si particules activées), et tampon géant `seal-crest` qui s'abat sur le campus au prestige (plane texturé, descente rebondie puis fondu). Burst d'achat réchauffé (or au lieu de bleu).
 - **0.18.4** – Finition scène 3D : feuilles de papier qui s'envolent au-dessus du campus (InstancedMesh), klaxon deux tons à la livraison d'un contrat, ciel de la scène synchronisé avec l'heure (jour/aube/nuit via les classes `.sky-*`), et arbres de bordure instanciés (18 meshes → 2 draw calls). Budget draw-calls révisé honnêtement dans ROADMAP : les bâtiments restent en meshes par pièce (interactifs + animés), la perf mobile tient par l'instanciation des décors + frame-skip + suspend hors-écran.
-- **0.18.5** – Livraison Atlas : Pages et la release VPS partagent désormais le même assemblage `site/`. L'archive statique et son inventaire complet de routes sont reproductibles, publiés dans GHCR par digest et attestés depuis le commit source.
+- **0.18.5** – Première livraison statique reproductible : l'assemblage `site/`, l'archive et l'inventaire de routes dérivent du même commit source.
 - **0.19.0** – « Empire World » : nouveau logo vectoriel couronne de ramette, hero jouable avec HUD réel, navigation et CTA multilingues, campus three.js riche dès quantité zéro (printworks décoratif, skyline, nuages, voirie et activité), nouveau cadrage desktop/mobile, ACES et icônes PWA raccordées à la marque. High contrast, mouvement réduit et fallback progressif restent contractuels.
-- **0.19.1** – Documentation opérationnelle Atlas : séparation explicite entre la publication sans secret VPS et la réconciliation centrale, avec une preuve historique datée.
-- **0.19.2** – Procédure Atlas visible depuis le README racine : branche et pull request vers `master`, attente de la release productrice, passage central planifié et commande de réconciliation immédiate sans modification de `vps-infra`.
-- **0.19.3** – Précision de la cadence Atlas : la réconciliation est planifiée toutes les dix minutes en best effort et peut être retardée par GitHub ; publication et activation restent séparées.
+- **0.19.1** – Documentation opérationnelle de l'ancienne chaîne : publication et activation sont distinguées avec une preuve historique datée.
+- **0.19.2** – Procédure de livraison historique visible depuis le README racine : branche, pull request, publication et réconciliation documentées.
+- **0.19.3** – La cadence de l'ancienne réconciliation est documentée comme best effort ; publication et activation restent séparées.
 - **0.20.0** – « Factory Key Art » : lockup illustré raster, horizons peints desktop/mobile, usine Three.js recadrée comme sujet principal et rail narratif en six étapes avant le jeu, sans métriques sociales inventées et avec i18n FR/EN/DE/LB.
 - **0.21.0** – « Operations Deck » : reconstruction de l'interface de gestion en pupitre industriel asymétrique, sprite SVG maison, presse à passage de feuille, catalogue de machines enrichi, bons/visas distincts et fiabilisation tactile iPhone (voiles de modale, cibles 44 px, safe areas, rendus DOM mémoïsés), avec i18n FR/EN/DE/LB.
 - **0.21.1** – Migration de la branche par défaut de `master` vers `main` :
-  workflows, protection, GitHub Pages, documentation et réconciliation Atlas
-  suivent désormais le même nom canonique.
+  workflows, protection, hébergement et documentation suivent désormais le
+  même nom canonique.
 - **0.22.0** – « Production Twin V4 » : design system rendu révocable et
   recentré sur la miniature industrielle illustrée ; landing transformée en sas
   qui disparaît après l'entrée ; scène Three.js partagée et compacte dans le
@@ -79,6 +79,9 @@ Track meaningful milestones in the project:
   attendue. Les achats détaillent leur effet réel. Les incidents aléatoires
   deviennent plus rares, peuvent être ignorés ou désactivés durablement, et les
   feuilles CSS publiées portent la révision dans leur nom de fichier.
+- **0.24.1** — Cloudflare Workers devient l'unique chaîne de livraison : build
+  statique reproductible, domaines personnalisés apex/`www`, redirection
+  canonique, en-têtes de sécurité et validation Wrangler avant fusion.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
@@ -88,10 +91,10 @@ When you make notable changes (new features, mechanics, UI improvements), append
 - `robots.txt` (root) allows crawling and lists both sitemaps: `sitemap.xml` (game + language variants, with xhtml hreflang annotations) and `/docs/sitemap.xml` (generated by Retype).
 - The social card is a 1200x630 rendered screenshot of the current landing and live 3D campus, stored at `assets/images/social-card.jpg` and referenced with absolute URLs in Open Graph/Twitter meta tags and JSON-LD.
 - PNG icons (`favicon-32`, `apple-touch-icon` 180, `icon-192`, `icon-512`) are faithful crops and resizes of the painted homepage master `assets/brand/papers-empire-logo-v2.png`; `site.webmanifest` makes the game installable.
-- The GitHub Actions workflow (`.github/workflows/docs.yml`) builds the docs, bundles the game assets, copies `robots.txt`/`sitemap.xml`/`404.html`/`site.webmanifest`, and deploys everything via GitHub Pages (Pages source = GitHub Actions).
-- The separate `.github/workflows/vps-release.yml` workflow publishes that same `site/` tree and its route inventory as immutable, attested GHCR artifacts. It has no Atlas secret and never contacts the VPS.
-- The central [`nclsppr/vps-infra`](https://github.com/nclsppr/vps-infra) reconciler owns activation. Its best-effort GitHub Actions schedule is configured to run every ten minutes, but GitHub may delay scheduled executions. On each run, it resolves the exact `main` HEAD, requires the configured checks to pass, resolves `sha-<commit>` tags to digests, and asks Atlas to verify the attestations and HTTP contract again before a transactional switch. Publication alone cannot activate a version, and the resolver does not fall back to an older green commit.
-- Historical evidence observed on 18 August 2026: source `c9b5165187765b5bfc089a196d4e5bdbfefb2a2f`, published by Actions run [`32078995055`](https://github.com/nclsppr/papersempire/actions/runs/32078995055), was accepted by Atlas in central run [`32080417977`](https://github.com/nclsppr/vps-infra/actions/runs/32080417977) with site `sha256:d0c7645202e1db75c9a89008132fa53c62e37f9b17684730be62856b87cb4c7c` and routes `sha256:be525ef7f387c06c266c1a429ae524c8feca8d0235c1c2822bb7ad48a6f149f3`. This documentation commit creates another candidate of its own. Check the central workflow and Atlas protected state for the current tuple instead of treating this snapshot as a permanent active digest.
+- `npm run cloudflare:build` builds the Retype documentation and assembles the complete `site/` tree from the current Git revision.
+- `wrangler.jsonc` deploys that tree as Cloudflare Worker static assets, serves the apex as the canonical hostname and redirects `www` while preserving paths and query strings.
+- The GitHub workflow validates UI contracts, Worker behavior, the complete static build and a Wrangler dry run. It never publishes the site.
+- Cloudflare Workers Builds is the sole production publisher. It follows `main`, runs the canonical build command and promotes the resulting Worker deployment.
 
 ## Accessibility
 
