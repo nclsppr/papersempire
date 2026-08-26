@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.24.2 — Découverte Google et URLs canoniques — 2026-08-26
+
+- Les titres et descriptions des quatre langues nomment clairement Papers
+  Empire comme jeu idle gratuit dans le navigateur. Le hero français emploie
+  aussi cette formulation dans le contenu visible.
+- Le sélecteur de langue navigue vers `/`, `/en/`, `/de/` ou `/lb/` au lieu de
+  fabriquer des variantes `?lang` contradictoires avec leur canonical.
+- Le trafic HTTP rejoint l'apex HTTPS en une redirection permanente. Les hôtes
+  Workers et previews sont `noindex`, comme la documentation technique, afin
+  de concentrer l'indexation sur les quatre pages joueur.
+- Le sitemap ne publie plus de dates `lastmod` inexactes. Un nouveau contrôle
+  SEO valide après build les head localisés, hreflang, canonicals, JSON-LD,
+  sitemap, robots et textes statiques sans JavaScript.
+
 ## 0.24.1 — Livraison Cloudflare Workers — 2026-08-24
 
 - Cloudflare Workers devient l'unique plateforme de production. Le Worker sert

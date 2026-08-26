@@ -3,7 +3,7 @@
   window.I18N.en = {
     "app.browserTitle": "Papers Empire",
     "app.title": "Papers Empire",
-    "app.metaTitle": "Papers Empire, a free idle game: print shop to Factory 4.0",
+    "app.metaTitle": "Papers Empire — Free browser idle game",
     "app.tagline": "Turn your print shop into a 4.0 omnichannel factory.",
     "nav.factory": "3D factory",
     "nav.gameOverview": "The game",
@@ -15,7 +15,7 @@
     "actions.enterFactory": "Enter the workshop",
     "actions.printNow": "Print now",
     "actions.exploreFactory": "Explore the factory",
-    "hero.kicker": "PRINT-SHOP IDLE GAME",
+    "hero.kicker": "PAPERS EMPIRE · PRINT-SHOP IDLE GAME",
     "hero.line1": "PRINT.",
     "hero.line2": "AUTOMATE.",
     "hero.line3": "RULE.",

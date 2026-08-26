@@ -36,6 +36,8 @@ et les données racontent la même usine : le **production twin**.
   interruptions aléatoires maîtrisées.
 - **0.24.1 — Livraison Cloudflare** : Worker, domaines personnalisés et build
   continu depuis `main`.
+- **0.24.2 — Découverte Google** : URLs de langue canoniques, redirection HTTPS,
+  surfaces techniques `noindex` et contrat SEO exécuté après chaque build.
 
 ## 0.24 — Dossier du moment
 

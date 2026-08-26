@@ -3,7 +3,7 @@
   window.I18N.de = {
     "app.browserTitle": "Papers Empire",
     "app.title": "Papers Empire",
-    "app.metaTitle": "Papers Empire: Idle Game von der Druckerei zur Fabrik 4.0",
+    "app.metaTitle": "Papers Empire — Kostenloses Idle Game im Browser",
     "app.tagline": "Verwandle deine Druckerei in eine 4.0-Omnichannel-Fabrik.",
     "nav.factory": "3D-Fabrik",
     "nav.gameOverview": "Spielübersicht",
@@ -15,7 +15,7 @@
     "actions.enterFactory": "Fabrik betreten",
     "actions.printNow": "Jetzt drucken",
     "actions.exploreFactory": "Fabrik erkunden",
-    "hero.kicker": "DRUCKEREI-IDLE-GAME",
+    "hero.kicker": "PAPERS EMPIRE · DRUCKEREI-IDLE-GAME",
     "hero.line1": "DRUCKE.",
     "hero.line2": "AUTOMATISIERE.",
     "hero.line3": "HERRSCHE.",

@@ -45,9 +45,9 @@
   // une seule fois par tick et proportionnel au temps simulé.
   const INFRA_STAT_RATE_PER_SECOND = 0.024;
   const LOCALE_BY_LANG = { fr: "fr-FR", en: "en-US", de: "de-DE", lb: "lb-LU" };
-  // Langue initiale, par priorité : ?lang=xx (bascule client partageable),
-  // puis le préfixe de chemin des pages construites par langue (/en/, /de/,
-  // /lb/), puis le français. PAS de navigator.language : la langue rendue
+  // Langue initiale, par priorité : le préfixe de chemin des pages construites
+  // par langue (/en/, /de/, /lb/), puis l'ancien ?lang=xx comme filet local,
+  // puis le français. PAS de navigator.language : la langue rendue
   // doit être déterministe par URL (Googlebot rend en en-US, ce qui ferait
   // de / un duplicat anglais de /en/ alors qu'elle est déclarée hreflang fr).
   const urlLang = (() => {
@@ -58,7 +58,7 @@
     }
   })();
   const pathLang = (window.location.pathname.match(/^\/(en|de|lb)\//) || [])[1] || null;
-  let currentLang = (urlLang || pathLang || DEFAULT_LANG).slice(0, 2).toLowerCase();
+  let currentLang = (pathLang || urlLang || DEFAULT_LANG).slice(0, 2).toLowerCase();
   if (!SUPPORTED_LANGS.includes(currentLang)) {
     currentLang = DEFAULT_LANG;
   }
@@ -1127,33 +1127,26 @@
     location.reload();
   }
 
-  /** Updates the current language and re-renders the UI. */
+  /** Navigates to the canonical static page for the requested language. */
   function setLanguage(lang) {
     if (!SUPPORTED_LANGS.includes(lang)) {
       lang = DEFAULT_LANG;
     }
-    currentLang = lang;
-    if (DOM.langSelect && DOM.langSelect.value !== lang) {
-      DOM.langSelect.value = lang;
+    try {
+      const path = lang === DEFAULT_LANG ? "/" : `/${lang}/`;
+      const url = new URL(path, window.location.origin);
+      if (wantsWelcomeView()) url.searchParams.set("welcome", "1");
+      url.hash = window.location.hash;
+      window.location.assign(url.href);
+      return;
+    } catch {
+      // file:// et environnements sans navigation : conserver le filet client.
     }
+    currentLang = lang;
+    if (DOM.langSelect && DOM.langSelect.value !== lang) DOM.langSelect.value = lang;
     applyStaticTranslations();
     renderContractsPanel();
     document.documentElement.setAttribute("lang", lang);
-    try {
-      // La langue de base de l'URL est celle du chemin (/en/…) ou le français
-      // sur / : on ne garde ?lang que quand il s'en écarte, pour des URLs
-      // propres qui survivent au rechargement et au partage.
-      const url = new URL(window.location.href);
-      const baseLang = pathLang || DEFAULT_LANG;
-      if (lang === baseLang) {
-        url.searchParams.delete("lang");
-      } else {
-        url.searchParams.set("lang", lang);
-      }
-      window.history.replaceState(null, "", url);
-    } catch {
-      // environnements sans History API (file://) : on garde l'URL telle quelle
-    }
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
     uiState.lastAction = null;

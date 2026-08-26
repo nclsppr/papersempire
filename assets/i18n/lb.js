@@ -3,7 +3,7 @@
   window.I18N.lb = {
     "app.browserTitle": "Papers Empire",
     "app.title": "Papers Empire",
-    "app.metaTitle": "Papers Empire: Idle Game vun der Dréckerei bis d'Fabrick 4.0",
+    "app.metaTitle": "Papers Empire — Gratis Idle Game am Browser",
     "app.tagline": "Maach deng Dréckerei zu enger 4.0 Omnichannel-Fabrick.",
     "nav.factory": "3D-Fabrick",
     "nav.gameOverview": "Spilliwwersiicht",
@@ -15,7 +15,7 @@
     "actions.enterFactory": "An d'Fabrick goen",
     "actions.printNow": "Elo drécken",
     "actions.exploreFactory": "Fabrick entdecken",
-    "hero.kicker": "DRÉCKEREI-IDLE-GAME",
+    "hero.kicker": "PAPERS EMPIRE · DRÉCKEREI-IDLE-GAME",
     "hero.line1": "DRÉCK.",
     "hero.line2": "AUTOMATISÉIER.",
     "hero.line3": "REGÉIER.",
