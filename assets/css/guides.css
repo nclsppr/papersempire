@@ -29,6 +29,27 @@
   --shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
 }
 
+:root.pref-large-text {
+  font-size: clamp(17px, 2vw, 20px);
+}
+
+:root.pref-high-contrast {
+  --night-soft: #000;
+  --navy: #000;
+  --paper: #1a1230;
+  --paper-shade: #1a1230;
+  --kraft: #000;
+  --ink: #fff;
+  --ink-soft: #e5e7eb;
+  --stamp: #fef08a;
+  --orange: #fef08a;
+  --brass: #fef08a;
+  --lime: #fef08a;
+  --line-dark: rgba(255, 255, 255, 0.68);
+  --line-paper: rgba(255, 255, 255, 0.68);
+  --shadow: none;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -50,6 +71,58 @@ body {
   background:
     radial-gradient(circle at 82% 4%, rgba(48, 76, 112, 0.38), transparent 34rem),
     linear-gradient(180deg, #091725 0%, var(--night) 48rem);
+}
+
+.pref-high-contrast body {
+  color: #fff;
+  background: #000;
+}
+
+.pref-high-contrast .guide-header,
+.pref-high-contrast .author-note,
+.pref-high-contrast .disclosure,
+.pref-high-contrast .table-scroll {
+  border-color: var(--lime);
+  background: #000;
+}
+
+.pref-high-contrast .hub-hero,
+.pref-high-contrast .article-hero,
+.pref-high-contrast .guide-card,
+.pref-high-contrast .rail-card {
+  border: 2px solid var(--lime);
+  color: #fff;
+  background: #1a1230;
+}
+
+.pref-high-contrast .hub-hero h1,
+.pref-high-contrast .hub-hero__mark,
+.pref-high-contrast .hub-hero__mark span,
+.pref-high-contrast .guide-card h2,
+.pref-high-contrast .article-hero h1 {
+  border-color: var(--lime);
+  color: #fff;
+}
+
+.pref-high-contrast thead th {
+  color: #000;
+  background: var(--lime);
+}
+
+.pref-high-contrast .related-guides a {
+  border-color: var(--lime);
+}
+
+html.pref-reduce-motion {
+  scroll-behavior: auto;
+}
+
+.pref-reduce-motion *,
+.pref-reduce-motion *::before,
+.pref-reduce-motion *::after {
+  scroll-behavior: auto !important;
+  transition: none !important;
+  animation: none !important;
 }
 
 img {

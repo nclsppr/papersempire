@@ -121,6 +121,7 @@ function verifyStaticContracts() {
   const css = read("assets/css/style.css");
   const experienceCss = read("assets/css/experience-v4.css");
   const guidesCss = read("assets/css/guides.css");
+  const guidesBuild = read("scripts/build-guides.mjs");
   const manifest = read("site.webmanifest");
   const build = read("scripts/build-lang-pages.mjs");
   const siteBuild = read("scripts/build-site.sh");
@@ -192,6 +193,16 @@ function verifyStaticContracts() {
     "guide language targets must remain at least 44px on narrow screens");
   assert.match(guidesCss, /@media \(prefers-reduced-motion:\s*reduce\)/,
     "guides must respect reduced-motion preferences");
+  assert.ok(
+    guidesBuild.indexOf('localStorage.getItem("pe-accessibility")') < guidesBuild.indexOf('rel="stylesheet"'),
+    "guides must apply saved visual preferences before loading CSS"
+  );
+  assert.match(guidesCss, /:root\.pref-large-text\s*\{[^}]*font-size:\s*clamp\(17px,\s*2vw,\s*20px\)/,
+    "guides must honor the saved large-text preference");
+  assert.match(guidesCss, /:root\.pref-high-contrast\s*\{[^}]*--paper:\s*#1a1230[^}]*--ink:\s*#fff/,
+    "guides must honor the saved high-contrast preference");
+  assert.match(guidesCss, /\.pref-reduce-motion \*,[\s\S]*transition:\s*none !important[\s\S]*animation:\s*none !important/,
+    "guides must honor the saved reduced-motion preference");
   for (const inset of ["top", "right", "bottom", "left"]) {
     assert.match(guidesCss, new RegExp(`env\\(safe-area-inset-${inset}\\)`),
       `guides must consume the ${inset} safe-area inset`);

@@ -128,6 +128,21 @@ ${alternateLinks(article)}
   <link rel="icon" type="image/png" sizes="32x32" href="${versioned("/assets/images/favicon-32.png")}">
   <link rel="apple-touch-icon" href="${versioned("/assets/images/apple-touch-icon.png")}">
   <link rel="preload" href="${versioned("/assets/fonts/alfa-slab-one-latin.woff2")}" as="font" type="font/woff2" crossorigin>
+  <script>
+  // Apply the visual preferences before CSS to avoid a flash of the default theme.
+  (function () {
+    try {
+      var prefs = JSON.parse(localStorage.getItem("pe-accessibility") || "null");
+      if (!prefs) return;
+      var root = document.documentElement;
+      if (prefs.highContrast) root.classList.add("pref-high-contrast");
+      if (prefs.largeText) root.classList.add("pref-large-text");
+      if (prefs.reduceMotion) root.classList.add("pref-reduce-motion");
+    } catch (error) {
+      // The guide remains usable with its default presentation.
+    }
+  })();
+  </script>
   <link rel="stylesheet" href="${cssPath()}">
   <meta property="og:type" content="${type}">
   <meta property="og:site_name" content="Papers Empire">
