@@ -7,6 +7,7 @@
     "app.tagline": "Turn your print shop into a 4.0 omnichannel factory.",
     "nav.factory": "3D factory",
     "nav.gameOverview": "The game",
+    "nav.guides": "Workshop guides",
     "nav.primaryLabel": "Primary navigation",
     "nav.production": "Production",
     "nav.buildings": "Units",

@@ -21,7 +21,7 @@ if (!siteDir) {
 
 const CANON = "https://papersempire.com";
 const LANGS = ["en", "de", "lb"];
-const CSS_FILES = ["style.css", "experience-v4.css"];
+const CSS_FILES = ["style.css", "experience-v4.css", "guides.css"];
 
 const META = {
   en: {
@@ -77,6 +77,7 @@ const PREFILLED_KEYS = [
   "app.tagline",
   "nav.factory",
   "nav.gameOverview",
+  "nav.guides",
   "nav.production",
   "nav.buildings",
   "nav.upgrades",

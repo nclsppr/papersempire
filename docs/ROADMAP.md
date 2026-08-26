@@ -38,6 +38,18 @@ et les données racontent la même usine : le **production twin**.
   continu depuis `main`.
 - **0.24.2 — Découverte Google** : URLs de langue canoniques, redirection HTTPS,
   surfaces techniques `noindex` et contrat SEO exécuté après chaque build.
+- **0.25.0 — Guides de l’atelier** : hub éditorial et trois guides en quatre
+  langues, illustrations Production Twin, schémas Article et sitemap généré.
+
+## 0.25 — Guides de l’atelier
+
+- [x] Hub éditorial distinct du jeu et de la documentation technique.
+- [x] Trois guides de fond disponibles en FR, EN, DE et LB.
+- [x] Auteur Nicolas Pieper, transparence sur Papers Empire et sources
+      officielles visibles.
+- [x] Illustrations originales 1200 × 630 sans texte ni marque concurrente.
+- [x] Canonicals, hreflang, JSON-LD et sitemap dérivés du même catalogue.
+- [x] Lecture responsive, tableaux défilables, clavier et mouvement réduit.
 
 ## 0.24 — Dossier du moment
 

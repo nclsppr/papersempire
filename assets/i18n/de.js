@@ -7,6 +7,7 @@
     "app.tagline": "Verwandle deine Druckerei in eine 4.0-Omnichannel-Fabrik.",
     "nav.factory": "3D-Fabrik",
     "nav.gameOverview": "Spielübersicht",
+    "nav.guides": "Werkstatt-Guides",
     "nav.primaryLabel": "Hauptnavigation",
     "nav.production": "Produktion",
     "nav.buildings": "Einheiten",

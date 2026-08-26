@@ -1,18 +1,21 @@
 # Architecture
 
-Cette page décrit le contrat technique de Papers Empire 0.24.0. Elle résume les
+Cette page décrit le contrat technique de Papers Empire 0.25.0. Elle résume les
 modules clés, les deux états de l'expérience, les flux locaux de données et les
 limites de la Data Science Zone.
 
 ## Pile Front-end
 
 - **HTML** : `index.html` porte le sas d'entrée et l'application de jeu ;
-  `dashboard/index.html` porte la Data Science Zone autonome.
+  `dashboard/index.html` porte la Data Science Zone autonome ; les hubs et
+  articles `/guides/` sont générés en HTML statique depuis le catalogue
+  éditorial.
 - **CSS** : `assets/css/style.css` conserve les fondations historiques et la
   couche V4 applique le monde « Production Twin », le passage landing/jeu, le
   responsive et les préférences `pref-*`. La release les publie sous
   `style.<sha>.css` et `experience-v4.<sha>.css` afin que chaque révision utilise
-  une nouvelle clé de cache.
+  une nouvelle clé de cache. `guides.<sha>.css` fournit une surface de lecture
+  légère sans charger le CSS complet du jeu.
 - **JavaScript** :
   - `app.js` : boucle de jeu, projection DOM, contrôleur d'expérience et
     snapshots analytiques ;
@@ -87,6 +90,22 @@ sequenceDiagram
 | `assets/js/scene/*.js` | Production twin procédural (enrichissement progressif) |
 | `assets/vendor/three.module.min.js` | three.js **0.185.1** vendored (+ `three.core.min.js`, importé par le premier) |
 | `scripts/build-site.sh` | Assemblage reproductible du jeu et de la documentation |
+| `content/guides/index.mjs` | Catalogue, traductions, sources et métadonnées des Guides de l'atelier |
+| `scripts/build-guides.mjs` | Génération des hubs, articles, données structurées et sitemap |
+
+### Guides de l’atelier
+
+Les Guides sont une surface statique indexable, séparée de `/docs/` qui reste
+technique et `noindex`. Le catalogue contient les quatre traductions publiées,
+les slugs, les dates, les images et les sources. Le générateur en dérive seize
+pages et le sitemap de production ; il n’existe plus de sitemap manuel à tenir
+en parallèle.
+
+Chaque famille de pages possède des alternates `fr`/`en`/`de`/`lb` réciproques
+et un `x-default` français. Les articles exposent `Article` et
+`BreadcrumbList`, le hub `CollectionPage` et `ItemList`. Les guides ne chargent
+ni `app.js`, ni les catalogues i18n du jeu, ni Three.js : le contenu principal,
+les langues et la navigation sont entièrement rendus au build.
 
 ### Scène 3D partagée (`assets/js/scene/`)
 

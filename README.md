@@ -2,12 +2,13 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
-Current version: **0.24.2**.
+Current version: **0.25.0**.
 
 [Play Papers Empire](https://papersempire.com/) — free in the browser, with no account required.
 
 ## Quick Links
 - [Play the game](https://papersempire.com/)
+- [Workshop Guides](https://papersempire.com/guides/)
 - [Docs Overview](docs/README.md)
 - [Developer Guide](docs/DOCUMENTATION.md)
 - [Release Notes](docs/RELEASE_NOTES.md)
@@ -26,10 +27,10 @@ canonical hostname.
 
 `wrangler.jsonc` is the source of truth for assets, custom domains, observability and Worker
 compatibility. Cloudflare Workers Builds listens to `main`, runs
-`npm run cloudflare:build`, then `npm exec wrangler deploy`.
+`npm run cloudflare:check`, then `npm exec wrangler deploy`.
 
 ## Development
-- `python3 -m http.server 8000` – serve the static game locally.
+- `npm run cloudflare:build && python3 -m http.server 8000 --directory site` – build and serve the complete static site locally.
 - `npm ci` – install the locked documentation and Cloudflare tools.
 - `npm run ui:check` – validate Safari/WebGL/cache and interaction resilience contracts.
 - `npm run worker:check` – validate canonical redirects and security headers.

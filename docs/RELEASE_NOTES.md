@@ -1,5 +1,23 @@
 # Release Notes
 
+## 0.25.0 — Guides de l’atelier — 2026-08-26
+
+- Un nouvel espace éditorial public est disponible sous `/guides/`, avec un
+  hub et trois articles complets en français, anglais, allemand et
+  luxembourgeois. Les comparaisons citent les versions officielles, évitent les
+  notes globales et déclarent que Nicolas Pieper est le créateur de Papers Empire.
+- Les guides disposent d’un rendu statique léger, distinct du jeu et de la
+  documentation technique : aucun runtime Three.js ou script de simulation
+  n’est chargé. La typographie, les couleurs et trois nouvelles illustrations
+  1200 × 630 prolongent la direction Production Twin.
+- Le catalogue éditorial génère les seize pages, leurs canonicals, les clusters
+  hreflang, les schémas `Article`/`CollectionPage`/`BreadcrumbList` et le
+  sitemap complet de vingt URL. Le sitemap manuel devient inutile.
+- Le gate SEO parcourt désormais chaque page et refuse les métadonnées en
+  double, les alternates incomplets, les images absentes, les schémas
+  incohérents et les routes oubliées. Le déploiement manuel et Workers Builds
+  exécutent le gate complet avant Wrangler.
+
 ## 0.24.2 — Découverte Google et URLs canoniques — 2026-08-26
 
 - Les titres et descriptions des quatre langues nomment clairement Papers
