@@ -26,29 +26,29 @@ const CSS_FILES = ["style.css", "experience-v4.css"];
 const META = {
   en: {
     locale: "en_US",
-    title: "Papers Empire, a free idle game: print shop to Factory 4.0",
+    title: "Papers Empire — Free browser idle game",
     description:
-      "Grow a tiny print shop into a 4.0 omnichannel factory: buildings, premium contracts, strategic reorgs and paper jams. Free idle game in your browser.",
-    ogTitle: "Papers Empire: print shop to Factory 4.0",
-    ogDescription: "Click, print, automate: build your document empire in this free browser idle game.",
+      "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0, unlock 11 production units and keep your progress locally.",
+    ogTitle: "Papers Empire — Free browser idle game",
+    ogDescription: "Turn a small print shop into Factory 4.0, unlock eleven production units and keep your progress locally.",
     imageAlt: "Papers Empire interface showing the automated printworks, industrial campus, and live game counters",
   },
   de: {
     locale: "de_DE",
-    title: "Papers Empire: Idle Game von der Druckerei zur Fabrik 4.0",
+    title: "Papers Empire — Kostenloses Idle Game im Browser",
     description:
-      "Verwandle eine kleine Druckerei in eine 4.0-Omnichannel-Fabrik: Gebäude, Premium-Verträge, strategische Reorgs und Papierstaus. Gratis Idle Game im Browser.",
-    ogTitle: "Papers Empire: von der Druckerei zur Fabrik 4.0",
-    ogDescription: "Klicken, drucken, automatisieren: Bau dein Dokumenten-Imperium im kostenlosen Idle Game.",
+      "Spiele Papers Empire kostenlos im Browser. Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte elf Produktionseinheiten frei und speichere lokal.",
+    ogTitle: "Papers Empire — Kostenloses Idle Game im Browser",
+    ogDescription: "Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte elf Produktionseinheiten frei und speichere lokal.",
     imageAlt: "Papers-Empire-Oberfläche mit automatisierter Druckerei, Industriecampus und Live-Spielwerten",
   },
   lb: {
     locale: "lb_LU",
-    title: "Papers Empire: Idle Game vun der Dréckerei bis d'Fabrick 4.0",
+    title: "Papers Empire — Gratis Idle Game am Browser",
     description:
-      "Maach deng kleng Dréckerei zu enger 4.0 Omnichannel-Fabrick: Gebaier, Premium-Kontrakter, strategesch Reorgen a Pabeierstau. Gratis Idle Game am Browser.",
-    ogTitle: "Papers Empire: vun der Dréckerei bis d'Fabrick 4.0",
-    ogDescription: "Klicken, drécken, automatiséieren: Bau däin Dokumenten-Empire am gratis Idle Game.",
+      "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt eelef Produktiounseenheete fräi a späicher lokal.",
+    ogTitle: "Papers Empire — Gratis Idle Game am Browser",
+    ogDescription: "Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt eelef Produktiounseenheete fräi a späicher lokal.",
     imageAlt: "Papers-Empire-Interface mat automatiséierter Dréckerei, Industriecampus a Live-Spillwäerter",
   },
 };
@@ -89,6 +89,7 @@ const PREFILLED_KEYS = [
   "hero.benefitIdle",
   "hero.benefitGrow",
   "hero.benefitFree",
+  "scene.fallback",
   "hud.title",
   "hud.documents",
   "hud.production",
@@ -173,6 +174,9 @@ const PREFILLED_KEYS = [
   "building.finishingWorkshop.name",
   "building.logistics.name",
   "footer.madeBy",
+  "footer.kicker",
+  "footer.tagline",
+  "footer.intro",
   "footer.docs",
   "footer.source",
 ];
@@ -219,6 +223,14 @@ function localize(html, lang) {
   );
   html = html.replace(
     /(<meta property="og:description" content=")[^"]*(">)/,
+    `$1${escapeAttr(m.ogDescription)}$2`
+  );
+  html = html.replace(
+    /(<meta name="twitter:title" content=")[^"]*(">)/,
+    `$1${escapeAttr(m.ogTitle)}$2`
+  );
+  html = html.replace(
+    /(<meta name="twitter:description" content=")[^"]*(">)/,
     `$1${escapeAttr(m.ogDescription)}$2`
   );
   html = html.replace(

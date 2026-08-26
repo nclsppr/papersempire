@@ -39,6 +39,17 @@ assert.equal(redirected.status, 308);
 assert.equal(redirected.headers.get("Location"), "https://papersempire.com/docs/?lang=fr");
 assert.equal(assetRequests, 0, "www requests must redirect before reading an asset");
 
+const redirectedToHttps = await worker.fetch(
+  new Request("http://papersempire.com/en/?welcome=1"),
+  env
+);
+assert.equal(redirectedToHttps.status, 308);
+assert.equal(
+  redirectedToHttps.headers.get("Location"),
+  "https://papersempire.com/en/?welcome=1"
+);
+assert.equal(assetRequests, 0, "HTTP requests must redirect before reading an asset");
+
 const served = await worker.fetch(
   new Request("https://papersempire.com/dashboard/"),
   env
@@ -46,6 +57,26 @@ const served = await worker.fetch(
 assert.equal(served.status, 200);
 assert.equal(await served.text(), "asset:/dashboard/");
 assert.equal(assetRequests, 1);
+assert.equal(served.headers.get("X-Robots-Tag"), "noindex, follow");
+
+const docs = await worker.fetch(
+  new Request("https://papersempire.com/docs/architecture/"),
+  env
+);
+assert.equal(docs.headers.get("X-Robots-Tag"), "noindex, follow");
+
+const preview = await worker.fetch(
+  new Request("https://papersempire.example-account.workers.dev/en/"),
+  env
+);
+assert.equal(preview.status, 200);
+assert.equal(preview.headers.get("X-Robots-Tag"), "noindex, nofollow");
+
+const canonical = await worker.fetch(
+  new Request("https://papersempire.com/en/"),
+  env
+);
+assert.equal(canonical.headers.get("X-Robots-Tag"), null);
 
 for (const [name, expected] of Object.entries({
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
@@ -56,6 +87,8 @@ for (const [name, expected] of Object.entries({
 })) {
   assert.equal(served.headers.get(name), expected, `${name} must be set on static assets`);
   assert.equal(redirected.headers.get(name), expected, `${name} must be set on redirects`);
+  assert.equal(redirectedToHttps.headers.get(name), expected,
+    `${name} must be set on HTTP redirects`);
 }
 
 console.log("Cloudflare Worker contracts: ok");

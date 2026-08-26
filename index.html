@@ -2,9 +2,9 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Papers Empire, jeu idle : de l'imprimerie à l'usine 4.0</title>
+  <title>Papers Empire — Jeu idle gratuit dans le navigateur</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="Transforme ta petite imprimerie en usine 4.0 : bâtiments, contrats premium, réorgs stratégiques et bourrages papier. Jeu idle gratuit dans ton navigateur.">
+  <meta name="description" content="Joue gratuitement à Papers Empire, un idle game de navigateur où tu transformes une petite imprimerie en usine 4.0. Sans compte, sauvegarde locale.">
   <meta name="author" content="Nicolas Pieper">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="theme-color" content="#07111f">
@@ -76,8 +76,8 @@
   </script>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Papers Empire">
-  <meta property="og:title" content="Papers Empire : de l'imprimerie à l'usine 4.0">
-  <meta property="og:description" content="Clique, imprime, automatise : bâtis ton empire du document dans ce jeu idle gratuit.">
+  <meta property="og:title" content="Papers Empire — Jeu idle gratuit dans le navigateur">
+  <meta property="og:description" content="Transforme une petite imprimerie en usine 4.0, débloque onze unités de production et garde ta progression localement.">
   <meta property="og:url" content="https://papersempire.com/">
   <meta property="og:image" content="https://papersempire.com/assets/images/social-card.jpg">
   <meta property="og:image:type" content="image/jpeg">
@@ -89,31 +89,44 @@
   <meta property="og:locale:alternate" content="de_DE">
   <meta property="og:locale:alternate" content="lb_LU">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Papers Empire — Jeu idle gratuit dans le navigateur">
+  <meta name="twitter:description" content="Transforme une petite imprimerie en usine 4.0, débloque onze unités de production et garde ta progression localement.">
   <meta name="twitter:image" content="https://papersempire.com/assets/images/social-card.jpg">
   <meta name="twitter:image:alt" content="Interface de Papers Empire montrant l'imprimerie automatisée, le campus industriel et les compteurs du jeu">
   <script>
-  // Confort humain des liens ?lang=xx : ajuste très tôt la langue du
-  // document et le title/description pour éviter tout flash en français.
-  // L'indexation multilingue passe par les vraies pages /en/ /de/ /lb/
-  // (générées au déploiement) ; le canonical statique n'est jamais touché.
+  // Les anciens liens ?lang=xx convergent vers les vraies pages de langue.
+  // Une seule URL rend ainsi une langue donnée, pour les humains comme pour
+  // les moteurs, sans variante partageable qui contredise son canonical.
   (function () {
     var COPY = {
       en: {
-        title: "Papers Empire, a free idle game: print shop to Factory 4.0",
-        description: "Grow a tiny print shop into a 4.0 omnichannel factory: buildings, premium contracts, strategic reorgs and paper jams. Free idle game in your browser."
+        title: "Papers Empire — Free browser idle game",
+        description: "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0, unlock 11 production units and keep your progress locally."
       },
       de: {
-        title: "Papers Empire: Idle Game von der Druckerei zur Fabrik 4.0",
-        description: "Verwandle eine kleine Druckerei in eine 4.0-Omnichannel-Fabrik: Gebäude, Premium-Verträge, strategische Reorgs und Papierstaus. Gratis Idle Game im Browser."
+        title: "Papers Empire — Kostenloses Idle Game im Browser",
+        description: "Spiele Papers Empire kostenlos im Browser. Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte elf Produktionseinheiten frei und speichere lokal."
       },
       lb: {
-        title: "Papers Empire: Idle Game vun der Dréckerei bis d'Fabrick 4.0",
-        description: "Maach deng kleng Dréckerei zu enger 4.0 Omnichannel-Fabrick: Gebaier, Premium-Kontrakter, strategesch Reorgen a Pabeierstau. Gratis Idle Game am Browser."
+        title: "Papers Empire — Gratis Idle Game am Browser",
+        description: "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt eelef Produktiounseenheete fräi a späicher lokal."
       }
     };
     var lang = null;
-    try { lang = new URLSearchParams(location.search).get("lang"); } catch (e) { return; }
+    var params = null;
+    try {
+      params = new URLSearchParams(location.search);
+      lang = params.get("lang");
+    } catch (e) { return; }
     if (["fr", "en", "de", "lb"].indexOf(lang) === -1) return;
+    var canonicalPath = lang === "fr" ? "/" : "/" + lang + "/";
+    if (location.protocol !== "file:") {
+      var target = new URL(canonicalPath, location.origin);
+      if (params.get("welcome") === "1") target.searchParams.set("welcome", "1");
+      target.hash = location.hash;
+      location.replace(target.href);
+      return;
+    }
     document.documentElement.setAttribute("lang", lang);
     var copy = COPY[lang];
     if (!copy) return;
@@ -146,6 +159,7 @@
         "operatingSystem": "Any",
         "browserRequirements": "Requires JavaScript",
         "isAccessibleForFree": true,
+        "sameAs": "https://github.com/nclsppr/papersempire",
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -286,11 +300,11 @@
       <div class="stage-skyline" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
 </div>
-      <p class="stage-fallback-text" data-i18n="scene.fallback"></p>
+      <p class="stage-fallback-text" data-i18n="scene.fallback">La vue 3D du campus s'affiche sur les navigateurs compatibles.</p>
 </div>
 
     <div class="hero-copy" data-landing-only>
-      <p class="hero-kicker" data-i18n="hero.kicker">IDLE GAME D'IMPRIMERIE</p>
+      <p class="hero-kicker" data-i18n="hero.kicker">PAPERS EMPIRE · JEU IDLE D'IMPRIMERIE</p>
       <h1 class="hero-title" id="heroTitle">
         <span data-i18n="hero.line1">IMPRIME.</span>
         <span data-i18n="hero.line2">AUTOMATISE.</span>

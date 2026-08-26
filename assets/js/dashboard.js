@@ -189,10 +189,10 @@
       if (value) element.setAttribute("aria-label", value);
     });
 
-    const langQuery = state.lang === "fr" ? "" : "?lang=" + encodeURIComponent(state.lang);
-    if (els && els.backToGameLink) els.backToGameLink.href = "/" + langQuery;
+    const gamePath = state.lang === "fr" ? "/" : "/" + encodeURIComponent(state.lang) + "/";
+    if (els && els.backToGameLink) els.backToGameLink.href = gamePath;
     document.querySelectorAll(".data-zone-footer a[href='/']").forEach(function (link) {
-      link.href = "/" + langQuery;
+      link.href = gamePath;
     });
   }
 
