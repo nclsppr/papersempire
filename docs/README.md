@@ -1,6 +1,6 @@
 # Papers Empire
 
-Papers Empire is a browser-based incremental game that runs entirely in the browser. You modernise an industrial print shop through eleven production units, contracts and a prestige loop. Current version: **0.24.2**.
+Papers Empire is a browser-based incremental game that runs entirely in the browser. You modernise an industrial print shop through eleven production units, contracts and a prestige loop. Current version: **0.25.0**.
 
 The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier maintenance. Additional helper modules power the modifier builder math and god-mode utilities so they can be unit-tested in isolation.
 
@@ -86,13 +86,17 @@ Track meaningful milestones in the project:
   plus directs, les langues naviguent vers leurs vrais chemins, HTTP converge
   vers HTTPS, les surfaces techniques sortent de l'index et le build gagne un
   contrat SEO dédié.
+- **0.25.0** — Les Guides de l’atelier publient un hub et trois articles en
+  quatre langues, avec auteur et transparence visibles, sources officielles,
+  illustrations originales, schémas Article et sitemap généré depuis le même
+  catalogue éditorial.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 
 ## SEO & Deployment
 
 - Canonical domain: `https://papersempire.com/`. `index.html` embeds canonical + hreflang links for `/`, `/en/`, `/de/` and `/lb/`, Open Graph/Twitter cards, and a JSON-LD `@graph` (VideoGame + WebSite + Person author).
-- `robots.txt` allows crawling and advertises `sitemap.xml`, limited to the four canonical player pages. `/docs/` remains public but receives `X-Robots-Tag: noindex, follow` from the Worker.
+- `robots.txt` allows crawling and advertises the generated `sitemap.xml`, which contains the four player pages, four guide hubs and twelve localized articles. `/docs/` remains public but receives `X-Robots-Tag: noindex, follow` from the Worker.
 - The social card is a 1200x630 rendered screenshot of the current landing and live 3D campus, stored at `assets/images/social-card.jpg` and referenced with absolute URLs in Open Graph/Twitter meta tags and JSON-LD.
 - PNG icons (`favicon-32`, `apple-touch-icon` 180, `icon-192`, `icon-512`) are faithful crops and resizes of the painted homepage master `assets/brand/papers-empire-logo-v2.png`; `site.webmanifest` makes the game installable.
 - `npm run cloudflare:build` builds the Retype documentation and assembles the complete `site/` tree from the current Git revision.

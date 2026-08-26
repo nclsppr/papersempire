@@ -75,7 +75,7 @@ flowchart LR
 - **Docs:** `npm run docs:build` generates the Retype site into `docs-site/`; the canonical site build publishes it below `/docs/`.
 - **Delivery:** `npm run cloudflare:check` assembles the full site, validates the
   Worker and performs a Wrangler dry run. Cloudflare Workers Builds deploys
-  `main` with `npm run cloudflare:build` followed by `npm exec wrangler deploy`.
+  `main` with `npm run cloudflare:check` followed by `npm exec wrangler deploy`.
 - **Limite actuelle:** le dépôt ne contient pas de suite navigateur complète.
   Les parcours clavier, Safari/iPhone et WebGL doivent donc encore être
   contrôlés dans de vrais navigateurs avant de déclarer une release validée.

@@ -6,9 +6,11 @@ Papers Empire is a static browser game. It has no application bundler or backend
 
 - `index.html` contains the landing page and the game.
 - `dashboard/index.html` contains the Data Science Zone.
+- `content/guides/index.mjs` is the single source for the four-language workshop guide catalog.
 - `assets/css/style.css` contains the shared CSS foundations. `assets/css/experience-v4.css` contains the current interface layer.
+- `assets/css/guides.css` contains the standalone long-form guide interface.
 - `assets/js/` contains the game, dashboard, persistence, accessibility, events, tutorial, analytics, and Three.js modules.
-- `assets/i18n/{fr,en,de,lb}.js` contains every translated interface string.
+- `assets/i18n/{fr,en,de,lb}.js` contains the translated game and dashboard interface strings.
 - `assets/brand/` contains the active Papers Empire logo and Data Science Zone emblem. Source masters stay under `assets/brand/sources/`.
 - `docs/` contains the Retype sources. Retype generates `docs-site/`; do not edit that directory.
 - `scripts/` builds and validates the static release.
@@ -18,7 +20,7 @@ Papers Empire is a static browser game. It has no application bundler or backend
 
 - Keep runtime JavaScript in `assets/js/`. Do not move application logic back into `index.html`.
 - Preserve the script order declared in the HTML entry points.
-- When visible copy changes, update all four i18n catalogs. Update the matching static French fallback in the HTML too.
+- When game or dashboard copy changes, update all four i18n catalogs and the matching static French fallback in the HTML. Keep all four guide translations together in `content/guides/index.mjs`.
 - Do not rename building IDs, storage keys, or saved fields without a migration.
 - Read `docs/design-system.md` before changing the interface or brand assets.
 - Keep keyboard focus, reduced motion, high contrast, and 44 px touch targets working.
@@ -48,10 +50,11 @@ Run `node --check` on each changed JavaScript file. For example:
 node --check assets/js/app.js
 ```
 
-Serve the repository over HTTP for browser checks:
+Build and serve the complete release over HTTP for browser checks:
 
 ```sh
-python3 -m http.server 8000
+npm run cloudflare:build
+python3 -m http.server 8000 --directory site
 ```
 
 Test visual changes at desktop and mobile widths. Check normal and reduced motion, keyboard use, console errors, and horizontal overflow. The repository has no full browser suite.

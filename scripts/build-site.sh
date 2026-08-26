@@ -32,7 +32,6 @@ cp "$REPOSITORY_ROOT/index.html" "$output_directory/index.html"
 cp "$REPOSITORY_ROOT/robots.txt" "$output_directory/robots.txt"
 cp "$REPOSITORY_ROOT/404.html" "$output_directory/404.html"
 cp "$REPOSITORY_ROOT/site.webmanifest" "$output_directory/site.webmanifest"
-cp "$REPOSITORY_ROOT/sitemap.xml" "$output_directory/sitemap.xml"
 cp -R "$REPOSITORY_ROOT/assets" "$output_directory/assets"
 # Les masters ImageGen/PNG et manifestes de production restent versionnés dans
 # le dépôt pour la traçabilité, mais ne sont jamais téléchargés par le jeu.
@@ -42,5 +41,9 @@ cp -R "$REPOSITORY_ROOT/dashboard" "$output_directory/dashboard"
 cp -R "$REPOSITORY_ROOT/docs-site/." "$output_directory/docs/"
 
 node "$REPOSITORY_ROOT/scripts/build-lang-pages.mjs" \
+  "$output_directory" \
+  "${revision:0:8}"
+
+node "$REPOSITORY_ROOT/scripts/build-guides.mjs" \
   "$output_directory" \
   "${revision:0:8}"

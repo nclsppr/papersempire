@@ -10,7 +10,7 @@
     "seo:check": "node scripts/validate-seo.mjs",
     "cloudflare:build": "./scripts/build-cloudflare-site.sh",
     "cloudflare:check": "npm run ui:check && npm run worker:check && npm run cloudflare:build && npm run seo:check && wrangler deploy --dry-run",
-    "cloudflare:deploy": "npm run cloudflare:build && wrangler deploy"
+    "cloudflare:deploy": "npm run cloudflare:check && wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",

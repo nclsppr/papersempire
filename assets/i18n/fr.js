@@ -7,6 +7,7 @@
     "app.tagline": "Transforme ton imprimerie en usine 4.0 omnicanale.",
     "nav.factory": "Usine 3D",
     "nav.gameOverview": "Le jeu",
+    "nav.guides": "Guides de l'atelier",
     "nav.primaryLabel": "Navigation principale",
     "nav.production": "Production",
     "nav.buildings": "Unités",

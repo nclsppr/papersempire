@@ -78,6 +78,22 @@ const canonical = await worker.fetch(
 );
 assert.equal(canonical.headers.get("X-Robots-Tag"), null);
 
+const guide = await worker.fetch(
+  new Request("https://papersempire.com/guides/jeu-idle-clicker-incremental-differences/"),
+  env
+);
+assert.equal(guide.status, 200);
+assert.equal(guide.headers.get("X-Robots-Tag"), null,
+  "canonical workshop guides must remain indexable");
+
+const guidePreview = await worker.fetch(
+  new Request("https://papersempire.example-account.workers.dev/en/guides/idle-game-clicker-incremental-differences/"),
+  env
+);
+assert.equal(guidePreview.status, 200);
+assert.equal(guidePreview.headers.get("X-Robots-Tag"), "noindex, nofollow",
+  "preview guide routes must stay out of search indexes");
+
 for (const [name, expected] of Object.entries({
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
   "Referrer-Policy": "strict-origin-when-cross-origin",

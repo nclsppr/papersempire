@@ -7,6 +7,7 @@
     "app.tagline": "Maach deng Dréckerei zu enger 4.0 Omnichannel-Fabrick.",
     "nav.factory": "3D-Fabrick",
     "nav.gameOverview": "Spilliwwersiicht",
+    "nav.guides": "Atelier-Guiden",
     "nav.primaryLabel": "Haaptnavigatioun",
     "nav.production": "Produktioun",
     "nav.buildings": "Eenheeten",
