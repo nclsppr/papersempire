@@ -8,6 +8,7 @@
     "nav.factory": "3D-Fabrick",
     "nav.gameOverview": "Spilliwwersiicht",
     "nav.guides": "Atelier-Guiden",
+    "nav.guidesShort": "Atelier",
     "nav.primaryLabel": "Haaptnavigatioun",
     "nav.production": "Produktioun",
     "nav.buildings": "Eenheeten",

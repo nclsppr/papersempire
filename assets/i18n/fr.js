@@ -8,6 +8,7 @@
     "nav.factory": "Usine 3D",
     "nav.gameOverview": "Le jeu",
     "nav.guides": "Guides de l'atelier",
+    "nav.guidesShort": "L'atelier",
     "nav.primaryLabel": "Navigation principale",
     "nav.production": "Production",
     "nav.buildings": "Unités",

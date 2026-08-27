@@ -3,33 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <title>Page introuvable · Papers Empire</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#1a1230">
+  <meta name="theme-color" content="#07111f">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(180deg, #241b47 0%, #0b0617 100%);
-      color: #f8fafc;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      text-align: center;
-      padding: 24px;
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+  <link rel="preload" href="/assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+  (function () {
+    var locale = window.location.pathname.split("/").filter(Boolean)[0];
+    var language = ["en", "de", "lb"].indexOf(locale) === -1 ? "fr" : locale;
+    var homePath = language === "fr" ? "/" : "/" + language + "/";
+    var guidesPath = homePath + "guides/";
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("[data-home-link]").forEach(function (link) {
+        link.href = homePath;
+      });
+      document.querySelectorAll("[data-guides-link]").forEach(function (link) {
+        link.href = guidesPath;
+      });
+    });
+
+    try {
+      var prefs = JSON.parse(localStorage.getItem("pe-accessibility") || "null");
+      if (!prefs) return;
+      var root = document.documentElement;
+      if (prefs.highContrast) root.classList.add("pref-high-contrast");
+      if (prefs.largeText) root.classList.add("pref-large-text");
+      if (prefs.reduceMotion) root.classList.add("pref-reduce-motion");
+    } catch (error) {
+      // Les styles par défaut restent utilisables si le stockage est indisponible.
     }
-    h1 { font-size: 42px; margin: 0 0 8px; color: #fcd34d; }
-    p { margin: 6px 0; color: #cbd5e1; }
-    a { color: #fcd34d; font-weight: 600; }
-  </style>
+  })();
+  </script>
+  <link rel="stylesheet" href="/assets/css/guides.css">
 </head>
-<body>
-  <main>
-    <h1>404 · Bourrage papier</h1>
-    <p>Cette page est partie à la déchiqueteuse. / This page went through the shredder.</p>
-    <p><a href="https://papersempire.com/">Retourner au jeu</a> · <a href="https://papersempire.com/docs/">Documentation</a></p>
+<body class="error-page">
+  <a class="skip-link" href="#main">Aller au contenu</a>
+  <header class="guide-header">
+    <div class="guide-header__inner">
+      <a class="guide-brand" data-home-link href="/" aria-label="Papers Empire · Jouer">
+        <picture>
+          <source srcset="/assets/brand/papers-empire-logo-v2-cutout.webp" type="image/webp">
+          <img src="/assets/brand/papers-empire-logo-v2-cutout.png" width="700" height="560" alt="" decoding="async">
+        </picture>
+      </a>
+      <nav class="guide-nav" aria-label="Navigation principale">
+        <a data-home-link href="/">Jouer</a>
+        <a data-guides-link href="/guides/">Guides de l’atelier</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="error-main" id="main">
+    <section class="hub-hero error-hero" aria-labelledby="errorTitle">
+      <div class="hub-hero__copy">
+        <p class="eyebrow">INCIDENT DE PRODUCTION · CODE 404</p>
+        <h1 id="errorTitle">Bourrage papier.</h1>
+        <p class="hub-hero__lead">Cette adresse ne mène à aucun poste de l’atelier. La production continue : reprends la partie ou ouvre le registre éditorial.</p>
+        <p class="error-note" lang="en">This address does not lead to a workshop station.</p>
+        <div class="error-actions">
+          <a class="error-primary" data-home-link href="/">Retourner au jeu</a>
+          <a class="error-secondary" data-guides-link href="/guides/">Explorer les guides de l’atelier</a>
+        </div>
+      </div>
+      <div class="hub-hero__mark" aria-hidden="true">
+        <span>PE</span><strong>404</strong>
+      </div>
+    </section>
   </main>
+
+  <footer class="guide-footer">
+    <div>
+      <p class="guide-footer__stamp">PAPERS EMPIRE · INCIDENT CLOS</p>
+      <p>Le monde de l’atelier reste accessible depuis les chemins ci-contre.</p>
+    </div>
+    <div class="guide-footer__links">
+      <a data-home-link href="/">Ouvrir Papers Empire</a>
+      <a data-guides-link href="/guides/">Guides de l’atelier</a>
+      <a href="/docs/">Manuel de l’atelier</a>
+    </div>
+  </footer>
 </body>
 </html>

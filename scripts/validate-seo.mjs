@@ -241,9 +241,23 @@ function validateHome(page, html) {
   const dict = loadDictionary(page.lang);
   assert.equal(dict["app.metaTitle"], page.title,
     `${page.lang} runtime title must match the static head`);
-  const renderedGuideLabel = html.match(/data-i18n="nav\.guides"[^>]*>([^<]+)</)?.[1];
-  assert.equal(renderedGuideLabel, dict["nav.guides"],
-    `${page.url} must pre-render the guide navigation label`);
+  for (const key of ["nav.guides", "nav.guidesShort"]) {
+    const renderedGuideLabel = html.match(new RegExp(`data-i18n="${key.replaceAll(".", "\\.")}"[^>]*>([^<]+)<`))?.[1];
+    assert.equal(renderedGuideLabel, dict[key],
+      `${page.url} must pre-render the ${key} navigation label`);
+  }
+
+  for (const className of ["site-nav-guides", "home-guides-link"]) {
+    const matches = tags(html, "a").filter(anchor =>
+      anchor.attrs.class?.split(/\s+/).includes(className));
+    assert.equal(matches.length, 1,
+      `${page.url} must expose one ${className} workshop link`);
+    const target = new URL(matches[0].attrs.href, page.url);
+    assert.equal(target.origin, SITE_ORIGIN,
+      `${page.url} ${className} must remain on the canonical site`);
+    assert.equal(target.pathname, LOCALES[page.lang].hubPath,
+      `${page.url} ${className} must open the ${page.lang} workshop hub`);
+  }
 
   for (const key of ["scene.fallback", "footer.kicker", "footer.tagline", "footer.intro"]) {
     const value = dict[key];
@@ -360,6 +374,18 @@ for (const page of PAGES) {
   if (page.kind === "hub") validateHub(page, html);
   if (page.kind === "article") validateArticle(page, html);
 }
+
+const notFound = readSite("404.html");
+const notFoundStyles = linksByRel(notFound, "stylesheet")
+  .map(link => link.attrs.href)
+  .filter(path => path?.startsWith("/assets/"));
+assert.equal(notFoundStyles.length, 1, "the 404 page must load one local editorial stylesheet");
+assert.match(notFoundStyles[0], /^\/assets\/css\/guides\.[a-f0-9]+\.css$/,
+  "the built 404 page must load the versioned workshop stylesheet");
+assert.ok(existsSync(new URL(`.${notFoundStyles[0]}`, siteDir)),
+  `the built 404 page references missing ${notFoundStyles[0]}`);
+const notFoundGuideLink = tags(notFound, "a").find(anchor => anchor.attrs.href === "/guides/");
+assert.ok(notFoundGuideLink, "the built 404 page must retain a workshop recovery link");
 
 for (const article of ARTICLES) {
   const sourcePath = fileURLToPath(new URL(`.${article.image}`, rootDir));
