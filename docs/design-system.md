@@ -1,6 +1,6 @@
 # Design system V5 : Production Twin
 
-Ce document décrit la direction de Papers Empire 0.24.0. Les règles visuelles
+Ce document décrit la direction de Papers Empire 0.25.2. Les règles visuelles
 servent la lisibilité, le plaisir de jeu et la cohérence du monde. Si elles
 cessent de le faire, elles changent.
 
@@ -54,18 +54,26 @@ de palette ou de rôle entre ces trois lectures.
 Le jeu, la Data Science Zone, les Guides de l’atelier et les pages de récupération
 appartiennent au même site, même lorsque leur densité diffère.
 
-- Le logo peint, la nuit acier, le papier ivoire, l’orange d’action et la
-  typographie de titre relient toutes les surfaces publiques.
+- L’accueil, les Guides de l’atelier et la 404 utilisent le même header global,
+  dont `site-header.css` est la source de vérité. Une page ne recrée pas un
+  header voisin sous un autre jeu de classes.
+- Le logo peint conserve le même cadre, la même taille et la même matière. Le
+  shell reste sticky et bascule aux mêmes breakpoints sur l’accueil, les hubs,
+  les articles et la 404.
 - « Guides de l’atelier » reste accessible avant le footer, dans les états
   landing et jeu ainsi que sur mobile. La Data Science Zone expose le même
   chemin et conserve la langue active.
+- Les actions du header sont rendues dans la langue de la page. L’Atelier est
+  actif sur son hub et sur chaque article ; les destinations vers le jeu et la
+  Data Science Zone restent fonctionnelles sans dépendre de la simulation.
 - Le shell éditorial reste léger et autonome : il reprend les rôles de couleur,
-  le focus, les cibles tactiles et la marque sans charger la simulation ni
-  Three.js.
+  le focus, les cibles tactiles, la marque et le header partagé sans charger
+  `app.js`, les catalogues i18n du navigateur, la simulation ni Three.js.
 - Les appels à jouer utilisent l’orange d’action. Le vert reste réservé aux
   gains, rendements et états favorables.
-- Une page d’erreur réutilise ce shell et propose des chemins de récupération
-  vers le jeu et les Guides ; elle ne réintroduit pas une ancienne palette.
+- Une page d’erreur réutilise ce shell et le header global, puis propose des
+  chemins de récupération vers le jeu et les Guides ; elle ne réintroduit pas
+  une ancienne palette.
 
 ## Fondations visuelles
 

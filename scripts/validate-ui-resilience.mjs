@@ -120,8 +120,10 @@ function verifyStaticContracts() {
   const dashboardJs = read("assets/js/dashboard.js");
   const assetHelper = read("assets/js/asset-url.js");
   const css = read("assets/css/style.css");
+  const siteHeaderCss = read("assets/css/site-header.css");
   const experienceCss = read("assets/css/experience-v4.css");
   const guidesCss = read("assets/css/guides.css");
+  const siteHeaderJs = read("assets/js/site-header.js");
   const guidesBuild = read("scripts/build-guides.mjs");
   const guidesCatalog = read("content/guides/index.mjs");
   const manifest = read("site.webmanifest");
@@ -179,25 +181,57 @@ function verifyStaticContracts() {
     "workshop gauges must expose their current value accessibly");
   assert.match(dashboardJs, /function setText\(element, value\)[\s\S]*element\.textContent !== next/,
     "Data Science live regions must not be rewritten with identical text on every poll");
-  assert.doesNotMatch(css + experienceCss + guidesCss, /transition\s*:\s*all\b/,
+  assert.doesNotMatch(css + siteHeaderCss + experienceCss + guidesCss, /transition\s*:\s*all\b/,
     "UI motion must continue to name the properties it changes");
+  for (const [name, html] of [["game", index], ["404", notFound], ["generated guides", guidesBuild]]) {
+    assert.match(html, /<header\b[^>]*class="app-header site-header[^"]*"[^>]*>[\s\S]*?<div\b[^>]*class="header-inner"[^>]*>[\s\S]*?<div\b[^>]*class="header-top"/,
+      `${name} must use the shared global header hierarchy`);
+    assert.doesNotMatch(html, /guide-header/,
+      `${name} must not restore the retired editorial-only header`);
+  }
+  assert.match(index, /rel="stylesheet" href="\/assets\/css\/site-header\.css"/,
+    "the game must load the shared site header stylesheet");
+  assert.match(notFound, /href="\/assets\/css\/guides\.css"[\s\S]*href="\/assets\/css\/site-header\.css"/,
+    "the 404 must load editorial styles before the shared header overrides");
+  assert.match(guidesBuild, /cssPath\("guides"\)[\s\S]*cssPath\("site-header"\)/,
+    "generated guides must load editorial styles before the shared header overrides");
+  for (const [name, html] of [["404", notFound], ["generated guides", guidesBuild]]) {
+    assert.match(html, /assets\/js\/site-header\.js/,
+      `${name} must load only the lightweight shared-header controller`);
+    assert.match(html, /papers-empire-logo-v2-cutout\.webp[\s\S]*papers-empire-logo-v2-cutout\.png/,
+      `${name} header must retain WebP and PNG variants of the painted logo`);
+  }
+  assert.match(guidesBuild, /class="site-nav-guides active"/,
+    "guide hubs and articles must expose the workshop as the active global section");
+  assert.match(guidesBuild, /const dashboardPath = lang === "fr" \? "\/dashboard\/" : `\/dashboard\/\?lang=\$\{lang\}`[\s\S]*class="nav-dash-link"[^>]*href="\$\{dashboardPath\}"/,
+    "generated guide headers must expose the localized Data Science Zone route");
+  assert.match(guidesBuild, /function languageOptions\([\s\S]*article \? articlePath\(article, code\) : LOCALES\[code\]\.hubPath[\s\S]*<option value=[\s\S]*class="lang-select"[^>]*data-locale-select/,
+    "generated guide headers must render all language alternates into the shared selector");
+  assert.match(siteHeaderJs, /addEventListener\(["']change["']/,
+    "the lightweight header controller must react to language changes");
+  assert.match(siteHeaderJs, /\.value/,
+    "the lightweight header controller must navigate from the selected alternate URL");
+  assert.doesNotMatch(siteHeaderJs, /papersEmpireSave|WebGL|three\.(?:module|core)|pe-dash-snapshot/,
+    "the shared header controller must stay independent from game and analytics runtimes");
+  assert.match(siteHeaderCss, /\.site-header\b/,
+    "the global header chrome must live in its shared stylesheet");
   assert.match(index, /class="site-nav-guides" href="guides\/" data-i18n="nav\.guides"/,
     "the desktop game navigation must keep the workshop guides visible in landing and playing states");
   assert.doesNotMatch(index, /class="[^"]*landing-nav-only[^"]*"[^>]*href="guides\/"/,
     "the workshop guides must not disappear after the player enters the game");
   assert.match(index, /class="header-guides-link home-guides-link"[^>]*href="guides\/"[^>]*data-i18n-aria-label="nav\.guides"/,
     "the compact header must expose a localized workshop link when the primary navigation collapses");
-  assert.match(css, /@media \(max-width:\s*1080px\)[\s\S]*\.primary-nav\s*\{[^}]*display:\s*none[\s\S]*\.home-guides-link\s*\{[^}]*display:\s*inline-flex/,
+  assert.match(siteHeaderCss, /@media \(max-width:\s*1080px\)[\s\S]*\.primary-nav\s*\{[^}]*display:\s*none[\s\S]*\.home-guides-link\s*\{[^}]*display:\s*inline-flex/,
     "the compact workshop link must become visible at the primary-navigation breakpoint");
-  assert.match(css, /@media \(max-width:\s*470px\)[\s\S]*\.app-header \.header-brand\s*\{[^}]*width:\s*74px[\s\S]*grid-template-columns:[^;]*44px 58px/,
+  assert.match(siteHeaderCss, /@media \(max-width:\s*470px\)[\s\S]*\.site-header \.header-brand\s*\{[^}]*width:\s*74px[\s\S]*grid-template-columns:[^;]*44px 58px/,
     "the narrow game header must reserve non-overlapping tracks for its logo and controls");
-  assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*grid-template-columns:\s*50px 48px 44px 58px/,
+  assert.match(siteHeaderCss, /@media \(max-width:\s*360px\)[\s\S]*grid-template-columns:\s*50px 48px 44px 58px/,
     "the smallest game header tracks must fit within the available actions width");
   assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*#buildingsPanelTitle\s*\{[^}]*overflow-wrap:\s*anywhere/,
     "the localized production heading must wrap without widening the mobile game");
-  assert.match(css, /@media \(any-pointer:\s*coarse\)[\s\S]*\.app-header \.header-guides-link,[\s\S]*min-height:\s*44px/,
+  assert.match(siteHeaderCss, /@media \(any-pointer:\s*coarse\)[\s\S]*\.site-header \.header-guides-link,[\s\S]*min-height:\s*44px/,
     "the compact workshop link must retain a 44px coarse-pointer target");
-  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.header-guides-link,[\s\S]*transition:\s*none/,
+  assert.match(siteHeaderCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.header-guides-link,[\s\S]*transition:\s*none/,
     "the workshop link must honor the system reduced-motion preference");
   assert.match(dashboard, /class="header-guides-link data-zone-guides-link"[^>]*data-guides-link[^>]*href="\/guides\/"/,
     "the Data Science Zone header must expose the workshop before its footer");
@@ -217,14 +251,16 @@ function verifyStaticContracts() {
   }
   assert.match(guidesCss, /\.play-cta\s*\{[^}]*background:\s*var\(--orange\)/,
     "guide play CTAs must use the global primary-action orange");
-  assert.match(notFound, /rel="stylesheet" href="\/assets\/css\/guides\.css"/,
-    "the 404 page must reuse the lightweight Production Twin editorial styles");
+  assert.match(notFound, /rel="stylesheet" href="\/assets\/css\/guides\.css"[\s\S]*rel="stylesheet" href="\/assets\/css\/site-header\.css"/,
+    "the 404 page must combine editorial content styles with the global header chrome");
   assert.match(notFound, /href="\/guides\/">Guides de l’atelier<\/a>/,
     "the 404 recovery path must expose the workshop guides");
   assert.match(notFound, /var guidesPath = homePath \+ "guides\/"[\s\S]*querySelectorAll\("\[data-guides-link\]"\)/,
     "the 404 recovery links must preserve EN, DE and LB routes");
   assert.doesNotMatch(notFound, /#241b47|#0b0617|#fcd34d/,
     "the 404 page must not restore the retired violet and yellow palette");
+  assert.doesNotMatch(guidesCss, /guide-header/,
+    "editorial styles must not retain a second header implementation");
   assert.match(guidesCss, /--reading:\s*70ch/,
     "long-form guide copy must retain a readable measure");
   assert.match(guidesCss, /:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--night\)[^}]*box-shadow:\s*0 0 0 6px var\(--lime\)/,
@@ -233,8 +269,8 @@ function verifyStaticContracts() {
     "links on paper surfaces must retain a dark hover color");
   assert.match(guidesCss, /@media \(max-width:\s*600px\)[\s\S]*\.article-rail,[\s\S]*grid-template-columns:\s*1fr/,
     "guide sidebars and related content must collapse on narrow screens");
-  assert.match(guidesCss, /@media \(max-width:\s*600px\)[\s\S]*\.language-nav a\s*\{[^}]*min-inline-size:\s*44px[^}]*min-block-size:\s*44px/,
-    "guide language targets must remain at least 44px on narrow screens");
+  assert.match(siteHeaderCss, /@media \(any-pointer:\s*coarse\)[\s\S]*\.lang-select[\s\S]*min-height:\s*44px/,
+    "the shared language selector must retain a 44px coarse-pointer target");
   assert.match(guidesCss, /@media \(prefers-reduced-motion:\s*reduce\)/,
     "guides must respect reduced-motion preferences");
   assert.ok(
@@ -248,8 +284,8 @@ function verifyStaticContracts() {
   assert.match(guidesCss, /\.pref-reduce-motion \*,[\s\S]*transition:\s*none !important[\s\S]*animation:\s*none !important/,
     "guides must honor the saved reduced-motion preference");
   for (const inset of ["top", "right", "bottom", "left"]) {
-    assert.match(guidesCss, new RegExp(`env\\(safe-area-inset-${inset}\\)`),
-      `guides must consume the ${inset} safe-area inset`);
+    assert.match(guidesCss + siteHeaderCss, new RegExp(`env\\(safe-area-inset-${inset}\\)`),
+      `the editorial shell and shared header must consume the ${inset} safe-area inset`);
   }
   assert.match(css, /--hero-width:\s*1920px/,
     "the desktop production twin must retain its large-screen canvas budget");
@@ -310,8 +346,10 @@ function verifyStaticContracts() {
     "CSS-owned images and fonts must share the release stamp");
   assert.match(build, /CSS_FILES[\s\S]*replaceAll[\s\S]*renameSync\(cssPath, versionedPath\)/,
     "published CSS must use revisioned filenames instead of stable cache keys");
-  assert.match(build, /"guides\.css"/,
-    "the guide stylesheet must receive the same immutable release name as the game CSS");
+  for (const stylesheet of ["guides.css", "site-header.css"]) {
+    assert.match(build, new RegExp(`CSS_FILES\\s*=\\s*\\[[\\s\\S]*["']${stylesheet.replace(".", "\\.")}["']`),
+      `${stylesheet} must receive the same immutable release name as the game CSS`);
+  }
   assert.match(build, /function stampJavaScriptAssetUrls[\s\S]*three\.core\.min\.js/,
     "JavaScript imports and static assets must share the release stamp");
   assert.match(build, /function stampManifestAssets/,

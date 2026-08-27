@@ -142,6 +142,137 @@ function hreflangMap(html) {
   return Object.fromEntries(alternates.map(link => [link.attrs.hreflang, link.attrs.href]));
 }
 
+function classTokens(tag) {
+  return new Set((tag.attrs.class || "").split(/\s+/).filter(Boolean));
+}
+
+function tagsWithClass(html, name, className) {
+  return tags(html, name).filter(tag => classTokens(tag).has(className));
+}
+
+function siteHeaderBlock(html, pageUrl) {
+  const matches = [...html.matchAll(/<header\b[^>]*class=["']app-header site-header[^"']*["'][^>]*>[\s\S]*?<\/header>/gi)];
+  assert.equal(matches.length, 1, `${pageUrl} must expose one shared global header`);
+  const header = matches[0][0];
+  assert.match(header, /<div\b[^>]*class=["']header-inner["'][^>]*>[\s\S]*?<div\b[^>]*class=["']header-top["']/,
+    `${pageUrl} must retain header-inner > header-top hierarchy`);
+  assert.doesNotMatch(header, /guide-header/,
+    `${pageUrl} must not restore the retired editorial-only header`);
+  return header;
+}
+
+function localStyles(html) {
+  return linksByRel(html, "stylesheet")
+    .map(link => link.attrs.href)
+    .filter(path => path?.startsWith("/assets/css/"));
+}
+
+function assertVersionedStyles(html, expectedNames, pageUrl) {
+  const styles = localStyles(html);
+  assert.equal(styles.length, expectedNames.length,
+    `${pageUrl} must load exactly ${expectedNames.length} local stylesheets`);
+  expectedNames.forEach((name, index) => {
+    const escapedName = name.replace(".", "\\.");
+    assert.match(styles[index], new RegExp(`^/assets/css/${escapedName.replace("\\.css", "")}\\.[a-f0-9]+\\.css$`),
+      `${pageUrl} must load versioned ${name} in the shared cascade order`);
+    assert.ok(existsSync(new URL(`.${styles[index]}`, siteDir)),
+      `${pageUrl} references missing ${styles[index]}`);
+  });
+}
+
+function localScriptSources(html) {
+  return tags(html, "script")
+    .map(script => script.attrs.src)
+    .filter(path => path?.startsWith("/assets/"));
+}
+
+function assertLightweightHeaderRuntime(html, pageUrl) {
+  const scripts = localScriptSources(html);
+  assert.equal(scripts.length, 1,
+    `${pageUrl} must load only one local controller outside its editorial HTML`);
+  assert.match(scripts[0], /^\/assets\/js\/site-header\.js\?v=[a-f0-9]+$/,
+    `${pageUrl} must load only the revisioned shared-header controller`);
+  assert.ok(existsSync(new URL(`.${scripts[0].split("?")[0]}`, siteDir)),
+    `${pageUrl} references missing ${scripts[0]}`);
+}
+
+function validateSiteHeader(page, html) {
+  const header = siteHeaderBlock(html, page.url);
+  const styles = localStyles(html);
+  assert.equal(styles.filter(path => /^\/assets\/css\/site-header\.[a-f0-9]+\.css$/.test(path)).length, 1,
+    `${page.url} must load one immutable shared-header stylesheet`);
+
+  const webpLogo = tags(header, "source").find(source =>
+    source.attrs.srcset?.includes("/assets/brand/papers-empire-logo-v2-cutout.webp"));
+  const pngLogo = tags(header, "img").find(image =>
+    image.attrs.src?.startsWith("/assets/brand/papers-empire-logo-v2-cutout.png"));
+  assert.ok(webpLogo && pngLogo,
+    `${page.url} shared header must expose WebP and PNG variants of the painted logo`);
+
+  const workshopLinks = tagsWithClass(header, "a", "site-nav-guides");
+  assert.equal(workshopLinks.length, 1,
+    `${page.url} must expose one desktop workshop link in the shared header`);
+  const workshop = workshopLinks[0];
+  assert.equal(new URL(workshop.attrs.href, page.url).pathname, LOCALES[page.lang].hubPath,
+    `${page.url} shared header must target its localized workshop hub`);
+  if (page.kind === "hub" || page.kind === "article") {
+    assert.ok(classTokens(workshop).has("active"),
+      `${page.url} must show the workshop as its active global section`);
+    assert.equal(workshop.attrs["aria-current"], page.kind === "hub" ? "page" : "location",
+      `${page.url} must distinguish the workshop hub from an article location`);
+  }
+
+  const dataLinks = tagsWithClass(header, "a", "nav-dash-link");
+  assert.equal(dataLinks.length, 1,
+    `${page.url} must expose one Data Science Zone link in the shared header`);
+  if (page.kind !== "home") {
+    const dataUrl = new URL(dataLinks[0].attrs.href, page.url);
+    assert.equal(dataUrl.pathname, "/dashboard/",
+      `${page.url} Data Science Zone link must retain its canonical path`);
+    assert.equal(dataUrl.search, page.lang === "fr" ? "" : `?lang=${page.lang}`,
+      `${page.url} Data Science Zone link must preserve the editorial language`);
+  }
+
+  return header;
+}
+
+function validateHeaderLanguageAlternates(page, header) {
+  const selects = tagsWithClass(header, "select", "lang-select")
+    .filter(select => /\bdata-(?:language|locale)-select\b/.test(select.raw));
+  assert.equal(selects.length, 1,
+    `${page.url} must expose one shared language selector`);
+  const selectBlockMatch = header.match(new RegExp(`${selects[0].raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([\\s\\S]*?)<\\/select>`));
+  assert.ok(selectBlockMatch, `${page.url} language selector must close`);
+  const options = [...selectBlockMatch[0].matchAll(/<option\b([^>]*)>([^<]*)<\/option>/gi)]
+    .map((match) => ({
+      raw: match[0].slice(0, match[0].indexOf(">") + 1),
+      attrs: parseAttributes(`<option ${match[1]}>`),
+      label: match[2].trim(),
+    }));
+  assert.equal(options.length, localeCodes.length,
+    `${page.url} language selector must expose every locale exactly once`);
+
+  const byLanguage = new Map();
+  for (const option of options) {
+    const lang = option.attrs["data-lang"] || option.label.toLowerCase();
+    assert.ok(localeCodes.includes(lang), `${page.url} language option needs a supported data-lang`);
+    assert.equal(byLanguage.has(lang), false, `${page.url} must not duplicate ${lang} in its language selector`);
+    assert.ok(option.attrs.value, `${page.url} ${lang} language option needs an alternate URL`);
+    byLanguage.set(lang, option);
+  }
+
+  for (const lang of localeCodes) {
+    const option = byLanguage.get(lang);
+    assert.ok(option, `${page.url} language selector is missing ${lang}`);
+    assert.equal(new URL(option.attrs.value, page.url).href, page.alternates[lang],
+      `${page.url} ${lang} selector option must preserve the equivalent editorial page`);
+  }
+  const selected = options.filter(option => /\sselected(?:\s|>|=)/i.test(option.raw));
+  assert.equal(selected.length, 1, `${page.url} language selector needs one selected option`);
+  assert.equal(selected[0].attrs["data-lang"] || selected[0].label.toLowerCase(), page.lang,
+    `${page.url} language selector must select its current locale`);
+}
+
 function loadDictionary(lang) {
   const source = readRoot(`assets/i18n/${lang}.js`);
   const window = { I18N: {} };
@@ -212,6 +343,7 @@ function validateCommon(page, html) {
     `${page.url} title must remain concise`);
   assert.ok(page.description.length >= 100 && page.description.length <= 180,
     `${page.url} description must remain useful`);
+  validateSiteHeader(page, html);
 
   const alternates = hreflangMap(html);
   assert.deepEqual(Object.keys(alternates).sort(), [...localeCodes, "x-default"].sort(),
@@ -241,6 +373,7 @@ function validateHome(page, html) {
   const dict = loadDictionary(page.lang);
   assert.equal(dict["app.metaTitle"], page.title,
     `${page.lang} runtime title must match the static head`);
+  assertVersionedStyles(html, ["style.css", "site-header.css", "experience-v4.css"], page.url);
   for (const key of ["nav.guides", "nav.guidesShort"]) {
     const renderedGuideLabel = html.match(new RegExp(`data-i18n="${key.replaceAll(".", "\\.")}"[^>]*>([^<]+)<`))?.[1];
     assert.equal(renderedGuideLabel, dict[key],
@@ -283,8 +416,9 @@ function validateGuide(page, html) {
   assert.match(html, /class="skip-link" href="#main"/, `${page.url} must expose a skip link`);
   assert.match(html, new RegExp(`class="breadcrumbs"[^>]*aria-label="${LOCALES[page.lang].ui.breadcrumbLabel}"[\\s\\S]*<ol>`),
     `${page.url} must expose an ordered visible breadcrumb`);
-  assert.doesNotMatch(html, /assets\/js\/(?:app|scene|persistence|events)|three\.module/,
-    `${page.url} must not load the game runtime`);
+  assertVersionedStyles(html, ["guides.css", "site-header.css"], page.url);
+  assertLightweightHeaderRuntime(html, page.url);
+  validateHeaderLanguageAlternates(page, siteHeaderBlock(html, page.url));
   assert.doesNotMatch(html, /tabindex=["'][1-9]/,
     `${page.url} must not alter keyboard order`);
 
@@ -303,7 +437,9 @@ function validateGuide(page, html) {
 
   const localAssets = [
     ...tags(html, "img").map(tag => tag.attrs.src),
+    ...tags(html, "source").map(tag => tag.attrs.srcset),
     ...linksByRel(html, "stylesheet").map(tag => tag.attrs.href),
+    ...localScriptSources(html),
   ].filter(path => path?.startsWith("/assets/")).map(path => path.split("?")[0]);
   for (const path of localAssets) {
     assert.ok(existsSync(new URL(`.${path}`, siteDir)), `${page.url} references missing ${path}`);
@@ -376,14 +512,10 @@ for (const page of PAGES) {
 }
 
 const notFound = readSite("404.html");
-const notFoundStyles = linksByRel(notFound, "stylesheet")
-  .map(link => link.attrs.href)
-  .filter(path => path?.startsWith("/assets/"));
-assert.equal(notFoundStyles.length, 1, "the 404 page must load one local editorial stylesheet");
-assert.match(notFoundStyles[0], /^\/assets\/css\/guides\.[a-f0-9]+\.css$/,
-  "the built 404 page must load the versioned workshop stylesheet");
-assert.ok(existsSync(new URL(`.${notFoundStyles[0]}`, siteDir)),
-  `the built 404 page references missing ${notFoundStyles[0]}`);
+const notFoundPage = { kind: "404", lang: "fr", url: `${SITE_ORIGIN}/404.html` };
+validateSiteHeader(notFoundPage, notFound);
+assertVersionedStyles(notFound, ["guides.css", "site-header.css"], notFoundPage.url);
+assertLightweightHeaderRuntime(notFound, notFoundPage.url);
 const notFoundGuideLink = tags(notFound, "a").find(anchor => anchor.attrs.href === "/guides/");
 assert.ok(notFoundGuideLink, "the built 404 page must retain a workshop recovery link");
 

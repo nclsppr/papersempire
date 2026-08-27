@@ -1,6 +1,6 @@
 # Architecture
 
-Cette page décrit le contrat technique de Papers Empire 0.25.1. Elle résume les
+Cette page décrit le contrat technique de Papers Empire 0.25.2. Elle résume les
 modules clés, les deux états de l'expérience, les flux locaux de données et les
 limites de la Data Science Zone.
 
@@ -9,13 +9,15 @@ limites de la Data Science Zone.
 - **HTML** : `index.html` porte le sas d'entrée et l'application de jeu ;
   `dashboard/index.html` porte la Data Science Zone autonome ; les hubs et
   articles `/guides/` sont générés en HTML statique depuis le catalogue
-  éditorial.
+  éditorial. L’accueil, les guides et la 404 exposent la même structure de
+  header global, avec des destinations rendues pour la langue courante.
 - **CSS** : `assets/css/style.css` conserve les fondations historiques et la
   couche V4 applique le monde « Production Twin », le passage landing/jeu, le
-  responsive et les préférences `pref-*`. La release les publie sous
-  `style.<sha>.css` et `experience-v4.<sha>.css` afin que chaque révision utilise
-  une nouvelle clé de cache. `guides.<sha>.css` fournit une surface de lecture
-  légère sans charger le CSS complet du jeu.
+  responsive et les préférences `pref-*`. `site-header.css` est la source
+  commune du logo, du shell sticky, de la navigation et de leurs breakpoints.
+  La release publie ces feuilles sous des noms `*.<sha>.css` afin que chaque
+  révision utilise une nouvelle clé de cache. `guides.<sha>.css` reste limitée
+  à la surface de lecture et ne charge pas le CSS complet du jeu.
 - **JavaScript** :
   - `app.js` : boucle de jeu, projection DOM, contrôleur d'expérience et
     snapshots analytiques ;
@@ -89,6 +91,7 @@ sequenceDiagram
 | `assets/js/asset-url.js` | Propage la révision du build aux assets dont le nom est assemblé au runtime |
 | `assets/js/scene/*.js` | Production twin procédural (enrichissement progressif) |
 | `assets/vendor/three.module.min.js` | three.js **0.185.1** vendored (+ `three.core.min.js`, importé par le premier) |
+| `assets/css/site-header.css` | Header global partagé par l’accueil, les guides et la 404 |
 | `scripts/build-site.sh` | Assemblage reproductible du jeu et de la documentation |
 | `content/guides/index.mjs` | Catalogue, traductions, sources et métadonnées des Guides de l'atelier |
 | `scripts/build-guides.mjs` | Génération des hubs, articles, données structurées et sitemap |
@@ -103,9 +106,11 @@ en parallèle.
 
 Chaque famille de pages possède des alternates `fr`/`en`/`de`/`lb` réciproques
 et un `x-default` français. Les articles exposent `Article` et
-`BreadcrumbList`, le hub `CollectionPage` et `ItemList`. Les guides ne chargent
-ni `app.js`, ni les catalogues i18n du jeu, ni Three.js : le contenu principal,
-les langues et la navigation sont entièrement rendus au build.
+`BreadcrumbList`, le hub `CollectionPage` et `ItemList`. Le générateur rend le
+header global, ses actions localisées et l’état actif de l’Atelier sur le hub
+comme sur les articles. Les guides ne chargent ni `app.js`, ni les catalogues
+i18n du navigateur, ni Three.js : le contenu principal, les langues et les
+destinations de navigation sont rendus au build.
 
 ### Scène 3D partagée (`assets/js/scene/`)
 

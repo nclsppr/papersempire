@@ -15,13 +15,23 @@
     var language = ["en", "de", "lb"].indexOf(locale) === -1 ? "fr" : locale;
     var homePath = language === "fr" ? "/" : "/" + language + "/";
     var guidesPath = homePath + "guides/";
+    var dashboardPath = language === "fr" ? "/dashboard/" : "/dashboard/?lang=" + language;
 
     document.addEventListener("DOMContentLoaded", function () {
       document.querySelectorAll("[data-home-link]").forEach(function (link) {
         link.href = homePath;
       });
+      document.querySelectorAll("[data-home-anchor]").forEach(function (link) {
+        link.href = homePath + "?welcome=1#" + link.dataset.homeAnchor;
+      });
       document.querySelectorAll("[data-guides-link]").forEach(function (link) {
         link.href = guidesPath;
+      });
+      document.querySelectorAll("[data-dashboard-link]").forEach(function (link) {
+        link.href = dashboardPath;
+      });
+      document.querySelectorAll("[data-locale-select]").forEach(function (select) {
+        select.value = homePath;
       });
     });
 
@@ -38,21 +48,49 @@
   })();
   </script>
   <link rel="stylesheet" href="/assets/css/guides.css">
+  <link rel="stylesheet" href="/assets/css/site-header.css">
+  <script defer src="/assets/js/site-header.js"></script>
 </head>
 <body class="error-page">
   <a class="skip-link" href="#main">Aller au contenu</a>
-  <header class="guide-header">
-    <div class="guide-header__inner">
-      <a class="guide-brand" data-home-link href="/" aria-label="Papers Empire · Jouer">
-        <picture>
-          <source srcset="/assets/brand/papers-empire-logo-v2-cutout.webp" type="image/webp">
-          <img src="/assets/brand/papers-empire-logo-v2-cutout.png" width="700" height="560" alt="" decoding="async">
-        </picture>
-      </a>
-      <nav class="guide-nav" aria-label="Navigation principale">
-        <a data-home-link href="/">Jouer</a>
-        <a data-guides-link href="/guides/">Guides de l’atelier</a>
-      </nav>
+  <header class="app-header site-header site-header--editorial">
+    <div class="header-inner">
+      <div class="header-top">
+        <a class="header-brand" data-home-link href="/" aria-label="Papers Empire · Jouer">
+          <picture class="brand-picture">
+            <source srcset="/assets/brand/papers-empire-logo-v2-cutout.webp" type="image/webp">
+            <img class="brand-lockup" src="/assets/brand/papers-empire-logo-v2-cutout.png" width="700" height="560" alt="" decoding="async">
+          </picture>
+          <span class="sr-only">Papers Empire</span>
+        </a>
+        <nav class="primary-nav" aria-label="Navigation principale">
+          <a class="landing-nav-only" data-home-anchor="sceneStage" href="/?welcome=1#sceneStage">Usine 3D</a>
+          <a class="landing-nav-only" data-home-anchor="roadmapTitle" href="/?welcome=1#roadmapTitle">Le jeu</a>
+          <a class="site-nav-guides" data-guides-link href="/guides/">Guides de l’atelier</a>
+        </nav>
+        <div class="header-actions">
+          <a class="header-guides-link home-guides-link" data-guides-link href="/guides/" aria-label="Guides de l’atelier">
+            <svg class="header-guides-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+              <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Zm16 0A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z"/>
+            </svg>
+            <span>L’atelier</span>
+          </a>
+          <a class="nav-dash-link" data-dashboard-link href="/dashboard/">
+            <picture class="nav-brand-emblem" aria-hidden="true">
+              <source srcset="/assets/brand/data-science-zone-emblem-v2-cutout.webp" type="image/webp">
+              <img src="/assets/brand/data-science-zone-emblem-v2-cutout.png" width="512" height="512" alt="" decoding="async">
+            </picture>
+            <span>Data Science Zone</span>
+          </a>
+          <a class="header-play-link" data-home-anchor="sceneStage" href="/?welcome=1#sceneStage">Jouer maintenant</a>
+          <select class="lang-select" aria-label="Choisir une langue" data-locale-select>
+            <option value="/">FR</option>
+            <option value="/en/">EN</option>
+            <option value="/de/">DE</option>
+            <option value="/lb/">LB</option>
+          </select>
+        </div>
+      </div>
     </div>
   </header>
 

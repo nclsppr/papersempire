@@ -8,7 +8,8 @@ Papers Empire is a static browser game. It has no application bundler or backend
 - `dashboard/index.html` contains the Data Science Zone.
 - `content/guides/index.mjs` is the single source for the four-language workshop guide catalog.
 - `assets/css/style.css` contains the shared CSS foundations. `assets/css/experience-v4.css` contains the current interface layer.
-- `assets/css/guides.css` contains the standalone long-form guide interface.
+- `assets/css/site-header.css` is the source of truth for the global header used by the home page, workshop guides, and 404 page.
+- `assets/css/guides.css` contains the standalone long-form guide interface below the shared header.
 - `assets/js/` contains the game, dashboard, persistence, accessibility, events, tutorial, analytics, and Three.js modules.
 - `assets/i18n/{fr,en,de,lb}.js` contains the translated game and dashboard interface strings.
 - `assets/brand/` contains the active Papers Empire logo and Data Science Zone emblem. Source masters stay under `assets/brand/sources/`.
@@ -23,6 +24,8 @@ Papers Empire is a static browser game. It has no application bundler or backend
 - When game or dashboard copy changes, update all four i18n catalogs and the matching static French fallback in the HTML. Keep all four guide translations together in `content/guides/index.mjs`.
 - Do not rename building IDs, storage keys, or saved fields without a migration.
 - Read `docs/design-system.md` before changing the interface or brand assets.
+- Keep global-header structure, logo sizing, sticky behavior, and responsive breakpoints in `assets/css/site-header.css`; do not recreate a page-specific visual equivalent.
+- Keep workshop pages statically rendered and lightweight. A shared header must not pull in the game runtime, browser i18n catalogs, or Three.js.
 - Keep keyboard focus, reduced motion, high contrast, and 44 px touch targets working.
 - Do not invent product claims, financial metrics, social proof, or future work.
 - Write interface and documentation copy in direct, concrete sentences. Remove generic marketing language, decorative emoji, and filler headings.
