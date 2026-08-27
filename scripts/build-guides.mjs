@@ -11,6 +11,7 @@ import {
   absolute,
   articlePath,
 } from "../content/guides/index.mjs";
+import { loadDictionary } from "./i18n-loader.mjs";
 
 const [siteDir, stamp = ""] = process.argv.slice(2);
 if (!siteDir) {
@@ -45,8 +46,8 @@ function versioned(path) {
   return stamp ? `${path}?v=${stamp}` : path;
 }
 
-function cssPath() {
-  return `/assets/css/${stamp ? `guides.${stamp}.css` : "guides.css"}`;
+function cssPath(name) {
+  return `/assets/css/${stamp ? `${name}.${stamp}.css` : `${name}.css`}`;
 }
 
 function assertCatalog() {
@@ -143,7 +144,9 @@ ${alternateLinks(article)}
     }
   })();
   </script>
-  <link rel="stylesheet" href="${cssPath()}">
+  <link rel="stylesheet" href="${cssPath("guides")}">
+  <link rel="stylesheet" href="${cssPath("site-header")}">
+  <script defer src="${versioned("/assets/js/site-header.js")}"></script>
   <meta property="og:type" content="${type}">
   <meta property="og:site_name" content="Papers Empire">
   <meta property="og:title" content="${escapeAttr(title)}">
@@ -167,30 +170,60 @@ ${jsonLd(structuredData)}
 </head>`;
 }
 
-function languageLinks(article, lang) {
-  const alternates = alternateMap(article);
+function languageOptions(article, lang) {
+  const alternates = Object.fromEntries(localeCodes.map(code => [
+    code,
+    article ? articlePath(article, code) : LOCALES[code].hubPath,
+  ]));
   return localeCodes.map(code => {
-    const active = code === lang ? ' aria-current="page"' : "";
-    return `<a href="${escapeAttr(alternates[code])}" hreflang="${code}" lang="${code}"${active}>${LOCALES[code].label}</a>`;
-  }).join("");
+    const selected = code === lang ? " selected" : "";
+    return `<option value="${escapeAttr(alternates[code])}"${selected}>${LOCALES[code].label}</option>`;
+  }).join("\n          ");
 }
 
 function shellStart({ lang, article = null }) {
   const locale = LOCALES[lang];
-  return `<body>
+  const dictionary = loadDictionary(lang);
+  const welcomePath = `${locale.homePath}?welcome=1`;
+  const current = article ? "location" : "page";
+  const dashboardPath = lang === "fr" ? "/dashboard/" : `/dashboard/?lang=${lang}`;
+  return `<body class="editorial-shell">
   <a class="skip-link" href="#main">${escapeHtml(locale.ui.skip)}</a>
-  <header class="guide-header">
-    <div class="guide-header__inner">
-      <a class="guide-brand" href="${locale.homePath}" aria-label="Papers Empire · ${escapeAttr(locale.ui.home)}">
-        <img src="${versioned("/assets/brand/papers-empire-logo-v2-cutout.webp")}" width="175" height="140" alt="" decoding="async">
-      </a>
-      <nav class="guide-nav" aria-label="${escapeAttr(locale.ui.guides)}">
-        <a href="${locale.homePath}">${escapeHtml(locale.ui.home)}</a>
-        <a href="${locale.hubPath}"${article ? "" : ' aria-current="page"'}>${escapeHtml(locale.ui.guides)}</a>
-      </nav>
-      <nav class="language-nav" aria-label="${escapeAttr(locale.ui.language)}">
-        ${languageLinks(article, lang)}
-      </nav>
+  <header class="app-header site-header site-header--editorial">
+    <div class="header-inner">
+      <div class="header-top">
+        <a class="header-brand" href="${welcomePath}#sceneStage" aria-label="Papers Empire · ${escapeAttr(locale.ui.home)}">
+          <picture class="brand-picture">
+            <source srcset="${versioned("/assets/brand/papers-empire-logo-v2-cutout.webp")}" type="image/webp">
+            <img class="brand-lockup" src="${versioned("/assets/brand/papers-empire-logo-v2-cutout.png")}" width="700" height="560" alt="" decoding="async">
+          </picture>
+          <span class="sr-only">Papers Empire</span>
+        </a>
+        <nav class="primary-nav" aria-label="${escapeAttr(dictionary["nav.primaryLabel"])}">
+          <a class="landing-nav-only" href="${welcomePath}#sceneStage">${escapeHtml(dictionary["nav.factory"])}</a>
+          <a class="landing-nav-only" href="${welcomePath}#roadmapTitle">${escapeHtml(dictionary["nav.gameOverview"])}</a>
+          <a class="site-nav-guides active" href="${locale.hubPath}" aria-current="${current}">${escapeHtml(dictionary["nav.guides"])}</a>
+        </nav>
+        <div class="header-actions">
+          <a class="header-guides-link home-guides-link active" href="${locale.hubPath}" aria-current="${current}" aria-label="${escapeAttr(dictionary["nav.guides"])}">
+            <svg class="header-guides-icon" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+              <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Zm16 0A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z"/>
+            </svg>
+            <span>${escapeHtml(dictionary["nav.guidesShort"])}</span>
+          </a>
+          <a class="nav-dash-link" href="${dashboardPath}">
+            <picture class="nav-brand-emblem" aria-hidden="true">
+              <source srcset="${versioned("/assets/brand/data-science-zone-emblem-v2-cutout.webp")}" type="image/webp">
+              <img src="${versioned("/assets/brand/data-science-zone-emblem-v2-cutout.png")}" width="512" height="512" alt="" decoding="async">
+            </picture>
+            <span>${escapeHtml(dictionary["nav.dashboard"])}</span>
+          </a>
+          <a class="header-play-link" href="${welcomePath}#sceneStage">${escapeHtml(dictionary["actions.playNow"])}</a>
+          <select class="lang-select" aria-label="${escapeAttr(dictionary["actions.languageLabel"])}" data-locale-select>
+          ${languageOptions(article, lang)}
+          </select>
+        </div>
+      </div>
     </div>
   </header>`;
 }

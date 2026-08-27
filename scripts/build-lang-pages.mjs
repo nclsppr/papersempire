@@ -12,6 +12,7 @@
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { join } from "node:path";
+import { loadDictionary } from "./i18n-loader.mjs";
 
 const [siteDir, stamp] = process.argv.slice(2);
 if (!siteDir) {
@@ -21,7 +22,7 @@ if (!siteDir) {
 
 const CANON = "https://papersempire.com";
 const LANGS = ["en", "de", "lb"];
-const CSS_FILES = ["style.css", "experience-v4.css", "guides.css"];
+const CSS_FILES = ["style.css", "site-header.css", "experience-v4.css", "guides.css"];
 
 const META = {
   en: {
@@ -183,14 +184,6 @@ const PREFILLED_KEYS = [
   "footer.source",
 ];
 
-/** Charge un dictionnaire i18n du jeu dans Node (fichiers window.I18N.xx). */
-function loadDict(lang) {
-  const src = readFileSync(join(process.cwd(), "assets/i18n", `${lang}.js`), "utf8");
-  const window = { I18N: {} };
-  new Function("window", src)(window);
-  return window.I18N[lang];
-}
-
 function escapeAttr(s) {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
@@ -203,7 +196,7 @@ const rootHtml = readFileSync(join(siteDir, "index.html"), "utf8");
 
 function localize(html, lang) {
   const m = META[lang];
-  const dict = loadDict(lang);
+  const dict = loadDictionary(lang);
 
   html = html.replace('<html lang="fr">', `<html lang="${lang}">`);
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(m.title)}</title>`);

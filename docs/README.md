@@ -1,6 +1,6 @@
 # Papers Empire
 
-Papers Empire is a browser-based incremental game that runs entirely in the browser. You modernise an industrial print shop through eleven production units, contracts and a prestige loop. Current version: **0.25.1**.
+Papers Empire is a browser-based incremental game that runs entirely in the browser. You modernise an industrial print shop through eleven production units, contracts and a prestige loop. Current version: **0.25.2**.
 
 The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier maintenance. Additional helper modules power the modifier builder math and god-mode utilities so they can be unit-tested in isolation.
 
@@ -90,9 +90,15 @@ Track meaningful milestones in the project:
   quatre langues, avec auteur et transparence visibles, sources officielles,
   illustrations originales, schémas Article et sitemap généré depuis le même
   catalogue éditorial.
-- **0.25.1** — Le jeu, la Data Science Zone et la page 404 rendent l’Atelier
-  visible avant le footer et alignent leur chrome, leurs libellés et leurs
-  actions sur le même contrat Production Twin.
+- **0.25.1** — L’Atelier devient visible dans la navigation du jeu, y compris
+  sur mobile, et depuis la Data Science Zone. La 404 adopte la palette et le
+  logo Production Twin ; les guides conservent encore leur header éditorial
+  distinct.
+- **0.25.2** — Correctif de cohérence : l’accueil, les hubs et articles de
+  l’Atelier ainsi que la 404 partagent le vrai header global fourni par
+  `site-header.css` — même shell sticky, logo peint, breakpoints et actions
+  localisées. L’Atelier reste actif sur ses articles sans charger le runtime du
+  jeu.
 
 When you make notable changes (new features, mechanics, UI improvements), append a new entry with an incremented version number and a short description of what changed.
 

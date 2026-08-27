@@ -41,8 +41,11 @@ et les données racontent la même usine : le **production twin**.
 - **0.25.0 — Guides de l’atelier** : hub éditorial et trois guides en quatre
   langues, illustrations Production Twin, schémas Article et sitemap généré.
 - **0.25.1 — Atelier visible partout** : navigation persistante dans le jeu et
-  sur mobile, accès depuis la Data Science Zone et 404 alignée sur Production
-  Twin.
+  sur mobile, accès depuis la Data Science Zone et 404 passée dans la palette
+  Production Twin ; le header des guides reste alors distinct.
+- **0.25.2 — Header global partagé** : accueil, Atelier et 404 réunis par
+  `site-header.css`, avec le même shell sticky, le même logo, les mêmes
+  breakpoints et des actions localisées.
 
 ## 0.25 — Guides de l’atelier
 
@@ -53,6 +56,10 @@ et les données racontent la même usine : le **production twin**.
 - [x] Illustrations originales 1200 × 630 sans texte ni marque concurrente.
 - [x] Canonicals, hreflang, JSON-LD et sitemap dérivés du même catalogue.
 - [x] Lecture responsive, tableaux défilables, clavier et mouvement réduit.
+- [x] Header global partagé avec l’accueil et la 404 ; rubrique Atelier active
+      sur les hubs et les articles.
+- [x] Shell éditorial léger, sans runtime de jeu, catalogue i18n navigateur ni
+      Three.js.
 
 ## 0.24 — Dossier du moment
 

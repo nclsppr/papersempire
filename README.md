@@ -2,7 +2,7 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
-Current version: **0.25.1**.
+Current version: **0.25.2**.
 
 [Play Papers Empire](https://papersempire.com/) — free in the browser, with no account required.
 

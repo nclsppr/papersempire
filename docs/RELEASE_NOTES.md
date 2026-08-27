@@ -1,5 +1,21 @@
 # Release Notes
 
+## 0.25.2 — Header global partagé — 2026-08-27
+
+- L’accueil, les hubs et articles des Guides de l’atelier ainsi que la page 404
+  utilisent désormais le même shell de header et la même source de styles,
+  `site-header.css`, au lieu de maintenir un header éditorial parallèle.
+- Le logo peint conserve la même taille et le header le même comportement
+  sticky aux breakpoints desktop et mobile. Les actions de navigation suivent
+  la langue de la page et la rubrique Atelier reste active sur le hub comme sur
+  chaque article.
+- Les guides conservent leur feuille de lecture dédiée et leur rendu statique :
+  le header partagé n’importe ni `app.js`, ni les catalogues i18n du navigateur,
+  ni Three.js ou la simulation.
+- Les contrats de résilience et de build vérifient la structure commune, la
+  feuille `site-header.<sha>.css`, les routes localisées et l’absence du runtime
+  du jeu sur les pages éditoriales.
+
 ## 0.25.1 — Un Atelier visible partout — 2026-08-27
 
 - Les Guides de l’atelier restent accessibles dans le header avant et après
@@ -9,7 +25,8 @@
 - Le shell des guides emploie le nom complet de la rubrique et l’orange commun
   pour les appels à jouer. La page 404 rejoint la palette, la typographie et le
   logo Production Twin, avec des chemins de récupération vers le jeu et les
-  guides.
+  guides. Cette version ne partage pas encore le header de l’accueil avec les
+  pages éditoriales ; cette incohérence est corrigée en 0.25.2.
 - Les contrôles de résilience vérifient désormais la position, le breakpoint,
   la cible tactile, la localisation et les rôles de couleur de ces accès.
 
