@@ -78,6 +78,7 @@ const PREFILLED_KEYS = [
   "nav.factory",
   "nav.gameOverview",
   "nav.guides",
+  "nav.guidesShort",
   "nav.production",
   "nav.buildings",
   "nav.upgrades",

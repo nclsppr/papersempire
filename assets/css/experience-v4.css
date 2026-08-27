@@ -470,6 +470,10 @@ html[data-experience="playing"] body {
   color: #fff7e6;
 }
 
+.data-zone-shell .data-zone-guides-link {
+  min-height: 44px;
+}
+
 .data-zone-shell .data-zone {
   width: min(100%, 1500px);
   display: block;
@@ -1725,6 +1729,24 @@ html[data-experience="playing"] body {
   .data-state-chip {
     min-width: 0;
     flex: 1;
+  }
+
+  .data-zone-header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .data-zone-header-actions .data-state-chip {
+    grid-column: 1 / -1;
+  }
+
+  .data-zone-header-actions .data-zone-guides-link,
+  .data-zone-header-actions .nav-dash-link {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
   }
 
   .data-zone-header .nav-dash-link {

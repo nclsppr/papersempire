@@ -190,9 +190,16 @@
     });
 
     const gamePath = state.lang === "fr" ? "/" : "/" + encodeURIComponent(state.lang) + "/";
+    const guidesPath = gamePath + "guides/";
     if (els && els.backToGameLink) els.backToGameLink.href = gamePath;
+    document.querySelectorAll("[data-home-link]").forEach(function (link) {
+      link.href = gamePath;
+    });
     document.querySelectorAll(".data-zone-footer a[href='/']").forEach(function (link) {
       link.href = gamePath;
+    });
+    document.querySelectorAll("[data-guides-link]").forEach(function (link) {
+      link.href = guidesPath;
     });
   }
 

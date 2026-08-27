@@ -16,7 +16,7 @@ export const LOCALES = Object.freeze({
     ui: {
       skip: "Aller au contenu",
       home: "Jouer",
-      guides: "Guides",
+      guides: "Guides de l’atelier",
       language: "Langues",
       breadcrumbHome: "Papers Empire",
       breadcrumbHub: "Guides de l’atelier",
@@ -46,7 +46,7 @@ export const LOCALES = Object.freeze({
     ui: {
       skip: "Skip to content",
       home: "Play",
-      guides: "Guides",
+      guides: "Workshop guides",
       language: "Languages",
       breadcrumbHome: "Papers Empire",
       breadcrumbHub: "Workshop Guides",
@@ -76,7 +76,7 @@ export const LOCALES = Object.freeze({
     ui: {
       skip: "Zum Inhalt springen",
       home: "Spielen",
-      guides: "Guides",
+      guides: "Werkstatt-Guides",
       language: "Sprachen",
       breadcrumbHome: "Papers Empire",
       breadcrumbHub: "Werkstatt-Guides",
@@ -106,7 +106,7 @@ export const LOCALES = Object.freeze({
     ui: {
       skip: "Bei den Inhalt sprangen",
       home: "Spillen",
-      guides: "Guiden",
+      guides: "Atelier-Guiden",
       language: "Sproochen",
       breadcrumbHome: "Papers Empire",
       breadcrumbHub: "Atelier-Guiden",

@@ -3214,6 +3214,52 @@ body {
   flex: 0 0 auto;
 }
 
+.header-guides-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 37px;
+  gap: 7px;
+  padding: 4px 11px;
+  border: 1px solid rgba(217, 194, 154, 0.45);
+  border-radius: 5px;
+  background: rgba(253, 248, 236, 0.08);
+  color: var(--paper-bright);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, transform 100ms ease;
+}
+
+.header-guides-link:hover {
+  border-color: var(--accent);
+  background: rgba(239, 109, 44, 0.16);
+  color: #fff7e6;
+  transform: translateY(-1px);
+}
+
+.header-guides-link:active {
+  transform: translateY(1px);
+}
+
+.header-guides-link:focus-visible {
+  outline: 2px solid var(--paper-bright);
+  outline-offset: 3px;
+}
+
+.header-guides-icon {
+  flex: 0 0 auto;
+  fill: currentColor;
+}
+
+.home-guides-link {
+  display: none;
+}
+
 .header-play-link {
   display: inline-flex;
   align-items: center;
@@ -4156,6 +4202,7 @@ body {
 }
 
 .pref-high-contrast .primary-nav a,
+.pref-high-contrast .header-guides-link,
 .pref-high-contrast .app-header .nav-dash-link,
 .pref-high-contrast .app-header .icon-button,
 .pref-high-contrast .app-header .lang-select,
@@ -4258,6 +4305,20 @@ body {
   }
 }
 
+@media (max-width: 1080px) {
+  .primary-nav {
+    display: none;
+  }
+
+  .home-guides-link {
+    display: inline-flex;
+  }
+
+  .header-actions {
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 960px) {
   .app-header {
     min-height: 64px;
@@ -4271,14 +4332,6 @@ body {
     top: -10px;
     width: 168px;
     height: 134px;
-  }
-
-  .primary-nav {
-    display: none;
-  }
-
-  .header-actions {
-    margin-left: auto;
   }
 
   .stage {
@@ -4366,6 +4419,12 @@ body {
     min-height: 38px;
     padding-inline: 11px;
     font-size: 0.65rem;
+  }
+
+  .header-guides-link {
+    min-height: 38px;
+    padding-inline: 9px;
+    font-size: 0.64rem;
   }
 
   .app-header .icon-button {
@@ -4568,12 +4627,69 @@ body {
 }
 
 @media (max-width: 470px) {
+  body:not(.data-zone-shell) .header-top {
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  body:not(.data-zone-shell) .app-header .header-brand {
+    width: 74px;
+  }
+
+  body:not(.data-zone-shell) .app-header .brand-picture {
+    top: 0;
+    width: 74px;
+    height: 60px;
+  }
+
   .header-play-link {
     display: none;
   }
 
-  .header-actions {
+  body:not(.data-zone-shell) .header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr) 44px 58px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
     gap: 6px;
+    margin-left: 0;
+  }
+
+  body:not(.data-zone-shell) .home-guides-link {
+    grid-column: 1;
+  }
+
+  body:not(.data-zone-shell) .header-guides-link {
+    min-width: 0;
+    gap: 4px;
+    padding-inline: 4px;
+    font-size: 0.55rem;
+    letter-spacing: 0.03em;
+    white-space: normal;
+  }
+
+  body:not(.data-zone-shell) .app-header .nav-dash-link {
+    grid-column: 2;
+    max-width: none;
+    min-width: 0;
+    gap: 4px;
+    padding-inline: 3px;
+    font-size: 0.52rem;
+  }
+
+  body:not(.data-zone-shell) .app-header .nav-brand-emblem {
+    width: 24px;
+    height: 24px;
+  }
+
+  body:not(.data-zone-shell) .app-header .icon-button {
+    grid-column: 3;
+  }
+
+  body:not(.data-zone-shell) .app-header .lang-select {
+    grid-column: 4;
   }
 
   .stage {
@@ -4649,8 +4765,26 @@ body {
   }
 }
 
+@media (max-width: 360px) {
+  body:not(.data-zone-shell) .header-actions {
+    grid-template-columns: 50px 48px 44px 58px;
+    gap: 4px;
+  }
+
+  body:not(.data-zone-shell) .header-guides-link {
+    font-size: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  body:not(.data-zone-shell) .header-guides-icon,
+  body:not(.data-zone-shell) .app-header .nav-brand-emblem {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .header-brand,
+  .header-guides-link,
   .primary-nav a::after,
   .header-play-link,
   .hero-primary {
@@ -6365,6 +6499,10 @@ html.pref-reduce-motion {
     gap: 10px;
   }
 
+  #buildingsPanelTitle {
+    overflow-wrap: anywhere;
+  }
+
   .progress-card .panel-heading {
     grid-template-columns: 34px minmax(0, 1fr);
   }
@@ -6518,6 +6656,7 @@ html.pref-reduce-motion {
   }
 
   .app-header .header-play-link,
+  .app-header .header-guides-link,
   .app-header .nav-dash-link,
   .app-header .icon-button,
   .app-header .lang-select {

@@ -49,6 +49,24 @@ La scène Three.js, les miniatures de machines et la Data Science Zone doivent
 parler de la même usine. Une machine ne change pas arbitrairement de silhouette,
 de palette ou de rôle entre ces trois lectures.
 
+### Chrome global et registre éditorial
+
+Le jeu, la Data Science Zone, les Guides de l’atelier et les pages de récupération
+appartiennent au même site, même lorsque leur densité diffère.
+
+- Le logo peint, la nuit acier, le papier ivoire, l’orange d’action et la
+  typographie de titre relient toutes les surfaces publiques.
+- « Guides de l’atelier » reste accessible avant le footer, dans les états
+  landing et jeu ainsi que sur mobile. La Data Science Zone expose le même
+  chemin et conserve la langue active.
+- Le shell éditorial reste léger et autonome : il reprend les rôles de couleur,
+  le focus, les cibles tactiles et la marque sans charger la simulation ni
+  Three.js.
+- Les appels à jouer utilisent l’orange d’action. Le vert reste réservé aux
+  gains, rendements et états favorables.
+- Une page d’erreur réutilise ce shell et propose des chemins de récupération
+  vers le jeu et les Guides ; elle ne réintroduit pas une ancienne palette.
+
 ## Fondations visuelles
 
 La source de vérité technique des tokens reste le CSS. Les noms exacts peuvent

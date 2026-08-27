@@ -112,6 +112,7 @@ function verifyHighContrastDoesNotBootWebGL() {
 function verifyStaticContracts() {
   const index = read("index.html");
   const dashboard = read("dashboard/index.html");
+  const notFound = read("404.html");
   const loader = read("assets/js/scene/scene-loader.js");
   const city = read("assets/js/scene/city-scene.js");
   const app = read("assets/js/app.js");
@@ -122,6 +123,7 @@ function verifyStaticContracts() {
   const experienceCss = read("assets/css/experience-v4.css");
   const guidesCss = read("assets/css/guides.css");
   const guidesBuild = read("scripts/build-guides.mjs");
+  const guidesCatalog = read("content/guides/index.mjs");
   const manifest = read("site.webmanifest");
   const build = read("scripts/build-lang-pages.mjs");
   const siteBuild = read("scripts/build-site.sh");
@@ -179,8 +181,50 @@ function verifyStaticContracts() {
     "Data Science live regions must not be rewritten with identical text on every poll");
   assert.doesNotMatch(css + experienceCss + guidesCss, /transition\s*:\s*all\b/,
     "UI motion must continue to name the properties it changes");
-  assert.match(index, /href="guides\/" data-i18n="nav\.guides"/,
-    "the game must expose a crawlable localized link to the workshop guides");
+  assert.match(index, /class="site-nav-guides" href="guides\/" data-i18n="nav\.guides"/,
+    "the desktop game navigation must keep the workshop guides visible in landing and playing states");
+  assert.doesNotMatch(index, /class="[^"]*landing-nav-only[^"]*"[^>]*href="guides\/"/,
+    "the workshop guides must not disappear after the player enters the game");
+  assert.match(index, /class="header-guides-link home-guides-link"[^>]*href="guides\/"[^>]*data-i18n-aria-label="nav\.guides"/,
+    "the compact header must expose a localized workshop link when the primary navigation collapses");
+  assert.match(css, /@media \(max-width:\s*1080px\)[\s\S]*\.primary-nav\s*\{[^}]*display:\s*none[\s\S]*\.home-guides-link\s*\{[^}]*display:\s*inline-flex/,
+    "the compact workshop link must become visible at the primary-navigation breakpoint");
+  assert.match(css, /@media \(max-width:\s*470px\)[\s\S]*\.app-header \.header-brand\s*\{[^}]*width:\s*74px[\s\S]*grid-template-columns:[^;]*44px 58px/,
+    "the narrow game header must reserve non-overlapping tracks for its logo and controls");
+  assert.match(css, /@media \(max-width:\s*360px\)[\s\S]*grid-template-columns:\s*50px 48px 44px 58px/,
+    "the smallest game header tracks must fit within the available actions width");
+  assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*#buildingsPanelTitle\s*\{[^}]*overflow-wrap:\s*anywhere/,
+    "the localized production heading must wrap without widening the mobile game");
+  assert.match(css, /@media \(any-pointer:\s*coarse\)[\s\S]*\.app-header \.header-guides-link,[\s\S]*min-height:\s*44px/,
+    "the compact workshop link must retain a 44px coarse-pointer target");
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.header-guides-link,[\s\S]*transition:\s*none/,
+    "the workshop link must honor the system reduced-motion preference");
+  assert.match(dashboard, /class="header-guides-link data-zone-guides-link"[^>]*data-guides-link[^>]*href="\/guides\/"/,
+    "the Data Science Zone header must expose the workshop before its footer");
+  assert.match(dashboard, /class="header-guides-link data-zone-guides-link"[\s\S]*data-i18n="nav\.guides"/,
+    "the Data Science Zone must name the guides explicitly instead of duplicating the game workshop label");
+  assert.match(dashboard, /class="footer-links"[\s\S]*data-guides-link href="\/guides\/" data-i18n="nav\.guides"/,
+    "the Data Science Zone footer must retain a workshop fallback link");
+  assert.match(dashboardJs, /const guidesPath = gamePath \+ "guides\/"[\s\S]*querySelectorAll\("\[data-guides-link\]"\)[\s\S]*link\.href = guidesPath/,
+    "the Data Science Zone workshop links must follow the active language route");
+  assert.match(dashboardJs, /querySelectorAll\("\[data-home-link\]"\)[\s\S]*link\.href = gamePath/,
+    "the Data Science Zone brand must return to the active language home");
+  assert.match(experienceCss, /\.data-zone-shell \.data-zone-guides-link\s*\{[^}]*min-height:\s*44px/,
+    "the Data Science Zone workshop link must retain a 44px touch target after cascade overrides");
+  for (const label of ["Guides de l’atelier", "Workshop guides", "Werkstatt-Guides", "Atelier-Guiden"]) {
+    assert.ok(guidesCatalog.includes(`guides: "${label}"`),
+      `the editorial shell must retain its complete localized workshop name: ${label}`);
+  }
+  assert.match(guidesCss, /\.play-cta\s*\{[^}]*background:\s*var\(--orange\)/,
+    "guide play CTAs must use the global primary-action orange");
+  assert.match(notFound, /rel="stylesheet" href="\/assets\/css\/guides\.css"/,
+    "the 404 page must reuse the lightweight Production Twin editorial styles");
+  assert.match(notFound, /href="\/guides\/">Guides de l’atelier<\/a>/,
+    "the 404 recovery path must expose the workshop guides");
+  assert.match(notFound, /var guidesPath = homePath \+ "guides\/"[\s\S]*querySelectorAll\("\[data-guides-link\]"\)/,
+    "the 404 recovery links must preserve EN, DE and LB routes");
+  assert.doesNotMatch(notFound, /#241b47|#0b0617|#fcd34d/,
+    "the 404 page must not restore the retired violet and yellow palette");
   assert.match(guidesCss, /--reading:\s*70ch/,
     "long-form guide copy must retain a readable measure");
   assert.match(guidesCss, /:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--night\)[^}]*box-shadow:\s*0 0 0 6px var\(--lime\)/,

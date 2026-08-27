@@ -194,13 +194,13 @@ a:hover {
 .guide-brand {
   display: grid;
   place-items: center;
-  inline-size: 104px;
+  inline-size: 112px;
   block-size: 84px;
   overflow: hidden;
 }
 
 .guide-brand img {
-  inline-size: 98px;
+  inline-size: 104px;
   max-inline-size: none;
 }
 
@@ -387,6 +387,76 @@ h2 {
 
 .hub-hero__mark strong {
   font-size: 4rem;
+}
+
+.error-page .guide-header__inner {
+  grid-template-columns: auto 1fr;
+}
+
+.error-page .guide-nav {
+  justify-content: end;
+}
+
+.error-main {
+  min-block-size: calc(100svh - 250px);
+  display: grid;
+  align-items: center;
+}
+
+.error-hero {
+  inline-size: 100%;
+  margin-block: clamp(3rem, 8vw, 6rem);
+}
+
+.error-hero h1 {
+  max-inline-size: 10ch;
+}
+
+.error-note {
+  margin: 0.75rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-block-start: 2rem;
+}
+
+.error-primary,
+.error-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 48px;
+  padding-inline: 1.1rem;
+  border: 2px solid var(--night);
+  color: var(--night);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.error-primary {
+  background: var(--orange);
+}
+
+.error-secondary {
+  background: transparent;
+}
+
+.error-primary:hover,
+.error-secondary:hover {
+  color: var(--paper);
+  background: var(--stamp);
+}
+
+.pref-high-contrast .error-primary,
+.pref-high-contrast .error-secondary {
+  border-color: var(--lime);
+  color: #000;
+  background: var(--lime);
 }
 
 .guide-grid {
@@ -705,7 +775,7 @@ tbody th {
   margin-block-start: 1rem;
   padding-inline: 1.2rem;
   color: var(--night);
-  background: var(--lime);
+  background: var(--orange);
   font-weight: 900;
   text-decoration: none;
 }

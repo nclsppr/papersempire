@@ -1,5 +1,18 @@
 # Release Notes
 
+## 0.25.1 — Un Atelier visible partout — 2026-08-27
+
+- Les Guides de l’atelier restent accessibles dans le header avant et après
+  l’entrée en jeu, avec une action compacte et explicite sur mobile.
+- La Data Science Zone relie désormais le hub éditorial dans son header et son
+  footer, en conservant la route de langue active.
+- Le shell des guides emploie le nom complet de la rubrique et l’orange commun
+  pour les appels à jouer. La page 404 rejoint la palette, la typographie et le
+  logo Production Twin, avec des chemins de récupération vers le jeu et les
+  guides.
+- Les contrôles de résilience vérifient désormais la position, le breakpoint,
+  la cible tactile, la localisation et les rôles de couleur de ces accès.
+
 ## 0.25.0 — Guides de l’atelier — 2026-08-26
 
 - Un nouvel espace éditorial public est disponible sous `/guides/`, avec un
