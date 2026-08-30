@@ -221,6 +221,8 @@ function verifyStaticContracts() {
   const loader = read("assets/js/scene/scene-loader.js");
   const city = read("assets/js/scene/city-scene.js");
   const app = read("assets/js/app.js");
+  const accessibility = read("assets/js/accessibility.js");
+  const tutorial = read("assets/js/tutorial.js");
   const events = read("assets/js/events.js");
   const dashboardJs = read("assets/js/dashboard.js");
   const assetHelper = read("assets/js/asset-url.js");
@@ -278,6 +280,124 @@ function verifyStaticContracts() {
   ]) {
     assert.ok(objectiveMarkup.includes(hook), `the current job must expose the ${hook} hook`);
   }
+  assert.doesNotMatch(objectiveMarkup, /data-(?:collapsible-panel|panel-toggle|panel-body)/,
+    "the current job must remain visible as the single non-collapsible objective surface");
+  assert.match(objectiveMarkup, /data-work-order-last-action aria-hidden="true"/,
+    "the current job must reserve its last-action rail before the first purchase");
+  assert.match(app, /workOrderLastAction\.setAttribute\("aria-hidden", lastAction \? "false" : "true"\)/,
+    "the reserved last-action rail must expose only meaningful feedback to assistive technology");
+  assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*\.work-order-details \[data-work-order-last-action\]\s*\{[^}]*width:\s*100%[^}]*block-size:\s*2\.7em[^}]*overflow:\s*auto/,
+    "the first mobile purchase must not grow the current-job card above the unit catalog");
+
+  const collapsiblePanelIds = ["print", "buildings", "strategy", "dispatch", "progress"];
+  assert.deepEqual(
+    [...index.matchAll(/data-collapsible-panel="([^"]+)"/g)].map(match => match[1]),
+    collapsiblePanelIds,
+    "only the five secondary game panels may be collapsed"
+  );
+  for (const [panelId, bodyId] of [
+    ["print", "printStationBody"],
+    ["buildings", "buildingsPanelBody"],
+    ["strategy", "strategyPanelBody"],
+    ["dispatch", "dispatchPanelBody"],
+    ["progress", "progressPanelBody"]
+  ]) {
+    assert.equal((index.match(new RegExp(`data-panel-toggle="${panelId}"`, "g")) || []).length, 1,
+      `${panelId} must expose exactly one collapse control`);
+    assert.equal((index.match(new RegExp(`data-panel-body="${panelId}"`, "g")) || []).length, 1,
+      `${panelId} must expose exactly one collapsible body`);
+    assert.match(index, new RegExp(
+      `data-panel-toggle="${panelId}"[^>]*aria-expanded="true"[^>]*aria-controls="${bodyId}"`
+    ), `${panelId} collapse control must own its body and expose its initial state`);
+    assert.match(index, new RegExp(`id="${bodyId}"[^>]*data-panel-body="${panelId}"`),
+      `${panelId} collapsible body must retain its stable identifier`);
+  }
+  assert.match(css, /\.collapsible-panel-body\[hidden\],[\s\S]*\.panel-collapsed-progress \[data-panel-body="progress"\]\s*\{[^}]*display:\s*none !important/,
+    "collapsed panel bodies must leave both the visual layout and accessibility tree");
+  assert.match(app, /function setPanelCollapsed\([\s\S]*body\.hidden = collapsed[\s\S]*updatePanelToggle\(button, panel, collapsed\)/,
+    "collapsing a panel must synchronize its hidden body and accessible control state");
+
+  const collapsibleIdsLiteral = /const COLLAPSIBLE_PANEL_IDS = \["print", "buildings", "strategy", "dispatch", "progress"\]/;
+  assert.match(app, collapsibleIdsLiteral,
+    "the game controller must whitelist the five collapsible panels");
+  assert.match(accessibility, collapsibleIdsLiteral,
+    "saved interface preferences must share the collapsible-panel whitelist");
+  assert.match(accessibility, /function sanitizeCollapsedPanels\(value\)[\s\S]*Array\.isArray\(value\)[\s\S]*new Set\(value\.filter\(panelId => COLLAPSIBLE_PANEL_IDS\.includes\(panelId\)\)\)/,
+    "saved collapsed panels must reject unknown and duplicate identifiers");
+  assert.match(accessibility, /getPrefs\(\)[\s\S]*collapsedPanels:\s*\[\.\.\.initialPrefs\.collapsedPanels\]/,
+    "callers must receive a copy of the saved collapsed-panel list");
+  assert.match(accessibility, /setPreference\(key, value\)[\s\S]*key === "collapsedPanels"[\s\S]*sanitizeCollapsedPanels\(value\)/,
+    "collapsed-panel writes must be sanitized before persistence");
+  assert.match(index, /var allowedPanels = \["print", "buildings", "strategy", "dispatch", "progress"\][\s\S]*allowedPanels\.indexOf\(panelId\) !== -1[\s\S]*panel-collapsed-/,
+    "pre-CSS preference hydration must whitelist collapsed panels without a layout flash");
+
+  const anchorHandlerStart = app.indexOf("document.querySelectorAll('a[href^=\"#\"]')");
+  const anchorHandlerEnd = app.indexOf("window.addEventListener(\"hashchange\"", anchorHandlerStart);
+  assert.ok(anchorHandlerStart >= 0 && anchorHandlerEnd > anchorHandlerStart &&
+      app.slice(anchorHandlerStart, anchorHandlerEnd).includes("expandPanelForTarget"),
+    "hash links must expand their destination panel before native anchor scrolling");
+  assert.match(app, /onBeforeHighlight:\s*selector => \{[\s\S]*expandPanelForTarget\(target, \{ persist: true \}\)/,
+    "tutorial targets must request their owning panel before highlighting");
+  const tutorialHighlightStart = tutorial.indexOf("function highlight(selector)");
+  const tutorialExpandIndex = tutorial.indexOf("state.onBeforeHighlight(selector)", tutorialHighlightStart);
+  const tutorialScrollIndex = tutorial.indexOf("target.scrollIntoView", tutorialHighlightStart);
+  assert.ok(tutorialHighlightStart >= 0 && tutorialExpandIndex > tutorialHighlightStart &&
+      tutorialScrollIndex > tutorialExpandIndex,
+    "tutorial panels must expand before the target is resolved and scrolled into view");
+
+  assert.equal((index.match(/id="buildingInspector"/g) || []).length, 1,
+    "the production catalog must expose one shared unit inspector");
+  const inspectorIndex = index.indexOf('id="buildingInspector"');
+  const buildingsListIndex = index.indexOf('id="buildingsList"');
+  assert.ok(inspectorIndex >= 0 && buildingsListIndex > inspectorIndex,
+    "the shared unit inspector must sit outside and before the dynamic building grid");
+  assert.match(index, /<aside class="building-inspector" id="buildingInspector"[\s\S]*<\/aside>\s*<div class="buildings-list" id="buildingsList"><\/div>/,
+    "the shared unit inspector and dynamic building grid must remain sibling surfaces");
+  assert.match(index, /id="buildingInspector"[^>]*aria-labelledby="buildingInspectorTitle"[\s\S]*id="buildingInspectorTitle"[^>]*data-building-inspector-title[\s\S]*id="buildingInspectorPrimary"[^>]*data-building-inspector-primary[\s\S]*id="buildingInspectorSecondary"[^>]*data-building-inspector-secondary/,
+    "the shared unit inspector must expose a stable accessible name");
+  assert.match(app, /nameButton\.dataset\.buildingSelect = b\.id[\s\S]*aria-controls", "buildingInspector"[\s\S]*aria-pressed", buildingInspectorState\.selectedId === b\.id/,
+    "generated unit selectors must target the shared inspector and expose selection state");
+  assert.match(app, /function syncBuildingInspectorButtons\([\s\S]*data-building-select[\s\S]*setAttribute\("aria-pressed", selected \? "true" : "false"\)/,
+    "unit selection state must remain synchronized after catalog rerenders");
+  assert.match(app, /if \(selected\) \{[\s\S]*"aria-describedby",[\s\S]*"buildingInspectorTitle buildingInspectorPrimary buildingInspectorSecondary"[\s\S]*removeAttribute\("aria-describedby"\)/,
+    "the selected unit control must expose the inspector content to assistive technology");
+  assert.match(app, /function selectBuildingForInspector\([\s\S]*renderBuildingInspector\(\)[\s\S]*announceStatus\(/,
+    "unit inspection changes must be announced without moving keyboard focus");
+  assert.doesNotMatch(index + app, /building-(?:tooltip|feedback)/,
+    "unit details and purchase receipts must not reintroduce per-card expanding blocks");
+  assert.doesNotMatch(css + experienceCss, /\.building-(?:tooltip|feedback)\b/,
+    "styles must not reintroduce per-card expanding blocks");
+  assert.match(app, /const replacementButton = installedRow[\s\S]*playPurchaseEffect\(replacementButton \|\| sourceEl \|\| DOM\.buildingInspector/,
+    "purchase feedback must remain on the visible replacement action instead of moving the purchased card");
+  assert.doesNotMatch(css + experienceCss, /\.building-row\.is-stamped|@keyframes machine-stamp/,
+    "purchase feedback must not transform a unit card or its buy button");
+  assert.match(css, /html:not\(\.pref-reduce-motion\) \.building-inspector\.is-stamped\s*\{[^}]*animation:\s*inspector-receipt/,
+    "purchase feedback must visibly stamp the stable inspector when motion is allowed");
+  assert.match(css, /@keyframes inspector-receipt\s*\{[\s\S]*box-shadow:[^}]*\}/,
+    "the inspector receipt must use paint-only feedback instead of changing geometry");
+  assert.doesNotMatch(css.match(/@keyframes inspector-receipt\s*\{([\s\S]*?)\n\}/)?.[1] || "", /transform|width|height|margin|padding/,
+    "the inspector receipt animation must never move or resize the purchase action");
+  assert.match(css, /html:not\(\.pref-reduce-motion\) \.operations-deck \.btn-buy\.is-stamped\s*\{[^}]*outline:[^}]*animation:\s*purchase-action-confirm/,
+    "a purchase must visibly confirm on the action that remains under the pointer");
+  const purchaseActionFrames = css.match(/@keyframes purchase-action-confirm\s*\{([\s\S]*?)\n\}/)?.[1] || "";
+  assert.doesNotMatch(purchaseActionFrames, /transform|width|height|margin|padding/,
+    "the visible purchase confirmation must use paint-only properties");
+  assert.match(css, /\.operations-deck \.btn-buy:hover:not\(\.disabled\),\s*\.operations-deck \.btn-buy:active:not\(\.disabled\)\s*\{[^}]*transform:\s*none/,
+    "hovering or pressing a production purchase must not move the action under the pointer");
+  assert.match(css, /\.building-inspector\s*\{[^}]*block-size:\s*112px[^}]*position:\s*sticky[^}]*top:\s*calc\(var\(--header-offset\) \+ 12px\)[^}]*overflow:\s*auto[^}]*contain:\s*layout paint/,
+    "the shared unit inspector must reserve a fixed, contained height and stay visible through the catalog");
+  assert.match(css, /@media \(max-width:\s*700px\)[\s\S]*\.building-inspector\s*\{[^}]*block-size:\s*148px/,
+    "the shared unit inspector must reserve a fixed mobile height");
+  assert.match(css, /:root\.pref-large-text \.building-inspector\s*\{[^}]*block-size:\s*190px/,
+    "the shared unit inspector must reserve a fixed large-text height");
+  assert.match(css, /\.operations-deck \.buildings-list\s*\{[^}]*align-items:\s*start/,
+    "one unit card must never stretch its grid neighbour");
+  const inspectorRule = css.match(/\.building-inspector\s*\{([^}]*)\}/);
+  assert.ok(inspectorRule, "the shared unit inspector must have a base style rule");
+  assert.doesNotMatch(inspectorRule[1], /(?:transition|animation)[^;]*(?:height|block-size|max-height)/,
+    "the shared unit inspector must not animate layout dimensions");
+  assert.doesNotMatch(css + experienceCss, /(?:\.building-inspector|\.collapsible-panel-body)[^{]*\{[^}]*(?:transition:\s*(?:all|[^;]*(?:height|block-size|max-height))|animation:[^;]*(?:height|block-size|max-height))/,
+    "unit inspection and panel collapse must never animate layout height");
   assert.match(index, /class="prestige-card"[\s\S]*id="careerPlanContainer"[\s\S]*id="careerPlanChoices"[\s\S]*id="prestigeButton"/,
     "career choices must stay inside the existing strategic reorganisation card");
   assert.match(app, /const conclusionUnlocked = Boolean\(summary\.conclusion && summary\.conclusion\.unlocked\)[\s\S]*career\.conclusion\.pendingTitle/,

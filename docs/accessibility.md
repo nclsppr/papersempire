@@ -7,8 +7,31 @@ The ⚙️ button opens a modal built with four sections. All controls are nativ
 
 - **Accessibility tab:** toggles for high contrast, large text (bumps the `:root` font-size), and reduced motion. Each option simply flips a `pref-*` class and is applied before `app.js` renders to avoid flashes.
 - **Audio tab:** enables or disables UI bleeps produced by `ui-effects.js`. The toggle maps to `documentElement.dataset.soundsEnabled` so other modules can respect it without reading storage.
-- **Interface tab:** controls the particle layer, the guided tutorial, and a toggle that pauses narrative events entirely. Players can re-run the tutorial at any time through the “Restart tutorial” button.
+- **Interface tab:** controls the particle layer, the guided tutorial, narrative events and the 3D campus. The same preference store remembers which operation panels the player has folded. Players can re-run the tutorial at any time through the “Restart tutorial” button.
 - **Save tab:** houses export/import/reset buttons so keyboard users can access them without scrolling through the right column.
+
+## Collapsible operation panels
+
+Five secondary cards can be folded independently: the starting press,
+production units, upgrades and prestige, dispatch, and achievements. The current
+job remains permanently expanded because it carries the next action, active
+criteria, rewards and pending incidents.
+
+- Each card uses a native button with a localized accessible name,
+  `aria-expanded` and `aria-controls`. `Enter` and `Space` therefore work without
+  a custom keyboard convention.
+- Folding applies `hidden` to the controlled body, not to the card itself. Its
+  heading stays visible and the hidden controls leave both the tab order and the
+  accessibility tree.
+- Focus remains on the disclosure button after activation. Opening a deep link
+  or advancing the tutorial first expands the relevant panel, then scrolls or
+  moves focus to its target.
+- The five states are sanitized against a fixed panel allowlist and persisted
+  through `pe-accessibility`. They are local interface preferences, not part of
+  the exported V3 gameplay save.
+- The disclosure target is at least 44 × 44 px for coarse pointers. High
+  contrast keeps its border and focus ring; reduced motion removes the chevron
+  transition. Panel height itself is never animated.
 
 ## Visual & Audio Feedback
 `ui-effects.js` centralises paper cues and minimal Web Audio beeps:
@@ -44,6 +67,16 @@ The ⚙️ button opens a modal built with four sections. All controls are nativ
 - A machine or upgrade purchase restores focus to the corresponding rebuilt
   action (or the next logical action), instead of dropping keyboard and voice
   control back onto the document body.
+- Unit details and purchase feedback live in one persistently mounted,
+  fixed-height inspector above the grid. It remains sticky below the global
+  header while the catalogue scrolls. The selected unit control references its
+  title and descriptions through `aria-describedby`; a dedicated announcement
+  exposes selection changes without moving focus.
+- Buying another unit replaces the inspector content without moving neighbouring
+  purchase actions. The visible receipt outline is painted on the replacement
+  buy button, while the existing atomic announcer provides the complete purchase
+  confirmation. The current job reserves its last-action rail before it receives
+  content, preventing that first confirmation from pushing the catalogue down.
 - Continuous counters are not live regions. A dedicated atomic announcer only
   receives meaningful new activity messages.
 - Une page restaurée par le BFCache Safari est rechargée une seule fois : cela

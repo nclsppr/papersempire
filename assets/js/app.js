@@ -42,6 +42,7 @@
 
   const SUPPORTED_LANGS = ["fr", "en", "de", "lb"];
   const DEFAULT_LANG = "fr";
+  const COLLAPSIBLE_PANEL_IDS = ["print", "buildings", "strategy", "dispatch", "progress"];
   const DOM_RENDER_INTERVAL_MS = 100;
   const DASH_SNAPSHOT_KEY = "pe-dash-snapshot";
   const ANALYTICS_HISTORY_KEY = "pe-analytics-history-v1";
@@ -147,7 +148,11 @@
   };
   const CONTRACT_REROLL_COOLDOWN = 30000;
   const CONTRACTS_UNLOCK_DOC_TOTAL = 1500;
-  const buildingFeedbackTimers = new WeakMap();
+  const buildingInspectorState = {
+    selectedId: null,
+    feedback: null,
+    feedbackTimer: null
+  };
 
   let saveTimer = null;
   let bannerHideTimer = null;
@@ -400,6 +405,7 @@
     cacheDomReferences();
     bindUIEvents();
     initLocalization();
+    initCollapsiblePanels();
     eventState.eventsEnabled = areEventsAllowed();
     initGame();
     initExperienceMode();
@@ -509,6 +515,7 @@
     const target = targetSelector && targetSelector.startsWith("#")
       ? document.querySelector(targetSelector)
       : DOM.mainContent;
+    if (targetSelector) expandPanelForTarget(target, { persist: true });
     updateWelcomeParam(false, targetSelector || "#gameViewTitle");
     requestAnimationFrame(() => {
       if ([DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
@@ -651,6 +658,11 @@
     DOM.careerPlanEffect = document.getElementById("careerPlanEffect");
     DOM.careerPlanStamps = DOM.careerPlanContainer && DOM.careerPlanContainer.querySelector("[data-career-plan-stamps]");
     DOM.buildingsList = document.getElementById("buildingsList");
+    DOM.buildingInspector = document.getElementById("buildingInspector");
+    DOM.buildingInspectorTitle = DOM.buildingInspector && DOM.buildingInspector.querySelector("[data-building-inspector-title]");
+    DOM.buildingInspectorPrimary = DOM.buildingInspector && DOM.buildingInspector.querySelector("[data-building-inspector-primary]");
+    DOM.buildingInspectorSecondary = DOM.buildingInspector && DOM.buildingInspector.querySelector("[data-building-inspector-secondary]");
+    DOM.panelToggles = document.querySelectorAll("[data-panel-toggle]");
     DOM.upgradesList = document.getElementById("upgradesList");
     DOM.logPanel = document.getElementById("logPanel");
     DOM.contractsTab = document.getElementById("contractsTab");
@@ -799,12 +811,6 @@
       DOM.rerollContractsBtn.addEventListener("click", handleContractsReroll);
     }
 
-    document.addEventListener("click", event => {
-      if (!event.target.closest(".building-name-button") && !event.target.closest(".building-tooltip")) {
-        hideAllTooltips();
-      }
-    });
-
     document.addEventListener("keydown", handleGlobalKeydown);
 
     contractsState.unlocked = areContractsUnlocked();
@@ -832,7 +838,7 @@
       event.preventDefault();
       return;
     }
-    hideAllTooltips();
+    if (clearBuildingInspectorSelection()) event.preventDefault();
   }
 
   /* Motion des modales (pattern transitions-dev) : le voile cross-fade,
@@ -1210,6 +1216,7 @@
     currentLang = lang;
     if (DOM.langSelect && DOM.langSelect.value !== lang) DOM.langSelect.value = lang;
     applyStaticTranslations();
+    renderCollapsiblePanelControls();
     renderContractsPanel();
     document.documentElement.setAttribute("lang", lang);
     uiState.buildingsDirty = true;
@@ -1231,6 +1238,105 @@
       });
     }
     applyStaticTranslations();
+  }
+
+  function sanitizeCollapsedPanelIds(value) {
+    if (!Array.isArray(value)) return [];
+    return [...new Set(value.filter(panelId => COLLAPSIBLE_PANEL_IDS.includes(panelId)))];
+  }
+
+  function panelForTarget(target) {
+    if (!target || !target.matches) return null;
+    if (target.matches("[data-collapsible-panel]")) return target;
+    const ancestor = target.closest("[data-collapsible-panel]");
+    if (ancestor) return ancestor;
+    return target.querySelector ? target.querySelector("[data-collapsible-panel]") : null;
+  }
+
+  function panelName(panel) {
+    if (!panel) return "";
+    const headingId = panel.getAttribute("aria-labelledby");
+    const heading = headingId ? document.getElementById(headingId) : null;
+    return heading ? heading.textContent.trim() : "";
+  }
+
+  function updatePanelToggle(button, panel, collapsed) {
+    if (!button) return;
+    button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    const label = button.querySelector("[data-panel-toggle-label]");
+    setTextIfChanged(label, t(collapsed ? "actions.expand" : "actions.collapse"));
+    button.setAttribute("aria-label", t(collapsed ? "actions.expandPanel" : "actions.collapsePanel", {
+      name: panelName(panel)
+    }));
+  }
+
+  function setPanelCollapsed(panelId, collapsed, options = {}) {
+    if (!COLLAPSIBLE_PANEL_IDS.includes(panelId)) return false;
+    const panel = document.querySelector(`[data-collapsible-panel="${panelId}"]`);
+    const body = document.querySelector(`[data-panel-body="${panelId}"]`);
+    const button = document.querySelector(`[data-panel-toggle="${panelId}"]`);
+    if (!panel || !body || !button) return false;
+    panel.classList.toggle("is-collapsed", collapsed);
+    body.hidden = collapsed;
+    document.documentElement.classList.toggle("panel-collapsed-" + panelId, collapsed);
+    updatePanelToggle(button, panel, collapsed);
+    if (options.persist !== false && Settings && typeof Settings.setPreference === "function") {
+      const previous = sanitizeCollapsedPanelIds(Settings.getPreference("collapsedPanels"));
+      const next = collapsed
+        ? [...new Set([...previous, panelId])]
+        : previous.filter(id => id !== panelId);
+      Settings.setPreference("collapsedPanels", next);
+    }
+    return true;
+  }
+
+  function renderCollapsiblePanelControls() {
+    const collapsedPanels = sanitizeCollapsedPanelIds(
+      Settings && typeof Settings.getPreference === "function"
+        ? Settings.getPreference("collapsedPanels")
+        : []
+    );
+    COLLAPSIBLE_PANEL_IDS.forEach(panelId => {
+      setPanelCollapsed(panelId, collapsedPanels.includes(panelId), { persist: false });
+    });
+  }
+
+  function expandPanelForTarget(target, options = {}) {
+    const panel = panelForTarget(target);
+    if (!panel) return false;
+    const panelId = panel.getAttribute("data-collapsible-panel");
+    return setPanelCollapsed(panelId, false, options);
+  }
+
+  function targetFromHash(hash) {
+    if (!hash || hash.charAt(0) !== "#") return null;
+    try {
+      return document.getElementById(decodeURIComponent(hash.slice(1)));
+    } catch {
+      return null;
+    }
+  }
+
+  function initCollapsiblePanels() {
+    renderCollapsiblePanelControls();
+    if (DOM.panelToggles) {
+      DOM.panelToggles.forEach(button => {
+        button.addEventListener("click", () => {
+          const panelId = button.getAttribute("data-panel-toggle");
+          const collapsed = button.getAttribute("aria-expanded") === "true";
+          setPanelCollapsed(panelId, collapsed, { persist: true });
+        });
+      });
+    }
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener("click", () => {
+        expandPanelForTarget(targetFromHash(link.getAttribute("href")), { persist: true });
+      });
+    });
+    window.addEventListener("hashchange", () => {
+      expandPanelForTarget(targetFromHash(window.location.hash), { persist: true });
+    });
+    expandPanelForTarget(targetFromHash(window.location.hash), { persist: true });
   }
 
   function initTutorialGuidance() {
@@ -1269,6 +1375,10 @@
       steps,
       translate: t,
       settings: Settings,
+      onBeforeHighlight: selector => {
+        const target = selector ? document.querySelector(selector) : null;
+        expandPanelForTarget(target, { persist: true });
+      },
       onComplete: () => logMessage("log.tutorialComplete"),
       autoStart: experienceStarted && experienceMode === "playing"
     });
@@ -1938,17 +2048,96 @@
     return parts.join(" • ");
   }
 
-  /** Hides every currently open building tooltip. */
-  function hideAllTooltips() {
-    document.querySelectorAll(".building-tooltip").forEach(el => {
-      if (!el.classList.contains("hidden")) {
-        el.classList.add("hidden");
-      }
-      if (el.id) {
-        const controller = document.querySelector(`[aria-controls="${el.id}"]`);
-        if (controller) controller.setAttribute("aria-expanded", "false");
+  function syncBuildingInspectorButtons() {
+    if (!DOM.buildingsList) return;
+    DOM.buildingsList.querySelectorAll(".building-name-button").forEach(button => {
+      const selected = button.getAttribute("data-building-select") === buildingInspectorState.selectedId;
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      if (selected) {
+        button.setAttribute(
+          "aria-describedby",
+          "buildingInspectorTitle buildingInspectorPrimary buildingInspectorSecondary"
+        );
+      } else {
+        button.removeAttribute("aria-describedby");
       }
     });
+  }
+
+  function renderBuildingInspector() {
+    if (!DOM.buildingInspector) return;
+    const feedback = buildingInspectorState.feedback;
+    const selectedBuilding = gameState.buildings.find(building => {
+      return building.id === buildingInspectorState.selectedId && building.isUnlocked;
+    });
+    if (!feedback && buildingInspectorState.selectedId && !selectedBuilding) {
+      buildingInspectorState.selectedId = null;
+    }
+
+    DOM.buildingInspector.classList.toggle("is-success", !!feedback);
+    DOM.buildingInspector.classList.toggle("is-empty", !feedback && !selectedBuilding);
+    if (feedback) {
+      setTextIfChanged(DOM.buildingInspectorTitle, getBuildingName(
+        gameState.buildings.find(building => building.id === feedback.id) || { nameKey: "" }
+      ));
+      setTextIfChanged(DOM.buildingInspectorPrimary, feedback.primary);
+      setTextIfChanged(DOM.buildingInspectorSecondary, feedback.detail || "");
+    } else if (selectedBuilding) {
+      const perUnitImpact = formatBuildingImpactText(selectedBuilding, 1);
+      const totalImpact = selectedBuilding.quantity > 0
+        ? formatBuildingImpactText(selectedBuilding)
+        : "";
+      setTextIfChanged(DOM.buildingInspectorTitle, getBuildingName(selectedBuilding));
+      setTextIfChanged(DOM.buildingInspectorPrimary, getBuildingDesc(selectedBuilding));
+      setTextIfChanged(DOM.buildingInspectorSecondary, [
+        perUnitImpact
+          ? t("label.modifierPerUnit", { impact: perUnitImpact })
+          : t("label.modifierPerUnitNA"),
+        totalImpact
+          ? t("label.modifierTotal", { impact: totalImpact })
+          : t("label.modifierImpactNA")
+      ].join(" · "));
+    } else {
+      setTextIfChanged(DOM.buildingInspectorTitle, t("operations.unitInspectorEmptyTitle"));
+      setTextIfChanged(DOM.buildingInspectorPrimary, t("operations.unitInspectorEmptyHint"));
+      setTextIfChanged(DOM.buildingInspectorSecondary, "");
+    }
+    syncBuildingInspectorButtons();
+  }
+
+  function clearBuildingInspectorFeedback() {
+    if (buildingInspectorState.feedbackTimer) {
+      clearTimeout(buildingInspectorState.feedbackTimer);
+      buildingInspectorState.feedbackTimer = null;
+    }
+    buildingInspectorState.feedback = null;
+  }
+
+  function selectBuildingForInspector(id) {
+    clearBuildingInspectorFeedback();
+    buildingInspectorState.selectedId = buildingInspectorState.selectedId === id ? null : id;
+    renderBuildingInspector();
+    const selectedBuilding = gameState.buildings.find(building => {
+      return building.id === buildingInspectorState.selectedId && building.isUnlocked;
+    });
+    if (!selectedBuilding) {
+      announceStatus(t("operations.unitInspectorEmptyHint"));
+      return;
+    }
+    const detail = formatBuildingImpactText(selectedBuilding, 1);
+    announceStatus([
+      getBuildingName(selectedBuilding),
+      getBuildingDesc(selectedBuilding),
+      detail ? t("label.modifierPerUnit", { impact: detail }) : t("label.modifierPerUnitNA")
+    ].join(". "));
+  }
+
+  function clearBuildingInspectorSelection() {
+    if (!buildingInspectorState.selectedId && !buildingInspectorState.feedback) return false;
+    clearBuildingInspectorFeedback();
+    buildingInspectorState.selectedId = null;
+    renderBuildingInspector();
+    return true;
   }
 
   /** Unlocks buildings once the player holds enough DOC to buy the next unit. */
@@ -2481,8 +2670,10 @@
     const installedRow = DOM.buildingsList
       ? DOM.buildingsList.querySelector(`[data-building-id="${id}"]`)
       : null;
+    const replacementButton = installedRow
+      ? installedRow.querySelector(`[data-building-btn="${id}"]`)
+      : null;
     if (shouldRestoreFocus && installedRow) {
-      const replacementButton = installedRow.querySelector(`[data-building-btn="${id}"]`);
       const focusTarget = replacementButton && !replacementButton.disabled
         ? replacementButton
         : installedRow.querySelector(".building-name-button");
@@ -2510,7 +2701,10 @@
       purchaseAnnouncement += ". " + t("log.achievement", { name: t(unlockedAchievement.nameKey) });
     }
     announceStatus(purchaseAnnouncement);
-    UIEffects.playPurchaseEffect(installedRow || sourceEl || DOM.buildingsList);
+    // Le reçu reste attaché au bouton remplacé par le rendu : il demeure sous
+    // les yeux et sous le pointeur, même au bas d'un long catalogue. Son effet
+    // ne peint qu'un contour, sans transformer la carte ni déplacer l'action.
+    UIEffects.playPurchaseEffect(replacementButton || sourceEl || DOM.buildingInspector || DOM.buildingsList);
     if (TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
       TutorialEngine.markMilestone("building");
     }
@@ -3064,7 +3258,7 @@
     }
     const lastAction = kind === "delivery" || kind === "prestige-receipt" ? "" : describeLastAction();
     if (DOM.workOrderLastAction) {
-      DOM.workOrderLastAction.hidden = !lastAction;
+      DOM.workOrderLastAction.setAttribute("aria-hidden", lastAction ? "false" : "true");
       setTextIfChanged(DOM.workOrderLastAction, lastAction);
     }
     setTextIfChanged(DOM.workOrderNext, t("objective.next", { next }));
@@ -4608,32 +4802,15 @@
   }
 
   function showBuildingFeedback(id, primary, detail) {
-    const row = DOM.buildingsList && DOM.buildingsList.querySelector(`[data-building-id="${id}"]`);
-    const feedback = row && row.querySelector(`[data-building-feedback="${id}"]`);
-    if (!feedback) return;
-    const primaryEl = feedback.querySelector("strong");
-    const detailEl = feedback.querySelector("span");
-    const pending = buildingFeedbackTimers.get(feedback);
-    if (pending) {
-      if (pending.hide) clearTimeout(pending.hide);
-      if (pending.cleanup) clearTimeout(pending.cleanup);
-    }
-    setTextIfChanged(primaryEl, primary);
-    setTextIfChanged(detailEl, detail || "");
-    feedback.classList.remove("is-visible");
-    feedback.classList.remove("hidden");
-    void feedback.offsetWidth;
-    feedback.classList.add("is-visible");
-    const hide = setTimeout(() => {
-      if (!feedback.isConnected) return;
-      feedback.classList.remove("is-visible");
-      const cleanup = setTimeout(() => {
-        if (feedback.isConnected) feedback.classList.add("hidden");
-        buildingFeedbackTimers.delete(feedback);
-      }, 160);
-      buildingFeedbackTimers.set(feedback, { hide: null, cleanup });
+    clearBuildingInspectorFeedback();
+    buildingInspectorState.selectedId = id;
+    buildingInspectorState.feedback = { id, primary, detail: detail || "" };
+    renderBuildingInspector();
+    buildingInspectorState.feedbackTimer = setTimeout(() => {
+      buildingInspectorState.feedback = null;
+      buildingInspectorState.feedbackTimer = null;
+      renderBuildingInspector();
     }, 2000);
-    buildingFeedbackTimers.set(feedback, { hide, cleanup: null });
   }
 
   /** Toggles the affordability state for each upgrade action button. */
@@ -4673,7 +4850,6 @@
   function renderBuildings() {
     const container = DOM.buildingsList;
     if (!container) return;
-    hideAllTooltips();
     container.innerHTML = "";
     let hasVisible = false;
 
@@ -4683,8 +4859,6 @@
       const cost = buildingCost(b);
       const milestoneMultiplier = getMilestoneMultiplier(b.quantity);
       const totalProd = b.baseProduction * getEffectiveQuantity(b.quantity);
-      const perUnitImpact = formatBuildingImpactText(b, 1);
-      const totalImpactText = b.quantity > 0 ? formatBuildingImpactText(b) : "";
 
       const row = document.createElement("div");
       row.className = "building-row" + (b.quantity > 0 ? " is-owned" : "");
@@ -4704,7 +4878,10 @@
       const nameButton = document.createElement("button");
       nameButton.type = "button";
       nameButton.className = "building-name-button";
-      nameButton.setAttribute("aria-expanded", "false");
+      nameButton.dataset.buildingSelect = b.id;
+      nameButton.setAttribute("aria-controls", "buildingInspector");
+      nameButton.setAttribute("aria-pressed", buildingInspectorState.selectedId === b.id ? "true" : "false");
+      nameButton.setAttribute("aria-label", t("feedback.unitDetailsLabel", { name: getBuildingName(b) }));
       const emoji = b.emoji || "🏗️";
       const emojiSpan = document.createElement("span");
       emojiSpan.className = "building-emoji";
@@ -4732,34 +4909,9 @@
       nameButton.appendChild(emojiSpan);
       nameButton.appendChild(labelSpan);
 
-      const tooltip = document.createElement("div");
-      tooltip.className = "building-tooltip hidden";
-      tooltip.id = "building-details-" + b.id;
-      nameButton.setAttribute("aria-controls", tooltip.id);
-      const tooltipLines = [];
-      if (perUnitImpact) {
-        tooltipLines.push(t("label.modifierPerUnit", { impact: perUnitImpact }));
-      } else {
-        tooltipLines.push(t("label.modifierPerUnitNA"));
-      }
-      if (totalImpactText) {
-        tooltipLines.push(t("label.modifierTotal", { impact: totalImpactText }));
-      } else {
-        tooltipLines.push(t("label.modifierImpactNA"));
-      }
-      tooltip.innerHTML = tooltipLines.join("<br>");
-
       nameButton.addEventListener("click", event => {
         event.stopPropagation();
-        const wasHidden = tooltip.classList.contains("hidden");
-        hideAllTooltips();
-        if (wasHidden) {
-          tooltip.classList.remove("hidden");
-          nameButton.setAttribute("aria-expanded", "true");
-        } else {
-          tooltip.classList.add("hidden");
-          nameButton.setAttribute("aria-expanded", "false");
-        }
+        selectBuildingForInspector(b.id);
       });
 
       info.appendChild(nameButton);
@@ -4801,16 +4953,6 @@
       }
       info.appendChild(milestone);
 
-      const purchaseFeedback = document.createElement("div");
-      purchaseFeedback.className = "building-feedback hidden";
-      purchaseFeedback.dataset.buildingFeedback = b.id;
-      const feedbackTitle = document.createElement("strong");
-      const feedbackDetail = document.createElement("span");
-      purchaseFeedback.appendChild(feedbackTitle);
-      purchaseFeedback.appendChild(feedbackDetail);
-      info.appendChild(purchaseFeedback);
-      info.appendChild(tooltip);
-
       const buy = document.createElement("div");
       buy.className = "building-buy";
 
@@ -4844,6 +4986,7 @@
     if (!hasVisible) {
       container.innerHTML = `<div class="building-placeholder">${t("buildings.noneAffordable")}</div>`;
     }
+    renderBuildingInspector();
   }
 
   /** Renders unlocked upgrades or a placeholder when none are ready. */

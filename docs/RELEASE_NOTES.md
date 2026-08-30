@@ -1,5 +1,28 @@
 # Release Notes
 
+## 0.26.1 — Un poste de commande qui reste en place — 2026-08-30
+
+- Les fiches d'unités conservent désormais leur hauteur pendant les achats. Un
+  inspecteur unique, toujours monté et de hauteur stable au-dessus de la grille,
+  reçoit les détails de l'unité sélectionnée puis la confirmation locale. Passer
+  d'une unité à l'autre ne fait plus sauter le bouton voisin ni recomposer la
+  grille à chaque clic. Le premier achat ne décale plus non plus le catalogue :
+  le Dossier du moment réserve à l'avance sa ligne « Dernière action ».
+- Sur un long catalogue, l'inspecteur reste sous le header et la confirmation
+  visuelle se produit directement autour du bouton acheté. Survol, pression et
+  validation n'appliquent aucun déplacement géométrique à cette action.
+- Presse de départ, Unités de production, Améliorations et prestige,
+  Expéditions ainsi qu'Archives et succès peuvent être repliés séparément. Seul
+  leur contenu est masqué : le titre et la place de chaque carte restent stables,
+  tandis que le Dossier du moment demeure toujours visible.
+- Les cinq choix de disposition sont persistants dans les préférences locales
+  d'interface, indépendamment de la sauvegarde de progression V3. Les ancres et
+  le tutoriel rouvrent automatiquement le panneau qu'ils ciblent.
+- Chaque commande de repli est un bouton clavier natif avec `aria-expanded`,
+  `aria-controls`, un libellé dans les quatre langues et une cible tactile de
+  44 px. Le contraste élevé, le grand texte et le mouvement réduit conservent
+  le même contrat ; aucune animation de hauteur ne réintroduit de déplacement.
+
 ## 0.26.0 — Les plans de réorganisation — 2026-08-30
 
 - La réorganisation devient une carrière longue : trois Plans — Cadence,

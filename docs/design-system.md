@@ -1,6 +1,6 @@
 # Design system V5 : Production Twin
 
-Ce document décrit la direction de Papers Empire 0.25.2. Les règles visuelles
+Ce document décrit la direction de Papers Empire 0.26.1. Les règles visuelles
 servent la lisibilité, le plaisir de jeu et la cohérence du monde. Si elles
 cessent de le faire, elles changent.
 
@@ -48,6 +48,44 @@ pas une seconde interface conservée au-dessus du jeu.
 La scène Three.js, les miniatures de machines et la Data Science Zone doivent
 parler de la même usine. Une machine ne change pas arbitrairement de silhouette,
 de palette ou de rôle entre ces trois lectures.
+
+### Stabilité spatiale et panneaux repliables
+
+Le poste de commande est une surface de travail continue. Une donnée qui change
+ne doit pas déplacer l'action visée, faire permuter deux fiches ou modifier la
+géométrie de la grille sans décision explicite du joueur.
+
+- Une fiche d'unité conserve une hauteur stable pendant l'achat. Elle contient
+  le résumé opérationnel et l'action d'achat, mais aucun détail ni retour
+  temporaire susceptible d'allonger sa rangée.
+- Un inspecteur unique reste monté à hauteur stable au-dessus de la grille. Un
+  clic sur le nom d'une unité y remplace le détail précédent ; une validation
+  d'achat réutilise temporairement la même surface. Passer d'une unité à l'autre
+  ne modifie donc jamais la géométrie des fiches ni la position de leurs actions.
+  Sur un catalogue long, cette fiche reste sous le header afin que son contenu
+  demeure visible sans injecter un retour supplémentaire dans chaque carte.
+- Le bouton d'achat reste au même pixel au survol, à la pression et après le
+  rendu de sa nouvelle quantité. La confirmation utilise un contour hors flux ;
+  le Dossier du moment réserve sa ligne « Dernière action » avant le premier
+  achat pour ne pas pousser tout le parc lorsqu'elle reçoit enfin du texte.
+- Le catalogue ne s'allonge que lorsqu'une nouvelle unité est réellement
+  débloquée. Sur écran étroit et en grand texte, il revient à une colonne avant
+  que les libellés traduits compromettent la lecture.
+- Cinq cartes peuvent être repliées à la demande : Presse de départ, Unités de
+  production, Améliorations et prestige, Expéditions, puis Archives et succès.
+  Elles sont ouvertes par défaut et leur état est mémorisé comme préférence
+  locale d'interface.
+- Seul le corps d'une carte disparaît. Son en-tête, son numéro, son titre et son
+  emplacement dans la grille restent présents ; replier un panneau ne permet
+  donc jamais au navigateur de réordonner les autres cartes.
+- Le Dossier du moment, le bandeau opérationnel et la navigation restent
+  toujours développés. Ils conservent la prochaine action, les critères actifs
+  et les données nécessaires pour comprendre un atelier compacté.
+- Une ancre, le tutoriel ou une action qui cible un contenu masqué déplie d'abord
+  son panneau. Aucun contrôle ne reçoit le focus derrière un corps `hidden`.
+- La réduction est volontaire et immédiate. Le chevron peut signaler le
+  changement d'état, mais la hauteur du contenu n'est pas animée : la fonction
+  de compactage ne doit pas recréer un déplacement prolongé de la page.
 
 ### Chrome global et registre éditorial
 

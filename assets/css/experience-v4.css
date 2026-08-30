@@ -246,7 +246,6 @@ html[data-experience="playing"] body {
 .operations-deck .building-row:hover {
   border-color: rgba(49, 92, 114, 0.55);
   box-shadow: 0 12px 25px rgba(8, 22, 32, 0.15);
-  transform: translateY(-2px);
 }
 
 .operations-deck .building-row.is-owned .building-sticker {
@@ -280,9 +279,7 @@ html[data-experience="playing"] body {
 }
 
 .operations-deck .building-meta,
-.operations-deck .building-effect-preview,
-.operations-deck .building-feedback,
-.operations-deck .building-tooltip {
+.operations-deck .building-effect-preview {
   margin-left: 91px;
 }
 
@@ -292,8 +289,7 @@ html[data-experience="playing"] body {
 
 @media (min-width: 821px) {
   .operations-deck .building-meta,
-  .operations-deck .building-effect-preview,
-  .operations-deck .building-feedback {
+  .operations-deck .building-effect-preview {
     margin-left: 0;
   }
 }
@@ -1487,9 +1483,7 @@ html[data-experience="playing"] body {
   }
 
   .operations-deck .building-meta,
-  .operations-deck .building-effect-preview,
-  .operations-deck .building-feedback,
-  .operations-deck .building-tooltip {
+  .operations-deck .building-effect-preview {
     margin-left: 81px;
   }
 
@@ -1610,8 +1604,7 @@ html[data-experience="playing"] body {
     padding: 5px 0;
   }
 
-  .operations-deck .building-effect-preview,
-  .operations-deck .building-feedback {
+  .operations-deck .building-effect-preview {
     margin-left: 0;
   }
 
@@ -1841,10 +1834,6 @@ html[data-experience="playing"] body {
   }
 
   .work-order-progress::-moz-progress-bar {
-    transition: none;
-  }
-
-  .operations-deck .building-feedback {
     transition: none;
   }
 
