@@ -7,7 +7,9 @@
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#07111f">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/icon-192.png">
   <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin>
   <script>
   (function () {
@@ -22,7 +24,7 @@
         link.href = homePath;
       });
       document.querySelectorAll("[data-home-anchor]").forEach(function (link) {
-        link.href = homePath + "?welcome=1#" + link.dataset.homeAnchor;
+        link.href = homePath + "#" + link.dataset.homeAnchor;
       });
       document.querySelectorAll("[data-guides-link]").forEach(function (link) {
         link.href = guidesPath;
@@ -64,8 +66,8 @@
           <span class="sr-only">Papers Empire</span>
         </a>
         <nav class="primary-nav" aria-label="Navigation principale">
-          <a class="landing-nav-only" data-home-anchor="sceneStage" href="/?welcome=1#sceneStage">Usine 3D</a>
-          <a class="landing-nav-only" data-home-anchor="roadmapTitle" href="/?welcome=1#roadmapTitle">Le jeu</a>
+          <a class="landing-nav-only" data-home-anchor="sceneStage" href="/#sceneStage">Usine 3D</a>
+          <a class="landing-nav-only" data-home-anchor="roadmapTitle" href="/#roadmapTitle">Le jeu</a>
           <a class="site-nav-guides" data-guides-link href="/guides/">Guides de l’atelier</a>
         </nav>
         <div class="header-actions">
@@ -82,7 +84,7 @@
             </picture>
             <span>Data Science Zone</span>
           </a>
-          <a class="header-play-link" data-home-anchor="sceneStage" href="/?welcome=1#sceneStage">Jouer maintenant</a>
+          <a class="header-play-link" data-home-anchor="sceneStage" href="/#sceneStage">Jouer maintenant</a>
           <select class="lang-select" aria-label="Choisir une langue" data-locale-select>
             <option value="/">FR</option>
             <option value="/en/">EN</option>

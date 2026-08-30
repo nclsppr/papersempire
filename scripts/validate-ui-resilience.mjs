@@ -668,6 +668,8 @@ function verifyStaticContracts() {
     "the localized production heading must wrap without widening the mobile game");
   assert.match(siteHeaderCss, /@media \(any-pointer:\s*coarse\)[\s\S]*\.site-header \.header-guides-link,[\s\S]*min-height:\s*44px/,
     "the compact workshop link must retain a 44px coarse-pointer target");
+  assert.match(siteHeaderCss, /\.app-footer \.footer-language-nav a\s*\{[^}]*min-width:\s*44px[^}]*min-height:\s*44px/,
+    "the visible footer language links must retain 44px touch targets after cascade overrides");
   assert.match(siteHeaderCss, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.header-guides-link,[\s\S]*transition:\s*none/,
     "the workshop link must honor the system reduced-motion preference");
   assert.match(dashboard, /class="header-guides-link data-zone-guides-link"[^>]*data-guides-link[^>]*href="\/guides\/"/,

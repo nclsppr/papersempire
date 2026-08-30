@@ -18,6 +18,25 @@ const siteDir = new URL("../site/", import.meta.url);
 const readRoot = path => readFileSync(new URL(path, rootDir), "utf8");
 const readSite = path => readFileSync(new URL(path, siteDir), "utf8");
 const localeCodes = Object.keys(LOCALES);
+const HOME_AND_HUB_LASTMOD = "2026-08-31";
+const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
+const AUTHOR_ID = `${AUTHOR.url}#person`;
+const SEO_FALLBACK_KEYS = Object.freeze([
+  "hero.kicker",
+  "hero.line1",
+  "hero.line2",
+  "hero.line3",
+  "hero.lede",
+  "roadmap.title",
+  "roadmap.subtitle",
+  "operations.title",
+  "operations.subtitle",
+  "operations.unitInspectorKicker",
+  "scene.fallback",
+  "footer.kicker",
+  "footer.tagline",
+  "footer.intro",
+]);
 
 const HOME_PAGES = Object.freeze({
   fr: {
@@ -35,6 +54,29 @@ const HOME_PAGES = Object.freeze({
   lb: {
     title: "Papers Empire — Gratis Idle Game am Browser",
     description: "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt zwielef Produktiounseenheete fräi a späicher lokal.",
+  },
+});
+
+const MANIFESTS = Object.freeze({
+  fr: {
+    path: "/site.webmanifest",
+    startUrl: "/",
+    description: "Jeu idle gratuit dans le navigateur : transforme ton imprimerie en usine 4.0.",
+  },
+  en: {
+    path: "/site.en.webmanifest",
+    startUrl: "/en/",
+    description: "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0 and keep your progress locally.",
+  },
+  de: {
+    path: "/site.de.webmanifest",
+    startUrl: "/de/",
+    description: "Spiele Papers Empire kostenlos im Browser. Verwandle eine kleine Druckerei in eine Fabrik 4.0 und speichere deinen Fortschritt lokal.",
+  },
+  lb: {
+    path: "/site.lb.webmanifest",
+    startUrl: "/lb/",
+    description: "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0 a späicher däi Fortschrëtt lokal.",
   },
 });
 
@@ -125,6 +167,12 @@ function pageTitle(html) {
   return matches[0][1].trim();
 }
 
+function pageH1(html) {
+  const matches = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi)];
+  assert.equal(matches.length, 1, "each page must expose one h1");
+  return matches[0][1].replace(/<[^>]*>/g, "").trim();
+}
+
 function jsonLdItems(html) {
   const blocks = [...html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   assert.ok(blocks.length > 0, "each indexable page must expose JSON-LD");
@@ -194,6 +242,39 @@ function assertLightweightHeaderRuntime(html, pageUrl) {
     `${pageUrl} must load only the revisioned shared-header controller`);
   assert.ok(existsSync(new URL(`.${scripts[0].split("?")[0]}`, siteDir)),
     `${pageUrl} references missing ${scripts[0]}`);
+}
+
+function validateAppIconLinks(html, pageUrl, lang = "fr") {
+  const icon = findTag(html, "link", { rel: "icon", type: "image/png", sizes: "192x192" });
+  assert.match(icon.attrs.href, /^\/assets\/images\/icon-192\.png\?v=[a-f0-9]+$/,
+    `${pageUrl} must expose the revisioned 192px PNG favicon`);
+  assert.ok(existsSync(new URL(`.${icon.attrs.href.split("?")[0]}`, siteDir)),
+    `${pageUrl} references a missing 192px PNG favicon`);
+
+  const manifest = findTag(html, "link", { rel: "manifest" });
+  const expectedManifest = MANIFESTS[lang];
+  const escapedPath = expectedManifest.path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(manifest.attrs.href, new RegExp(`^${escapedPath}\\?v=[a-f0-9]+$`),
+    `${pageUrl} must expose its revisioned ${lang} web manifest`);
+  const manifestUrl = new URL(`.${expectedManifest.path}`, siteDir);
+  assert.ok(existsSync(manifestUrl),
+    `${pageUrl} references a missing web manifest`);
+  const manifestData = JSON.parse(readFileSync(manifestUrl, "utf8"));
+  assert.equal(manifestData.name, "Papers Empire");
+  assert.equal(manifestData.lang, lang, `${pageUrl} manifest must use ${lang}`);
+  assert.equal(manifestData.id, "/", `${pageUrl} manifests must share one app identity`);
+  assert.equal(manifestData.scope, "/", `${pageUrl} manifest must cover the whole app`);
+  assert.equal(manifestData.start_url, expectedManifest.startUrl,
+    `${pageUrl} manifest must launch its localized home`);
+  assert.equal(manifestData.description, expectedManifest.description,
+    `${pageUrl} manifest description must match its language`);
+  for (const iconSize of ["192x192", "512x512"]) {
+    const icons = manifestData.icons.filter(iconEntry => iconEntry.sizes === iconSize);
+    assert.equal(icons.length, 1, `${pageUrl} manifest must expose one ${iconSize} icon`);
+    const dimension = iconSize.split("x")[0];
+    assert.match(icons[0].src, new RegExp(`^/assets/images/icon-${dimension}\\.png\\?v=[a-f0-9]+$`),
+      `${pageUrl} manifest icons must be revisioned`);
+  }
 }
 
 function validateSiteHeader(page, html) {
@@ -273,6 +354,96 @@ function validateHeaderLanguageAlternates(page, header) {
     `${page.url} language selector must select its current locale`);
 }
 
+function validateFooterLanguageAlternates(page, html) {
+  const footerMatches = [...html.matchAll(/<footer\b[^>]*class=["'][^"']*\bguide-footer\b[^"']*["'][^>]*>[\s\S]*?<\/footer>/gi)];
+  assert.equal(footerMatches.length, 1, `${page.url} must expose one editorial footer`);
+  const footer = footerMatches[0][0];
+  const navMatches = [...footer.matchAll(/<nav\b[^>]*class=["'][^"']*\bguide-footer__links\b[^"']*["'][^>]*>[\s\S]*?<\/nav>/gi)];
+  assert.equal(navMatches.length, 1,
+    `${page.url} footer must expose one visible language navigation`);
+  const nav = navMatches[0][0];
+  const navTag = tags(nav, "nav")[0];
+  assert.equal(navTag.attrs["aria-label"], LOCALES[page.lang].ui.language,
+    `${page.url} footer language navigation needs a localized accessible name`);
+
+  const anchors = [...nav.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)].map((match) => ({
+    attrs: parseAttributes(`<a ${match[1]}>`),
+    label: match[2].replace(/<[^>]*>/g, "").trim(),
+  }));
+  assert.equal(anchors.length, localeCodes.length,
+    `${page.url} footer must expose four language links`);
+
+  const byLanguage = new Map();
+  for (const anchor of anchors) {
+    const code = anchor.attrs.hreflang;
+    assert.ok(localeCodes.includes(code), `${page.url} footer language link needs a supported hreflang`);
+    assert.equal(byLanguage.has(code), false, `${page.url} footer must not duplicate ${code}`);
+    assert.ok(anchor.attrs.rel?.split(/\s+/).includes("alternate"),
+      `${page.url} footer ${code} link must declare rel=alternate`);
+    assert.equal(anchor.attrs.lang, LOCALES[code].htmlLang,
+      `${page.url} footer ${code} link must declare its text language`);
+    assert.equal(anchor.label, LOCALES[code].nativeName,
+      `${page.url} footer ${code} link must use its native language name`);
+    assert.equal(new URL(anchor.attrs.href, page.url).href, page.alternates[code],
+      `${page.url} footer ${code} link must target the equivalent page`);
+    byLanguage.set(code, anchor);
+  }
+
+  const current = anchors.filter(anchor => anchor.attrs["aria-current"] === "page");
+  assert.equal(current.length, 1, `${page.url} footer needs one current language`);
+  assert.equal(current[0].attrs.hreflang, page.lang,
+    `${page.url} footer must mark its active language as current`);
+}
+
+function validateHomeFooterLanguageAlternates(page, html) {
+  const navMatches = [...html.matchAll(/<nav\b[^>]*class=["'][^"']*\bfooter-language-nav\b[^"']*["'][^>]*>[\s\S]*?<\/nav>/gi)];
+  assert.equal(navMatches.length, 1,
+    `${page.url} must expose one visible footer language navigation`);
+  const anchors = [...navMatches[0][0].matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)].map(match => ({
+    attrs: parseAttributes(`<a ${match[1]}>`),
+    label: match[2].replace(/<[^>]*>/g, "").trim(),
+  }));
+  assert.equal(anchors.length, localeCodes.length,
+    `${page.url} footer must expose every home language`);
+
+  for (const code of localeCodes) {
+    const matches = anchors.filter(anchor => anchor.attrs["data-home-lang"] === code);
+    assert.equal(matches.length, 1, `${page.url} footer must expose ${code} once`);
+    const anchor = matches[0];
+    assert.equal(anchor.attrs.hreflang, code);
+    assert.equal(anchor.attrs.lang, LOCALES[code].htmlLang);
+    assert.ok(anchor.attrs.rel?.split(/\s+/).includes("alternate"));
+    assert.equal(anchor.label, code.toUpperCase());
+    assert.equal(new URL(anchor.attrs.href, page.url).href, page.alternates[code]);
+  }
+
+  const current = anchors.filter(anchor => anchor.attrs["aria-current"] === "page");
+  assert.equal(current.length, 1, `${page.url} footer needs one current language`);
+  assert.equal(current[0].attrs["data-home-lang"], page.lang);
+}
+
+function validateIdentityGraph(items, pageUrl) {
+  const website = items.find(item => item["@type"] === "WebSite" && item["@id"] === WEBSITE_ID);
+  const person = items.find(item => item["@type"] === "Person" && item["@id"] === AUTHOR_ID);
+  assert.ok(website && person, `${pageUrl} JSON-LD must define its WebSite and Person entities`);
+  assert.equal(website.url, `${SITE_ORIGIN}/`);
+  assert.equal(website.name, "Papers Empire");
+  assert.deepEqual(website.publisher, { "@id": AUTHOR_ID });
+  assert.equal(person.name, AUTHOR.name);
+  assert.equal(person.url, AUTHOR.url);
+}
+
+function hasNestedKey(value, keys) {
+  if (Array.isArray(value)) return value.some(item => hasNestedKey(item, keys));
+  if (!value || typeof value !== "object") return false;
+  return Object.entries(value).some(([key, nested]) => keys.has(key) || hasNestedKey(nested, keys));
+}
+
+function assertNoInventedRatings(items, pageUrl) {
+  assert.equal(hasNestedKey(items, new Set(["aggregateRating", "review", "ratingValue"])), false,
+    `${pageUrl} structured data must not invent ratings or reviews`);
+}
+
 function loadDictionary(lang) {
   const source = readRoot(`assets/i18n/${lang}.js`);
   const window = { I18N: {} };
@@ -339,8 +510,8 @@ function validateCommon(page, html) {
   }
   assert.doesNotMatch(meta(html, "name", "robots"), /(?:^|\s|,)noindex(?:\s|,|$)/i,
     `${page.url} must remain indexable`);
-  assert.ok(page.title.length >= 30 && page.title.length <= (page.kind === "home" ? 65 : 85),
-    `${page.url} title must remain concise`);
+  assert.ok(page.title.length >= 30 && page.title.length <= 65,
+    `${page.url} title must remain within 30–65 characters`);
   assert.ok(page.description.length >= 100 && page.description.length <= 180,
     `${page.url} description must remain useful`);
   validateSiteHeader(page, html);
@@ -357,6 +528,8 @@ function validateCommon(page, html) {
 
   for (const anchor of tags(html, "a")) {
     if (!anchor.attrs.href) continue;
+    assert.doesNotMatch(anchor.attrs.href, /(?:[?&])welcome=1(?:[&#]|$)/,
+      `${page.url} must not link to the legacy welcome query`);
     const target = new URL(anchor.attrs.href, page.url);
     if (target.origin !== SITE_ORIGIN) continue;
     const targetPath = target.pathname.endsWith("/")
@@ -392,12 +565,22 @@ function validateHome(page, html) {
       `${page.url} ${className} must open the ${page.lang} workshop hub`);
   }
 
-  for (const key of ["scene.fallback", "footer.kicker", "footer.tagline", "footer.intro"]) {
+  for (const key of SEO_FALLBACK_KEYS) {
     const value = dict[key];
     assert.ok(value, `${page.lang} dictionary must define ${key}`);
-    assert.ok(html.includes(`data-i18n="${key}"`) && html.includes(`>${value}<`),
+    const rendered = html.match(new RegExp(`data-i18n="${key.replaceAll(".", "\\.")}"[^>]*>([^<]+)<`))?.[1];
+    assert.equal(rendered, value,
       `${page.url} must pre-render ${key} without JavaScript`);
   }
+
+  const dictionaries = localScriptSources(html)
+    .filter(path => /^\/assets\/i18n\/[a-z]+\.js\?v=[a-f0-9]+$/.test(path));
+  assert.equal(dictionaries.length, 1,
+    `${page.url} must load exactly one locale dictionary`);
+  assert.match(dictionaries[0], new RegExp(`^/assets/i18n/${page.lang}\\.js\\?v=[a-f0-9]+$`),
+    `${page.url} must load only its own locale dictionary`);
+  validateAppIconLinks(html, page.url, page.lang);
+  validateHomeFooterLanguageAlternates(page, html);
 
   const items = jsonLdItems(html);
   const game = items.find(item => Array.isArray(item["@type"]) && item["@type"].includes("VideoGame"));
@@ -406,8 +589,10 @@ function validateHome(page, html) {
   assert.ok(website, `${page.url} JSON-LD must describe the website`);
   assert.equal(game.url, `${SITE_ORIGIN}/`);
   assert.equal(game.sameAs, "https://github.com/nclsppr/papersempire");
+  assert.deepEqual(game.author, { "@id": AUTHOR_ID });
   assert.equal(game.isAccessibleForFree, true);
   assert.equal(game.offers?.price, "0");
+  validateIdentityGraph(items, page.url);
 }
 
 function validateGuide(page, html) {
@@ -419,8 +604,11 @@ function validateGuide(page, html) {
   assertVersionedStyles(html, ["guides.css", "site-header.css"], page.url);
   assertLightweightHeaderRuntime(html, page.url);
   validateHeaderLanguageAlternates(page, siteHeaderBlock(html, page.url));
+  validateFooterLanguageAlternates(page, html);
   assert.doesNotMatch(html, /tabindex=["'][1-9]/,
     `${page.url} must not alter keyboard order`);
+
+  validateAppIconLinks(html, page.url, page.lang);
 
   const imageUrl = meta(html, "property", "og:image");
   assert.equal(meta(html, "name", "twitter:image"), imageUrl,
@@ -449,6 +637,12 @@ function validateGuide(page, html) {
 function validateHub(page, html) {
   validateGuide(page, html);
   assert.equal(meta(html, "property", "og:type"), "website");
+  assert.equal(pageH1(html), HUBS[page.lang].h1,
+    `${page.url} h1 must describe its browser idle game guides`);
+  for (const property of ["article:published_time", "article:modified_time", "article:author"]) {
+    assert.equal(tags(html, "meta").filter(tag => tag.attrs.property === property).length, 0,
+      `${page.url} must not expose article-only Open Graph metadata`);
+  }
   const items = jsonLdItems(html);
   const collection = items.find(item => item["@type"] === "CollectionPage");
   const list = items.find(item => item["@type"] === "ItemList");
@@ -456,7 +650,11 @@ function validateHub(page, html) {
   assert.ok(collection && list && breadcrumb, `${page.url} needs CollectionPage, ItemList and BreadcrumbList`);
   assert.equal(collection.url, page.url);
   assert.equal(collection.inLanguage, page.lang);
-  assert.equal(collection.author?.url, AUTHOR.url);
+  assert.deepEqual(collection.author, { "@id": AUTHOR_ID });
+  assert.deepEqual(collection.publisher, { "@id": AUTHOR_ID });
+  assert.deepEqual(collection.isPartOf, { "@id": WEBSITE_ID });
+  validateIdentityGraph(items, page.url);
+  assertNoInventedRatings(items, page.url);
   assert.equal(list.numberOfItems, ARTICLES.length);
   assert.equal(list.itemListElement.length, ARTICLES.length);
   assert.deepEqual(list.itemListElement.map(item => item.position), [1, 2, 3]);
@@ -466,7 +664,11 @@ function validateHub(page, html) {
 function validateArticle(page, html) {
   validateGuide(page, html);
   assert.equal(meta(html, "property", "og:type"), "article");
+  assert.equal(meta(html, "property", "article:published_time"), page.article.datePublished);
+  assert.equal(meta(html, "property", "article:modified_time"), page.article.dateModified);
+  assert.equal(meta(html, "property", "article:author"), AUTHOR.url);
   assert.equal((html.match(/<article\b/gi) || []).length, 1, `${page.url} must expose one article`);
+  assert.equal(pageH1(html), page.title, `${page.url} h1 must match its article title`);
   assert.match(html, new RegExp(`rel=["']author["'][^>]*>${AUTHOR.name}<`),
     `${page.url} must visibly credit Nicolas Pieper`);
   assert.ok((html.match(/<section\b/gi) || []).length >= 4,
@@ -481,8 +683,9 @@ function validateArticle(page, html) {
   assert.equal(article.headline, page.title);
   assert.equal(article.description, page.description);
   assert.equal(article.inLanguage, page.lang);
-  assert.equal(article.author?.name, AUTHOR.name);
-  assert.equal(article.author?.url, AUTHOR.url);
+  assert.deepEqual(article.author, { "@id": AUTHOR_ID });
+  assert.deepEqual(article.publisher, { "@id": AUTHOR_ID });
+  assert.deepEqual(article.isPartOf, { "@id": WEBSITE_ID });
   assert.equal(article.datePublished, page.article.datePublished);
   assert.equal(article.dateModified, page.article.dateModified);
   assert.ok(article.dateModified >= article.datePublished);
@@ -490,6 +693,8 @@ function validateArticle(page, html) {
     `${page.url} must expose a machine-readable source-check date`);
   assert.equal(article.image?.url, absolute(page.article.image));
   assert.deepEqual([article.image?.width, article.image?.height], [1200, 630]);
+  validateIdentityGraph(items, page.url);
+  assertNoInventedRatings(items, page.url);
   assert.deepEqual(breadcrumb.itemListElement.map(item => item.position), [1, 2, 3]);
   assert.equal(breadcrumb.itemListElement.at(-1).item, page.url);
 }
@@ -516,8 +721,12 @@ const notFoundPage = { kind: "404", lang: "fr", url: `${SITE_ORIGIN}/404.html` }
 validateSiteHeader(notFoundPage, notFound);
 assertVersionedStyles(notFound, ["guides.css", "site-header.css"], notFoundPage.url);
 assertLightweightHeaderRuntime(notFound, notFoundPage.url);
+validateAppIconLinks(notFound, notFoundPage.url);
 const notFoundGuideLink = tags(notFound, "a").find(anchor => anchor.attrs.href === "/guides/");
 assert.ok(notFoundGuideLink, "the built 404 page must retain a workshop recovery link");
+
+const dashboard = readSite("dashboard/index.html");
+validateAppIconLinks(dashboard, `${SITE_ORIGIN}/dashboard/`);
 
 for (const article of ARTICLES) {
   const sourcePath = fileURLToPath(new URL(`.${article.image}`, rootDir));
@@ -533,6 +742,8 @@ assert.match(sitemap, /xmlns:xhtml="http:\/\/www\.w3\.org\/1999\/xhtml"/,
   "the sitemap must expose the hreflang namespace");
 assert.match(sitemap, /xmlns:image="http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1"/,
   "the sitemap must expose the image namespace");
+assert.doesNotMatch(sitemap, /<image:title>/,
+  "the sitemap must not use the deprecated image:title element");
 assert.equal((sitemap.match(/<url>/g) || []).length, (sitemap.match(/<\/url>/g) || []).length,
   "every sitemap URL entry must close");
 const sitemapBlocks = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(([, block]) => block);
@@ -542,19 +753,27 @@ assert.deepEqual(sitemapUrls, PAGES.map(page => page.url),
 assert.equal(new Set(sitemapUrls).size, sitemapUrls.length, "sitemap URLs must be unique");
 for (const [index, block] of sitemapBlocks.entries()) {
   const page = PAGES[index];
-  const alternates = Object.fromEntries([...block.matchAll(/<xhtml:link\b([^>]+)\/>/g)]
-    .map(([, attrs]) => {
-      const parsed = parseAttributes(`<xhtml:link ${attrs}>`);
-      return [parsed.hreflang, parsed.href];
-    }));
+  const alternateTags = [...block.matchAll(/<xhtml:link\b([^>]+)\/>/g)];
+  assert.equal(alternateTags.length, localeCodes.length + 1,
+    `${page.url} sitemap must expose exactly one alternate per language plus x-default`);
+  const alternateEntries = alternateTags.map(([, attrs]) => {
+    const parsed = parseAttributes(`<xhtml:link ${attrs}>`);
+    return [parsed.hreflang, parsed.href];
+  });
+  assert.equal(new Set(alternateEntries.map(([code]) => code)).size, alternateEntries.length,
+    `${page.url} sitemap hreflang values must be unique`);
+  const alternates = Object.fromEntries(alternateEntries);
   assert.deepEqual(alternates, { ...page.alternates, "x-default": page.alternates.fr },
     `${page.url} sitemap hreflang must match its HTML cluster`);
+  const expectedLastmod = page.kind === "article" ? page.article.dateModified : HOME_AND_HUB_LASTMOD;
+  const lastmods = [...block.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match => match[1]);
+  assert.deepEqual(lastmods, [expectedLastmod],
+    `${page.url} sitemap must expose one exact lastmod`);
   if (page.kind === "article") {
-    assert.match(block, new RegExp(`<lastmod>${page.article.dateModified}<\\/lastmod>`));
     assert.match(block, new RegExp(`<image:loc>${absolute(page.article.image)}<\\/image:loc>`));
   } else {
-    assert.doesNotMatch(block, /<lastmod>|<image:image>/,
-      `${page.url} must not invent an editorial date or image entry`);
+    assert.doesNotMatch(block, /<image:image>/,
+      `${page.url} must not invent an image entry`);
   }
 }
 

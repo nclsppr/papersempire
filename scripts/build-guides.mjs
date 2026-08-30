@@ -22,6 +22,9 @@ if (!siteDir) {
 const localeEntries = Object.entries(LOCALES);
 const localeCodes = Object.keys(LOCALES);
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+const HOME_AND_HUB_LASTMOD = "2026-08-31";
+const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
+const AUTHOR_ID = `${AUTHOR.url}#person`;
 
 function escapeHtml(value) {
   return String(value)
@@ -76,8 +79,8 @@ function assertCatalog() {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(translation.slug)) {
         throw new Error(`${article.id}:${lang} has an invalid slug`);
       }
-      if (translation.title.length < 30 || translation.title.length > 85) {
-        throw new Error(`${article.id}:${lang} title length is outside 30–85 characters`);
+      if (translation.title.length < 30 || translation.title.length > 65) {
+        throw new Error(`${article.id}:${lang} title length is outside 30–65 characters`);
       }
       if (translation.description.length < 100 || translation.description.length > 180) {
         throw new Error(`${article.id}:${lang} description length is outside 100–180 characters`);
@@ -112,8 +115,16 @@ function localeAlternateMeta(lang) {
     .join("\n");
 }
 
+function articleOpenGraphMeta(article) {
+  if (!article) return "";
+  return `  <meta property="article:published_time" content="${escapeAttr(article.datePublished)}">
+  <meta property="article:modified_time" content="${escapeAttr(article.dateModified)}">
+  <meta property="article:author" content="${escapeAttr(AUTHOR.url)}">`;
+}
+
 function head({ lang, title, description, canonical, image, imageAlt, type, article = null, structuredData }) {
   const locale = LOCALES[lang];
+  const manifestPath = lang === "fr" ? "/site.webmanifest" : `/site.${lang}.webmanifest`;
   return `<!doctype html>
 <html lang="${locale.htmlLang}">
 <head>
@@ -127,7 +138,9 @@ function head({ lang, title, description, canonical, image, imageAlt, type, arti
   <link rel="canonical" href="${escapeAttr(canonical)}">
 ${alternateLinks(article)}
   <link rel="icon" type="image/png" sizes="32x32" href="${versioned("/assets/images/favicon-32.png")}">
+  <link rel="icon" type="image/png" sizes="192x192" href="${versioned("/assets/images/icon-192.png")}">
   <link rel="apple-touch-icon" href="${versioned("/assets/images/apple-touch-icon.png")}">
+  <link rel="manifest" href="${versioned(manifestPath)}">
   <link rel="preload" href="${versioned("/assets/fonts/alfa-slab-one-latin.woff2")}" as="font" type="font/woff2" crossorigin>
   <script>
   // Apply the visual preferences before CSS to avoid a flash of the default theme.
@@ -159,6 +172,7 @@ ${alternateLinks(article)}
   <meta property="og:image:alt" content="${escapeAttr(imageAlt)}">
   <meta property="og:locale" content="${locale.ogLocale}">
 ${localeAlternateMeta(lang)}
+${articleOpenGraphMeta(article)}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeAttr(title)}">
   <meta name="twitter:description" content="${escapeAttr(description)}">
@@ -184,7 +198,7 @@ function languageOptions(article, lang) {
 function shellStart({ lang, article = null }) {
   const locale = LOCALES[lang];
   const dictionary = loadDictionary(lang);
-  const welcomePath = `${locale.homePath}?welcome=1`;
+  const homePath = locale.homePath;
   const current = article ? "location" : "page";
   const dashboardPath = lang === "fr" ? "/dashboard/" : `/dashboard/?lang=${lang}`;
   return `<body class="editorial-shell">
@@ -192,7 +206,7 @@ function shellStart({ lang, article = null }) {
   <header class="app-header site-header site-header--editorial">
     <div class="header-inner">
       <div class="header-top">
-        <a class="header-brand" href="${welcomePath}#sceneStage" aria-label="Papers Empire · ${escapeAttr(locale.ui.home)}">
+        <a class="header-brand" href="${homePath}#sceneStage" aria-label="Papers Empire · ${escapeAttr(locale.ui.home)}">
           <picture class="brand-picture">
             <source srcset="${versioned("/assets/brand/papers-empire-logo-v2-cutout.webp")}" type="image/webp">
             <img class="brand-lockup" src="${versioned("/assets/brand/papers-empire-logo-v2-cutout.png")}" width="700" height="560" alt="" decoding="async">
@@ -200,8 +214,8 @@ function shellStart({ lang, article = null }) {
           <span class="sr-only">Papers Empire</span>
         </a>
         <nav class="primary-nav" aria-label="${escapeAttr(dictionary["nav.primaryLabel"])}">
-          <a class="landing-nav-only" href="${welcomePath}#sceneStage">${escapeHtml(dictionary["nav.factory"])}</a>
-          <a class="landing-nav-only" href="${welcomePath}#roadmapTitle">${escapeHtml(dictionary["nav.gameOverview"])}</a>
+          <a class="landing-nav-only" href="${homePath}#sceneStage">${escapeHtml(dictionary["nav.factory"])}</a>
+          <a class="landing-nav-only" href="${homePath}#roadmapTitle">${escapeHtml(dictionary["nav.gameOverview"])}</a>
           <a class="site-nav-guides active" href="${locale.hubPath}" aria-current="${current}">${escapeHtml(dictionary["nav.guides"])}</a>
         </nav>
         <div class="header-actions">
@@ -218,7 +232,7 @@ function shellStart({ lang, article = null }) {
             </picture>
             <span>${escapeHtml(dictionary["nav.dashboard"])}</span>
           </a>
-          <a class="header-play-link" href="${welcomePath}#sceneStage">${escapeHtml(dictionary["actions.playNow"])}</a>
+          <a class="header-play-link" href="${homePath}#sceneStage">${escapeHtml(dictionary["actions.playNow"])}</a>
           <select class="lang-select" aria-label="${escapeAttr(dictionary["actions.languageLabel"])}" data-locale-select>
           ${languageOptions(article, lang)}
           </select>
@@ -242,13 +256,21 @@ function breadcrumb({ lang, article = null }) {
   return `<nav class="breadcrumbs" aria-label="${escapeAttr(locale.ui.breadcrumbLabel)}"><ol>${crumbs.join("")}</ol></nav>`;
 }
 
-function shellEnd(lang) {
+function shellEnd({ lang, article = null }) {
   const locale = LOCALES[lang];
+  const languageLinks = localeCodes.map(code => {
+    const href = article ? articlePath(article, code) : LOCALES[code].hubPath;
+    const current = code === lang ? ' aria-current="page"' : "";
+    return `<a href="${escapeAttr(href)}" rel="alternate" hreflang="${code}" lang="${LOCALES[code].htmlLang}"${current}>${escapeHtml(LOCALES[code].nativeName)}</a>`;
+  }).join("\n      ");
   return `  <footer class="guide-footer">
     <div>
       <p class="guide-footer__stamp">PAPERS EMPIRE · ${escapeHtml(locale.ui.breadcrumbHub).toUpperCase()}</p>
       <p>${escapeHtml(locale.ui.footer)}</p>
     </div>
+    <nav class="guide-footer__links" aria-label="${escapeAttr(locale.ui.language)}">
+      ${languageLinks}
+    </nav>
     <div class="guide-footer__links">
       <a href="${locale.homePath}">${escapeHtml(locale.ui.play)}</a>
       <a href="${locale.hubPath}">${escapeHtml(locale.ui.back)}</a>
@@ -274,7 +296,9 @@ function hubStructuredData(lang) {
         name: hub.h1,
         description: hub.description,
         inLanguage: lang,
-        author: { "@type": "Person", name: AUTHOR.name, url: AUTHOR.url },
+        author: { "@id": AUTHOR_ID },
+        publisher: { "@id": AUTHOR_ID },
+        isPartOf: { "@id": WEBSITE_ID },
         mainEntity: { "@id": `${canonical}#list` },
       },
       {
@@ -294,6 +318,19 @@ function hubStructuredData(lang) {
           { "@type": "ListItem", position: 1, name: "Papers Empire", item: absolute(locale.homePath) },
           { "@type": "ListItem", position: 2, name: hub.h1, item: canonical },
         ],
+      },
+      {
+        "@type": "WebSite",
+        "@id": WEBSITE_ID,
+        url: `${SITE_ORIGIN}/`,
+        name: "Papers Empire",
+        publisher: { "@id": AUTHOR_ID },
+      },
+      {
+        "@type": "Person",
+        "@id": AUTHOR_ID,
+        name: AUTHOR.name,
+        url: AUTHOR.url,
       },
     ],
   };
@@ -352,7 +389,7 @@ ${shellStart({ lang })}
       <a href="${AUTHOR.url}" rel="author">${AUTHOR.name} · nicolaspieper.com</a>
     </aside>
   </main>
-${shellEnd(lang)}`;
+${shellEnd({ lang })}`;
 }
 
 function formatDate(date, lang) {
@@ -410,9 +447,9 @@ function articleStructuredData(article, lang) {
         datePublished: article.datePublished,
         dateModified: article.dateModified,
         inLanguage: lang,
-        author: { "@type": "Person", name: AUTHOR.name, url: AUTHOR.url },
-        publisher: { "@type": "Person", name: AUTHOR.name, url: AUTHOR.url },
-        isPartOf: { "@type": "WebSite", name: "Papers Empire", url: SITE_ORIGIN },
+        author: { "@id": AUTHOR_ID },
+        publisher: { "@id": AUTHOR_ID },
+        isPartOf: { "@id": WEBSITE_ID },
       },
       {
         "@type": "BreadcrumbList",
@@ -421,6 +458,19 @@ function articleStructuredData(article, lang) {
           { "@type": "ListItem", position: 2, name: HUBS[lang].h1, item: absolute(locale.hubPath) },
           { "@type": "ListItem", position: 3, name: translation.title, item: canonical },
         ],
+      },
+      {
+        "@type": "WebSite",
+        "@id": WEBSITE_ID,
+        url: `${SITE_ORIGIN}/`,
+        name: "Papers Empire",
+        publisher: { "@id": AUTHOR_ID },
+      },
+      {
+        "@type": "Person",
+        "@id": AUTHOR_ID,
+        name: AUTHOR.name,
+        url: AUTHOR.url,
       },
     ],
   };
@@ -498,7 +548,7 @@ ${shellStart({ lang, article })}
       </nav>
     </article>
   </main>
-${shellEnd(lang)}`;
+${shellEnd({ lang, article })}`;
 }
 
 function writeRoute(path, html) {
@@ -507,7 +557,7 @@ function writeRoute(path, html) {
   writeFileSync(target, html);
 }
 
-function sitemapEntry({ path, article = null, lang, family = "hub" }) {
+function sitemapEntry({ path, article = null, family = "hub" }) {
   const canonical = absolute(path);
   const alternate = article
     ? alternateMap(article)
@@ -518,22 +568,22 @@ function sitemapEntry({ path, article = null, lang, family = "hub" }) {
   const alternates = localeCodes.map(code =>
     `    <xhtml:link rel="alternate" hreflang="${code}" href="${escapeXml(alternate[code])}"/>`).join("\n");
   const xDefault = `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(alternate.fr)}"/>`;
-  const lastmod = article ? `\n    <lastmod>${article.dateModified}</lastmod>` : "";
-  const image = article ? `\n    <image:image>\n      <image:loc>${escapeXml(absolute(article.image))}</image:loc>\n      <image:title>${escapeXml(article.translations[lang].title)}</image:title>\n    </image:image>` : "";
-  return `  <url>\n    <loc>${escapeXml(canonical)}</loc>\n${alternates}\n${xDefault}${lastmod}${image}\n  </url>`;
+  const lastmod = article ? article.dateModified : HOME_AND_HUB_LASTMOD;
+  const image = article ? `\n    <image:image>\n      <image:loc>${escapeXml(absolute(article.image))}</image:loc>\n    </image:image>` : "";
+  return `  <url>\n    <loc>${escapeXml(canonical)}</loc>\n${alternates}\n${xDefault}\n    <lastmod>${lastmod}</lastmod>${image}\n  </url>`;
 }
 
 function buildSitemap() {
   const entries = [];
   for (const [lang, locale] of localeEntries) {
-    entries.push(sitemapEntry({ path: locale.homePath, lang, family: "home" }));
+    entries.push(sitemapEntry({ path: locale.homePath, family: "home" }));
   }
   for (const [lang, locale] of localeEntries) {
-    entries.push(sitemapEntry({ path: locale.hubPath, lang }));
+    entries.push(sitemapEntry({ path: locale.hubPath }));
   }
   for (const article of ARTICLES) {
     for (const lang of localeCodes) {
-      entries.push(sitemapEntry({ path: articlePath(article, lang), article, lang }));
+      entries.push(sitemapEntry({ path: articlePath(article, lang), article }));
     }
   }
   return `<?xml version="1.0" encoding="UTF-8"?>

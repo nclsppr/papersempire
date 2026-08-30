@@ -143,6 +143,7 @@ const PREFILLED_KEYS = [
   "operations.pressCaption",
   "operations.barometers",
   "operations.machinesKicker",
+  "operations.unitInspectorKicker",
   "operations.nextMachine",
   "operations.strategyKicker",
   "operations.dispatchKicker",
@@ -190,6 +191,16 @@ function escapeAttr(s) {
 
 function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+}
+
+function markCurrentHomeLanguage(html, lang) {
+  return html.replace(
+    /<a\b([^>]*\bdata-home-lang="(fr|en|de|lb)"[^>]*)>/g,
+    (match, attributes, code) => {
+      const cleanAttributes = attributes.replace(/\saria-current="page"/g, "");
+      return `<a${cleanAttributes}${code === lang ? ' aria-current="page"' : ""}>`;
+    }
+  );
 }
 
 const rootHtml = readFileSync(join(siteDir, "index.html"), "utf8");
@@ -259,7 +270,15 @@ function localize(html, lang) {
       ? `aria-label="${escapeAttr(dict[key])}" data-i18n-aria-label="${key}"`
       : match
   );
-  return html;
+  html = html.replace(
+    '<script src="/assets/i18n/fr.js" defer></script>',
+    `<script src="/assets/i18n/${lang}.js" defer></script>`
+  );
+  html = html.replace(
+    '<link rel="manifest" href="/site.webmanifest">',
+    `<link rel="manifest" href="/site.${lang}.webmanifest">`
+  );
+  return markCurrentHomeLanguage(html, lang);
 }
 
 function stampAssets(html) {
@@ -272,7 +291,7 @@ function stampAssets(html) {
   // Safari peut sinon combiner un HTML neuf avec une image, une police ou un
   // srcset conservé pendant la durée du cache partagé.
   return html.replace(
-    /(\/(?:assets\/[^"'()<>,\s?]+|favicon\.svg|site\.webmanifest))/g,
+    /(\/(?:assets\/[^"'()<>,\s?]+|favicon\.svg|site(?:\.(?:en|de|lb))?\.webmanifest))/g,
     assetPath => assetPath.endsWith(`.${stamp}.css`) ? assetPath : `${assetPath}?v=${stamp}`
   );
 }
@@ -343,11 +362,13 @@ if (stamp) {
   });
   console.log(`JavaScript : imports et assets statiques estampillés ?v=${stamp}`);
 
-  const manifestPath = join(siteDir, "site.webmanifest");
-  if (existsSync(manifestPath)) {
+  const manifestNames = readdirSync(siteDir)
+    .filter(name => /^site(?:\.(?:en|de|lb))?\.webmanifest$/.test(name));
+  for (const manifestName of manifestNames) {
+    const manifestPath = join(siteDir, manifestName);
     writeFileSync(manifestPath, stampManifestAssets(readFileSync(manifestPath, "utf8")));
-    console.log(`site.webmanifest : icônes estampillées ?v=${stamp}`);
   }
+  console.log(`${manifestNames.length} manifestes : icônes estampillées ?v=${stamp}`);
 
   const notFoundPath = join(siteDir, "404.html");
   if (existsSync(notFoundPath)) {

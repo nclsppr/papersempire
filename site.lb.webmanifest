@@ -1,10 +1,10 @@
 {
   "name": "Papers Empire",
   "short_name": "Papers Empire",
-  "description": "Jeu idle gratuit dans le navigateur : transforme ton imprimerie en usine 4.0.",
-  "lang": "fr",
+  "description": "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0 a späicher däi Fortschrëtt lokal.",
+  "lang": "lb",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/lb/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#07111f",
