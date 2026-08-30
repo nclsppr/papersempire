@@ -42,6 +42,7 @@
 
   const SUPPORTED_LANGS = ["fr", "en", "de", "lb"];
   const DEFAULT_LANG = "fr";
+  const LANDING_HASHES = ["#sceneStage", "#roadmapTitle"];
   const COLLAPSIBLE_PANEL_IDS = ["print", "buildings", "strategy", "dispatch", "progress"];
   const DOM_RENDER_INTERVAL_MS = 100;
   const DASH_SNAPSHOT_KEY = "pe-dash-snapshot";
@@ -441,19 +442,19 @@
     return !!(savedAchievements && Object.values(savedAchievements).some(Boolean));
   }
 
-  function wantsWelcomeView() {
+  function wantsLandingView() {
     try {
-      return new URLSearchParams(window.location.search).get("welcome") === "1";
+      return new URLSearchParams(window.location.search).get("welcome") === "1" ||
+        LANDING_HASHES.includes(window.location.hash);
     } catch {
       return false;
     }
   }
 
-  function updateWelcomeParam(show, hash) {
+  function updateExperienceUrl(hash) {
     try {
       const url = new URL(window.location.href);
-      if (show) url.searchParams.set("welcome", "1");
-      else url.searchParams.delete("welcome");
+      url.searchParams.delete("welcome");
       if (typeof hash === "string" && hash) url.hash = hash;
       window.history.replaceState(null, "", url);
     } catch {
@@ -465,9 +466,9 @@
     experienceMode = mode === "playing" ? "playing" : "landing";
     document.documentElement.dataset.experience = experienceMode;
     const playing = experienceMode === "playing";
-    if (DOM.mainContent) {
-      DOM.mainContent.inert = !playing;
-      DOM.mainContent.setAttribute("aria-hidden", playing ? "false" : "true");
+    if (DOM.gameSurface) {
+      DOM.gameSurface.inert = !playing;
+      DOM.gameSurface.setAttribute("aria-hidden", playing ? "false" : "true");
     }
     if (DOM.sceneStage) {
       DOM.sceneStage.setAttribute("aria-labelledby", playing ? "empireHudTitle" : "heroTitle");
@@ -480,12 +481,30 @@
       element.setAttribute("aria-hidden", playing ? "true" : "false");
     });
     window.__PE_SCENE_MODE__ = experienceMode;
-    if (options.updateUrl !== false) updateWelcomeParam(!playing && experienceStarted);
+    if (options.updateUrl !== false) updateExperienceUrl();
   }
 
   function initExperienceMode() {
-    const showWelcome = wantsWelcomeView();
-    applyExperienceMode(showWelcome || !experienceStarted ? "landing" : "playing", { updateUrl: false });
+    const showLanding = wantsLandingView();
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("welcome")) {
+        const canonicalLandingHash = LANDING_HASHES.includes(window.location.hash)
+          ? window.location.hash
+          : params.get("welcome") === "1"
+            ? "#sceneStage"
+            : window.location.hash;
+        updateExperienceUrl(canonicalLandingHash);
+      }
+    } catch {
+      // The current URL already remains usable if query parsing is unavailable.
+    }
+    applyExperienceMode(showLanding || !experienceStarted ? "landing" : "playing", { updateUrl: false });
+    window.addEventListener("hashchange", () => {
+      if (LANDING_HASHES.includes(window.location.hash)) {
+        applyExperienceMode("landing", { updateUrl: false });
+      }
+    });
     if (experienceMode === "playing") {
       requestAnimationFrame(showOfflineReport);
     }
@@ -514,14 +533,14 @@
       : null;
     const target = targetSelector && targetSelector.startsWith("#")
       ? document.querySelector(targetSelector)
-      : DOM.mainContent;
+      : DOM.gameSurface;
     if (targetSelector) expandPanelForTarget(target, { persist: true });
-    updateWelcomeParam(false, targetSelector || "#gameViewTitle");
+    updateExperienceUrl(targetSelector || "#gameViewTitle");
     requestAnimationFrame(() => {
       if ([DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
         return;
       }
-      const destination = target || DOM.mainContent || DOM.clickButton;
+      const destination = target || DOM.gameSurface || DOM.clickButton;
       const focusTarget = destination && destination.matches && destination.matches("button, a, [tabindex]")
         ? destination
         : destination && destination.querySelector
@@ -552,7 +571,7 @@
       TutorialEngine.skip(false);
     }
     applyExperienceMode("landing");
-    updateWelcomeParam(experienceStarted, "#sceneStage");
+    updateExperienceUrl("#sceneStage");
     requestAnimationFrame(() => {
       if (DOM.sceneStage && typeof DOM.sceneStage.scrollIntoView === "function") {
         DOM.sceneStage.scrollIntoView({ behavior: reduceMotionPreferred() ? "auto" : "smooth", block: "start" });
@@ -595,7 +614,7 @@
 
   /** Stores every frequently used DOM node locally for fast access. */
   function cacheDomReferences() {
-    DOM.mainContent = document.getElementById("mainContent");
+    DOM.gameSurface = document.querySelector("[data-game-surface]");
     DOM.sceneStage = document.getElementById("sceneStage");
     DOM.heroTitle = document.getElementById("heroTitle");
     DOM.gameViewTitle = document.getElementById("gameViewTitle");
@@ -1206,7 +1225,6 @@
     try {
       const path = lang === DEFAULT_LANG ? "/" : `/${lang}/`;
       const url = new URL(path, window.location.origin);
-      if (wantsWelcomeView()) url.searchParams.set("welcome", "1");
       url.hash = window.location.hash;
       window.location.assign(url.href);
       return;

@@ -1,10 +1,10 @@
 {
   "name": "Papers Empire",
   "short_name": "Papers Empire",
-  "description": "Jeu idle gratuit dans le navigateur : transforme ton imprimerie en usine 4.0.",
-  "lang": "fr",
+  "description": "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0 and keep your progress locally.",
+  "lang": "en",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/en/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#07111f",

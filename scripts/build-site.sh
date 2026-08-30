@@ -31,7 +31,7 @@ mkdir -p "$output_directory/docs"
 cp "$REPOSITORY_ROOT/index.html" "$output_directory/index.html"
 cp "$REPOSITORY_ROOT/robots.txt" "$output_directory/robots.txt"
 cp "$REPOSITORY_ROOT/404.html" "$output_directory/404.html"
-cp "$REPOSITORY_ROOT/site.webmanifest" "$output_directory/site.webmanifest"
+cp "$REPOSITORY_ROOT"/site*.webmanifest "$output_directory/"
 cp -R "$REPOSITORY_ROOT/assets" "$output_directory/assets"
 # Les masters ImageGen/PNG et manifestes de production restent versionnés dans
 # le dépôt pour la traçabilité, mais ne sont jamais téléchargés par le jeu.

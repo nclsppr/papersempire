@@ -188,7 +188,7 @@ html[data-experience="playing"] body {
   padding-top: 42px;
 }
 
-.operations-title-block h1 {
+.operations-title-block h2 {
   max-width: 760px;
   margin: 0;
   padding: 0;
@@ -1608,7 +1608,7 @@ html[data-experience="playing"] body {
     margin-left: 0;
   }
 
-  .operations-title-block h1 {
+  .operations-title-block h2 {
     font-size: clamp(1.48rem, 8vw, 2.15rem);
   }
 

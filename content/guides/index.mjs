@@ -131,7 +131,7 @@ export const LOCALES = Object.freeze({
 export const HUBS = Object.freeze({
   fr: {
     title: "Guides de l’atelier — Idle games de navigateur",
-    h1: "Les guides de l’atelier",
+    h1: "Guides des idle games de navigateur",
     description: "Définitions, sélections et comparaisons honnêtes pour comprendre les idle games de navigateur et choisir l’expérience qui vous correspond.",
     eyebrow: "REGISTRE ÉDITORIAL · ATELIER 01",
     intro: "L’atelier ne se limite pas à produire des documents. Ici, on démonte les mécaniques des jeux idle, on compare leurs rythmes et on renvoie toujours vers leurs versions officielles.",
@@ -139,7 +139,7 @@ export const HUBS = Object.freeze({
   },
   en: {
     title: "Workshop Guides — Browser idle games",
-    h1: "Workshop Guides",
+    h1: "Guides to Browser Idle Games",
     description: "Clear definitions, curated selections, and honest comparisons to understand browser idle games and choose the experience that fits you.",
     eyebrow: "EDITORIAL REGISTER · WORKSHOP 01",
     intro: "The workshop is about more than producing documents. Here we take idle-game systems apart, compare their rhythms, and always point to official versions.",
@@ -147,7 +147,7 @@ export const HUBS = Object.freeze({
   },
   de: {
     title: "Werkstatt-Guides — Idle Games im Browser",
-    h1: "Die Werkstatt-Guides",
+    h1: "Werkstatt-Guides für Browser-Idle-Games",
     description: "Klare Definitionen, ausgewählte Spiele und ehrliche Vergleiche, um Browser-Idle-Games zu verstehen und das passende Erlebnis zu finden.",
     eyebrow: "REDAKTIONSREGISTER · WERKSTATT 01",
     intro: "In der Werkstatt geht es um mehr als Dokumente. Wir zerlegen Idle-Mechaniken, vergleichen Spielrhythmen und verlinken immer die offiziellen Versionen.",
@@ -155,7 +155,7 @@ export const HUBS = Object.freeze({
   },
   lb: {
     title: "Atelier-Guiden — Idle Games am Browser",
-    h1: "D’Guide vum Atelier",
+    h1: "Atelier-Guiden iwwer Browser-Idle-Games",
     description: "Kloer Erklärungen, ausgewielte Spiller an éierlech Vergläicher fir Browser-Idle-Games ze verstoen an dat passend Spill ze fannen.",
     eyebrow: "REDAKTIOUNSREGISTER · ATELIER 01",
     intro: "Am Atelier geet et ëm méi wéi Dokumenter. Mir huelen d’Mechanike vun Idle Games auserneen, vergläichen hire Rhythmus a verlinken ëmmer déi offiziell Versiounen.",
@@ -197,13 +197,13 @@ export const ARTICLES = Object.freeze([
     id: "idle-clicker-incremental",
     image: "/assets/images/guides/idle-clicker-incremental.webp",
     datePublished: "2026-08-26",
-    dateModified: "2026-08-26",
+    dateModified: "2026-08-31",
     sourcesCheckedAt: "2026-08-26",
     sources: [sharedSources.papers, sharedSources.papersDesign, sharedSources.cookie, sharedSources.paperclips],
     translations: {
       fr: {
         slug: "jeu-idle-clicker-incremental-differences",
-        title: "Jeu idle, clicker ou jeu incrémental : quelles différences ?",
+        title: "Jeu idle, clicker ou incrémental : quelles différences ?",
         description: "Idle, clicker, incrémental : ce qui change entre clic actif, automatisation, progression hors ligne et prestige, avec des exemples jouables.",
         eyebrow: "LEXIQUE DE PRODUCTION · GUIDE 01",
         lead: "Il n’existe pas de frontière normalisée unique entre ces trois étiquettes. Cette grille éditoriale distingue surtout le geste du clicker, le rapport au temps de l’idle et la croissance du système incrémental.",
@@ -243,7 +243,7 @@ export const ARTICLES = Object.freeze([
       },
       en: {
         slug: "idle-game-clicker-incremental-differences",
-        title: "Idle game, clicker, or incremental game: what’s the difference?",
+        title: "Idle, clicker or incremental game: what’s the difference?",
         description: "See how active clicking, automation, offline progress, and prestige differ across idle, clicker, and incremental browser games.",
         eyebrow: "PRODUCTION GLOSSARY · GUIDE 01",
         lead: "There is no single standardized boundary between these three labels. This editorial framework separates the clicker’s input, idle design’s relationship with time, and the incremental system’s growth into new layers.",
@@ -283,7 +283,7 @@ export const ARTICLES = Object.freeze([
       },
       de: {
         slug: "idle-game-clicker-incremental-unterschied",
-        title: "Idle Game, Clicker oder Incremental Game: Was ist der Unterschied?",
+        title: "Idle Game, Clicker oder Incremental: der Unterschied",
         description: "So unterscheiden sich aktives Klicken, Automatisierung, Offline-Fortschritt und Prestige – mit Beispielen aus Browser-Spielen.",
         eyebrow: "PRODUKTIONSLEXIKON · GUIDE 01",
         lead: "Für diese drei Begriffe gibt es keine einheitlich normierte Grenze. Diese redaktionelle Einteilung trennt vor allem die Clicker-Eingabe, den Umgang von Idle Design mit Zeit und das Wachsen des Incremental-Systems.",
@@ -323,7 +323,7 @@ export const ARTICLES = Object.freeze([
       },
       lb: {
         slug: "idle-game-clicker-incremental-ennerscheed",
-        title: "Idle Game, Clicker oder Incremental Game: Wat ass den Ënnerscheed?",
+        title: "Idle Game, Clicker oder Incremental: den Ënnerscheed",
         description: "Dëse Guide erkläert Klicks, Automatiséierung, Offline-Fortschrëtt a Prestige mat Beispiller aus Browser-Spiller.",
         eyebrow: "PRODUKTIOUNSLEXIKON · GUIDE 01",
         lead: "Et gëtt keng eenzeg norméiert Grenz tëscht dësen dräi Begrëffer. Dës redaktionell Andeelung ënnerscheet virun allem d’Clicker-Aktioun, d’Relatioun vun Idle Design mat der Zäit an de Wuesstem vum Incremental-System.",
@@ -367,13 +367,13 @@ export const ARTICLES = Object.freeze([
     id: "browser-idle-selection",
     image: "/assets/images/guides/browser-idle-games.webp",
     datePublished: "2026-08-26",
-    dateModified: "2026-08-26",
+    dateModified: "2026-08-31",
     sourcesCheckedAt: "2026-08-26",
     sources: [sharedSources.papers, sharedSources.papersDesign, sharedSources.paperclips, sharedSources.cookie, sharedSources.kittens, sharedSources.trimps, sharedSources.industry, sharedSources.evolve, sharedSources.evolveRepo],
     translations: {
       fr: {
         slug: "idle-games-navigateur-gestion",
-        title: "7 idle games de navigateur pour ceux qui préfèrent gérer plutôt que cliquer",
+        title: "7 idle games de navigateur axés sur la gestion",
         description: "Sept jeux idle et incrémentaux jouables dans le navigateur, choisis pour leurs décisions, leur automatisation et leurs systèmes de gestion.",
         eyebrow: "CATALOGUE DE L’ATELIER · GUIDE 02",
         lead: "Cette sélection n’est pas un classement. Elle réunit sept jeux officiels accessibles dans le navigateur, chacun avec une façon différente de transformer l’attente en décisions.",
@@ -414,7 +414,7 @@ export const ARTICLES = Object.freeze([
       },
       en: {
         slug: "browser-idle-games-for-management",
-        title: "7 browser idle games for players who would rather manage than click",
+        title: "7 browser idle games focused on management",
         description: "Seven official browser idle and incremental games selected for meaningful decisions, automation, and management systems rather than click speed.",
         eyebrow: "WORKSHOP CATALOGUE · GUIDE 02",
         lead: "This is a selection, not a ranking. These seven official browser games turn waiting into different kinds of decisions—from production lines and markets to settlements and expeditions.",
@@ -455,7 +455,7 @@ export const ARTICLES = Object.freeze([
       },
       de: {
         slug: "browser-idle-games-fuer-manager",
-        title: "7 Browser-Idle-Games für alle, die lieber verwalten als klicken",
+        title: "7 Browser-Idle-Games mit Fokus auf Management",
         description: "Sieben offizielle Idle- und Incremental Games im Browser, ausgewählt wegen Entscheidungen, Automatisierung und Management statt Klicktempo.",
         eyebrow: "WERKSTATTKATALOG · GUIDE 02",
         lead: "Das ist eine Auswahl, keine Rangliste. Sieben offizielle Browser-Spiele verwandeln Wartezeit in ganz unterschiedliche Entscheidungen – von Produktionslinien bis zu Siedlungen.",
@@ -496,7 +496,7 @@ export const ARTICLES = Object.freeze([
       },
       lb: {
         slug: "browser-idle-games-fir-manager",
-        title: "7 Browser-Idle-Games fir Leit, déi léiwer geréieren ewéi klicken",
+        title: "7 Browser-Idle-Games fir Leit, déi léiwer geréieren",
         description: "Siwen offiziell Idle- an Incremental Games am Browser, ausgewielt wéinst Entscheedungen, Automatiséierung a Management amplaz Klicktempo.",
         eyebrow: "ATELIER-KATALOG · GUIDE 02",
         lead: "Dat hei ass eng Auswiel, kee Klassement. Siwen offiziell Browser-Spiller maachen aus Waardezäit ganz verschidden Entscheedungen – vu Produktiounslinne bis zu Siedlungen.",
@@ -541,13 +541,13 @@ export const ARTICLES = Object.freeze([
     id: "papers-vs-paperclips",
     image: "/assets/images/guides/papers-empire-vs-paperclips.webp",
     datePublished: "2026-08-26",
-    dateModified: "2026-08-26",
+    dateModified: "2026-08-31",
     sourcesCheckedAt: "2026-08-26",
     sources: [sharedSources.papers, sharedSources.papersDesign, sharedSources.paperclips, sharedSources.paperclipsCreator],
     translations: {
       fr: {
         slug: "papers-empire-universal-paperclips-deux-philosophies",
-        title: "Papers Empire ou Universal Paperclips : deux empires de papier, deux philosophies",
+        title: "Papers Empire vs Universal Paperclips : deux philosophies",
         description: "Comparaison sans gros spoilers entre Papers Empire et Universal Paperclips : départ, automatisation, décisions, présentation et type de progression.",
         eyebrow: "FACE-À-FACE INDUSTRIEL · GUIDE 03",
         lead: "Les deux jeux partent d’un objet de bureau et d’une action simple. Papers Empire développe une imprimerie illustrée ; Universal Paperclips révèle progressivement de nouveaux systèmes dans une interface textuelle minimale.",
@@ -589,7 +589,7 @@ export const ARTICLES = Object.freeze([
       },
       en: {
         slug: "papers-empire-vs-universal-paperclips-two-philosophies",
-        title: "Papers Empire vs Universal Paperclips: two paper empires, two philosophies",
+        title: "Papers Empire vs Universal Paperclips: two philosophies",
         description: "A low-spoiler comparison of Papers Empire and Universal Paperclips: openings, automation, decisions, presentation, and progression style.",
         eyebrow: "INDUSTRIAL HEAD-TO-HEAD · GUIDE 03",
         lead: "Both games begin with an office object and a simple action. Papers Empire develops an illustrated print shop; Universal Paperclips gradually reveals new systems through a minimal text interface.",
@@ -631,7 +631,7 @@ export const ARTICLES = Object.freeze([
       },
       de: {
         slug: "papers-empire-universal-paperclips-zwei-philosophien",
-        title: "Papers Empire vs. Universal Paperclips: zwei Papierimperien, zwei Ideen",
+        title: "Papers Empire vs. Universal Paperclips: zwei Spielideen",
         description: "Spoilerarmer Vergleich von Papers Empire und Universal Paperclips: Einstieg, Automatisierung, Entscheidungen, Darstellung und Fortschritt.",
         eyebrow: "INDUSTRIELLES DUELL · GUIDE 03",
         lead: "Beide Spiele beginnen mit einem Bürogegenstand und einer einfachen Handlung. Papers Empire entwickelt eine illustrierte Druckerei; Universal Paperclips zeigt nach und nach neue Systeme in einer reduzierten Textoberfläche.",
@@ -673,7 +673,7 @@ export const ARTICLES = Object.freeze([
       },
       lb: {
         slug: "papers-empire-universal-paperclips-zwou-philosophien",
-        title: "Papers Empire an Universal Paperclips: zwee Pabeiersräicher, zwou Iddien",
+        title: "Papers Empire vs Universal Paperclips: zwou Spilliddien",
         description: "E spoilerarme Verglach vu Papers Empire an Universal Paperclips: Ufank, Automatiséierung, Entscheedungen, Presentatioun a Fortschrëtt.",
         eyebrow: "INDUSTRIELLEN DUELL · GUIDE 03",
         lead: "Béid Spiller fänke mat Büromaterial an enger einfacher Aktioun un. Papers Empire entwéckelt eng illustréiert Dréckerei; Universal Paperclips weist no an no nei Systemer an enger minimalistescher Text-Uewerfläch.",
