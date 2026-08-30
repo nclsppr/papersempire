@@ -5905,7 +5905,9 @@ html.pref-reduce-motion {
 .building-inspector.is-success {
   border-color: rgba(79, 113, 46, 0.68);
   border-left-color: var(--ops-positive);
-  background: rgba(79, 113, 46, 0.1);
+  background:
+    linear-gradient(rgba(79, 113, 46, 0.06), rgba(79, 113, 46, 0.06)),
+    var(--paper-bright);
 }
 
 .building-inspector.is-success .building-inspector-kicker,
@@ -6566,24 +6568,27 @@ html:not(.pref-reduce-motion) .operations-deck .btn-buy.is-stamped {
 
 .contract-clause-head {
   min-width: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 3px;
 }
 
 .contract-clause-label {
   min-width: 0;
   color: var(--ink-strong);
   font-weight: 850;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .contract-clause-status {
-  flex: 0 0 auto;
+  max-width: 100%;
+  justify-self: start;
   font-size: 0.56rem;
   font-weight: 900;
   letter-spacing: 0.06em;
+  line-height: 1.35;
+  overflow-wrap: break-word;
   text-transform: uppercase;
 }
 
@@ -7028,6 +7033,16 @@ html:not(.pref-reduce-motion) .operations-deck .btn-buy.is-stamped {
 .pref-high-contrast .contract-clause-progress > span,
 .pref-high-contrast .achievement-progress > span {
   background: var(--hc-accent);
+}
+
+.pref-high-contrast .building-inspector.is-success .building-inspector-kicker,
+.pref-high-contrast .building-inspector.is-success .building-inspector-copy {
+  color: var(--hc-accent);
+}
+
+.pref-high-contrast .contract-clause.is-met .contract-clause-status,
+.pref-high-contrast .contract-clause.is-failed .contract-clause-status {
+  color: var(--hc-accent);
 }
 
 .pref-high-contrast .work-order:focus-visible {
