@@ -1125,6 +1125,11 @@ html[data-experience="playing"] body {
   gap: 18px;
 }
 
+.data-zone-split > .data-zone-section-heading-wide {
+  grid-column: 1 / -1;
+  margin-bottom: 6px;
+}
+
 .flow-panel,
 .gauge-panel {
   padding: 24px;
@@ -1136,6 +1141,14 @@ html[data-experience="playing"] body {
 
 .flow-panel:nth-child(2) {
   border-top-color: var(--world-brass);
+}
+
+.flow-panel:nth-child(4) {
+  border-top-color: var(--world-green);
+}
+
+.gauge-panel {
+  grid-column: 1 / -1;
 }
 
 .flow-row {

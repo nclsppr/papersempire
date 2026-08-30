@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "docs:build": "node node_modules/retypeapp/retype.js build --output docs-site",
+    "gameplay:check": "node scripts/validate-progression.mjs && node scripts/validate-gameplay-modules.mjs",
+    "i18n:check": "node scripts/validate-i18n.mjs",
     "ui:check": "node scripts/validate-ui-resilience.mjs",
     "worker:check": "node scripts/validate-cloudflare-worker.mjs",
     "seo:check": "node scripts/validate-seo.mjs",
     "cloudflare:build": "./scripts/build-cloudflare-site.sh",
-    "cloudflare:check": "npm run ui:check && npm run worker:check && npm run cloudflare:build && npm run seo:check && wrangler deploy --dry-run",
+    "cloudflare:check": "npm run gameplay:check && npm run i18n:check && npm run ui:check && npm run worker:check && npm run cloudflare:build && npm run seo:check && wrangler deploy --dry-run",
     "cloudflare:deploy": "npm run cloudflare:check && wrangler deploy"
   },
   "devDependencies": {

@@ -113,7 +113,7 @@ Principes :
 
 ## Miniatures de machines
 
-Les anciens stickers bristol ne sont plus la référence obligatoire. Les onze
+Les anciens stickers bristol ne sont plus la référence obligatoire. Les douze
 bâtiments utilisent des miniatures isométriques illustrées sur fond alpha :
 châssis acier bleu nuit, panneaux orange, rouleaux métal/laiton, papier
 ivoire, lumière de studio chaude et détails CMJN discrets.

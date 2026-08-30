@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
+const THREE = await import(new URL("../assets/vendor/three.module.min.js", import.meta.url));
+
 const rootDir = new URL("../", import.meta.url);
 const read = path => readFileSync(new URL(path, rootDir), "utf8");
 const readBuffer = path => readFileSync(new URL(path, rootDir));
@@ -21,6 +23,19 @@ function readPngMetadata(path) {
     width: image.readUInt32BE(16),
     height: image.readUInt32BE(20),
     colorType: image[25]
+  };
+}
+
+function readWebpMetadata(path) {
+  const image = readBuffer(path);
+  assert.equal(image.subarray(0, 4).toString("ascii"), "RIFF", `${path} must remain a RIFF WebP`);
+  assert.equal(image.subarray(8, 12).toString("ascii"), "WEBP", `${path} must remain a WebP`);
+  assert.equal(image.subarray(12, 16).toString("ascii"), "VP8X", `${path} must expose extended WebP metadata`);
+  const readUInt24LE = offset => image[offset] | image[offset + 1] << 8 | image[offset + 2] << 16;
+  return {
+    width: readUInt24LE(24) + 1,
+    height: readUInt24LE(27) + 1,
+    hasAlpha: Boolean(image[20] & 0x10)
   };
 }
 
@@ -109,6 +124,96 @@ function verifyHighContrastDoesNotBootWebGL() {
     "high contrast must keep the progressive fallback visible");
 }
 
+function object3dSignature(root) {
+  const signature = [];
+  root.traverse(object => {
+    signature.push({
+      type: object.type,
+      name: object.name,
+      position: object.position.toArray().map(value => Number(value.toFixed(6))),
+      rotation: [object.rotation.x, object.rotation.y, object.rotation.z]
+        .map(value => Number(value.toFixed(6))),
+      scale: object.scale.toArray().map(value => Number(value.toFixed(6))),
+      color: object.material && object.material.color
+        ? object.material.color.getHex()
+        : null
+    });
+  });
+  return signature;
+}
+
+function verifyPrepressCampusContracts() {
+  const layoutSandbox = {};
+  vm.runInNewContext(read("assets/js/scene/city-layout.js"), layoutSandbox);
+  const layout = layoutSandbox.CityLayout;
+  assert.ok(layout, "city layout must expose its pure API");
+  assert.equal(layout.BUILDING_IDS.length, 12,
+    "the campus must expose twelve purchasable building lots");
+  assert.ok(layout.BUILDING_IDS.includes("prepressStudio"),
+    "the prepress studio must have a campus lot");
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(layout.LOTS.prepressStudio)),
+    { x: -9.5, z: -5, w: 2, d: 1.6, cap: 2 },
+    "the prepress lot must keep its collision-reviewed footprint"
+  );
+  assert.equal(layout.copiesFor("prepressStudio", 99), 2,
+    "the prepress studio must respect its visual copy cap");
+
+  const occupied = layout.BUILDING_IDS.map(id => {
+    const lot = layout.LOTS[id];
+    const offsets = layout.duplicateOffsets(id, lot.cap);
+    return {
+      id,
+      row: lot.z,
+      minX: Math.min(...offsets.map(offset => lot.x + offset.x - lot.w / 2)),
+      maxX: Math.max(...offsets.map(offset => lot.x + offset.x + lot.w / 2)),
+      minZ: Math.min(...offsets.map(offset => lot.z + offset.z - lot.d / 2)),
+      maxZ: Math.max(...offsets.map(offset => lot.z + offset.z + lot.d / 2))
+    };
+  });
+  occupied.forEach(bounds => {
+    assert.ok(bounds.minX >= -layout.WORLD.width / 2 && bounds.maxX <= layout.WORLD.width / 2,
+      `${bounds.id} visual copies must stay inside the campus width`);
+    assert.ok(bounds.minZ >= -layout.WORLD.depth / 2 && bounds.maxZ <= layout.WORLD.depth / 2,
+      `${bounds.id} visual copies must stay inside the campus depth`);
+  });
+  occupied.forEach((left, index) => {
+    occupied.slice(index + 1).forEach(right => {
+      if (left.row !== right.row) return;
+      assert.ok(left.maxX <= right.minX || right.maxX <= left.minX,
+        `${left.id} and ${right.id} visual copies must not overlap`);
+    });
+  });
+
+  const recipeSandbox = { window: {} };
+  vm.runInNewContext(read("assets/js/scene/building-recipes.js"), recipeSandbox);
+  const recipes = recipeSandbox.window.BuildingRecipes;
+  assert.ok(recipes, "building recipes must expose their browser API");
+  const studio = recipes.build(THREE, "prepressStudio");
+  assert.ok(studio, "the prepress studio recipe must build a Three.js group");
+  assert.equal(studio.userData.buildingId, "prepressStudio");
+  const initialSignature = object3dSignature(studio);
+  recipes.applyQuantity(THREE, studio, 10);
+  const grownSignature = object3dSignature(studio);
+  assert.notDeepEqual(grownSignature, initialSignature,
+    "the prepress miniature must visibly grow with its quantity");
+  assert.equal(studio.userData.floorCount, 4,
+    "quantity ten must use the shared fourth growth stage");
+  recipes.applyQuantity(THREE, studio, 10);
+  assert.deepEqual(object3dSignature(studio), grownSignature,
+    "reapplying a prepress growth stage must be idempotent");
+
+  const shadow = studio.getObjectByName("shadow");
+  if (shadow && shadow.parent) shadow.parent.remove(shadow);
+  const bounds = new THREE.Box3().setFromObject(studio);
+  const size = bounds.getSize(new THREE.Vector3());
+  assert.ok(size.x <= layout.LOTS.prepressStudio.w + 0.01,
+    "the prepress recipe must fit its lot width");
+  assert.ok(size.z <= layout.LOTS.prepressStudio.d + 0.01,
+    "the prepress recipe must fit its lot depth");
+  recipes.disposeResources();
+}
+
 function verifyStaticContracts() {
   const index = read("index.html");
   const dashboard = read("dashboard/index.html");
@@ -123,6 +228,7 @@ function verifyStaticContracts() {
   const siteHeaderCss = read("assets/css/site-header.css");
   const experienceCss = read("assets/css/experience-v4.css");
   const guidesCss = read("assets/css/guides.css");
+  const fr = read("assets/i18n/fr.js");
   const siteHeaderJs = read("assets/js/site-header.js");
   const guidesBuild = read("scripts/build-guides.mjs");
   const guidesCatalog = read("content/guides/index.mjs");
@@ -155,6 +261,86 @@ function verifyStaticContracts() {
     "one current job must appear before client offers");
   assert.doesNotMatch(index, /id="(?:activeContractPanel|machineUnlockPanel)"/,
     "legacy objective panels must not duplicate the current job");
+  const objectiveStart = index.indexOf('id="currentObjective"');
+  const objectiveEnd = index.indexOf("</section>", objectiveStart);
+  const objectiveMarkup = index.slice(objectiveStart, objectiveEnd);
+  for (const hook of [
+    "data-work-order-context",
+    "data-work-order-plan",
+    "data-work-order-step",
+    "data-work-order-steps",
+    "data-work-order-criteria",
+    "data-work-order-outcome",
+    "data-work-order-reward",
+    "data-work-order-incident",
+    "data-work-order-incident-label",
+    "data-work-order-incident-hint"
+  ]) {
+    assert.ok(objectiveMarkup.includes(hook), `the current job must expose the ${hook} hook`);
+  }
+  assert.match(index, /class="prestige-card"[\s\S]*id="careerPlanContainer"[\s\S]*id="careerPlanChoices"[\s\S]*id="prestigeButton"/,
+    "career choices must stay inside the existing strategic reorganisation card");
+  assert.match(app, /const conclusionUnlocked = Boolean\(summary\.conclusion && summary\.conclusion\.unlocked\)[\s\S]*career\.conclusion\.pendingTitle/,
+    "the final job title must stay hidden until all major campaigns are archived");
+  assert.match(app, /function careerStatusSignature\([\s\S]*current: formatNumber\(progress\.current\)[\s\S]*activeCampaign:[\s\S]*status: careerStatusSignature/,
+    "career cards must invalidate their render cache when an active objective advances");
+  assert.match(app, /function handlePrestigeClick\([\s\S]*prestigeCampaignRestartCopy\(preview\)[\s\S]*prestigeChallengeFailureCopy\(preview\)/,
+    "reorganisation confirmation must disclose restarted campaigns and abandoned challenges");
+  assert.match(app, /const runCultureEarned =[\s\S]*const prestigeDelta = Math\.max\(0, gameState\.resources\.culturePoints - cultureBefore\)[\s\S]*gain: prestigeDelta/,
+    "the archive's run culture and the reorganisation receipt delta must stay distinct");
+  assert.match(app, /unlockedDefinitions: prestigeUnlockedDefinitions[\s\S]*grantedRewards: prestigeGrantedRewards[\s\S]*prestigeUnlockedDefinitions\.map/,
+    "a reorganisation receipt must explain every achievement reward in the unlocked batch");
+  assert.match(app, /function checkAchievements\([\s\S]*while \(newly\.length < Achievements\.definitions\.length\)[\s\S]*Achievements\.evaluate\(buildAchievementContext\(\), unlockedMap\)[\s\S]*applyAchievementReward/,
+    "achievement rewards must resolve cascading unlocks in one atomic batch");
+  assert.match(fr, /"prestige\.confirm": "[^"]*Gain garanti hors récompenses de succès\s*:[^"]*récompenses de succès seront ajoutées au reçu/,
+    "the reorganisation confirmation must distinguish guaranteed gain from achievement rewards");
+  assert.match(index, /building-prepressStudio-v4\.webp[\s\S]*data-i18n="building\.prepressStudio\.name"/,
+    "the public workshop catalogue must introduce the prepress studio");
+  assert.deepEqual(
+    readPngMetadata("assets/images/buildings-v4/sources/building-prepressStudio-v4.png"),
+    { width: 512, height: 512, colorType: 6 },
+    "the traceable prepress master must remain a 512px RGBA PNG"
+  );
+  assert.deepEqual(
+    readWebpMetadata("assets/images/building-prepressStudio-v4.webp"),
+    { width: 512, height: 512, hasAlpha: true },
+    "the shipped prepress thumbnail must remain a transparent 512px WebP"
+  );
+  assert.match(index, /id="careerPlanContainer"[^>]*role="group"[^>]*aria-labelledby="careerPlanTitle"[^>]*aria-describedby="careerPlanIntro careerPlanEffect"/,
+    "dynamic career choices must expose a labelled and described accessible group");
+  assert.match(index, /data-work-order-reward[^>]*role="status"[^>]*aria-live="polite"[^>]*aria-atomic="true"/,
+    "job rewards must announce their complete feedback without making the live job card noisy");
+  assert.doesNotMatch(index, /id="(?:plansPanel|careerPanel|incidentsPanel|clausesPanel)"/,
+    "long-term progression must not add another top-level dashboard panel");
+  for (const selector of [
+    ".work-order-context",
+    ".work-order-steps",
+    ".work-order-criteria",
+    ".work-order-outcome",
+    ".work-order-reward",
+    ".work-order-incident",
+    ".career-plan",
+    ".career-plan-choices",
+    ".contract-clause",
+    ".building-milestone",
+    ".achievement-progress",
+    ".event-choice-label",
+    ".event-choice-effect"
+  ]) {
+    assert.ok(css.includes(selector), `the long-term progression UI must style ${selector}`);
+  }
+  assert.match(css, /@media \(max-width:\s*520px\)[\s\S]*\.work-order-steps,[\s\S]*\.career-plan-choices\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+    "job steps, criteria and career choices must collapse to one mobile column");
+  assert.match(css, /@media \(any-pointer:\s*coarse\)[\s\S]*\.work-order-incident,[\s\S]*\.career-plan-choice,[\s\S]*\.career-plan-option label,[\s\S]*min-height:\s*44px/,
+    "new progression controls must retain coarse-pointer touch targets");
+  assert.ok(css.includes(".pref-high-contrast .career-plan"),
+    "career planning must provide an explicit high-contrast surface");
+  assert.ok(css.includes(".pref-high-contrast .work-order-criterion"),
+    "job criteria must provide explicit high-contrast states");
+  assert.ok(css.includes("html:not(.pref-reduce-motion) .work-order.is-plan-stamped"),
+    "stamp confirmation motion must only run when reduced motion is not requested");
+  assert.ok(css.includes(".pref-reduce-motion .work-order.is-plan-stamped"),
+    "stamp confirmation must expose a stable reduced-motion state");
   assert.match(app, /playContractEffect\(DOM\.currentObjective\)/,
     "contract activation feedback must target the current job");
   assert.match(index, /id="disableEventInterruptions"[\s\S]*data-i18n="events\.optOut"/,
@@ -167,6 +353,12 @@ function verifyStaticContracts() {
     "the interruption opt-out must reuse the persistent interface preference");
   assert.match(app, /function closeEventModal\([\s\S]*cancelActive\(\)[\s\S]*eventState\.active = null/,
     "dismissing an interruption must cancel it without applying a choice");
+  assert.match(app, /function closeEventModal\([\s\S]*renderPendingEventControl\(\)[\s\S]*restoreModalFocus\(DOM\.eventModal, DOM\.currentObjective\)/,
+    "closing an interruption must hide its pending trigger before restoring focus to the dossier");
+  assert.match(app, /function handleEventChoiceClick\([\s\S]*eventState\.active = null[\s\S]*queueSave\(true\)/,
+    "a resolved event choice must clear the pending incident before persisting");
+  assert.match(app, /function handleMinigameResponse\([\s\S]*eventState\.active = null[\s\S]*queueSave\(true\)/,
+    "a resolved calibration must clear the pending incident before persisting");
   assert.match(app, /function showEventBanner\([\s\S]*setTimeout\([\s\S]*hideEventBanner\(\)[\s\S]*6000/,
     "event result banners must leave the screen automatically");
   assert.match(events, /BASE_INTERVAL = 90[\s\S]*MIN_COOLDOWN = 180[\s\S]*spawnChancePerSecond[\s\S]*Math\.pow/,
@@ -177,10 +369,28 @@ function verifyStaticContracts() {
     "small positive-status text must keep sufficient contrast on paper surfaces");
   assert.match(app, /function renderWorkOrder\([\s\S]*activeContract\.timer[\s\S]*progressValue: elapsed/,
     "the client job must expose real elapsed-time progress");
+  assert.match(app, /careerState\.campaigns\.active[\s\S]*getCampaignStatus[\s\S]*kind: "campaign"/,
+    "an active campaign must remain the current dossier between two Plans");
   assert.match(index, /role="progressbar"[^>]*aria-valuenow="50"/,
     "workshop gauges must expose their current value accessibly");
   assert.match(dashboardJs, /function setText\(element, value\)[\s\S]*element\.textContent !== next/,
     "Data Science live regions must not be rewritten with identical text on every poll");
+  assert.match(dashboardJs, /const BUILDING_IDS = new Set\([\s\S]*"prepressStudio"/,
+    "Data Science must recognize the prepress studio snapshot row");
+  assert.match(dashboard, /id="docFlowList"[\s\S]*id="ccFlowList"[\s\S]*id="cultureFlowList"/,
+    "Data Science must expose separate DOC, trust and culture source lists");
+  assert.match(dashboardJs, /achievementDocs[\s\S]*achievementCc[\s\S]*careerCulture[\s\S]*achievementCulture/,
+    "Data Science resource origins must include achievement and career rewards");
+  assert.match(dashboardJs, /function catalogSizedText\([\s\S]*const total = BUILDING_IDS\.size/,
+    "Data Science catalog labels must follow the runtime catalog size");
+  assert.match(dashboardJs, /catalogSizedText\("analytics\.investment\.analyzed"/,
+    "the analyzed-building total must use the dynamic catalog label");
+  assert.match(dashboardJs, /catalogSizedText\("analytics\.matrix\.title"/,
+    "the comparison heading must use the dynamic catalog label");
+  assert.doesNotMatch(dashboard, /id="investmentCount">0 \/ 11/,
+    "the Data Science placeholder must not freeze the former catalog size");
+  assert.doesNotMatch(dashboard, /Comparer les 11 unités/,
+    "the Data Science fallback heading must not freeze the former catalog size");
   assert.doesNotMatch(css + siteHeaderCss + experienceCss + guidesCss, /transition\s*:\s*all\b/,
     "UI motion must continue to name the properties it changes");
   for (const [name, html] of [["game", index], ["404", notFound], ["generated guides", guidesBuild]]) {
@@ -367,5 +577,6 @@ function verifyStaticContracts() {
 }
 
 verifyHighContrastDoesNotBootWebGL();
+verifyPrepressCampusContracts();
 verifyStaticContracts();
 console.log("UI resilience contracts: ok");

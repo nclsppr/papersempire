@@ -10,11 +10,11 @@ Production assets for the V4 **Production Twin** visual system.
 - `../building-<id>-v4.webp` contains the 512×512 alpha WebP used by the site.
 - The previous sticker family remains available as a runtime fallback.
 
-The eleven subjects are: repro operator, repro workshop, digital press, offset
+The twelve subjects are: repro operator, repro workshop, digital press, offset
 press, finishing workshop, inserting line, logistics cell, client portal
-terminal, communications bridge, Industry 4.0 cell and Pampy AI production
-core. A solid magenta generation matte was removed before export; all final
-assets were visually checked on transparency.
+terminal, communications bridge, Industry 4.0 cell, Pampy AI production core
+and prepress studio. A solid magenta generation matte was removed before
+export; all final assets were visually checked on transparency.
 
 Master prompt direction:
 

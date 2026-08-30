@@ -29,11 +29,13 @@
     "logistics",
     "clientPortal",
     "comBridge",
+    "prepressStudio",
     "factory40",
     "pampyAI"
   ]);
 
   const FALLBACK = {
+    "hud.culture": "Culture",
     "analytics.status.waiting": "En attente de données",
     "analytics.status.live": "Relevé à l'instant",
     "analytics.status.fresh": "Données récentes",
@@ -72,16 +74,20 @@
     "analytics.flow.offlineDoc": "Production hors ligne",
     "analytics.flow.contractDoc": "Contrats",
     "analytics.flow.eventDoc": "Événements (net)",
+    "analytics.flow.achievementRewards": "Récompenses de succès",
     "analytics.flow.autoCc": "Confiance automatique",
     "analytics.flow.contractCc": "Contrats",
     "analytics.flow.eventCc": "Événements (net)",
+    "analytics.flow.cultureTitle": "Origine de la culture",
+    "analytics.flow.careerCulture": "Plans et défis",
+    "analytics.flow.achievementCulture": "Succès",
     "analytics.flow.empty": "Joue dans l'atelier pour faire apparaître l'origine des ressources.",
     "analytics.gauge.noHistory": "Pas encore de recul",
     "analytics.gauge.delta": "{value} pt depuis la première mesure",
     "analytics.runs.current": "Cycle courant",
     "analytics.runs.archived": "Cycle du {date}",
     "analytics.runs.prestige": "+{value} culture",
-    "analytics.investment.analyzed": "{count} / 11 unités",
+    "analytics.investment.analyzed": "{count} / {total} unités",
     "analytics.investment.imageFallback": "Illustration indisponible",
     "analytics.raw.schema": "Version du relevé",
     "analytics.raw.generatedAt": "Généré le",
@@ -163,6 +169,15 @@
     return interpolate(value, params || {});
   }
 
+  function catalogSizedText(key, fallback, params) {
+    const total = BUILDING_IDS.size;
+    const value = t(key, fallback, Object.assign({}, params || {}, { total }));
+    if (key === "analytics.investment.analyzed") {
+      return value.replace(/(\/\s*)\d+/, function (_, prefix) { return prefix + total; });
+    }
+    return value.replace(/\b\d+\b/, String(total));
+  }
+
   function detectLanguage() {
     let candidate = null;
     try {
@@ -188,6 +203,11 @@
       const value = own[key] || french[key];
       if (value) element.setAttribute("aria-label", value);
     });
+
+    const matrixTitle = document.querySelector('[data-i18n="analytics.matrix.title"]');
+    if (matrixTitle) {
+      matrixTitle.textContent = catalogSizedText("analytics.matrix.title", matrixTitle.textContent);
+    }
 
     const gamePath = state.lang === "fr" ? "/" : "/" + encodeURIComponent(state.lang) + "/";
     const guidesPath = gamePath + "guides/";
@@ -1001,7 +1021,9 @@
 
   function renderInvestmentTable() {
     const rows = investmentRows().sort(compareInvestmentRows);
-    setText(els.investmentCount, t("analytics.investment.analyzed", null, { count: rows.length }));
+    setText(els.investmentCount, catalogSizedText("analytics.investment.analyzed", null, {
+      count: rows.length
+    }));
     els.investmentEmptyState.hidden = rows.length > 0;
     els.investmentTable.hidden = rows.length === 0;
 
@@ -1091,15 +1113,23 @@
       { key: "manualDocs", label: "analytics.flow.manualDoc" },
       { key: "offlineDocs", label: "analytics.flow.offlineDoc" },
       { key: "contractDocs", label: "analytics.flow.contractDoc" },
-      { key: "eventDocNet", label: "analytics.flow.eventDoc" }
+      { key: "eventDocNet", label: "analytics.flow.eventDoc" },
+      { key: "achievementDocs", label: "analytics.flow.achievementRewards" }
     ]);
     const ccTotal = renderFlowList(els.ccFlowList, [
       { key: "autoCc", label: "analytics.flow.autoCc" },
       { key: "contractCc", label: "analytics.flow.contractCc" },
-      { key: "eventCcNet", label: "analytics.flow.eventCc" }
+      { key: "eventCcNet", label: "analytics.flow.eventCc" },
+      { key: "achievementCc", label: "analytics.flow.achievementRewards" }
+    ]);
+    const cultureTotal = renderFlowList(els.cultureFlowList, [
+      { key: "careerCulture", label: "analytics.flow.careerCulture" },
+      { key: "achievementCulture", label: "analytics.flow.achievementCulture" }
     ]);
     setText(els.docFlowTotal, docTotal === null ? "—" : formatSigned(docTotal) + " DOC");
     setText(els.ccFlowTotal, ccTotal === null ? "—" : formatSigned(ccTotal) + " CC");
+    setText(els.cultureFlowTotal,
+      cultureTotal === null ? "—" : formatSigned(cultureTotal) + " " + t("hud.culture"));
   }
 
   function firstHistoricGauge(key) {
@@ -1138,7 +1168,8 @@
   }
 
   function runCc(run) {
-    return finite(run.autoCc, 0) + finite(run.contractCc, 0) + finite(run.eventCcNet, 0);
+    return finite(run.autoCc, 0) + finite(run.contractCc, 0) +
+      finite(run.eventCcNet, 0) + finite(run.achievementCc, 0);
   }
 
   function runSpend(run) {
@@ -1287,6 +1318,8 @@
       docFlowTotal: byId("docFlowTotal"),
       ccFlowList: byId("ccFlowList"),
       ccFlowTotal: byId("ccFlowTotal"),
+      cultureFlowList: byId("cultureFlowList"),
+      cultureFlowTotal: byId("cultureFlowTotal"),
       gaugeQuality: byId("gaugeQuality"),
       gaugeQualityValue: byId("gaugeQualityValue"),
       gaugeQualityDelta: byId("gaugeQualityDelta"),

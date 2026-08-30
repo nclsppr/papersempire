@@ -29,27 +29,27 @@ const META = {
     locale: "en_US",
     title: "Papers Empire — Free browser idle game",
     description:
-      "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0, unlock 11 production units and keep your progress locally.",
+      "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0, unlock 12 production units and keep your progress locally.",
     ogTitle: "Papers Empire — Free browser idle game",
-    ogDescription: "Turn a small print shop into Factory 4.0, unlock eleven production units and keep your progress locally.",
+    ogDescription: "Turn a small print shop into Factory 4.0, unlock twelve production units and keep your progress locally.",
     imageAlt: "Papers Empire interface showing the automated printworks, industrial campus, and live game counters",
   },
   de: {
     locale: "de_DE",
     title: "Papers Empire — Kostenloses Idle Game im Browser",
     description:
-      "Spiele Papers Empire kostenlos im Browser. Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte elf Produktionseinheiten frei und speichere lokal.",
+      "Spiele Papers Empire kostenlos im Browser. Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte zwölf Produktionseinheiten frei und speichere lokal.",
     ogTitle: "Papers Empire — Kostenloses Idle Game im Browser",
-    ogDescription: "Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte elf Produktionseinheiten frei und speichere lokal.",
+    ogDescription: "Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte zwölf Produktionseinheiten frei und speichere lokal.",
     imageAlt: "Papers-Empire-Oberfläche mit automatisierter Druckerei, Industriecampus und Live-Spielwerten",
   },
   lb: {
     locale: "lb_LU",
     title: "Papers Empire — Gratis Idle Game am Browser",
     description:
-      "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt eelef Produktiounseenheete fräi a späicher lokal.",
+      "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt zwielef Produktiounseenheete fräi a späicher lokal.",
     ogTitle: "Papers Empire — Gratis Idle Game am Browser",
-    ogDescription: "Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt eelef Produktiounseenheete fräi a späicher lokal.",
+    ogDescription: "Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt zwielef Produktiounseenheete fräi a späicher lokal.",
     imageAlt: "Papers-Empire-Interface mat automatiséierter Dréckerei, Industriecampus a Live-Spillwäerter",
   },
 };
@@ -175,7 +175,7 @@ const PREFILLED_KEYS = [
   "building.digitalPress.name",
   "building.offsetPress.name",
   "building.finishingWorkshop.name",
-  "building.logistics.name",
+  "building.prepressStudio.name",
   "footer.madeBy",
   "footer.kicker",
   "footer.tagline",

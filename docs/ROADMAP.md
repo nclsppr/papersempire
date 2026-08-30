@@ -46,6 +46,44 @@ et les données racontent la même usine : le **production twin**.
 - **0.25.2 — Header global partagé** : accueil, Atelier et 404 réunis par
   `site-header.css`, avec le même shell sticky, le même logo, les mêmes
   breakpoints et des actions localisées.
+- **0.26.0 — Plans de réorganisation** : neuf rangs de carrière, défis
+  facultatifs, grands dossiers, clauses de contrat, paliers d'unités, Studio
+  prépresse et sauvegarde V3. La spécification source est l'issue
+  [#34](https://github.com/nclsppr/papersempire/issues/34).
+
+## 0.26 — Une vraie progression longue
+
+- [x] Plans Cadence, Qualité et Relation client, trois rangs et trois dossiers
+      séquentiels par rang.
+- [x] Dossier du moment conservé comme unique surface de guidage : Plan,
+      étape, progression, critères facultatifs, récompense et prochaine action.
+- [x] Réorganisation anticipée autorisée mais sans tampon ni bonus de Plan ;
+      un Plan terminé rapporte le tampon, un bonus Culture égal au rang et son
+      avantage permanent.
+- [x] Courbes de Culture à rendement décroissant et rangs 3 ancrés au palier 25
+      (20 000 DOC/s ou jusqu'à 10 000 000 CC selon l'orientation).
+- [x] Défis Budget gelé, Zéro retour client et Toute la direction en copie,
+      acceptables ou refusables sans modale automatique.
+- [x] Grands dossiers Onboarding de 842 personnes, Saison des rapports annuels
+      et Fusion strictement confidentielle, ouverts après 3, 6 et 9 tampons ;
+      leurs étapes sont séquentielles, donc la clause du Kit d'onboarding ne
+      compte pas comme la clause suivante.
+- [x] Conclusion de carrière après neuf tampons et les trois grands dossiers.
+- [x] Paliers de rendement ×1,10 à 10 exemplaires et ×1,25 à 25 exemplaires
+      pour les douze unités, avec émission idempotente du feedback.
+- [x] Clauses facultatives sur les contrats ; récompense de base toujours
+      garantie et bonus conditionnel explicite.
+- [x] Studio prépresse : douzième unité, miniature V4, parcelle 3D et réduction
+      de 6 % par exemplaire sur la durée des contrats, plafonnée à 30 %.
+- [x] Progression et récompense unique visibles sur les seize succès.
+- [x] Une seule bannette d'incident persistante, ouverte volontairement ou
+      classée sans suite ; aucun second tableau de missions.
+- [x] Sauvegarde V3 et migrations défensives depuis les anciennes parties.
+- [x] Parité FR/EN/DE/LB des clés et placeholders contrôlée automatiquement.
+
+Anti-objectifs maintenus : aucune monnaie supplémentaire, aucun arbre de
+talents, aucune gestion individuelle des salariés, aucun streak ou contenu à
+durée limitée, et aucune nouvelle avalanche de notifications.
 
 ## 0.25 — Guides de l’atelier
 
@@ -123,16 +161,18 @@ performance restent les portes de sortie de la release :
 `[~]` signifie que le pipeline et la direction font partie de la V4, mais que la
 couverture exhaustive ou la preuve sur appareil n'est pas revendiquée.
 
-## Après 0.22
+## Après 0.26
 
 Ordre indicatif, à challenger avec les retours de jeu :
 
-- observer des runs early/mid/late et ajuster la courbe à partir de données
-  locales explicitement consenties/exportées ;
-- compléter les miniatures manquantes et traiter les illustrations d'événements ;
-- créer des records et fins de partie partageables à partir de faits du run ;
-- explorer un arbre de compétences (« formations internes ») seulement s'il
-  ajoute de vraies décisions ;
+- observer des cycles Cadence/Qualité/Relation client aux trois rangs et
+  ajuster objectifs, bonus et coûts à partir de sauvegardes exportées avec
+  consentement explicite ;
+- mesurer le temps d'accès au Studio prépresse, aux grands dossiers et à la
+  conclusion sans transformer la durée de vie en attente artificielle ;
+- créer un récapitulatif de carrière partageable uniquement à partir des neuf
+  tampons, trois badges et faits réellement enregistrés ;
+- compléter les illustrations d'incidents si elles améliorent leur lecture ;
 - étudier un historique multi-appareil uniquement avec un contrat explicite de
   consentement, confidentialité et rétention.
 

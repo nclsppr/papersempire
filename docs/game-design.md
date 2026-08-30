@@ -1,5 +1,5 @@
 # Papers Empire
-Game Design Document (GDD), version développeur 0.24.0
+Game Design Document (GDD), version développeur 0.26.0
 
 ---
 
@@ -75,7 +75,6 @@ Convention:
 
 ```ts
 type BuildingId =
-  | "officePrinter"
   | "reproOperator"
   | "reproWorkshop"
   | "digitalPress"
@@ -85,6 +84,7 @@ type BuildingId =
   | "logistics"
   | "clientPortal"
   | "comBridge"
+  | "prepressStudio"
   | "factory40"
   | "pampyAI";
 ```
@@ -98,6 +98,13 @@ type Building = {
   quantity: number;           // nb d'unités possédées
   baseCost: number;           // coût initial en DOC
   costMultiplier: number;     // facteur multiplicatif par achat (ex: 1.15)
+  role: "producer" | "multiplier" | "ccMultiplier";
+  docMultiplierPerUnit?: number;
+  ccMultiplierPerUnit?: number;
+  qualityBonusPerUnit?: number;
+  footprintBonusPerUnit?: number;
+  imageBonusPerUnit?: number;
+  contractDurationReductionPerUnit?: number;
   unlocked: boolean;
   unlockCondition: UnlockCondition;
   upgrades: UpgradeId[];      // upgrades déjà achetées
@@ -153,26 +160,17 @@ type UpgradeEffect =
 ```ts
 type Achievement = {
   id: string;
-  name: string;
-  description: string;
-  unlocked: boolean;
-  condition: AchievementCondition;
-  reward?: AchievementReward;
+  nameKey: string;
+  descKey: string;
+  target: number;
+  progress: (state: GameState) => number;
+  reward: { doc?: number; cc?: number; culture?: number };
 };
-
-type AchievementCondition =
-  | { type: "docTotal"; value: number }
-  | { type: "maxProductionRate"; value: number }  // DOC/sec
-  | { type: "buildingQuantity"; building: BuildingId; quantity: number }
-  | { type: "qualityAbove"; value: number; durationSec: number }
-  | { type: "footprintBelow"; value: number; durationSec: number }
-  | { type: "eventCompleted"; eventId: string };
-
-type AchievementReward =
-  | { type: "culturePoints"; value: number }
-  | { type: "brandImage"; value: number }
-  | { type: "flatMultiplier"; multiplier: number };
 ```
+
+La sauvegarde distingue les succès `unlocked` des récompenses `rewarded`. Une
+récompense est créditée une seule fois, y compris après import ou migration
+d'une ancienne sauvegarde.
 
 ---
 
@@ -209,10 +207,15 @@ Chaque building produit:
 ```ts
 effectiveProduction(building) =
   building.baseProduction
-  * building.quantity
+  * effectiveQuantity(building.quantity)
   * buildingProductionMultiplier(building.id)
   * globalProductionMultiplier;
 ```
+
+`effectiveQuantity` applique le palier le plus haut atteint : `×1,10` dès 10
+unités, puis `×1,25` dès 25 unités. Les deux paliers ne se cumulent pas. Les
+modificateurs du Plan actif et les bonus permanents de carrière sont composés
+une seule fois par `modifier-utils.js` avant d'entrer dans ces formules.
 
 Production totale par tick:
 
@@ -279,7 +282,6 @@ Les upgrades changent `qualityTarget`, `footprintDrift`, `imageTarget`, etc.
 
 | Id                | Nom                         | Base DOC/s (par unité) | Base cost DOC | Cost mult | Type principal        |
 | ----------------- | --------------------------- | ---------------------- | ------------- | --------- | --------------------- |
-| officePrinter     | Petite imprimante de bureau | 0 (clic only)          | 0             | -         | Clic manuel           |
 | reproOperator     | Opérateur repro             | 0.5                    | 15            | 1.15      | Prod auto faible      |
 | reproWorkshop     | Atelier reprographie        | 3                      | 100           | 1.15      | Prod auto moyenne     |
 | digitalPress      | Presse numérique            | 20                     | 1_000         | 1.15      | Prod auto forte       |
@@ -289,6 +291,7 @@ Les upgrades changent `qualityTarget`, `footprintDrift`, `imageTarget`, etc.
 | logistics         | Logistique et tri postal    | 0 (global mult)        | 5_000         | 1.15      | Mult global envois    |
 | clientPortal      | Portail client sécurisé     | 5                      | 8_000         | 1.15      | Prod propre + qualité |
 | comBridge         | ComBridge omnicanal         | 0 (CC focus)           | 20_000        | 1.20      | Multiplicateur CC     |
+| prepressStudio    | Studio prépresse             | 0 (modificateur)       | 30_000        | 1.20      | Qualité et contrats   |
 | factory40         | Usine 4.0                   | 0 (global mult)        | 50_000        | 1.20      | Mult global           |
 | pampyAI           | IA Pampy Print              | 0 (global + footprint) | 100_000       | 1.25      | Optimisation globale  |
 
@@ -394,9 +397,12 @@ type EventChoice = {
 };
 ```
 
-Une seule définition peut être active. La fermer l'annule sans effet et lance
-le même délai de garde qu'une résolution. Les définitions, résultats exacts et
-règles de cadence sont détaillés dans [`events.md`](events.md).
+Une seule définition peut attendre dans la bannette. Son arrivée n'ouvre aucune
+modale : le joueur choisit quand consulter l'incident. Il peut alors répondre,
+ou le classer sans effet. Tant qu'un incident attend, aucun autre n'est généré ;
+son identifiant est sauvegardé. Désactiver les interruptions efface la bannette
+et empêche de nouveaux tirages. Les définitions, résultats exacts et règles de
+cadence sont détaillés dans [`events.md`](events.md).
 
 ### 6.2 Exemples
 
@@ -424,36 +430,27 @@ règles de cadence sont détaillés dans [`events.md`](events.md).
 
 ## 7. Succès détaillés
 
-Exemples:
+Chaque succès expose sa progression avant déblocage et crédite sa récompense
+une seule fois :
 
-```ts
-const achievements: Achievement[] = [
-  {
-    id: "ach_first_100_clicks",
-    name: "Ramasse-feuilles",
-    description: "Imprimer 100 documents à la main.",
-    unlocked: false,
-    condition: { type: "docTotal", value: 100 },
-    reward: { type: "culturePoints", value: 1 }
-  },
-  {
-    id: "ach_palette",
-    name: "Palette complète",
-    description: "Consommer l'équivalent d'une palette de papier.",
-    unlocked: false,
-    condition: { type: "docTotal", value: 50_000 },
-    reward: { type: "brandImage", value: 0.05 }
-  },
-  {
-    id: "ach_full_omnichannel",
-    name: "Full omnicanal",
-    description: "Lancer une campagne courrier + email + SMS + portail.",
-    unlocked: false,
-    condition: { type: "eventCompleted", eventId: "volumePeak" },
-    reward: { type: "flatMultiplier", multiplier: 1.05 }
-  }
-];
-```
+| ID | Condition | Récompense |
+| --- | --- | --- |
+| `firstDoc` | 1 DOC produit | 5 DOC |
+| `hundredDocs` | 100 DOC produits | 25 DOC |
+| `thousandDocs` | 1 000 DOC produits | 100 DOC |
+| `firstBuilding` | 1 unité achetée | 20 DOC |
+| `firstPrestige` | 1 réorganisation réellement effectuée | 1 Culture |
+| `tenKDocs` | 10 000 DOC produits | 300 DOC |
+| `hundredKDocs` | 100 000 DOC produits | 1 000 DOC |
+| `millionDocs` | 1 000 000 DOC produits | 1 Culture |
+| `firstUpgrade` | 1 amélioration achetée | 50 DOC |
+| `fiveBuildingTypes` | 5 types de bâtiments possédés | 200 CC |
+| `fullCampus` | une unité des douze bâtiments | 2 Culture |
+| `tenOfOne` | 10 unités d'un bâtiment | 250 DOC |
+| `industrialScale` | 25 unités d'un bâtiment | 1 000 DOC |
+| `qualityFreak` | qualité à 90 % | 300 CC |
+| `brandStar` | image à 90 % | 300 CC |
+| `cultureCollector` | 10 Culture possédées | 1 Culture |
 
 ---
 
@@ -461,41 +458,100 @@ const achievements: Achievement[] = [
 
 ### 8.1 Principe
 
-* Le joueur peut déclencher une "Réorganisation stratégique".
-* Effet:
-
-  * Reset:
-
-    * `docBank`, `docTotal`, `ccTotal`
-    * Bâtiments et upgrades
-  * Conserve:
-
-    * `culturePoints` (prestige)
-  * Applique:
-
-    * Bonus permanent sur productions et jauges.
+La Réorganisation stratégique devient le point de validation d'une carrière,
+mais reste toujours disponible dès 10 000 CC. Elle remet à zéro les DOC, CC,
+bâtiments, améliorations, jauges et contrat actif du run. Elle conserve Culture,
+rangs et tampons de Plans, défis terminés, badges de campagnes, succès et
+récompenses déjà créditées.
 
 ### 8.2 Calcul des points de culture obtenus
 
-Par exemple:
-
 ```ts
-cultureGained = floor( sqrt(ccTotal / 1_000) );
+cultureGained = floor(3 * log10(1 + ccTotal / 1_000));
 ```
 
-### 8.3 Effet des points de culture
-
-Multiplicateur global de production:
+La Culture a un rendement décroissant :
 
 ```ts
-globalProductionMultiplier = 1 + culturePoints * 0.05;
+prestigeMultiplier = 1 + 0.20 * sqrt(culturePoints);
+qualityCultureBonus = min(0.20, 0.025 * sqrt(culturePoints));
+imageCultureBonus = min(0.25, 0.03 * sqrt(culturePoints));
 ```
 
-Bonus de qualité de base:
+Les bonus de jauges sont exprimés en valeurs normalisées : ils sont donc
+plafonnés respectivement à 20 et 25 points, avant le plafonnement final des
+jauges à 100 %.
 
-```ts
-qualityBase = 0.3 + culturePoints * 0.02;  // clamp à 1
-```
+Si les trois étapes du Plan actif sont terminées, la Réorganisation valide son
+rang, ajoute son tampon et verse aussi `rang` points de Culture : 1, 2 ou 3.
+L'aperçu de confirmation affiche le gain garanti avant le reset : gain de base
+plus bonus du Plan validé. Il précise que les récompenses de succès éventuelles
+n'y sont pas encore incluses. Ces récompenses sont résolues en cascade dans la
+même transaction puis détaillées dans le reçu final, dont le total est exact.
+Si le Plan n'est pas prêt, la Réorganisation reste autorisée mais le Plan repart
+à sa première étape, sans tampon ni bonus de rang. Un défi actif échoue ; une
+campagne active repart à sa première étape.
+
+### 8.3 Plans de carrière
+
+Un seul Plan peut être actif. Chaque Plan possède trois rangs successifs et
+trois objectifs séquentiels par rang. Les objectifs d'action ne comptent qu'à
+partir du moment où ils deviennent l'étape active.
+
+| Plan | Rang | Avantage du run | Contrepartie du run | Objectifs successifs |
+| --- | ---: | --- | --- | --- |
+| Cadence | 1 | DOC ×1,10 | dérive empreinte ×1,20 | 10 opérateurs → 25 DOC/s → 15 000 CC |
+| Cadence | 2 | DOC ×1,15 | dérive empreinte ×1,35 | 10 presses numériques → 500 DOC/s → 75 000 CC |
+| Cadence | 3 | DOC ×1,20 | dérive empreinte ×1,50 | 25 presses offset → 20 000 DOC/s → 1 000 000 CC |
+| Qualité | 1 | cible qualité +4 points | DOC ×0,95 | 1 studio prépresse → 75 % qualité → 1 clause réussie |
+| Qualité | 2 | cible qualité +6 points | DOC ×0,925 | 5 studios → 85 % qualité → 2 clauses réussies |
+| Qualité | 3 | cible qualité +8 points | DOC ×0,90 | 25 studios → 92 % qualité → 3 clauses réussies |
+| Relations clients | 1 | CC ×1,10, contrats ×1,10 | coûts ×1,05 | 65 % image → 2 contrats → 25 000 CC |
+| Relations clients | 2 | CC ×1,15, contrats ×1,20 | coûts ×1,075 | 10 portails → 2 clauses → 100 000 CC |
+| Relations clients | 3 | CC ×1,20, contrats ×1,30 | coûts ×1,10 | 25 ComBridge → 4 contrats → 10 000 000 CC |
+
+Chaque rang validé laisse ensuite un bonus permanent : Cadence `+2 % DOC`,
+Qualité `+1 point` sur la cible de qualité, Relations clients `+2 % CC`. Les
+bonus permanents s'additionnent par rang ; le modificateur du Plan en cours se
+compose avec eux.
+
+### 8.4 Défis facultatifs
+
+Le Dossier peut proposer le défi lié au Plan actif. Accepter ou refuser est
+explicite ; un défi refusé ou raté ne revient pas dans le même cycle.
+
+| Défi | Condition | Échec | Récompense |
+| --- | --- | --- | ---: |
+| Budget gelé | acheter une presse offset | acheter une amélioration | 2 Culture |
+| Zéro retour | terminer 3 contrats à au moins 80 % de qualité | finir un contrat sous le seuil | 3 Culture |
+| Tout le monde en copie | terminer 3 contrats distincts à au moins 75 % d'image | finir un contrat sous le seuil | 4 Culture |
+
+### 8.5 Campagnes, badges et conclusion
+
+Les campagnes sont des dossiers plus longs, sans nouvelle monnaie. Elles se
+déverrouillent à 3, 6 et 9 tampons et livrent respectivement les badges
+`badgeOnboarding842`, `badgeAnnualReportSeason` et
+`badgeConfidentialMerger`. Une seule campagne peut être active ; sa progression
+est elle aussi séquentielle. Les campagnes donnent du contexte à des contrats
+existants et peuvent leur donner priorité dans l'offre, elles ne créent pas une
+deuxième liste de quêtes.
+
+| Campagne | Tampons | Étapes successives |
+| --- | ---: | --- |
+| Onboarding de 842 personnes | 3 | 5 lignes de mise sous pli → livrer `onboardingKit` → **puis** réussir une autre clause |
+| Saison des rapports annuels | 6 | 1 Studio prépresse → 85 % qualité → livrer `annualReports` |
+| Fusion strictement confidentielle | 9 | 10 portails client → 90 % image → livrer 3 contrats distincts |
+
+La clause éventuellement réussie pendant le Kit d'onboarding précède
+l'activation de la troisième étape : elle ne compte donc pas comme « l'autre
+clause ». Cette séquence est volontaire et doit rester explicite dans l'UI.
+
+Les neuf rangs et les trois campagnes terminés débloquent la conclusion
+« Assistant du vice-directeur des opérations papier ». C'est une reconnaissance
+persistante et rejouable, pas un écran qui bloque la production.
+
+La source normative de ce périmètre est l'issue GitHub
+[#34](https://github.com/nclsppr/papersempire/issues/34).
 
 ---
 
@@ -540,8 +596,9 @@ const defaultConfig: GameConfig = {
 Le jeu présente un poste d'exploitation hiérarchisé :
 
 * une console de presse manuelle avec DOC, CC et cadence ;
-* un dossier prioritaire qui montre la prochaine étape interne ou le contrat
-  client en cours, sans dupliquer ces informations ailleurs ;
+* un Dossier du moment qui montre le Plan, sa prochaine étape, le défi ou la
+  campagne disponibles, ou le contrat client en cours, sans créer une seconde
+  liste de quêtes ;
 * un catalogue de machines avec quantité, coût suivant, contribution et action
   d'achat ;
 * le bureau des méthodes pour les améliorations ;
@@ -559,11 +616,15 @@ tous les contrôles.
 * Un clic ou un achat produit un feedback court, causal et interruptible.
 * Qualité et image de marque montent visuellement avec leur valeur ; l'empreinte
   est explicitement inversée, car une valeur basse est favorable.
-* Les événements restent des modales à choix, avec conséquences
-  compréhensibles. Ils peuvent être ignorés sans effet ou désactivés durablement
-  depuis la modale, puis réactivés dans les paramètres.
-* Le panneau prestige affiche la culture actuelle et le gain potentiel de la
-  réorganisation avant confirmation.
+* Un incident signale discrètement son attente dans la bannette. Sa modale ne
+  s'ouvre que sur action ; il peut être classé sans effet ou désactivé
+  durablement, puis réactivé dans les paramètres.
+* Un objectif, défi, contrat, palier ou succès terminé affiche un retour bref,
+  traduit et causal. Les lots de succès sont regroupés pour éviter un mur de
+  notifications ; le journal garde la trace détaillée.
+* Le panneau prestige affiche la culture actuelle, le gain de base, le bonus de
+  Plan, l'abandon d'un défi et toute reprise d'un Plan ou d'un Grand dossier
+  avant confirmation.
 * Le mouvement n'est jamais requis pour comprendre un état et s'arrête selon
   les préférences d'accessibilité.
 

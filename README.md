@@ -2,7 +2,7 @@
 
 All project documentation now lives inside the `docs/` directory and is published via Retype. Start with `docs/README.md` for the overview, and see `docs/AGENTS.md` for repo guidelines.
 
-Current version: **0.25.2**.
+Current version: **0.26.0**.
 
 [Play Papers Empire](https://papersempire.com/) — free in the browser, with no account required.
 
@@ -33,6 +33,8 @@ compatibility. Cloudflare Workers Builds listens to `main`, runs
 - `npm run cloudflare:build && python3 -m http.server 8000 --directory site` – build and serve the complete static site locally.
 - `npm ci` – install the locked documentation and Cloudflare tools.
 - `npm run ui:check` – validate Safari/WebGL/cache and interaction resilience contracts.
+- `npm run i18n:check` – validate exact key and placeholder parity across FR, EN, DE and LB.
+- `npm run gameplay:check` – exercise progression, milestones, contracts and save migrations with pure Node tests.
 - `npm run worker:check` – validate canonical redirects and security headers.
 - `npm run seo:check` – validate the built multilingual metadata, canonicals, hreflang, sitemap and JSON-LD.
 - `npm run docs:build` – build the static docs site with Retype (output in `docs-site/`).

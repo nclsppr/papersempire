@@ -9,8 +9,13 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  const FORMULA_VERSION = 1;
-  const PRESTIGE_BONUS_PER_CULTURE_POINT = 0.05;
+  const FORMULA_VERSION = 3;
+  const PRESTIGE_GAIN_LOG_SCALE = 3;
+  const PRESTIGE_SQRT_BONUS = 0.2;
+  const CULTURE_QUALITY_BONUS = 0.025;
+  const CULTURE_QUALITY_BONUS_CAP = 0.2;
+  const CULTURE_BRAND_IMAGE_BONUS = 0.03;
+  const CULTURE_BRAND_IMAGE_BONUS_CAP = 0.25;
   const INFRA_STAT_RATE_PER_SECOND = 0.024;
   const MAX_RECONSTRUCTED_QUANTITY = 100000;
 
@@ -43,6 +48,41 @@
 
   function clamp01(value) {
     return Math.max(0, Math.min(1, value));
+  }
+
+  /** Diminishing-return Culture gain from the current run's cumulative CC. */
+  function computePotentialCultureGain(ccTotal, divisor) {
+    if (!isFiniteNumber(ccTotal) || ccTotal < 0 || !isFiniteNumber(divisor) || divisor <= 0) {
+      return 0;
+    }
+    return Math.max(0, Math.floor(PRESTIGE_GAIN_LOG_SCALE * Math.log10(1 + ccTotal / divisor)));
+  }
+
+  /** Permanent production bonus with diminishing returns instead of linear runaway. */
+  function computePrestigeMultiplier(culturePoints) {
+    if (!isFiniteNumber(culturePoints) || culturePoints < 0) return 1;
+    return 1 + PRESTIGE_SQRT_BONUS * Math.sqrt(culturePoints);
+  }
+
+  /** Bounded Culture contributions to gauge targets. */
+  function computeCultureGaugeBonuses(culturePoints) {
+    const rootCulture = isFiniteNumber(culturePoints) && culturePoints > 0
+      ? Math.sqrt(culturePoints)
+      : 0;
+    return {
+      quality: Math.min(CULTURE_QUALITY_BONUS_CAP, CULTURE_QUALITY_BONUS * rootCulture),
+      brandImage: Math.min(CULTURE_BRAND_IMAGE_BONUS_CAP, CULTURE_BRAND_IMAGE_BONUS * rootCulture)
+    };
+  }
+
+  function milestoneMultiplier(quantity) {
+    if (quantity >= 25) return 1.25;
+    if (quantity >= 10) return 1.1;
+    return 1;
+  }
+
+  function effectiveQuantity(building) {
+    return building.quantity * milestoneMultiplier(building.quantity);
   }
 
   function safeProduct(values) {
@@ -117,7 +157,15 @@
       return unavailable(validationError);
     }
 
-    const rawCost = building.baseCost * Math.pow(building.costMultiplier, building.quantity);
+    const stateModifiers = buildingOrState && Array.isArray(buildingOrState.buildings) &&
+      buildingOrState.careerModifiers && typeof buildingOrState.careerModifiers === "object"
+      ? buildingOrState.careerModifiers
+      : {};
+    const buildingCostMultiplier = optionalFiniteNumber(stateModifiers.buildingCostMultiplier, 1);
+    if (buildingCostMultiplier === null || buildingCostMultiplier <= 0) {
+      return unavailable("invalid-career-modifier");
+    }
+    const rawCost = building.baseCost * Math.pow(building.costMultiplier, building.quantity) * buildingCostMultiplier;
     if (!Number.isFinite(rawCost) || rawCost > Number.MAX_SAFE_INTEGER) {
       return unavailable("cost-out-of-range");
     }
@@ -156,9 +204,18 @@
       };
     }
 
+    const stateModifiers = buildingOrState && Array.isArray(buildingOrState.buildings) &&
+      buildingOrState.careerModifiers && typeof buildingOrState.careerModifiers === "object"
+      ? buildingOrState.careerModifiers
+      : {};
+    const buildingCostMultiplier = optionalFiniteNumber(stateModifiers.buildingCostMultiplier, 1);
+    if (buildingCostMultiplier === null || buildingCostMultiplier <= 0) {
+      return unavailable("invalid-career-modifier");
+    }
+
     let total = 0;
     for (let index = 0; index < building.quantity; index += 1) {
-      const rawCost = building.baseCost * Math.pow(building.costMultiplier, index);
+      const rawCost = building.baseCost * Math.pow(building.costMultiplier, index) * buildingCostMultiplier;
       if (!Number.isFinite(rawCost) || rawCost > Number.MAX_SAFE_INTEGER) {
         return unavailable("cost-out-of-range");
       }
@@ -203,7 +260,8 @@
         "ccMultiplierPerUnit",
         "qualityBonusPerUnit",
         "footprintBonusPerUnit",
-        "imageBonusPerUnit"
+        "imageBonusPerUnit",
+        "contractDurationReductionPerUnit"
       ];
       for (const field of modifierFields) {
         if (optionalFiniteNumber(building[field], 0) === null) {
@@ -240,7 +298,7 @@
     };
 
     for (const building of buildings) {
-      const quantity = building.quantity;
+      const quantity = effectiveQuantity(building);
       const docBonus = optionalFiniteNumber(building.docMultiplierPerUnit, 0) * quantity;
       const ccBonus = optionalFiniteNumber(building.ccMultiplierPerUnit, 0) * quantity;
 
@@ -271,6 +329,7 @@
     }
 
     let docMultiplier = buildingEffects.docMultiplier;
+    let ccMultiplier = buildingEffects.ccMultiplier;
     let clickMultiplier = 1;
     let baseQualityOffset = 0;
 
@@ -281,9 +340,21 @@
       if (upgrade.type === "qualityFlat") baseQualityOffset += upgrade.value;
     }
 
-    const prestigeMultiplier = 1 + state.resources.culturePoints * PRESTIGE_BONUS_PER_CULTURE_POINT;
+    const careerModifiers = state.careerModifiers && typeof state.careerModifiers === "object"
+      ? state.careerModifiers
+      : {};
+    const careerDocMultiplier = optionalFiniteNumber(careerModifiers.docMultiplier, 1);
+    const careerCcMultiplier = optionalFiniteNumber(careerModifiers.ccMultiplier, 1);
+    if (careerDocMultiplier === null || careerDocMultiplier <= 0 ||
+        careerCcMultiplier === null || careerCcMultiplier <= 0) {
+      return unavailable("invalid-career-modifier");
+    }
+    docMultiplier *= careerDocMultiplier;
+    ccMultiplier *= careerCcMultiplier;
+
+    const prestigeMultiplier = computePrestigeMultiplier(state.resources.culturePoints);
     const baseProductionPerSecond = state.buildings.reduce(
-      (sum, building) => sum + building.baseProduction * building.quantity,
+      (sum, building) => sum + building.baseProduction * effectiveQuantity(building),
       0
     );
     const automaticDocPerSecond = safeProduct([
@@ -300,7 +371,7 @@
             automaticDocPerSecond,
             qualityFactor,
             brandImageFactor,
-            buildingEffects.ccMultiplier
+            ccMultiplier
           ]);
 
     if (
@@ -314,7 +385,7 @@
     }
 
     const buildings = state.buildings.map(building => {
-      const directBaseProductionPerSecond = building.baseProduction * building.quantity;
+      const directBaseProductionPerSecond = building.baseProduction * effectiveQuantity(building);
       return {
         id: typeof building.id === "string" ? building.id : null,
         nameKey: typeof building.nameKey === "string" ? building.nameKey : null,
@@ -332,14 +403,14 @@
       docPerSecond: automaticDocPerSecond,
       ccPerSecond: automaticCcPerSecond,
       docMultiplier,
-      ccMultiplier: buildingEffects.ccMultiplier,
+      ccMultiplier,
       baseProductionPerSecond,
       automaticDocPerSecond,
       automaticCcPerSecond,
       prestigeMultiplier,
       multipliers: {
         doc: docMultiplier,
-        cc: buildingEffects.ccMultiplier,
+        cc: ccMultiplier,
         click: clickMultiplier
       },
       qualityFactor,
@@ -355,19 +426,31 @@
     };
   }
 
-  function resolveGaugeRateDelta(state, building, deltaDocPerSecond) {
+  function resolveGaugeRateDelta(state, building, deltaDocPerSecond, effectiveQuantityDelta) {
     const drift = state.config.footprintDriftBase;
     if (!isFiniteNumber(drift)) {
       return unavailable("invalid-footprint-drift-base");
     }
+    const careerModifiers = state.careerModifiers && typeof state.careerModifiers === "object"
+      ? state.careerModifiers
+      : {};
+    const footprintDriftMultiplier = optionalFiniteNumber(careerModifiers.footprintDriftMultiplier, 1);
+    if (footprintDriftMultiplier === null || footprintDriftMultiplier <= 0) {
+      return unavailable("invalid-career-modifier");
+    }
+    const gaugeQuantityDelta = isFiniteNumber(effectiveQuantityDelta) && effectiveQuantityDelta >= 0
+      ? effectiveQuantityDelta
+      : 1;
 
     return {
       status: "estimated",
-      quality: optionalFiniteNumber(building.qualityBonusPerUnit, 0) * INFRA_STAT_RATE_PER_SECOND,
+      quality:
+        optionalFiniteNumber(building.qualityBonusPerUnit, 0) * gaugeQuantityDelta * INFRA_STAT_RATE_PER_SECOND,
       footprint:
-        optionalFiniteNumber(building.footprintBonusPerUnit, 0) * INFRA_STAT_RATE_PER_SECOND +
-        drift * deltaDocPerSecond,
-      brandImage: optionalFiniteNumber(building.imageBonusPerUnit, 0) * INFRA_STAT_RATE_PER_SECOND,
+        optionalFiniteNumber(building.footprintBonusPerUnit, 0) * gaugeQuantityDelta * INFRA_STAT_RATE_PER_SECOND +
+        drift * footprintDriftMultiplier * deltaDocPerSecond,
+      brandImage:
+        optionalFiniteNumber(building.imageBonusPerUnit, 0) * gaugeQuantityDelta * INFRA_STAT_RATE_PER_SECOND,
       assumptions: ["linearized-before-clamp-and-recovery"]
     };
   }
@@ -384,7 +467,7 @@
     if (targetIndex < 0) return unavailable("building-not-found");
 
     const target = state.buildings[targetIndex];
-    const cost = computeNextCost(target);
+    const cost = computeNextCost(state, buildingId);
     if (cost.status === "unavailable") {
       return unavailable(cost.reason, { nextCost: cost });
     }
@@ -439,6 +522,8 @@
         : unavailable("zero-cost", { unit: "doc-per-second-per-1000-doc" });
     const beforeBuilding = before.buildings[targetIndex];
     const afterBuilding = after.buildings[targetIndex];
+    const effectiveQuantityDelta =
+      effectiveQuantity(simulatedBuildings[targetIndex]) - effectiveQuantity(target);
 
     return {
       status: "exact",
@@ -460,7 +545,8 @@
       gaugeRateDeltaPerSecond: resolveGaugeRateDelta(
         state,
         target,
-        deltaAutomaticDocPerSecond
+        deltaAutomaticDocPerSecond,
+        effectiveQuantityDelta
       ),
       assumptions: ["current-gauges-held-constant"]
     };
@@ -535,9 +621,9 @@
       }
 
       const simulation = simulateNextBuilding(state, building.id);
-      const cumulativeCost = computeCumulativeCost(building);
+      const cumulativeCost = computeCumulativeCost(state, building.id);
       if (simulation.status === "unavailable") {
-        const fallbackCost = computeNextCost(building);
+        const fallbackCost = computeNextCost(state, building.id);
         return {
           id: building.id,
           nameKey: typeof building.nameKey === "string" ? building.nameKey : null,
@@ -675,15 +761,13 @@
       return unavailable("invalid-prestige-requirement");
     }
 
-    const potentialCultureGain = Math.floor(Math.sqrt(ccTotal / divisor));
+    const potentialCultureGain = computePotentialCultureGain(ccTotal, divisor);
     const ready = ccTotal >= requirement;
-    const currentPrestigeMultiplier =
-      1 + culturePoints * PRESTIGE_BONUS_PER_CULTURE_POINT;
-    const prestigeMultiplierAfterReset =
-      1 +
-      (culturePoints + potentialCultureGain) * PRESTIGE_BONUS_PER_CULTURE_POINT;
+    const currentPrestigeMultiplier = computePrestigeMultiplier(culturePoints);
+    const prestigeMultiplierAfterReset = computePrestigeMultiplier(culturePoints + potentialCultureGain);
     const nextCultureGain = potentialCultureGain + 1;
-    const nextCultureGainThresholdCc = nextCultureGain * nextCultureGain * divisor;
+    const nextCultureGainThresholdCc =
+      divisor * (Math.pow(10, nextCultureGain / PRESTIGE_GAIN_LOG_SCALE) - 1);
     if (!Number.isFinite(nextCultureGainThresholdCc)) {
       return unavailable("prestige-threshold-out-of-range");
     }
@@ -725,6 +809,9 @@
   }
 
   return {
+    computePotentialCultureGain,
+    computePrestigeMultiplier,
+    computeCultureGaugeBonuses,
     computeNextCost,
     computeCumulativeCost,
     computeAutomaticEconomics,
@@ -799,31 +886,33 @@ if (typeof module !== "undefined" && module.exports && require.main === module) 
   );
 
   const automatic = analytics.computeAutomaticEconomics(sampleState);
+  const samplePrestigeMultiplier = analytics.computePrestigeMultiplier(2);
+  const sampleAutomaticDoc = 3 * samplePrestigeMultiplier;
   assert.equal(automatic.status, "exact");
   assert.equal(automatic.docMultiplier, 3);
   assert.equal(automatic.ccMultiplier, 1.1);
-  assert.ok(Math.abs(automatic.automaticDocPerSecond - 3.3) < 1e-12);
-  assert.ok(Math.abs(automatic.automaticCcPerSecond - 1.497375) < 1e-12);
+  assert.ok(Math.abs(automatic.automaticDocPerSecond - sampleAutomaticDoc) < 1e-12);
+  assert.ok(Math.abs(automatic.automaticCcPerSecond - sampleAutomaticDoc * 0.45375) < 1e-12);
   assert.equal(automatic.docPerSecond, automatic.automaticDocPerSecond);
   assert.equal(automatic.ccPerSecond, automatic.automaticCcPerSecond);
 
   const simulation = analytics.simulateNextBuilding(sampleState, "producer");
   assert.equal(simulation.status, "exact");
-  assert.ok(Math.abs(simulation.deltaAutomaticDocPerSecond - 3.3) < 1e-12);
-  assert.ok(Math.abs(simulation.paybackSeconds.value - 20 / 3.3) < 1e-12);
+  assert.ok(Math.abs(simulation.deltaAutomaticDocPerSecond - sampleAutomaticDoc) < 1e-12);
+  assert.ok(Math.abs(simulation.paybackSeconds.value - 20 / sampleAutomaticDoc) < 1e-12);
 
   const rows = analytics.buildInvestmentRows(sampleState);
   assert.equal(Array.isArray(rows), true);
   assert.equal(rows[0].id, "producer");
   assert.equal(rows[0].currentCost, 20);
-  assert.ok(Math.abs(rows[0].marginalDocPerSecond - 3.3) < 1e-12);
+  assert.ok(Math.abs(rows[0].marginalDocPerSecond - sampleAutomaticDoc) < 1e-12);
 
   const prestige = analytics.computePrestigeOutlook(sampleState);
   assert.equal(prestige.ready, true);
   assert.equal(prestige.available, true);
   assert.equal(prestige.potentialCultureGain, 3);
   assert.equal(prestige.potentialCulture, 3);
-  assert.equal(prestige.prestigeMultiplierAfterReset, 1.25);
+  assert.equal(prestige.prestigeMultiplierAfterReset, analytics.computePrestigeMultiplier(5));
 
   console.log("economy-analytics self-test ok");
 }

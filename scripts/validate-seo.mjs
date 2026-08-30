@@ -26,15 +26,15 @@ const HOME_PAGES = Object.freeze({
   },
   en: {
     title: "Papers Empire — Free browser idle game",
-    description: "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0, unlock 11 production units and keep your progress locally.",
+    description: "Play Papers Empire free in your browser. Turn a small print shop into Factory 4.0, unlock 12 production units and keep your progress locally.",
   },
   de: {
     title: "Papers Empire — Kostenloses Idle Game im Browser",
-    description: "Spiele Papers Empire kostenlos im Browser. Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte elf Produktionseinheiten frei und speichere lokal.",
+    description: "Spiele Papers Empire kostenlos im Browser. Verwandle eine kleine Druckerei in eine Fabrik 4.0, schalte zwölf Produktionseinheiten frei und speichere lokal.",
   },
   lb: {
     title: "Papers Empire — Gratis Idle Game am Browser",
-    description: "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt eelef Produktiounseenheete fräi a späicher lokal.",
+    description: "Spill Papers Empire gratis am Browser. Maach aus enger klenger Dréckerei eng Fabrick 4.0, schalt zwielef Produktiounseenheete fräi a späicher lokal.",
   },
 });
 
