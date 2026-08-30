@@ -227,6 +227,21 @@ function verifyStaticContracts() {
   const dashboardJs = read("assets/js/dashboard.js");
   const assetHelper = read("assets/js/asset-url.js");
   const css = read("assets/css/style.css");
+  const cssLeafRules = [...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map(match => ({
+      selectors: match[1].split(",").map(selector => selector.trim()),
+      declarations: match[2]
+    }));
+  const rulesForExactSelector = selector => cssLeafRules
+    .filter(rule => rule.selectors.includes(selector));
+  const rulesContainingSelector = selector => cssLeafRules
+    .filter(rule => rule.selectors.some(candidate => candidate.includes(selector)));
+  const declarationValues = (rules, property) => {
+    const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const declarationPattern = new RegExp(`(?:^|;)\\s*${escapedProperty}\\s*:\\s*([^;]+)`, "g");
+    return rules.flatMap(rule => [...rule.declarations.matchAll(declarationPattern)]
+      .map(match => match[1].trim()));
+  };
   const siteHeaderCss = read("assets/css/site-header.css");
   const experienceCss = read("assets/css/experience-v4.css");
   const guidesCss = read("assets/css/guides.css");
@@ -394,10 +409,102 @@ function verifyStaticContracts() {
     "one unit card must never stretch its grid neighbour");
   const inspectorRule = css.match(/\.building-inspector\s*\{([^}]*)\}/);
   assert.ok(inspectorRule, "the shared unit inspector must have a base style rule");
+  const inspectorSuccessRule = css.match(/\.building-inspector\.is-success\s*\{([^}]*)\}/);
+  assert.ok(inspectorSuccessRule,
+    "the shared unit inspector must define its purchase-success state");
+  const opaquePaperBacking = /(?:^|,)\s*var\(--paper-bright\)\s*(?:!important)?$/;
+  const baseInspectorBackgrounds = declarationValues(
+    rulesForExactSelector(".building-inspector"), "background"
+  );
+  assert.ok(baseInspectorBackgrounds.length > 0 &&
+      baseInspectorBackgrounds.every(background => opaquePaperBacking.test(background)),
+    "the shared unit inspector base must retain its opaque paper backing");
+  const highContrastInspectorBackgrounds = declarationValues(
+    rulesForExactSelector(".pref-high-contrast .building-inspector"), "background"
+  );
+  assert.ok(highContrastInspectorBackgrounds.length > 0 &&
+      highContrastInspectorBackgrounds.every(background => /^#1a1230(?:\s*!important)?$/.test(background)),
+    "the high-contrast unit inspector must retain its opaque dark backing");
+  const successBackgrounds = declarationValues(
+    rulesForExactSelector(".building-inspector.is-success"), "background"
+  );
+  const finalSuccessBackground = successBackgrounds.at(-1);
+  assert.ok(finalSuccessBackground === undefined || opaquePaperBacking.test(finalSuccessBackground),
+    "the purchase-success inspector must retain its opaque paper backing");
+  if (finalSuccessBackground !== undefined) {
+    assert.doesNotMatch(finalSuccessBackground, /rgba\(\s*40,\s*81,\s*106/,
+      "the purchase-success inspector must not place blue ruling behind its green text");
+    const tintMatch = finalSuccessBackground.match(
+      /linear-gradient\(rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/
+    );
+    const positiveMatch = css.match(/--ops-positive:\s*#([\da-f]{6})/i);
+    const paperMatch = css.match(/--paper-bright:\s*#([\da-f]{6})/i);
+    assert.ok(tintMatch && positiveMatch && paperMatch,
+      "the purchase-success contrast check must resolve its tint and color tokens");
+    const hexToRgb = hex => [0, 2, 4].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16));
+    const textRgb = hexToRgb(positiveMatch[1]);
+    const paperRgb = hexToRgb(paperMatch[1]);
+    const tintRgb = tintMatch.slice(1, 4).map(Number);
+    const tintAlpha = Number(tintMatch[4]);
+    const backgroundRgb = paperRgb.map((channel, index) =>
+      tintRgb[index] * tintAlpha + channel * (1 - tintAlpha));
+    const luminance = rgb => {
+      const channels = rgb.map(channel => {
+        const value = channel / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    const textLuminance = luminance(textRgb);
+    const backgroundLuminance = luminance(backgroundRgb);
+    const contrast = (Math.max(textLuminance, backgroundLuminance) + 0.05) /
+      (Math.min(textLuminance, backgroundLuminance) + 0.05);
+    assert.ok(contrast >= 4.5,
+      `the purchase-success inspector text must retain 4.5:1 contrast (received ${contrast.toFixed(2)}:1)`);
+  }
   assert.doesNotMatch(inspectorRule[1], /(?:transition|animation)[^;]*(?:height|block-size|max-height)/,
     "the shared unit inspector must not animate layout dimensions");
   assert.doesNotMatch(css + experienceCss, /(?:\.building-inspector|\.collapsible-panel-body)[^{]*\{[^}]*(?:transition:\s*(?:all|[^;]*(?:height|block-size|max-height))|animation:[^;]*(?:height|block-size|max-height))/,
     "unit inspection and panel collapse must never animate layout height");
+  const contractBaseStart = css.indexOf(".operations-deck .contract-card");
+  const contractResponsiveStart = css.indexOf("/* Responsive :", contractBaseStart);
+  assert.ok(contractBaseStart >= 0 && contractResponsiveStart > contractBaseStart,
+    "premium contract base styles must precede their responsive overrides");
+  const contractBaseCss = css.slice(contractBaseStart, contractResponsiveStart);
+  assert.match(contractBaseCss, /\.contract-clause-head\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+    "premium contract clause headings must stack before long status copy can crush their title");
+  assert.match(contractBaseCss, /\.contract-clause-label\s*\{[^}]*overflow-wrap:\s*break-word/,
+    "premium contract clause titles must wrap by words inside their dispatch column");
+  assert.match(contractBaseCss, /\.contract-clause-status\s*\{[^}]*max-width:\s*100%[^}]*overflow-wrap:\s*break-word/,
+    "premium contract clause statuses must wrap inside their narrow dispatch column");
+  const clauseHeadDisplays = declarationValues(
+    rulesContainingSelector(".contract-clause-head"), "display"
+  );
+  const clauseHeadColumns = declarationValues(
+    rulesContainingSelector(".contract-clause-head"), "grid-template-columns"
+  );
+  const clauseLabelWraps = declarationValues(
+    rulesContainingSelector(".contract-clause-label"), "overflow-wrap"
+  );
+  const clauseStatusWidths = declarationValues(
+    rulesContainingSelector(".contract-clause-status"), "max-width"
+  );
+  const clauseStatusWraps = declarationValues(
+    rulesContainingSelector(".contract-clause-status"), "overflow-wrap"
+  );
+  assert.ok(clauseHeadDisplays.length > 0 && clauseHeadDisplays.every(value => value === "grid"),
+    "no later premium clause rule may restore the crushing flex layout");
+  assert.ok(clauseHeadColumns.length > 0 &&
+      clauseHeadColumns.every(value => /^minmax\(0,\s*1fr\)$/.test(value)),
+    "no later premium clause rule may split the resilient single-column heading");
+  assert.ok(clauseLabelWraps.length > 0 && clauseLabelWraps.every(value => value === "break-word"),
+    "no later premium clause rule may restore letter-by-letter title wrapping");
+  assert.ok(clauseStatusWidths.length > 0 && clauseStatusWidths.every(value => value === "100%"),
+    "no later premium clause rule may let status copy exceed its dispatch column");
+  assert.ok(clauseStatusWraps.length > 0 && clauseStatusWraps.every(value => value === "break-word"),
+    "no later premium clause rule may restore letter-by-letter status wrapping");
+  assert.match(css, /\.pref-high-contrast \.contract-clause\.is-met \.contract-clause-status,\s*\.pref-high-contrast \.contract-clause\.is-failed \.contract-clause-status\s*\{[^}]*color:\s*var\(--hc-accent\)/,
+    "completed and failed premium clause statuses must retain high-contrast text");
   assert.match(index, /class="prestige-card"[\s\S]*id="careerPlanContainer"[\s\S]*id="careerPlanChoices"[\s\S]*id="prestigeButton"/,
     "career choices must stay inside the existing strategic reorganisation card");
   assert.match(app, /const conclusionUnlocked = Boolean\(summary\.conclusion && summary\.conclusion\.unlocked\)[\s\S]*career\.conclusion\.pendingTitle/,
