@@ -15,7 +15,7 @@
 (function () {
   "use strict";
 
-  /** Palette V4 — same numeric values as PEWorldTheme for the fallback path. */
+  /** Palette V4 — core values mirror PEWorldTheme; CMYK accents extend it. */
   var PALETTE = {
     paper: 0xf5ead2,
     accent: 0xe7601e,
@@ -23,6 +23,9 @@
     amber: 0xffb13b,
     hivis: 0xe7601e,
     good: 0x5f824f,
+    cyan: 0x19a7c2,
+    magenta: 0xd43b76,
+    yellow: 0xe8bd2d,
     slate: 0x355c70,
     roof: 0x263746,
     metal: 0x8b9aa0,
@@ -255,7 +258,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // The 11 recipes. Each entry: lot footprint (w x d), a static build(THREE,
+  // The 12 recipes. Each entry: lot footprint (w x d), a static build(THREE,
   // group) pass and a grow(THREE, group, growth, floors) pass. grow() runs on
   // a freshly cleared "growth" sub-group, so it is idempotent by construction.
   // --------------------------------------------------------------------------
@@ -469,7 +472,81 @@
       }
     },
 
-    // 10. Landmark hall 2.6x1.1x1.7: sawtooth roof, facade strips, robot arm.
+    // 10. Prepress studio: CTP unit, illuminated proofing table and calibrated
+    //     screens. Growth adds proof stations, colour bars and paper output.
+    prepressStudio: {
+      w: 2.0, d: 1.6,
+      build: function (THREE, group) {
+        // Low, wide silhouette: deliberately distinct from the client portal
+        // tower and from the large production halls around it.
+        addBox(THREE, group, PALETTE.dark, 1.78, 0.16, 1.28, 0, 0.08, 0);
+        addBox(THREE, group, PALETTE.slate, 1.62, 0.44, 1.12, 0, 0.3, 0);
+
+        // Computer-to-plate enclosure and its exposed output roller.
+        addBox(THREE, group, PALETTE.metal, 0.52, 0.62, 0.62, 0.52, 0.67, -0.22);
+        addBox(THREE, group, PALETTE.dark, 0.42, 0.36, 0.04, 0.52, 0.7, 0.11);
+        var roller = addCylinder(
+          THREE, group, PALETTE.amber, 0.085, 0.085, 0.4, 12,
+          0.52, 0.54, 0.15
+        );
+        roller.rotation.z = Math.PI / 2;
+
+        // The proof is the focal point: an ivory sheet on a warm light table.
+        addGlowBox(THREE, group, PALETTE.amber, 0.92, 0.045, 0.66, -0.28, 0.56, 0.18);
+        addBox(THREE, group, PALETTE.paper, 0.82, 0.025, 0.56, -0.28, 0.59, 0.18);
+        addBox(THREE, group, PALETTE.metal, 0.055, 0.42, 0.055, -0.68, 0.35, 0.18);
+        addBox(THREE, group, PALETTE.metal, 0.055, 0.42, 0.055, 0.12, 0.35, 0.18);
+      },
+      grow: function (THREE, group, growth, floors) {
+        var screenCount = Math.min(3, floors);
+        for (var i = 0; i < screenCount; i++) {
+          var sx = -0.58 + i * 0.42;
+          var housing = addBox(
+            THREE, growth, PALETTE.dark, 0.36, 0.29, 0.055,
+            sx, 0.9, 0.54
+          );
+          var screen = addGlowBox(
+            THREE, growth, PALETTE.glass, 0.29, 0.21, 0.026,
+            sx, 0.9, 0.574
+          );
+          housing.rotation.x = -0.08;
+          screen.rotation.x = -0.08;
+          addBox(THREE, growth, PALETTE.metal, 0.035, 0.22, 0.035, sx, 0.7, 0.5);
+        }
+
+        // Abstract CMYK control patches: colour information without baked
+        // copy, digits or an interface that would become illegible in 3D.
+        var swatches = [PALETTE.cyan, PALETTE.magenta, PALETTE.yellow, PALETTE.dark];
+        var swatchRows = Math.min(2, Math.ceil(floors / 2));
+        for (var row = 0; row < swatchRows; row++) {
+          for (var c = 0; c < swatches.length; c++) {
+            addBox(
+              THREE, growth, swatches[c], 0.105, 0.014, 0.075,
+              -0.53 + c * 0.15, 0.61 + row * 0.016, 0.14 + row * 0.1
+            );
+          }
+        }
+
+        // A taller output stack and additional calibration lights communicate
+        // capacity while keeping the recipe deterministic and inexpensive.
+        for (var sheetIndex = 0; sheetIndex < 1 + floors; sheetIndex++) {
+          var proof = addBox(
+            THREE, growth, PALETTE.paper, 0.34, 0.025, 0.26,
+            0.54, 0.88 + sheetIndex * 0.028, 0.2
+          );
+          proof.rotation.y = (sheetIndex % 2 ? -1 : 1) * sheetIndex * 0.025;
+        }
+        for (var lightIndex = 0; lightIndex < floors; lightIndex++) {
+          addGlowBox(
+            THREE, growth, lightIndex % 2 ? PALETTE.good : PALETTE.accent,
+            0.055, 0.055, 0.055,
+            0.7, 0.56 + lightIndex * 0.09, -0.54
+          );
+        }
+      }
+    },
+
+    // 11. Landmark hall 2.6x1.1x1.7: sawtooth roof, facade strips, robot arm.
     factory40: {
       w: 3.0, d: 2.0,
       build: function (THREE, group) {
@@ -522,7 +599,7 @@
       }
     },
 
-    // 11. Landmark: dark plinth storeys, glowing brain dome, tilted data ring.
+    // 12. Landmark: dark plinth storeys, glowing brain dome, tilted data ring.
     pampyAI: {
       w: 2.0, d: 2.0,
       build: function () { /* plinth height varies, all built in grow() */ },
@@ -558,7 +635,7 @@
   /**
    * Builds a lowpoly building for the given id.
    * @param {Object} THREE The three.js namespace.
-   * @param {string} buildingId One of the 11 campus building ids.
+   * @param {string} buildingId One of the 12 campus building ids.
    * @returns {Object|null} THREE.Group with userData.buildingId, base at y=0,
    *   fitting the lot footprint; null for unknown ids.
    */

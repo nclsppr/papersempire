@@ -237,7 +237,7 @@ export const ARTICLES = Object.freeze([
           } },
           { title: "Comment choisir ?", paragraphs: [
             "Choisissez un clicker si vous aimez sentir chaque première amélioration et garder une action directe. Cherchez un idle game si vous préférez préparer une production puis revenir pour arbitrer. Orientez-vous vers un incrémental plus dense si la découverte de nouvelles couches, de synergies et de réinitialisations vous motive.",
-            "Papers Empire se situe au croisement : le clic lance la presse, onze unités de production et d’optimisation développent l’atelier, et la réorganisation conserve de la culture pour le cycle suivant. Nous le décrivons donc comme un “idle incremental avec une ouverture clicker”."
+            "Papers Empire se situe au croisement : le clic lance la presse, douze unités de production et d’optimisation développent l’atelier, et la réorganisation conserve de la culture pour le cycle suivant. Nous le décrivons donc comme un “idle incremental avec une ouverture clicker”."
           ] },
         ],
       },
@@ -277,7 +277,7 @@ export const ARTICLES = Object.freeze([
           } },
           { title: "Which one should you choose?", paragraphs: [
             "Pick a clicker if you enjoy feeling every early upgrade and keeping a direct action. Look for idle design if you would rather prepare production and return for decisions. Choose a denser incremental if discovering layers, synergies, and resets is the main appeal.",
-            "Papers Empire sits at the intersection: clicks start the press, eleven production and optimization units develop the workshop, and reorganization carries culture into the next cycle. We therefore describe it as an “idle incremental with a clicker opening.”"
+            "Papers Empire sits at the intersection: clicks start the press, twelve production and optimization units develop the workshop, and reorganization carries culture into the next cycle. We therefore describe it as an “idle incremental with a clicker opening.”"
           ] },
         ],
       },
@@ -317,7 +317,7 @@ export const ARTICLES = Object.freeze([
           } },
           { title: "Was passt zu dir?", paragraphs: [
             "Ein Clicker passt, wenn jede frühe Verbesserung spürbar sein soll. Idle Design passt, wenn du Produktion vorbereiten und später Entscheidungen treffen möchtest. Ein dichteres Incremental lohnt sich, wenn neue Ebenen, Synergien und Resets das Ziel sind.",
-            "Papers Empire liegt dazwischen: Klicks starten die Presse, elf Produktions- und Optimierungseinheiten entwickeln die Werkstatt, und eine Reorganisation nimmt Kultur in den nächsten Zyklus mit. Wir beschreiben es daher als “Idle Incremental mit Clicker-Einstieg”."
+            "Papers Empire liegt dazwischen: Klicks starten die Presse, zwölf Produktions- und Optimierungseinheiten entwickeln die Werkstatt, und eine Reorganisation nimmt Kultur in den nächsten Zyklus mit. Wir beschreiben es daher als “Idle Incremental mit Clicker-Einstieg”."
           ] },
         ],
       },
@@ -357,7 +357,7 @@ export const ARTICLES = Object.freeze([
           } },
           { title: "Wat passt bei dech?", paragraphs: [
             "Wiel e Clicker, wann s du all fréi Verbesserung direkt spiere wëlls. En Idle Game passt, wann s du Produktioun virbereede wëlls an duerno fir Entscheedungen zeréckkënns. En déift Incremental passt, wann nei Schichten, Synergien a Resets dech motivéieren.",
-            "Papers Empire läit an der Mëtt: Klicks starten d’Press, eelef Produktiouns- an Optimisatiounseenheeten entwéckelen den Atelier, an eng Reorganisatioun hëlt Kultur an den nächste Zyklus mat. Mir beschreiwen et dofir als “Idle Incremental mat Clicker-Ufank”."
+            "Papers Empire läit an der Mëtt: Klicks starten d’Press, zwielef Produktiouns- an Optimisatiounseenheeten entwéckelen den Atelier, an eng Reorganisatioun hëlt Kultur an den nächste Zyklus mat. Mir beschreiwen et dofir als “Idle Incremental mat Clicker-Ufank”."
           ] },
         ],
       },
@@ -389,7 +389,7 @@ export const ARTICLES = Object.freeze([
             caption: "Sept idle games de navigateur et leur centre de gravité",
             headers: ["Jeu", "Ce que vous gérez", "À choisir si…"],
             rows: [
-              ["<a href=\"https://papersempire.com/\">Papers Empire</a>", "Une imprimerie, onze unités et une culture conservée après réorganisation", "vous voulez un thème industriel précis et une sauvegarde locale"],
+              ["<a href=\"https://papersempire.com/\">Papers Empire</a>", "Une imprimerie, douze unités et une culture conservée après réorganisation", "vous voulez un thème industriel précis et une sauvegarde locale"],
               ["<a href=\"https://play.industryidle.com/\">Industry Idle</a>", "Usines, ressources, logistique et marché", "la chaîne industrielle et les arbitrages économiques vous attirent"],
               ["<a href=\"https://orteil.dashnet.org/cookieclicker/\">Cookie Clicker</a>", "Cookies, bâtiments, améliorations et production automatique", "vous acceptez une ouverture très clicker avant de gérer une économie automatisée"],
               ["<a href=\"https://www.decisionproblem.com/paperclips/index2.html\">Universal Paperclips</a>", "Trombones, prix, fil, machines et projets successifs", "vous aimez une interface minimale dont les enjeux se déplacent"],
@@ -399,7 +399,7 @@ export const ARTICLES = Object.freeze([
             ],
           } },
           { title: "Pour une usine : Papers Empire ou Industry Idle", paragraphs: [
-            "Papers Empire met en scène une imprimerie qui passe du geste manuel à onze unités de production et d’optimisation, avec une vue de campus et un cycle de réorganisation. Industry Idle se concentre plus directement sur le réseau d’usines, les ressources et le marché. Le premier délimite un thème précis ; le second ouvre une économie industrielle plus large.",
+            "Papers Empire met en scène une imprimerie qui passe du geste manuel à douze unités de production et d’optimisation, avec une vue de campus et un cycle de réorganisation. Industry Idle se concentre plus directement sur le réseau d’usines, les ressources et le marché. Le premier délimite un thème précis ; le second ouvre une économie industrielle plus large.",
             "Nicolas Pieper crée Papers Empire : cette proximité est la raison pour laquelle nous ne lui attribuons ni rang ni note. Sa sauvegarde reste locale et son hors-ligne est réduit à 50 %, avec un plafond de huit heures."
           ] },
           { title: "Pour un départ manuel : Cookie Clicker ou Universal Paperclips", paragraphs: [
@@ -430,7 +430,7 @@ export const ARTICLES = Object.freeze([
             caption: "Seven browser idle games and what each asks you to manage",
             headers: ["Game", "What you manage", "Choose it if…"],
             rows: [
-              ["<a href=\"https://papersempire.com/en/\">Papers Empire</a>", "A printworks, eleven units, and culture carried through reorganization", "you want a focused industrial theme and a local save"],
+              ["<a href=\"https://papersempire.com/en/\">Papers Empire</a>", "A printworks, twelve units, and culture carried through reorganization", "you want a focused industrial theme and a local save"],
               ["<a href=\"https://play.industryidle.com/\">Industry Idle</a>", "Factories, resources, logistics, and a market", "industrial chains and economic trade-offs are the appeal"],
               ["<a href=\"https://orteil.dashnet.org/cookieclicker/\">Cookie Clicker</a>", "Cookies, buildings, upgrades, and automated output", "you accept a strongly clicker-led opening before managing an automated economy"],
               ["<a href=\"https://www.decisionproblem.com/paperclips/index2.html\">Universal Paperclips</a>", "Clips, price, wire, machines, and successive projects", "you like a minimal interface whose priorities keep shifting"],
@@ -440,7 +440,7 @@ export const ARTICLES = Object.freeze([
             ],
           } },
           { title: "For a factory: Papers Empire or Industry Idle", paragraphs: [
-            "Papers Empire frames the journey as a print shop growing from manual input to eleven production and optimization units, with a visible campus and reorganization cycle. Industry Idle focuses more directly on factory networks, resources, and the market. One defines a focused setting; the other opens a broader industrial economy.",
+            "Papers Empire frames the journey as a print shop growing from manual input to twelve production and optimization units, with a visible campus and reorganization cycle. Industry Idle focuses more directly on factory networks, resources, and the market. One defines a focused setting; the other opens a broader industrial economy.",
             "Nicolas Pieper is the creator of Papers Empire, which is why it receives neither a rank nor a score here. Its save is local only, and offline output runs at 50% with an eight-hour cap."
           ] },
           { title: "For a manual opening: Cookie Clicker or Universal Paperclips", paragraphs: [
@@ -471,7 +471,7 @@ export const ARTICLES = Object.freeze([
             caption: "Sieben Browser-Idle-Games und ihr Management-Schwerpunkt",
             headers: ["Spiel", "Was du verwaltest", "Wähle es, wenn…"],
             rows: [
-              ["<a href=\"https://papersempire.com/de/\">Papers Empire</a>", "Eine Druckerei, elf Einheiten und Kultur nach der Reorganisation", "du ein fokussiertes Industriethema und einen lokalen Spielstand willst"],
+              ["<a href=\"https://papersempire.com/de/\">Papers Empire</a>", "Eine Druckerei, zwölf Einheiten und Kultur nach der Reorganisation", "du ein fokussiertes Industriethema und einen lokalen Spielstand willst"],
               ["<a href=\"https://play.industryidle.com/\">Industry Idle</a>", "Fabriken, Ressourcen, Logistik und Markt", "industrielle Ketten und wirtschaftliche Abwägungen reizen"],
               ["<a href=\"https://orteil.dashnet.org/cookieclicker/\">Cookie Clicker</a>", "Cookies, Gebäude, Verbesserungen und automatische Produktion", "du einen starken Clicker-Einstieg vor einer automatisierten Wirtschaft akzeptierst"],
               ["<a href=\"https://www.decisionproblem.com/paperclips/index2.html\">Universal Paperclips</a>", "Büroklammern, Preis, Draht, Maschinen und Projekte", "du eine minimale Oberfläche mit wechselnden Prioritäten magst"],
@@ -481,7 +481,7 @@ export const ARTICLES = Object.freeze([
             ],
           } },
           { title: "Für eine Fabrik: Papers Empire oder Industry Idle", paragraphs: [
-            "Papers Empire erzählt den Weg einer Druckerei vom manuellen Start bis zu elf Produktions- und Optimierungseinheiten, sichtbarem Campus und Reorganisation. Industry Idle konzentriert sich direkter auf Fabriknetzwerke, Ressourcen und Markt. Das eine setzt einen fokussierten Rahmen, das andere öffnet eine breitere industrielle Wirtschaft.",
+            "Papers Empire erzählt den Weg einer Druckerei vom manuellen Start bis zu zwölf Produktions- und Optimierungseinheiten, sichtbarem Campus und Reorganisation. Industry Idle konzentriert sich direkter auf Fabriknetzwerke, Ressourcen und Markt. Das eine setzt einen fokussierten Rahmen, das andere öffnet eine breitere industrielle Wirtschaft.",
             "Nicolas Pieper ist der Schöpfer von Papers Empire. Deshalb erhält das Spiel hier weder Platzierung noch Note. Sein Spielstand bleibt lokal und die Offline-Produktion läuft mit 50 % bis zu acht Stunden."
           ] },
           { title: "Für einen manuellen Start: Cookie Clicker oder Universal Paperclips", paragraphs: [
@@ -512,7 +512,7 @@ export const ARTICLES = Object.freeze([
             caption: "Siwen Browser-Idle-Games an hire Management-Schwéierpunkt",
             headers: ["Spill", "Wat s du geréiers", "Wiel et, wann…"],
             rows: [
-              ["<a href=\"https://papersempire.com/lb/\">Papers Empire</a>", "Eng Dréckerei, eelef Eenheeten a Kultur no der Reorganisatioun", "s du e kloert Industriethema an eng lokal Späicherung wëlls"],
+              ["<a href=\"https://papersempire.com/lb/\">Papers Empire</a>", "Eng Dréckerei, zwielef Eenheeten a Kultur no der Reorganisatioun", "s du e kloert Industriethema an eng lokal Späicherung wëlls"],
               ["<a href=\"https://play.industryidle.com/\">Industry Idle</a>", "Fabricken, Ressourcen, Logistik an e Marché", "Industrieketten a wirtschaftlech Entscheedungen dech interesséieren"],
               ["<a href=\"https://orteil.dashnet.org/cookieclicker/\">Cookie Clicker</a>", "Cookies, Gebaier, Verbesserungen an automatesch Produktioun", "s du e staarke Clicker-Ufank virun enger automatiséierter Ekonomie akzeptéiers"],
               ["<a href=\"https://www.decisionproblem.com/paperclips/index2.html\">Universal Paperclips</a>", "Büroklameren, Präis, Drot, Maschinnen a Projeten", "s du eng minimalistesch Uewerfläch mat neie Prioritéite gär hues"],
@@ -522,7 +522,7 @@ export const ARTICLES = Object.freeze([
             ],
           } },
           { title: "Fir eng Fabrick: Papers Empire oder Industry Idle", paragraphs: [
-            "Papers Empire weist eng Dréckerei vum manuelle Start bis zu eelef Produktiouns- an Optimisatiounseenheeten, engem siichtbare Campus an enger Reorganisatioun. Industry Idle konzentréiert sech méi direkt op Fabricksnetzer, Ressourcen an de Marché. Dat eent setzt e kloere Kader, dat anert mécht eng méi breet Industrieekonomie op.",
+            "Papers Empire weist eng Dréckerei vum manuelle Start bis zu zwielef Produktiouns- an Optimisatiounseenheeten, engem siichtbare Campus an enger Reorganisatioun. Industry Idle konzentréiert sech méi direkt op Fabricksnetzer, Ressourcen an de Marché. Dat eent setzt e kloere Kader, dat anert mécht eng méi breet Industrieekonomie op.",
             "Nicolas Pieper ass de Schëpfer vu Papers Empire. Dofir kritt d’Spill hei keng Plaz a keng Note. Seng Späicherung bleift lokal an d’Offline-Produktioun leeft mat 50 % bis maximal aacht Stonnen."
           ] },
           { title: "Fir e manuellen Ufank: Cookie Clicker oder Universal Paperclips", paragraphs: [
@@ -571,7 +571,7 @@ export const ARTICLES = Object.freeze([
               ["Premier passage à l’échelle", "Unités de production", "AutoClippers"],
               ["Décisions visibles", "Achats, améliorations, contrats, réorganisation", "Prix, fil, machines, calcul et projets"],
               ["Présentation", "Atelier illustré et campus", "Interface textuelle minimale"],
-              ["Promesse de progression", "Développer onze unités, de la reprographie à l’IA Pampy Print", "Découvrir des phases successives sans en révéler ici la portée"],
+              ["Promesse de progression", "Développer douze unités, de la reprographie à l’IA Pampy Print", "Découvrir des phases successives sans en révéler ici la portée"],
             ],
           } },
           { title: "Le rapport au temps", paragraphs: [
@@ -579,7 +579,7 @@ export const ARTICLES = Object.freeze([
             "Pour Universal Paperclips, cette comparaison ne promet pas de gains navigateur fermé : la version web officielle doit être jugée sur son propre comportement. Son rythme vient surtout de seuils qui ouvrent de nouvelles décisions et de l’équilibre entre production, matière et demande."
           ] },
           { title: "Deux trajectoires de progression", paragraphs: [
-            "Papers Empire rend sa direction explicite : transformer une imprimerie en chaîne automatisée, déployer onze unités de production et d’optimisation, puis commencer un nouveau cycle avec la culture conservée après une réorganisation.",
+            "Papers Empire rend sa direction explicite : transformer une imprimerie en chaîne automatisée, déployer douze unités de production et d’optimisation, puis commencer un nouveau cycle avec la culture conservée après une réorganisation.",
             "Universal Paperclips révèle sa trajectoire par étapes. Il commence par un système d’optimisation compact, puis ajoute de nouveaux systèmes lorsque certaines conditions sont remplies. Papers Empire montre davantage ses prochains objectifs ; Universal Paperclips laisse une plus grande part de sa progression à découvrir."
           ] },
           { title: "Deux profils, deux limites", paragraphs: [
@@ -613,7 +613,7 @@ export const ARTICLES = Object.freeze([
               ["First scaling step", "Production units", "AutoClippers"],
               ["Visible decisions", "Purchases, upgrades, contracts, reorganization", "Price, wire, machines, computing, and projects"],
               ["Presentation", "Illustrated workshop and campus", "Minimal text interface"],
-              ["Progression promise", "Develop eleven units from reprographics to Pampy Print AI", "Discover successive phases whose reach is best left unspoiled"],
+              ["Progression promise", "Develop twelve units from reprographics to Pampy Print AI", "Discover successive phases whose reach is best left unspoiled"],
             ],
           } },
           { title: "Their relationship with time", paragraphs: [
@@ -621,7 +621,7 @@ export const ARTICLES = Object.freeze([
             "This comparison makes no closed-browser claim for Universal Paperclips; its official web version should be judged on its own behavior. Its rhythm comes from thresholds that reveal decisions and from balancing output, material, and demand."
           ] },
           { title: "Two progression paths", paragraphs: [
-            "Papers Empire makes its direction explicit: turn a print shop into an automated production chain, deploy eleven production and optimization units, then begin another cycle while retaining culture after reorganization.",
+            "Papers Empire makes its direction explicit: turn a print shop into an automated production chain, deploy twelve production and optimization units, then begin another cycle while retaining culture after reorganization.",
             "Universal Paperclips reveals its path in stages. It begins as a compact optimization system, then adds new systems as conditions are met. Papers Empire exposes more of its next objectives; Universal Paperclips leaves more of its progression to be discovered."
           ] },
           { title: "Two profiles, two limitations", paragraphs: [
@@ -655,7 +655,7 @@ export const ARTICLES = Object.freeze([
               ["Erste Skalierung", "Produktionseinheiten", "AutoClippers"],
               ["Sichtbare Entscheidungen", "Käufe, Verbesserungen, Verträge, Reorganisation", "Preis, Draht, Maschinen, Rechenleistung und Projekte"],
               ["Darstellung", "Illustrierte Werkstatt und Campus", "Minimale Textoberfläche"],
-              ["Fortschrittsversprechen", "Elf Einheiten von der Reprografie bis zur Pampy-Print-KI", "Aufeinanderfolgende Phasen entdecken, deren Reichweite hier nicht verraten wird"],
+              ["Fortschrittsversprechen", "Zwölf Einheiten von der Reprografie bis zur Pampy-Print-KI", "Aufeinanderfolgende Phasen entdecken, deren Reichweite hier nicht verraten wird"],
             ],
           } },
           { title: "Der Umgang mit Zeit", paragraphs: [
@@ -663,7 +663,7 @@ export const ARTICLES = Object.freeze([
             "Für Universal Paperclips macht dieser Vergleich keine Aussage über einen geschlossenen Browser. Der Rhythmus der offiziellen Webversion entsteht vor allem durch Schwellen, neue Entscheidungen und das Verhältnis von Produktion, Material und Nachfrage."
           ] },
           { title: "Zwei Wege des Fortschritts", paragraphs: [
-            "Papers Empire macht seine Richtung deutlich: eine Druckerei zu einer automatisierten Produktionskette ausbauen, elf Produktions- und Optimierungseinheiten einsetzen und nach einer Reorganisation mit erhaltener Kultur einen neuen Zyklus beginnen.",
+            "Papers Empire macht seine Richtung deutlich: eine Druckerei zu einer automatisierten Produktionskette ausbauen, zwölf Produktions- und Optimierungseinheiten einsetzen und nach einer Reorganisation mit erhaltener Kultur einen neuen Zyklus beginnen.",
             "Universal Paperclips zeigt seinen Weg schrittweise. Es beginnt als kompaktes Optimierungssystem und ergänzt neue Systeme, sobald bestimmte Bedingungen erfüllt sind. Papers Empire macht die nächsten Ziele früher sichtbar; bei Universal Paperclips bleibt mehr vom Fortschritt zu entdecken."
           ] },
           { title: "Zwei Spielertypen, zwei Einschränkungen", paragraphs: [
@@ -697,7 +697,7 @@ export const ARTICLES = Object.freeze([
               ["Éischt Skala", "Produktiounseenheeten", "AutoClippers"],
               ["Siichtbar Entscheedungen", "Akeef, Verbesserungen, Kontrakter, Reorganisatioun", "Präis, Drot, Maschinnen, Recheleeschtung a Projeten"],
               ["Presentatioun", "Illustréierten Atelier a Campus", "Minimal Text-Uewerfläch"],
-              ["Fortschrëtt", "Eelef Eenheete vun der Reprographie bis bei d’Pampy-Print-KI", "Nei Phasen entdecken, ouni hir Reechwäit hei ze verroden"],
+              ["Fortschrëtt", "Zwielef Eenheete vun der Reprographie bis bei d’Pampy-Print-KI", "Nei Phasen entdecken, ouni hir Reechwäit hei ze verroden"],
             ],
           } },
           { title: "D’Relatioun mat der Zäit", paragraphs: [
@@ -705,7 +705,7 @@ export const ARTICLES = Object.freeze([
             "Fir Universal Paperclips mécht dëse Verglach keng Ausso iwwer e zouene Browser. De Rhythmus vun der offizieller Webversioun kënnt virun allem vu Schwellen, neien Entscheedungen an der Balance tëscht Produktioun, Material an Demande."
           ] },
           { title: "Zwee Weeër vum Fortschrëtt", paragraphs: [
-            "Papers Empire mécht seng Richtung kloer: eng Dréckerei zu enger automatiséierter Produktiounskette ausbauen, eelef Produktiouns- an Optimisatiounseenheeten asetzen an no enger Reorganisatioun mat erhalener Kultur en neien Zyklus ufänken.",
+            "Papers Empire mécht seng Richtung kloer: eng Dréckerei zu enger automatiséierter Produktiounskette ausbauen, zwielef Produktiouns- an Optimisatiounseenheeten asetzen an no enger Reorganisatioun mat erhalener Kultur en neien Zyklus ufänken.",
             "Universal Paperclips weist säi Wee Schrëtt fir Schrëtt. Et fänkt als kompakt Optimisatioun un an nei Systemer kommen dobäi, soubal bestëmmte Konditiounen erfëllt sinn. Papers Empire weist déi nächst Ziler méi fréi; bei Universal Paperclips bleift méi vum Fortschrëtt ze entdecken."
           ] },
           { title: "Zwee Spillertypen, zwou Aschränkungen", paragraphs: [

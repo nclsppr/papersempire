@@ -1,8 +1,12 @@
 # Architecture
 
-Cette page décrit le contrat technique de Papers Empire 0.25.2. Elle résume les
+Cette page décrit le contrat technique de Papers Empire 0.26.0. Elle résume les
 modules clés, les deux états de l'expérience, les flux locaux de données et les
 limites de la Data Science Zone.
+
+La spécification fonctionnelle de la progression longue est l'issue GitHub
+[#34](https://github.com/nclsppr/papersempire/issues/34) ; cette page décrit son
+contrat d'intégration, pas un second jeu de règles.
 
 ## Pile Front-end
 
@@ -21,6 +25,12 @@ limites de la Data Science Zone.
 - **JavaScript** :
   - `app.js` : boucle de jeu, projection DOM, contrôleur d'expérience et
     snapshots analytiques ;
+  - `progression.js` : règles pures de Plans, défis, campagnes, paliers et
+    conclusion ;
+  - `modifier-utils.js` : composition pure des multiplicateurs de carrière,
+    prestige, bâtiments et améliorations ;
+  - `endgame.js` : catalogue de contrats, termes figés, clauses et minuterie ;
+  - `events.js` : tirage et résolution des incidents sans responsabilité UI ;
   - `economy-analytics.js` : calculs purs d'économie marginale et de prestige ;
   - `dashboard.js` : rendu local et autonome de la Data Science Zone ;
   - `persistence.js`, `achievements.js`, `accessibility.js`,
@@ -74,8 +84,30 @@ sequenceDiagram
     App->>Ach: evaluate(gameState, unlocked)
     Ach-->>App: IDs débloqués
     App->>AchState: stocke le succès
-    App->>App: logMessage + render panel
+    App->>AchState: crédite la récompense puis marque rewarded
+    App->>App: feedback groupé + journal + panneau
     App->>Persist: queueSave(force=true)
+```
+
+## Diagramme : validation d'un Plan
+
+```mermaid
+sequenceDiagram
+    actor Player
+    participant App as app.js
+    participant Career as progression.js
+    participant Mods as modifier-utils.js
+    participant Persist as Persistence
+    Player->>App: choisit un Plan
+    App->>Career: selectPlan(...)
+    Career-->>App: rang, étapes et modificateurs
+    App->>Mods: compose les effets du run
+    App->>Career: updateProgress(...) après les actions
+    Career-->>App: étapes terminées / récompenses idempotentes
+    Player->>App: confirme la Réorganisation
+    App->>Career: handlePrestige(...)
+    Career-->>App: tampon ou reprise à l'étape 1
+    App->>Persist: sauvegarde V3 cohérente
 ```
 
 ## Modules principaux
@@ -83,6 +115,10 @@ sequenceDiagram
 | Fichier | Rôle |
 | --- | --- |
 | `assets/js/app.js` | Boucle principale, rendu, UI |
+| `assets/js/progression.js` | État et règles pures de carrière : Plans, défis, campagnes, paliers et conclusion |
+| `assets/js/modifier-utils.js` | Composition déterministe des modificateurs d'économie |
+| `assets/js/endgame.js` | Offres de contrats, clauses optionnelles, termes figés et persistance du contrat actif |
+| `assets/js/events.js` | Catalogue, cadence et résolution des incidents en attente |
 | `assets/js/economy-analytics.js` | Simulation pure quantité +1, coûts, gains marginaux et prestige |
 | `assets/js/dashboard.js` | Data Science Zone, graphiques et tableaux à partir du stockage local |
 | `assets/js/persistence.js` | Sauvegarde locale, export/import |
@@ -95,6 +131,12 @@ sequenceDiagram
 | `scripts/build-site.sh` | Assemblage reproductible du jeu et de la documentation |
 | `content/guides/index.mjs` | Catalogue, traductions, sources et métadonnées des Guides de l'atelier |
 | `scripts/build-guides.mjs` | Génération des hubs, articles, données structurées et sitemap |
+
+Les catalogues `assets/i18n/{fr,en,de,lb}.js` sont l'unique source des textes
+runtime, y compris les contrats. Les modules métier ne mutent plus `window.I18N`.
+`scripts/validate-i18n.mjs` impose la parité stricte des clés et des placeholders
+entre les quatre langues, puis vérifie que les clés littérales appelées par le
+runtime sont résolues.
 
 ### Guides de l’atelier
 
@@ -126,7 +168,7 @@ donc pas remplacer le matte par un canvas vide. La scène lit l'état via
 (copie défensive exposée par `app.js`) en polling dans sa propre boucle rAF —
 elle ne mute jamais la simulation. Les interactions d'achat du canvas sont
 désactivées hors de la vue `playing` et réutilisent les règles métier du DOM.
-`city-layout.js` place les 11 parcelles ; `building-recipes.js` construit les
+`city-layout.js` place les 12 parcelles ; `building-recipes.js` construit les
 bâtiments en géométries procédurales avec matériaux PBR et ressources partagées.
 Un printworks décoratif permanent rend une sauvegarde vierge lisible sans
 prétendre que le joueur le possède. Le renderer transparent laisse le matte
@@ -163,18 +205,51 @@ sequenceDiagram
     Zone->>Zone: graphiques, matrice, recommandations
 ```
 
-La sauvegarde canonique V2 conserve aussi le contrat premium actif et son temps restant :
-ouvrir la Data Science Zone dans le même onglet ne détruit donc plus la mission.
-Une réorganisation annule explicitement ce contrat et régénère les offres selon
-le nouveau cycle.
+### Sauvegarde canonique V3
 
-`app.js` projette la prochaine étape interne et le contrat actif dans un seul
-« Dossier du moment ». Le contrat ne remplace pas le système d'offres : il prend
-seulement la priorité dans cette synthèse pendant son exécution. La préférence
-`eventsEnabled`, gérée par `accessibility.js`, persiste l'autorisation des
-interruptions aléatoires. Fermer une modale annule l'incident sans appliquer de
-choix ; désactiver les interruptions annule aussi l'incident et le bandeau en
-cours.
+`papersEmpireSave` porte `version: 3`. `app.js` sérialise uniquement les données
+durables, jamais le DOM ni les caches de rendu :
+
+| Champ | Contenu durable |
+| --- | --- |
+| `meta` | date du premier démarrage explicite |
+| `resources`, `stats` | DOC, CC, Culture et trois jauges |
+| `buildings`, `upgrades` | identifiants, quantités, déblocages et achats |
+| `achievements` | cartes `unlocked` et `rewarded`, séparées pour garantir une récompense unique |
+| `career` | état normalisé par `Progression.serializeCareer()` : cycle, Plan/rang/étape, compteurs, défis, campagnes, badges et conclusion |
+| `endgame.activeContract` | contrat, temps restant, durée, termes figés et état de clause (`schemaVersion: 2`) |
+| `events.pendingId` | identifiant de l'unique incident en attente |
+| `analytics`, `lastSeen` | compteurs locaux, résumés de cycles et calcul de l'absence |
+
+L'hydratation est défensive : seules les ressources finies et non négatives, les
+quantités entières sûres et les identifiants connus sont repris. Les anciennes
+sauvegardes V1/V2 restent acceptées ; `imageVbs` migre vers `brandImage`,
+`vbsPortal` vers `clientPortal`, l'ancien objet plat de succès devient
+`achievements.unlocked`, et ces succès historiques sont marqués récompensés
+pour ne pas recréditer leur lot. Les champs carrière, clause ou incident absents
+reçoivent leurs valeurs initiales. Le Studio prépresse apparaît à quantité zéro
+dans une sauvegarde ancienne. Aucun reset forcé n'est nécessaire.
+
+Une réorganisation annule explicitement le contrat actif, redémarre le cycle
+de carrière et régénère les offres. Un Plan incomplet et une campagne active
+repartent à l'étape 1 ; un défi actif échoue. Les tampons, badges, défis déjà
+terminés, récompenses de succès et Culture restent persistants.
+
+### Dossier et incidents
+
+`app.js` projette la prochaine étape du Plan, le défi ou la campagne disponible
+et le contrat actif dans un seul « Dossier du moment ». Le contrat ne remplace
+pas le système d'offres : il prend seulement la priorité dans cette synthèse
+pendant son exécution. La carrière est évaluée par `progression.js`, qui ne
+connaît ni DOM, ni traduction, ni stockage ; `app.js` applique les récompenses
+retournées dans la même sauvegarde que l'état terminé.
+
+La préférence `eventsEnabled`, gérée par `accessibility.js`, persiste
+l'autorisation des incidents. Un tirage crée une bannette discrète et sauvegarde
+son identifiant, sans ouvrir la modale. Le joueur choisit de l'ouvrir ou de le
+classer sans effet. Tant qu'un incident attend, `events.js` n'en génère pas un
+second. Désactiver les incidents vide la bannette et empêche les prochains
+tirages.
 
 Les calculs sont explicables et déterministes : coût suivant, gain marginal
 DOC/s et CC/s, temps d'accès et retour en DOC à cadence constante. Ils ne sont

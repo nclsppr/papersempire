@@ -9,8 +9,15 @@
   const assetUrl = window.PEAssetUrl || function (path) { return path; };
 
   const GAME_TITLE = window.GAME_TITLE || "Papers Empire";
-  const { computeBuildingEffects, getBuildingImpact } = ModifierUtils;
+  const {
+    computeBuildingEffects,
+    getBuildingImpact,
+    getEffectiveQuantity,
+    getMilestoneMultiplier,
+    getNextMilestone
+  } = ModifierUtils;
   const EconomyAnalytics = window.EconomyAnalytics || null;
+  const Progression = window.ProgressionModule || null;
   const { sanitizeTimeScale, updateCheatProgress } = GodModeUtils;
   const Events = window.Events;
   const Settings = window.Settings;
@@ -110,16 +117,25 @@
     log: []
   };
 
+  let careerState = null;
+
   const achievementsState = {
-    unlocked: {}
+    unlocked: {},
+    rewarded: {},
+    renderSignature: ""
   };
 
   const eventState = {
+    active: null,
     modalCanClose: false,
     bannerTone: "mixed",
     bannerKey: null,
     bannerParams: null,
     eventsEnabled: true
+  };
+
+  const careerUiState = {
+    renderSignature: ""
   };
 
   const contractsState = {
@@ -170,7 +186,12 @@
         upgradeSpend: 0,
         clicks: 0,
         contractsCompleted: 0,
-        eventsResolved: 0
+        eventsResolved: 0,
+        achievementDocs: 0,
+        achievementCc: 0,
+        achievementCulture: 0,
+        careerCulture: 0,
+        prestigeCulture: 0
       },
       lifetimeObserved: {
         prestiges: 0,
@@ -309,6 +330,21 @@
       imageBonusPerUnit: 0.04
     },
     {
+      id: "prepressStudio",
+      emoji: "🖥️",
+      nameKey: "building.prepressStudio.name",
+      descKey: "building.prepressStudio.desc",
+      baseProduction: 0,
+      baseCost: 30000,
+      costMultiplier: 1.2,
+      role: "multiplier",
+      docMultiplierPerUnit: 0.04,
+      qualityBonusPerUnit: 0.025,
+      footprintBonusPerUnit: -0.012,
+      imageBonusPerUnit: 0.01,
+      contractDurationReductionPerUnit: 0.06
+    },
+    {
       id: "factory40",
       emoji: "🤖",
       nameKey: "building.factory40.name",
@@ -386,7 +422,17 @@
     if (Array.isArray(saved.upgrades) && saved.upgrades.some(item => item && item.purchased)) {
       return true;
     }
-    return !!(saved.achievements && Object.values(saved.achievements).some(Boolean));
+    if (saved.career && (
+      saved.career.started ||
+      saved.career.activePlan ||
+      Object.values(saved.career.completedRanks || {}).some(value => Number(value) > 0)
+    )) {
+      return true;
+    }
+    const savedAchievements = saved.achievements && saved.achievements.unlocked
+      ? saved.achievements.unlocked
+      : saved.achievements;
+    return !!(savedAchievements && Object.values(savedAchievements).some(Boolean));
   }
 
   function wantsWelcomeView() {
@@ -581,11 +627,29 @@
     DOM.workOrderProgress = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-progress]");
     DOM.workOrderLastAction = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-last-action]");
     DOM.workOrderNext = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-next]");
+    DOM.workOrderContext = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-context]");
+    DOM.workOrderPlan = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-plan]");
+    DOM.workOrderStep = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-step]");
+    DOM.workOrderSteps = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-steps]");
+    DOM.workOrderCriteria = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-criteria]");
+    DOM.workOrderOutcome = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-outcome]");
+    DOM.workOrderReward = DOM.currentObjective && DOM.currentObjective.querySelector("[data-work-order-reward]");
+    DOM.pendingEventButton = document.getElementById("pendingEventButton");
+    DOM.pendingEventLabel = DOM.pendingEventButton && DOM.pendingEventButton.querySelector("[data-work-order-incident-label]");
+    DOM.pendingEventHint = document.querySelector("[data-work-order-incident-hint]");
     DOM.qualityGauge = DOM.qualityFill && DOM.qualityFill.closest('[role="progressbar"]');
     DOM.footprintGauge = DOM.footprintFill && DOM.footprintFill.closest('[role="progressbar"]');
     DOM.imageGauge = DOM.imageFill && DOM.imageFill.closest('[role="progressbar"]');
     DOM.prestigeButton = document.getElementById("prestigeButton");
     DOM.prestigeInfo = document.getElementById("prestigeInfo");
+    DOM.careerPlanContainer = document.getElementById("careerPlanContainer");
+    DOM.careerPlanKicker = DOM.careerPlanContainer && DOM.careerPlanContainer.querySelector("[data-career-plan-kicker]");
+    DOM.careerPlanTitle = document.getElementById("careerPlanTitle");
+    DOM.careerPlanProgress = DOM.careerPlanContainer && DOM.careerPlanContainer.querySelector("[data-career-plan-progress]");
+    DOM.careerPlanIntro = document.getElementById("careerPlanIntro");
+    DOM.careerPlanChoices = document.getElementById("careerPlanChoices");
+    DOM.careerPlanEffect = document.getElementById("careerPlanEffect");
+    DOM.careerPlanStamps = DOM.careerPlanContainer && DOM.careerPlanContainer.querySelector("[data-career-plan-stamps]");
     DOM.buildingsList = document.getElementById("buildingsList");
     DOM.upgradesList = document.getElementById("upgradesList");
     DOM.logPanel = document.getElementById("logPanel");
@@ -652,14 +716,13 @@
       if (document.visibilityState === "hidden") flushOnLifecycleBoundary();
     });
     if (DOM.prestigeButton) {
-      DOM.prestigeButton.addEventListener("click", () => {
-        if (!canPrestige()) return;
-        const gain = computePotentialCultureGain();
-        if (gain <= 0) return;
-        if (confirm(t("prestige.confirm", { gain }))) {
-          doPrestige();
-        }
-      });
+      DOM.prestigeButton.addEventListener("click", handlePrestigeClick);
+    }
+    if (DOM.careerPlanChoices) {
+      DOM.careerPlanChoices.addEventListener("click", handleCareerAction);
+    }
+    if (DOM.pendingEventButton) {
+      DOM.pendingEventButton.addEventListener("click", openPendingEvent);
     }
 
     if (DOM.exportSaveBtn) {
@@ -1043,6 +1106,8 @@
     }
     applyGameTitle();
     renderGodModePanel(true);
+    careerUiState.renderSignature = "";
+    renderCareerPanel(true);
     renderAchievementsPanel();
     refreshEventBanner();
   }
@@ -1151,6 +1216,9 @@
     uiState.upgradesDirty = true;
     uiState.lastAction = null;
     uiState.completionReceipt = null;
+    careerUiState.renderSignature = "";
+    achievementsState.renderSignature = "";
+    contractsState.listRenderSignature = "";
     renderAll(true);
   }
 
@@ -1321,6 +1389,17 @@
         : Date.now();
     }
     analyticsState = hydrateAnalyticsState(savedState && savedState.analytics, !!savedState && !savedState.analytics);
+    if (
+      savedState &&
+      !savedState.analytics &&
+      savedState.resources &&
+      Number(savedState.resources.culturePoints) > 0
+    ) {
+      // Avant l'historique analytique, la Culture ne pouvait provenir que
+      // d'une réorganisation. Conserver ce fait sans faire la même déduction
+      // pour les sauvegardes V3, où défis et succès donnent aussi de la Culture.
+      analyticsState.lifetimeObserved.prestiges = 1;
+    }
     analyticsHistory = loadAnalyticsHistory();
     if (savedState && savedState.analytics && analyticsHistory.length === 0) {
       // An imported/cleared profile may retain aggregate counters without the
@@ -1331,16 +1410,40 @@
       lastAnalyticsSampleAt = analyticsHistory[analyticsHistory.length - 1].generatedAt;
     }
     applyPersistedState(savedState);
+    careerState = Progression && typeof Progression.hydrateCareer === "function"
+      ? Progression.hydrateCareer(savedState && savedState.career, {
+          culturePoints: gameState.resources.culturePoints,
+          now: Date.now()
+        })
+      : null;
+    restorePendingEvent(savedState);
     offlineReport = settleOfflineProgress(savedState);
+    const loadProgress = updateCareerProgress({ notify: false, save: false });
+    const careerProgressNeedsSave = Boolean(loadProgress && (
+      (loadProgress.planObjectivesCompleted || []).length ||
+      (loadProgress.challengeObjectivesCompleted || []).length ||
+      (loadProgress.campaignObjectivesCompleted || []).length ||
+      loadProgress.challengeCompleted ||
+      loadProgress.campaignCompleted ||
+      loadProgress.conclusionUnlocked
+    ));
 
     if (window.EndgameModule) {
       const savedContract = savedState && savedState.endgame
         ? savedState.endgame.activeContract
         : null;
       window.EndgameModule.loadData(gameState, savedContract).then(() => {
+        syncCampaignContractPriority();
         renderContractsPanel();
         renderWorkOrder();
+        if (careerProgressNeedsSave) {
+          // Progress and any Culture reward must land in the same transaction,
+          // after the active contract was restored.
+          queueSave(true);
+        }
       });
+    } else if (careerProgressNeedsSave) {
+      queueSave(true);
     }
 
     uiState.buildingsDirty = true;
@@ -1361,7 +1464,7 @@
 
   function buildPersistedState() {
     return {
-      version: 2,
+      version: 3,
       meta: { startedAt: experienceStartedAt },
       resources: { ...gameState.resources },
       stats: { ...gameState.stats },
@@ -1371,10 +1474,21 @@
         isUnlocked: !!b.isUnlocked
       })),
       upgrades: gameState.upgrades.map(u => ({ id: u.id, purchased: !!u.purchased })),
-      achievements: achievementsState.unlocked,
+      achievements: {
+        unlocked: { ...achievementsState.unlocked },
+        rewarded: { ...achievementsState.rewarded }
+      },
+      career: Progression && careerState && typeof Progression.serializeCareer === "function"
+        ? Progression.serializeCareer(careerState)
+        : null,
       endgame: {
         activeContract: window.EndgameModule && typeof window.EndgameModule.exportActiveContract === "function"
           ? window.EndgameModule.exportActiveContract()
+          : null
+      },
+      events: {
+        pendingId: eventState.active && typeof eventState.active.id === "string"
+          ? eventState.active.id
           : null
       },
       analytics: JSON.parse(JSON.stringify(analyticsState)),
@@ -1443,10 +1557,27 @@
           ? window.Achievements.definitions.map(definition => definition.id)
           : []
       );
+      const rawUnlocked = isStateRecord(saved.achievements.unlocked)
+        ? saved.achievements.unlocked
+        : saved.achievements;
       achievementsState.unlocked = Object.fromEntries(
-        Object.entries(saved.achievements).filter(([id, unlocked]) => {
-          if (!achievementIds.has(id)) return false;
-          return unlocked === true || (Number.isFinite(unlocked) && unlocked > 0);
+        Object.entries(rawUnlocked).flatMap(([id, unlocked]) => {
+          if (!achievementIds.has(id)) return [];
+          if (unlocked !== true && !(Number.isFinite(unlocked) && unlocked > 0)) return [];
+          const timestamp = Number.isFinite(unlocked) && unlocked > 0
+            ? unlocked
+            : isValidTimestamp(saved.savedAt) ? saved.savedAt : Date.now();
+          return [[id, timestamp]];
+        })
+      );
+      const rawRewarded = isStateRecord(saved.achievements.rewarded)
+        ? saved.achievements.rewarded
+        : rawUnlocked;
+      achievementsState.rewarded = Object.fromEntries(
+        Object.entries(rawRewarded).flatMap(([id, rewarded]) => {
+          if (!achievementsState.unlocked[id]) return [];
+          if (rewarded !== true && !(Number.isFinite(rewarded) && rewarded > 0)) return [];
+          return [[id, Number.isFinite(rewarded) && rewarded > 0 ? rewarded : achievementsState.unlocked[id]]];
         })
       );
     }
@@ -1573,7 +1704,8 @@
       upgrades: gameState.upgrades.map(upgrade => ({ ...upgrade })),
       resources: { ...gameState.resources },
       stats: { ...gameState.stats },
-      config: { ...gameState.config }
+      config: { ...gameState.config },
+      careerModifiers: { ...getCareerModifiers() }
     };
   }
 
@@ -1605,6 +1737,10 @@
         ? automatic.buildings.map(item => [item.id, item.directAutomaticDocPerSecond])
         : []
     );
+    const careerSummary = Progression && careerState && typeof Progression.getSummary === "function"
+      ? Progression.getSummary(careerState, buildCareerContext(docPerSecond))
+      : null;
+    const careerModifiers = getCareerModifiers();
 
     return {
       schemaVersion: 2,
@@ -1622,6 +1758,7 @@
         culturePoints: gameState.resources.culturePoints,
         prestigeMult: prestigeMultiplier(),
         buildingCount: gameState.buildings.reduce((sum, building) => sum + building.quantity, 0),
+        modifiers: { ...careerModifiers },
         stats: { ...gameState.stats },
         buildings: gameState.buildings.map(building => ({
           id: building.id,
@@ -1633,8 +1770,10 @@
       economics: {
         automatic,
         investments,
-        prestige
+        prestige,
+        modifiers: { ...careerModifiers }
       },
+      career: careerSummary,
       analytics: JSON.parse(JSON.stringify(analyticsState))
     };
   }
@@ -1778,6 +1917,23 @@
     if (Math.abs(impact.imageBonus) > EPSILON) {
       parts.push(t("impact.image") + " " + formatPercent(impact.imageBonus));
     }
+    if (Math.abs(impact.contractDurationReduction) > EPSILON) {
+      // Les paliers de production multiplient les capacités industrielles,
+      // mais le BAT reste une réduction calendaire brute par Studio, plafonnée
+      // par EndgameModule. L'aperçu doit donc raconter exactement le délai que
+      // le moteur figera au lancement du contrat.
+      const rawQuantity = typeof quantityOverride === "number"
+        ? Math.max(0, quantityOverride)
+        : Math.max(0, building.quantity || 0);
+      const durationCap = window.EndgameModule && Number.isFinite(window.EndgameModule.MAX_PREPRESS_DURATION_REDUCTION)
+        ? window.EndgameModule.MAX_PREPRESS_DURATION_REDUCTION
+        : 0.3;
+      const durationReduction = Math.min(
+        durationCap,
+        Math.max(0, building.contractDurationReductionPerUnit || 0) * rawQuantity
+      );
+      parts.push(t("impact.contractDuration") + " " + formatPercent(-durationReduction));
+    }
 
     return parts.join(" • ");
   }
@@ -1821,7 +1977,11 @@
 
   /** Returns the current cost of buying the next unit of a building. */
   function buildingCost(building) {
-    return Math.floor(building.baseCost * Math.pow(building.costMultiplier, building.quantity));
+    return Math.floor(
+      building.baseCost *
+      Math.pow(building.costMultiplier, building.quantity) *
+      getCareerModifiers().buildingCostMultiplier
+    );
   }
 
   /** Finds the real next locked plan, independent of catalogue order. */
@@ -1917,9 +2077,172 @@
     });
   }
 
+  function getCareerModifiers() {
+    if (!Progression || !careerState || typeof Progression.getModifiers !== "function") {
+      return {
+        docMultiplier: 1,
+        ccMultiplier: 1,
+        qualityTargetOffset: 0,
+        footprintDriftMultiplier: 1,
+        buildingCostMultiplier: 1,
+        contractRewardMultiplier: 1
+      };
+    }
+    return Progression.getModifiers(careerState);
+  }
+
+  function getContractModifiers() {
+    const modifiers = getCareerModifiers();
+    return {
+      contractDocRewardMultiplier: modifiers.contractRewardMultiplier,
+      contractCcRewardMultiplier: modifiers.contractRewardMultiplier,
+      clauseRewardMultiplier: 1
+    };
+  }
+
+  function buildCareerContext(docPerSecond) {
+    const rate = Number.isFinite(docPerSecond) ? docPerSecond : computeDocPerSecond();
+    return {
+      resources: {
+        ccTotal: gameState.resources.ccTotal
+      },
+      stats: {
+        quality: gameState.stats.quality,
+        footprint: gameState.stats.footprint,
+        brandImage: gameState.stats.brandImage
+      },
+      metrics: {
+        docPerSecond: rate
+      },
+      buildings: gameState.buildings.map(building => ({
+        id: building.id,
+        quantity: building.quantity
+      }))
+    };
+  }
+
+  function applyCareerCultureReward(amount) {
+    const reward = Number.isFinite(amount) ? Math.max(0, amount) : 0;
+    if (!reward) return 0;
+    gameState.resources.culturePoints += reward;
+    analyticsState.currentRun.careerCulture += reward;
+    return reward;
+  }
+
+  function triggerStamp(element, className) {
+    if (!element) return;
+    element.classList.remove(className);
+    void element.offsetWidth;
+    element.classList.add(className);
+    setTimeout(() => {
+      if (element.isConnected) element.classList.remove(className);
+    }, 240);
+  }
+
+  function getChallengeDefinition(id) {
+    return Progression && typeof Progression.getChallengeDefinition === "function"
+      ? Progression.getChallengeDefinition(id)
+      : Progression && Array.isArray(Progression.CHALLENGE_DEFINITIONS)
+        ? Progression.CHALLENGE_DEFINITIONS.find(definition => definition.id === id) || null
+        : null;
+  }
+
+  function getCampaignDefinition(id) {
+    return Progression && typeof Progression.getCampaignDefinition === "function"
+      ? Progression.getCampaignDefinition(id)
+      : Progression && Array.isArray(Progression.CAMPAIGN_DEFINITIONS)
+        ? Progression.CAMPAIGN_DEFINITIONS.find(definition => definition.id === id) || null
+        : null;
+  }
+
+  function handleChallengeFailure(failure, notify = true) {
+    if (!failure) return;
+    const definition = getChallengeDefinition(failure.id);
+    const name = definition ? t(definition.nameKey) : failure.id;
+    const reason = t("career.challenge.failure." + (failure.reason || "prestige"));
+    logMessage("log.challengeFailed", { name, reason });
+    if (notify) showEventBanner("feedback.challengeFailed", "negative", { name });
+  }
+
+  function handleCareerProgressResult(result, options = {}) {
+    if (!result) return false;
+    const notify = options.notify !== false;
+    let changed = false;
+    const completedPlanObjectives = result.planObjectivesCompleted || [];
+    const completedChallengeObjectives = result.challengeObjectivesCompleted || [];
+    const completedCampaignObjectives = result.campaignObjectivesCompleted || [];
+    if (completedPlanObjectives.length || completedChallengeObjectives.length || completedCampaignObjectives.length) {
+      changed = true;
+    }
+
+    const completedVisibleObjectives = completedCampaignObjectives.length
+      ? completedCampaignObjectives
+      : completedPlanObjectives;
+    if (completedVisibleObjectives.length && notify) {
+      const latest = completedVisibleObjectives[completedVisibleObjectives.length - 1];
+      setLastAction("career.dossier.stepCompleted", { name: t(latest.labelKey) });
+      showEventBanner("career.dossier.stepCompleted", "positive", { name: t(latest.labelKey) });
+      triggerStamp(DOM.currentObjective, "is-plan-stamped");
+    }
+
+    if (result.challengeCompleted) {
+      changed = true;
+      const definition = getChallengeDefinition(result.challengeCompleted.id);
+      const name = definition ? t(definition.nameKey) : result.challengeCompleted.id;
+      const culture = applyCareerCultureReward(result.challengeCompleted.reward && result.challengeCompleted.reward.culture);
+      logMessage("log.challengeCompleted", { name, culture });
+      if (notify) showEventBanner("feedback.challengeCompleted", "positive", { name, culture });
+    }
+
+    if (result.campaignCompleted) {
+      changed = true;
+      const definition = getCampaignDefinition(result.campaignCompleted.id);
+      const name = definition ? t(definition.nameKey) : result.campaignCompleted.id;
+      const badge = t("career.badge." + result.campaignCompleted.badgeId);
+      logMessage("log.campaignCompleted", { name, badge });
+      if (notify) showEventBanner("feedback.campaignCompleted", "positive", { name, badge });
+      syncCampaignContractPriority();
+    }
+
+    if (result.conclusionUnlocked) {
+      changed = true;
+      logMessage("log.conclusionUnlocked");
+      if (notify) showEventBanner("feedback.conclusionUnlocked", "positive");
+    }
+
+    if (changed) {
+      careerUiState.renderSignature = "";
+      contractsState.listRenderSignature = "";
+      if (options.save !== false) queueSave(true);
+    }
+    return changed;
+  }
+
+  function updateCareerProgress(options = {}) {
+    if (!Progression || !careerState || typeof Progression.updateProgress !== "function") return null;
+    const result = Progression.updateProgress(careerState, buildCareerContext(), { now: Date.now() });
+    handleCareerProgressResult(result, options);
+    return result;
+  }
+
+  function syncCampaignContractPriority() {
+    if (!window.EndgameModule || typeof window.EndgameModule.setPriorityContracts !== "function") return;
+    const campaignId = careerState && careerState.campaigns && careerState.campaigns.active
+      ? careerState.campaigns.active.id
+      : null;
+    const priorities = campaignId === "onboarding842"
+      ? ["onboardingKit"]
+      : campaignId === "annualReportSeason"
+        ? ["annualReports"]
+        : [];
+    window.EndgameModule.setPriorityContracts(priorities, gameState);
+    contractsState.listRenderSignature = "";
+  }
+
   /** Aggregates all multiplicative bonuses currently active. */
   function computeMultipliers() {
     const buildingEffects = computeBuildingEffects(gameState.buildings);
+    const careerModifiers = getCareerModifiers();
     let docMult = buildingEffects.docMult;
     let ccMult = buildingEffects.ccMult;
     let clickMult = 1;
@@ -1938,12 +2261,17 @@
       }
     }
 
+    docMult *= careerModifiers.docMultiplier;
+    ccMult *= careerModifiers.ccMultiplier;
+    baseQualityOffset += careerModifiers.qualityTargetOffset;
+
     return {
       docMult,
       ccMult,
       clickMult,
       baseQualityOffset,
-      buildingEffects
+      buildingEffects,
+      careerModifiers
     };
   }
 
@@ -1954,7 +2282,7 @@
 
     for (const b of gameState.buildings) {
       if (!b.baseProduction) continue;
-      DOCps += b.baseProduction * b.quantity;
+      DOCps += b.baseProduction * getEffectiveQuantity(b.quantity);
     }
 
     DOCps *= mults.docMult;
@@ -2040,14 +2368,19 @@
     analyticsState.currentRun.autoCc += ccGain;
     analyticsState.lifetimeObserved.cc += ccGain;
 
-    const targetQualityBase = 0.3 + mults.baseQualityOffset + gameState.resources.culturePoints * 0.02;
+    const cultureGaugeBonuses = computeCultureGaugeBonuses();
+    const targetQualityBase = 0.3 + mults.baseQualityOffset + cultureGaugeBonuses.quality;
     const targetQuality = clamp01(targetQualityBase);
     gameState.stats.quality += (targetQuality - gameState.stats.quality) * gameState.config.qualityRecoveryRate * dt;
 
-    const targetImage = clamp01(0.4 + gameState.resources.culturePoints * 0.03);
+    const targetImage = clamp01(0.4 + cultureGaugeBonuses.brandImage);
     gameState.stats.brandImage += (targetImage - gameState.stats.brandImage) * gameState.config.imageRecoveryRate * dt;
 
-    gameState.stats.footprint += gameState.config.footprintDriftBase * DOCps * dt;
+    gameState.stats.footprint +=
+      gameState.config.footprintDriftBase *
+      DOCps *
+      mults.careerModifiers.footprintDriftMultiplier *
+      dt;
     gameState.stats.footprint = clamp01(gameState.stats.footprint);
 
     refreshUpgradeUnlocks();
@@ -2056,6 +2389,7 @@
       checkDynamicEvents(realDt);
       tickContracts(dt);
     }
+    updateCareerProgress();
     checkAchievements();
   }
 
@@ -2115,6 +2449,9 @@
     analyticsState.currentRun.buildingSpend += cost;
     const previousQuantity = b.quantity;
     b.quantity += 1;
+    const milestoneEvents = Progression && careerState && typeof Progression.recordBuildingMilestones === "function"
+      ? Progression.recordBuildingMilestones(careerState, b.id, previousQuantity, b.quantity)
+      : [];
     const afterRate = computeDocPerSecond();
     const primaryParams = { name: getBuildingName(b) };
     const rateChanged = Math.abs(afterRate - beforeRate) > 1e-9;
@@ -2126,9 +2463,18 @@
     const detailText = rateChanged ? "" : formatBuildingImpactText(b, 1);
     setLastAction("feedback.unitInstalled", primaryParams, detailKey, detailParams, detailText);
     uiState.buildingsDirty = true;
+    contractsState.listRenderSignature = "";
     notifyScene("purchase", b.id);
     logMessage("log.buyBuilding", { name: getBuildingName(b), total: b.quantity });
+    for (const milestone of milestoneEvents) {
+      logMessage("log.buildingMilestone", {
+        name: getBuildingName(b),
+        quantity: milestone.quantity,
+        multiplier: milestone.multiplier.toFixed(2)
+      });
+    }
     refreshUpgradeUnlocks();
+    updateCareerProgress();
     const unlockedAchievement = checkAchievements();
     queueSave();
     renderAll();
@@ -2146,6 +2492,20 @@
     const detailTextValue = rateChanged ? t(detailKey, detailParams) : detailText;
     showBuildingFeedback(id, primaryText, detailTextValue);
     let purchaseAnnouncement = detailTextValue ? primaryText + ". " + detailTextValue : primaryText;
+    if (milestoneEvents.length) {
+      const milestone = milestoneEvents[milestoneEvents.length - 1];
+      const milestoneParams = {
+        name: getBuildingName(b),
+        quantity: milestone.quantity,
+        multiplier: milestone.multiplier.toFixed(2)
+      };
+      purchaseAnnouncement += ". " + t("feedback.buildingMilestone", milestoneParams);
+      showEventBanner("feedback.buildingMilestone", "positive", milestoneParams);
+      const milestoneRow = DOM.buildingsList
+        ? DOM.buildingsList.querySelector(`[data-building-id="${id}"] .building-milestone`)
+        : null;
+      triggerStamp(milestoneRow, "is-stamped");
+    }
     if (unlockedAchievement) {
       purchaseAnnouncement += ". " + t("log.achievement", { name: t(unlockedAchievement.nameKey) });
     }
@@ -2172,6 +2532,12 @@
     gameState.resources.docBank -= upg.cost;
     analyticsState.currentRun.upgradeSpend += upg.cost;
     upg.purchased = true;
+    const progressionRecord = Progression && careerState && typeof Progression.recordUpgradePurchased === "function"
+      ? Progression.recordUpgradePurchased(careerState, { now: Date.now() })
+      : null;
+    if (progressionRecord && progressionRecord.challengeFailure) {
+      handleChallengeFailure(progressionRecord.challengeFailure);
+    }
     const afterRate = computeDocPerSecond();
     const rateChanged = Math.abs(afterRate - beforeRate) > 1e-9;
     const primaryParams = { name: getUpgradeName(upg) };
@@ -2184,6 +2550,7 @@
     setLastAction("feedback.upgradeInstalled", primaryParams, detailKey, detailParams, detailText);
     uiState.upgradesDirty = true;
     logMessage("log.buyUpgrade", { name: getUpgradeName(upg) });
+    updateCareerProgress();
     const unlockedAchievement = checkAchievements();
     queueSave();
     renderAll();
@@ -2212,31 +2579,163 @@
 
   /** How much culture would be earned by prestiging right now. */
   function computePotentialCultureGain() {
-    return Math.floor(Math.sqrt(gameState.resources.ccTotal / gameState.config.prestigeCcDivisor));
+    const ccTotal = Math.max(0, gameState.resources.ccTotal || 0);
+    const divisor = Math.max(1, gameState.config.prestigeCcDivisor || 1);
+    if (EconomyAnalytics && typeof EconomyAnalytics.computePotentialCultureGain === "function") {
+      try {
+        const sharedGain = EconomyAnalytics.computePotentialCultureGain(ccTotal, divisor);
+        if (Number.isFinite(sharedGain) && sharedGain >= 0) return Math.floor(sharedGain);
+      } catch {
+        // Le moteur de jeu conserve la formule canonique en filet local.
+      }
+    }
+    return Math.floor(3 * Math.log10(1 + ccTotal / divisor));
+  }
+
+  function computeCultureGaugeBonuses() {
+    const culture = Math.max(0, gameState.resources.culturePoints || 0);
+    if (EconomyAnalytics && typeof EconomyAnalytics.computeCultureGaugeBonuses === "function") {
+      try {
+        const shared = EconomyAnalytics.computeCultureGaugeBonuses(culture);
+        if (shared && Number.isFinite(shared.quality) && Number.isFinite(shared.brandImage)) {
+          return {
+            quality: Math.max(0, Math.min(0.2, shared.quality)),
+            brandImage: Math.max(0, Math.min(0.25, shared.brandImage))
+          };
+        }
+      } catch {
+        // Le moteur de jeu conserve la formule canonique en filet local.
+      }
+    }
+    const cultureRoot = Math.sqrt(culture);
+    return {
+      quality: Math.min(0.2, 0.025 * cultureRoot),
+      brandImage: Math.min(0.25, 0.03 * cultureRoot)
+    };
+  }
+
+  function getPrestigeCareerPreview() {
+    const assessment = Progression && careerState && typeof Progression.assessPrestige === "function"
+      ? Progression.assessPrestige(careerState, buildCareerContext())
+      : null;
+    const activePlan = careerState && careerState.activePlan;
+    const plan = activePlan && Progression && typeof Progression.getPlanDefinition === "function"
+      ? Progression.getPlanDefinition(activePlan.id)
+      : null;
+    const planCulture = assessment && assessment.willValidatePlan && activePlan
+      ? activePlan.rank
+      : 0;
+    const activeCampaign = careerState && careerState.campaigns && careerState.campaigns.active;
+    const campaign = activeCampaign && Progression && typeof Progression.getCampaignDefinition === "function"
+      ? Progression.getCampaignDefinition(activeCampaign.id)
+      : null;
+    const campaignStatus = activeCampaign && Progression && typeof Progression.getCampaignStatus === "function"
+      ? Progression.getCampaignStatus(careerState, buildCareerContext())
+      : null;
+    const activeChallenge = careerState && careerState.challenges && careerState.challenges.active;
+    const challenge = activeChallenge ? getChallengeDefinition(activeChallenge.id) : null;
+    const challengeStatus = activeChallenge && Progression && typeof Progression.getChallengeStatus === "function"
+      ? Progression.getChallengeStatus(careerState, buildCareerContext())
+      : null;
+    return {
+      assessment,
+      activePlan,
+      plan,
+      planCulture,
+      activeCampaign,
+      campaign,
+      campaignStatus,
+      activeChallenge,
+      challenge,
+      challengeStatus,
+      baseCulture: computePotentialCultureGain(),
+      totalCulture: computePotentialCultureGain() + planCulture
+    };
+  }
+
+  function prestigeCampaignRestartCopy(preview, completed = false) {
+    if (!preview || !preview.activeCampaign) return "";
+    const status = preview.campaignStatus;
+    return t(completed
+      ? "career.prestige.campaignRestarted"
+      : "career.prestige.campaignWillRestart", {
+      campaign: preview.campaign ? t(preview.campaign.nameKey) : preview.activeCampaign.id,
+      current: status ? status.stepNumber : 1,
+      total: status ? status.stepCount : 3
+    });
+  }
+
+  function prestigeChallengeFailureCopy(preview, completed = false) {
+    if (!preview || !preview.activeChallenge) return "";
+    const progress = preview.challengeStatus && preview.challengeStatus.objective;
+    return t(completed
+      ? "career.prestige.challengeFailed"
+      : "career.prestige.challengeWillFail", {
+      challenge: preview.challenge ? t(preview.challenge.nameKey) : preview.activeChallenge.id,
+      current: progress ? formatNumber(progress.current) : "0",
+      target: progress ? formatNumber(progress.target) : "1"
+    });
+  }
+
+  function handlePrestigeClick() {
+    if (!canPrestige()) return;
+    const preview = getPrestigeCareerPreview();
+    if (preview.totalCulture <= 0) return;
+    let confirmation = t("prestige.confirm", { gain: preview.totalCulture });
+    if (preview.assessment && preview.assessment.willRestartPlan) {
+      confirmation += "\n\n" + t("career.prestige.planNotValidated");
+    } else if (preview.assessment && preview.assessment.willValidatePlan && preview.activePlan) {
+      confirmation += "\n\n" + t("career.prestige.planValidated", {
+        plan: preview.plan ? t(preview.plan.nameKey) : preview.activePlan.id,
+        rank: preview.activePlan.rank,
+        culture: preview.planCulture
+      });
+    }
+    const campaignWarning = prestigeCampaignRestartCopy(preview);
+    if (campaignWarning) confirmation += "\n\n" + campaignWarning;
+    const challengeWarning = prestigeChallengeFailureCopy(preview);
+    if (challengeWarning) confirmation += "\n\n" + challengeWarning;
+    if (confirm(confirmation)) doPrestige();
   }
 
   /** Executes the prestige reset flow and reinitialises the run. */
   function doPrestige() {
     if (!canPrestige()) return;
-    const gain = computePotentialCultureGain();
-    if (gain <= 0) return;
+    const baseGain = computePotentialCultureGain();
+    if (baseGain <= 0) return;
     const multiplierBefore = prestigeMultiplier();
+    const cultureBefore = gameState.resources.culturePoints;
+    const prestigePreview = getPrestigeCareerPreview();
+    const careerResult = Progression && careerState && typeof Progression.handlePrestige === "function"
+      ? Progression.handlePrestige(careerState, buildCareerContext(), { now: Date.now() })
+      : null;
+    if (careerResult && careerResult.progress) {
+      handleCareerProgressResult(careerResult.progress, { notify: false, save: false });
+    }
+    const planCulture = careerResult && careerResult.planCompleted && careerResult.planCompleted.reward
+      ? applyCareerCultureReward(careerResult.planCompleted.reward.culture)
+      : 0;
+    gameState.resources.culturePoints += baseGain;
+    analyticsState.currentRun.prestigeCulture += baseGain;
+    const runCultureEarned =
+      analyticsState.currentRun.prestigeCulture +
+      analyticsState.currentRun.careerCulture +
+      analyticsState.currentRun.achievementCulture;
 
     notifyScene("prestige");
     const completedAt = Date.now();
-    analyticsState.runSummaries.push({
+    const completedRunSummary = {
       ...analyticsState.currentRun,
       endedAt: completedAt,
       docTotal: gameState.resources.docTotal,
       ccTotal: gameState.resources.ccTotal,
-      cultureEarned: gain
-    });
+      cultureEarned: runCultureEarned
+    };
+    analyticsState.runSummaries.push(completedRunSummary);
     analyticsState.runSummaries = analyticsState.runSummaries.slice(-20);
     analyticsState.lifetimeObserved.prestiges += 1;
     analyticsState.currentRun = createAnalyticsState(false).currentRun;
     analyticsState.currentRun.startedAt = completedAt;
-    gameState.resources.culturePoints += gain;
-    const multiplierAfter = prestigeMultiplier();
     gameState.resources.docBank = 0;
     gameState.resources.docTotal = 0;
     gameState.resources.ccTotal = 0;
@@ -2259,11 +2758,74 @@
     if (window.EndgameModule && typeof window.EndgameModule.resetForPrestige === "function") {
       window.EndgameModule.resetForPrestige(gameState);
     }
+    syncCampaignContractPriority();
 
     uiState.buildingsDirty = true;
     uiState.upgradesDirty = true;
+    careerUiState.renderSignature = "";
+    contractsState.listRenderSignature = "";
+    let prestigeCareerDetail = "";
+    if (careerResult && careerResult.planCompleted) {
+      const plan = Progression.getPlanDefinition(careerResult.planCompleted.id);
+      const params = {
+        plan: plan ? t(plan.nameKey) : careerResult.planCompleted.id,
+        rank: careerResult.planCompleted.rank,
+        culture: planCulture
+      };
+      logMessage("log.planValidated", params);
+      prestigeCareerDetail = t("career.prestige.planValidated", params);
+    } else if (careerResult && careerResult.earlyPlanRestart && careerState.activePlan) {
+      const plan = Progression.getPlanDefinition(careerState.activePlan.id);
+      const params = { plan: plan ? t(plan.nameKey) : careerState.activePlan.id };
+      logMessage("log.planRestarted", params);
+      prestigeCareerDetail = t("career.prestige.planLost", params);
+    }
+    if (careerResult && careerResult.challengeFailed) {
+      handleChallengeFailure(careerResult.challengeFailed, false);
+      const challengeDetail = prestigeChallengeFailureCopy(prestigePreview, true);
+      prestigeCareerDetail = [prestigeCareerDetail, challengeDetail].filter(Boolean).join(" ");
+    }
+    if (careerResult && careerResult.campaignRestarted) {
+      const campaign = getCampaignDefinition(careerResult.campaignRestarted);
+      const params = {
+        campaign: campaign ? t(campaign.nameKey) : careerResult.campaignRestarted
+      };
+      logMessage("log.campaignRestarted", params);
+      const campaignDetail = prestigeCampaignRestartCopy(prestigePreview, true);
+      prestigeCareerDetail = [prestigeCareerDetail, campaignDetail].filter(Boolean).join(" ");
+    }
+    if (careerResult && careerResult.conclusionUnlocked &&
+        !(careerResult.progress && careerResult.progress.conclusionUnlocked)) {
+      logMessage("log.conclusionUnlocked");
+    }
+    const prestigeUnlockedDefinitions = [];
+    const prestigeGrantedRewards = [];
+    checkAchievements({
+      notify: false,
+      save: false,
+      unlockedDefinitions: prestigeUnlockedDefinitions,
+      grantedRewards: prestigeGrantedRewards
+    });
+    const prestigeAchievementCulture = analyticsState.currentRun.achievementCulture;
+    if (prestigeAchievementCulture > 0) {
+      completedRunSummary.achievementCulture =
+        (completedRunSummary.achievementCulture || 0) + prestigeAchievementCulture;
+      completedRunSummary.cultureEarned += prestigeAchievementCulture;
+      analyticsState.currentRun.achievementCulture = 0;
+    }
+    if (prestigeUnlockedDefinitions.length) {
+      const achievementDetails = prestigeUnlockedDefinitions.map(definition => {
+        const granted = prestigeGrantedRewards.find(item => item.definition.id === definition.id);
+        return granted
+          ? t("feedback.achievementReward", { name: t(definition.nameKey), reward: granted.reward })
+          : t("log.achievement", { name: t(definition.nameKey) });
+      });
+      prestigeCareerDetail = [prestigeCareerDetail, ...achievementDetails].filter(Boolean).join(" ");
+    }
+    const prestigeDelta = Math.max(0, gameState.resources.culturePoints - cultureBefore);
+    const multiplierAfter = prestigeMultiplier();
     const receiptParams = {
-      gain,
+      gain: prestigeDelta,
       before: multiplierBefore.toFixed(2),
       after: multiplierAfter.toFixed(2)
     };
@@ -2272,12 +2834,12 @@
       name: t("objective.prestigeComplete"),
       detailKey: "feedback.prestigeReceipt",
       detailParams: receiptParams,
+      detailText: prestigeCareerDetail,
       expiresAt: Date.now() + 2800
     };
     setLastAction("objective.prestigeComplete", {}, "feedback.prestigeReceipt", receiptParams);
-    logMessage("log.prestige", { amount: gain });
+    logMessage("log.prestige", { amount: prestigeDelta });
     UIEffects.playCelebrationEffect("prestige");
-    checkAchievements();
     showEventBanner("feedback.prestigeReceipt", "positive", receiptParams);
     queueSave(true);
     renderAll(true);
@@ -2313,8 +2875,174 @@
   }
 
   function internalObjectiveName(objective) {
+    if (Progression && careerState && careerState.activePlan) {
+      const status = Progression.getPlanStatus(careerState, buildCareerContext());
+      if (status && status.objective) return t(status.objective.labelKey);
+      const plan = Progression.getPlanDefinition(careerState.activePlan.id);
+      if (plan) return t(plan.nameKey);
+    }
     if (objective && objective.building) return getBuildingName(objective.building);
     return t("objective.prestigeName");
+  }
+
+  function setHiddenState(element, hidden) {
+    if (!element) return;
+    element.hidden = hidden;
+    element.classList.toggle("hidden", hidden);
+  }
+
+  function careerProgressValues(progress) {
+    if (!progress) return { current: 0, target: 1 };
+    const percentMetric = progress.type === "statAtLeast" || progress.type === "statAtMost";
+    return {
+      current: percentMetric ? Math.round(progress.current * 100) + " %" : formatNumber(progress.current),
+      target: percentMetric ? Math.round(progress.target * 100) + " %" : formatNumber(progress.target)
+    };
+  }
+
+  function formatCareerCriterion(progress) {
+    const values = careerProgressValues(progress);
+    return t(progress && progress.direction === "atMost"
+      ? "career.dossier.criterionAtMost"
+      : "career.dossier.criterion", values);
+  }
+
+  function appendDossierCriterion(container, options) {
+    if (!container || !options) return;
+    const item = document.createElement("li");
+    item.className = options.className || "work-order-criterion";
+    if (options.complete) item.classList.add("is-met");
+    else if (options.failed) item.classList.add("is-failed");
+    else item.classList.add("is-current");
+    if (options.optional) item.classList.add("is-optional");
+    const mark = document.createElement("span");
+    mark.className = "work-order-criterion-mark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.textContent = options.complete ? "✓" : options.failed ? "×" : "•";
+    const text = document.createElement("span");
+    text.textContent = options.text;
+    item.appendChild(mark);
+    item.appendChild(text);
+    container.appendChild(item);
+  }
+
+  function renderWorkOrderDossierExtras() {
+    const hasCareerPlan = Boolean(Progression && careerState && careerState.activePlan);
+    const context = hasCareerPlan ? buildCareerContext() : null;
+    const plan = hasCareerPlan ? Progression.getPlanDefinition(careerState.activePlan.id) : null;
+    const rankDefinition = hasCareerPlan
+      ? Progression.getRankDefinition(careerState.activePlan.id, careerState.activePlan.rank)
+      : null;
+    const status = hasCareerPlan ? Progression.getPlanStatus(careerState, context) : null;
+
+    setHiddenState(DOM.workOrderContext, !hasCareerPlan);
+    setHiddenState(DOM.workOrderSteps, !hasCareerPlan);
+    if (hasCareerPlan && plan && status) {
+      setTextIfChanged(DOM.workOrderPlan, t("career.dossier.planContext", {
+        plan: t(plan.nameKey),
+        rank: careerState.activePlan.rank
+      }));
+      setTextIfChanged(DOM.workOrderStep, t("career.dossier.step", {
+        current: status.complete ? status.stepCount : status.stepNumber,
+        total: status.stepCount
+      }));
+      DOM.workOrderSteps.innerHTML = "";
+      for (const [index, objective] of rankDefinition.objectives.entries()) {
+        const item = document.createElement("li");
+        item.className = "work-order-step";
+        if (index < status.stepIndex || status.complete) item.classList.add("is-complete");
+        else if (index === status.stepIndex) item.classList.add("is-current");
+        const mark = document.createElement("span");
+        mark.className = "work-order-step-mark";
+        mark.setAttribute("aria-hidden", "true");
+        mark.textContent = index < status.stepIndex || status.complete ? "✓" : String(index + 1);
+        const label = document.createElement("span");
+        label.textContent = t(objective.labelKey);
+        if (index === status.stepIndex && status.objective) {
+          label.textContent += " · " + formatCareerCriterion(status.objective);
+        }
+        item.appendChild(mark);
+        item.appendChild(label);
+        DOM.workOrderSteps.appendChild(item);
+      }
+    }
+
+    if (DOM.workOrderCriteria) DOM.workOrderCriteria.innerHTML = "";
+    let criterionCount = 0;
+    if (Progression && careerState && careerState.challenges && careerState.challenges.active) {
+      const definition = getChallengeDefinition(careerState.challenges.active.id);
+      const challengeStatus = Progression.getChallengeStatus(careerState, context || buildCareerContext());
+      const progress = challengeStatus && challengeStatus.objective;
+      appendDossierCriterion(DOM.workOrderCriteria, {
+        optional: true,
+        complete: Boolean(challengeStatus && challengeStatus.complete),
+        text: t("career.challenge.label") + " · " + (definition ? t(definition.nameKey) : "") +
+          (progress ? " · " + formatCareerCriterion(progress) : "")
+      });
+      criterionCount += 1;
+    }
+    if (Progression && careerState && careerState.campaigns && careerState.campaigns.active) {
+      const definition = getCampaignDefinition(careerState.campaigns.active.id);
+      const campaignStatus = Progression.getCampaignStatus(careerState, context || buildCareerContext());
+      const progress = campaignStatus && campaignStatus.objective;
+      appendDossierCriterion(DOM.workOrderCriteria, {
+        complete: Boolean(campaignStatus && campaignStatus.complete),
+        text: t("career.campaign.label") + " · " + (definition ? t(definition.nameKey) : "") +
+          (progress ? " · " + formatCareerCriterion(progress) : "")
+      });
+      criterionCount += 1;
+    }
+    const activeContract = window.EndgameModule && window.EndgameModule.activeContract;
+    if (activeContract && activeContract.current && typeof window.EndgameModule.getClauseProgress === "function") {
+      const clause = window.EndgameModule.getClauseProgress(activeContract.current, gameState);
+      if (clause) {
+        const values = careerProgressValues({
+          type: clause.id === "footprint" ? "statAtMost" : "statAtLeast",
+          direction: clause.comparison === "maximum" ? "atMost" : "atLeast",
+          current: clause.current,
+          target: clause.target
+        });
+        appendDossierCriterion(DOM.workOrderCriteria, {
+          className: "contract-clause",
+          optional: true,
+          complete: clause.met,
+          failed: clause.failed,
+          text: t(clause.nameKey) + " · " + t(clause.descKey, { target: values.target.replace(" %", "") }) +
+            " · " + t("contracts.clause.deliveryGuaranteed")
+        });
+        criterionCount += 1;
+      }
+    }
+    setHiddenState(DOM.workOrderCriteria, criterionCount === 0);
+
+    const dossierRewards = [];
+    if (hasCareerPlan && plan) {
+      dossierRewards.push(t("career.dossier.planReward", {
+        plan: t(plan.nameKey),
+        rank: careerState.activePlan.rank,
+        culture: careerState.activePlan.rank
+      }));
+    }
+    if (careerState && careerState.challenges && careerState.challenges.active) {
+      const challenge = getChallengeDefinition(careerState.challenges.active.id);
+      if (challenge && challenge.reward) {
+        dossierRewards.push(t("career.dossier.challengeReward", {
+          culture: challenge.reward.culture || 0
+        }));
+      }
+    }
+    if (careerState && careerState.campaigns && careerState.campaigns.active) {
+      const campaign = getCampaignDefinition(careerState.campaigns.active.id);
+      if (campaign) {
+        dossierRewards.push(t("career.dossier.campaignReward", {
+          badge: t("career.badge." + campaign.badgeId)
+        }));
+      }
+    }
+    setHiddenState(DOM.workOrderReward, dossierRewards.length === 0);
+    setTextIfChanged(DOM.workOrderReward, dossierRewards.join(" · "));
+    renderPendingEventControl();
+    setHiddenState(DOM.workOrderOutcome, dossierRewards.length === 0 && !eventState.active);
   }
 
   function renderWorkOrderState({ kind, type, status, name, instruction, meta, progressMax, progressValue, next }) {
@@ -2340,6 +3068,7 @@
       setTextIfChanged(DOM.workOrderLastAction, lastAction);
     }
     setTextIfChanged(DOM.workOrderNext, t("objective.next", { next }));
+    renderWorkOrderDossierExtras();
   }
 
   /** Renders one persistent job, with client work taking priority. */
@@ -2357,7 +3086,8 @@
         type: t(completed.kind === "delivery" ? "objective.client" : "objective.internal"),
         status: t(completed.kind === "delivery" ? "objective.status.delivered" : "objective.status.validated"),
         name: completed.name,
-        instruction: t(completed.detailKey, completed.detailParams),
+        instruction: t(completed.detailKey, completed.detailParams) +
+          (completed.detailText ? " · " + completed.detailText : ""),
         meta: formatProgressPercent(1),
         progressMax: 100,
         progressValue: 100,
@@ -2370,9 +3100,14 @@
       ? window.EndgameModule.activeContract
       : null;
     if (activeContract && activeContract.current) {
-      const duration = Math.max(1, activeContract.current.duration || 1);
+      const duration = Math.max(1, activeContract.duration || activeContract.current.duration || 1);
       const remaining = Math.max(0, activeContract.timer || 0);
       const elapsed = Math.max(0, Math.min(duration, duration - remaining));
+      const terms = activeContract.terms || {};
+      const baseReward = {
+        doc: Math.round((activeContract.current.reward.doc || 0) * (terms.docRewardMultiplier || 1)),
+        cc: Math.round((activeContract.current.reward.cc || 0) * (terms.ccRewardMultiplier || 1))
+      };
       renderWorkOrderState({
         kind: "client",
         type: t("objective.client"),
@@ -2383,9 +3118,57 @@
         progressMax: duration,
         progressValue: elapsed,
         next: t("contracts.reward", {
-          doc: formatNumber(activeContract.current.reward.doc || 0),
-          cc: formatNumber(activeContract.current.reward.cc || 0)
+          doc: formatNumber(baseReward.doc),
+          cc: formatNumber(baseReward.cc)
         })
+      });
+      return;
+    }
+
+    if (Progression && careerState && careerState.activePlan) {
+      const context = buildCareerContext();
+      const plan = Progression.getPlanDefinition(careerState.activePlan.id);
+      const rankDefinition = Progression.getRankDefinition(careerState.activePlan.id, careerState.activePlan.rank);
+      const status = Progression.getPlanStatus(careerState, context);
+      const progress = status && status.objective;
+      const nextDefinition = status && !status.complete
+        ? rankDefinition.objectives[status.stepIndex + 1] || null
+        : null;
+      renderWorkOrderState({
+        kind: "career",
+        type: t("career.kicker"),
+        status: t(status && status.complete ? "career.status.ready" : "career.status.active"),
+        name: progress ? t(progress.labelKey) : t(plan.nameKey),
+        instruction: status && status.complete ? t("career.dossier.ready") : t(plan.descriptionKey),
+        meta: progress ? formatCareerCriterion(progress) : formatProgressPercent(1),
+        progressMax: 1,
+        progressValue: progress ? progress.ratio : 1,
+        next: status && status.complete
+          ? t("career.dossier.ready")
+          : nextDefinition ? t(nextDefinition.labelKey) : t("objective.nextPrestige")
+      });
+      return;
+    }
+
+    if (Progression && careerState && careerState.campaigns && careerState.campaigns.active) {
+      const campaign = getCampaignDefinition(careerState.campaigns.active.id);
+      const status = Progression.getCampaignStatus(careerState, buildCareerContext());
+      const progress = status && status.objective;
+      const nextDefinition = campaign && status && !status.complete
+        ? campaign.objectives[status.stepIndex + 1] || null
+        : null;
+      renderWorkOrderState({
+        kind: "campaign",
+        type: t("career.campaign.label"),
+        status: t(status && status.complete ? "career.status.ready" : "career.status.active"),
+        name: progress ? t(progress.labelKey) : campaign ? t(campaign.nameKey) : careerState.campaigns.active.id,
+        instruction: campaign ? t(campaign.descriptionKey) : "",
+        meta: progress ? formatCareerCriterion(progress) : formatProgressPercent(1),
+        progressMax: 1,
+        progressValue: progress ? progress.ratio : 1,
+        next: status && status.complete
+          ? t("career.campaign.status.completed")
+          : nextDefinition ? t(nextDefinition.labelKey) : t("career.campaign.status.active")
       });
       return;
     }
@@ -2436,6 +3219,349 @@
       progressValue: current,
       next
     });
+  }
+
+  function formatCareerPercent(value) {
+    const locale = LOCALE_BY_LANG[currentLang] || LOCALE_BY_LANG.fr;
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(Math.abs(value) * 100);
+  }
+
+  function careerPlanCopy(plan, rankDefinition) {
+    const modifiers = rankDefinition && rankDefinition.modifiers ? rankDefinition.modifiers : {};
+    if (plan.id === "cadence") {
+      return {
+        benefit: t("career.plan.cadence.benefit", {
+          bonus: formatCareerPercent((modifiers.docMultiplier || 1) - 1)
+        }),
+        tradeoff: t("career.plan.cadence.tradeoff", {
+          multiplier: Number(modifiers.footprintDriftMultiplier || 1).toFixed(2)
+        })
+      };
+    }
+    if (plan.id === "quality") {
+      return {
+        benefit: t("career.plan.quality.benefit", {
+          bonus: formatCareerPercent(modifiers.qualityTargetOffset || 0)
+        }),
+        tradeoff: t("career.plan.quality.tradeoff", {
+          penalty: formatCareerPercent(1 - (modifiers.docMultiplier || 1))
+        })
+      };
+    }
+    return {
+      benefit: t("career.plan.clientRelations.benefit", {
+        bonus: formatCareerPercent(Math.max(
+          (modifiers.ccMultiplier || 1) - 1,
+          (modifiers.contractRewardMultiplier || 1) - 1
+        ))
+      }),
+      tradeoff: t("career.plan.clientRelations.tradeoff", {
+        penalty: formatCareerPercent((modifiers.buildingCostMultiplier || 1) - 1)
+      })
+    };
+  }
+
+  function appendCareerLine(parent, className, text) {
+    if (!parent || !text) return null;
+    const line = document.createElement("span");
+    line.className = className;
+    line.textContent = text;
+    parent.appendChild(line);
+    return line;
+  }
+
+  function createCareerInfoCard(title, description, status, extraClass = "") {
+    const card = document.createElement("div");
+    card.className = "career-plan-choice" + (extraClass ? " " + extraClass : "");
+    appendCareerLine(card, "career-plan-choice-name", title);
+    if (description) appendCareerLine(card, "career-plan-choice-benefit", description);
+    if (status) appendCareerLine(card, "career-plan-choice-tradeoff", status);
+    return card;
+  }
+
+  function appendCareerAction(card, label, dataName, dataValue) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn-slim";
+    button.dataset[dataName] = dataValue;
+    button.textContent = label;
+    card.appendChild(button);
+    return button;
+  }
+
+  function careerStatusSignature(status) {
+    if (!status) return null;
+    const progress = status.objective;
+    return {
+      stepIndex: status.stepIndex,
+      complete: status.complete,
+      objective: progress ? {
+        id: progress.id,
+        current: formatNumber(progress.current),
+        target: formatNumber(progress.target),
+        complete: progress.complete
+      } : null
+    };
+  }
+
+  function renderCareerPanel(force = false) {
+    if (!DOM.careerPlanContainer) return;
+    if (!Progression || !careerState || typeof Progression.getSummary !== "function") {
+      setHiddenState(DOM.careerPlanContainer, true);
+      return;
+    }
+    const context = buildCareerContext();
+    const summary = Progression.getSummary(careerState, context);
+    const signature = currentLang + "|" + JSON.stringify({
+      completedRanks: summary.completedRanks,
+      activePlan: summary.activePlan && {
+        id: summary.activePlan.id,
+        rank: summary.activePlan.rank,
+        status: careerStatusSignature(summary.activePlan.status)
+      },
+      availablePlans: summary.availablePlans,
+      activeChallenge: summary.activeChallenge && {
+        id: summary.activeChallenge.id,
+        status: careerStatusSignature(summary.activeChallenge.status)
+      },
+      availableChallengeIds: summary.availableChallengeIds,
+      completedChallengeIds: summary.completedChallengeIds,
+      activeCampaign: summary.activeCampaign && {
+        id: summary.activeCampaign.id,
+        status: careerStatusSignature(summary.activeCampaign.status)
+      },
+      availableCampaignIds: summary.availableCampaignIds,
+      campaignBadgeIds: summary.campaignBadgeIds,
+      conclusion: summary.conclusion
+    });
+    setHiddenState(DOM.careerPlanContainer, false);
+    if (!force && careerUiState.renderSignature === signature) return;
+    careerUiState.renderSignature = signature;
+
+    setTextIfChanged(DOM.careerPlanKicker, t("career.kicker"));
+    setTextIfChanged(DOM.careerPlanProgress, t("career.stamps", { count: summary.stampCount }));
+    const activePlan = summary.activePlan;
+    const activePlanDefinition = activePlan ? Progression.getPlanDefinition(activePlan.id) : null;
+    if (activePlan && activePlanDefinition) {
+      setTextIfChanged(DOM.careerPlanTitle, t(activePlanDefinition.nameKey));
+      setTextIfChanged(DOM.careerPlanIntro, t(activePlanDefinition.descriptionKey));
+      const rankDefinition = Progression.getRankDefinition(activePlan.id, activePlan.rank);
+      const copy = careerPlanCopy(activePlanDefinition, rankDefinition);
+      setTextIfChanged(DOM.careerPlanEffect,
+        t("career.benefit") + " : " + copy.benefit + " · " +
+        t("career.tradeoff") + " : " + copy.tradeoff + " · " +
+        t("career.permanent") + " : " + t("career.plan." + activePlan.id + ".permanent"));
+    } else {
+      const conclusionUnlocked = Boolean(summary.conclusion && summary.conclusion.unlocked);
+      setTextIfChanged(DOM.careerPlanTitle,
+        summary.availablePlans.length
+          ? t("career.choose.title")
+          : conclusionUnlocked
+            ? t("career.conclusion.title")
+            : t("career.conclusion.pendingTitle"));
+      setTextIfChanged(DOM.careerPlanIntro,
+        summary.availablePlans.length
+          ? t("career.choose.intro")
+          : conclusionUnlocked
+            ? t("career.conclusion.description")
+            : t("career.conclusion.pendingDescription"));
+      setTextIfChanged(DOM.careerPlanEffect, "");
+    }
+
+    DOM.careerPlanChoices.innerHTML = "";
+    if (!activePlan) {
+      for (const available of Progression.getAvailablePlans(careerState)) {
+        const plan = available.plan;
+        const copy = careerPlanCopy(plan, available.rankDefinition);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "career-plan-choice";
+        button.dataset.careerSelectPlan = plan.id;
+        button.setAttribute("aria-label", t("career.choose.action", { plan: t(plan.nameKey) }));
+        appendCareerLine(button, "career-plan-choice-name",
+          t(plan.nameKey) + " · " + t("career.rank", { rank: available.rank }));
+        appendCareerLine(button, "career-plan-choice-benefit", copy.benefit);
+        appendCareerLine(button, "career-plan-choice-tradeoff", copy.tradeoff);
+        appendCareerLine(button, "career-plan-choice-benefit", t("career.plan." + plan.id + ".permanent"));
+        appendCareerLine(button, "career-plan-choice-benefit", t("career.plan.cultureReward", {
+          culture: available.rank
+        }));
+        DOM.careerPlanChoices.appendChild(button);
+      }
+    }
+
+    if (summary.activeChallenge) {
+      const definition = getChallengeDefinition(summary.activeChallenge.id);
+      const status = summary.activeChallenge.status;
+      const progress = status && status.objective;
+      const card = createCareerInfoCard(
+        t("career.challenge.label") + " · " + (definition ? t(definition.nameKey) : summary.activeChallenge.id),
+        definition ? t(definition.descriptionKey) : "",
+        t("career.challenge.status.active") + (progress ? " · " + formatCareerCriterion(progress) : ""),
+        "is-selected"
+      );
+      if (definition) {
+        appendCareerLine(card, "career-plan-choice-benefit", t("career.challenge.reward", {
+          culture: definition.reward.culture
+        }));
+      }
+      DOM.careerPlanChoices.appendChild(card);
+    } else {
+      for (const challengeId of summary.availableChallengeIds) {
+        const definition = getChallengeDefinition(challengeId);
+        if (!definition) continue;
+        const card = createCareerInfoCard(
+          t("career.challenge.label") + " · " + t(definition.nameKey),
+          t(definition.descriptionKey),
+          t("career.challenge.reward", { culture: definition.reward.culture })
+        );
+        appendCareerAction(card, t("career.challenge.accept"), "careerAcceptChallenge", challengeId);
+        appendCareerAction(card, t("career.challenge.decline"), "careerDeclineChallenge", challengeId);
+        DOM.careerPlanChoices.appendChild(card);
+      }
+    }
+
+    for (const campaignId of summary.availableCampaignIds) {
+      const definition = getCampaignDefinition(campaignId);
+      if (!definition) continue;
+      const card = createCareerInfoCard(
+        t("career.campaign.label") + " · " + t(definition.nameKey),
+        t(definition.descriptionKey),
+        t("career.campaign.status.available")
+      );
+      appendCareerAction(card, t("career.campaign.start"), "careerStartCampaign", campaignId);
+      DOM.careerPlanChoices.appendChild(card);
+    }
+    const visibleCampaignIds = new Set([
+      ...summary.availableCampaignIds,
+      ...summary.campaignBadgeIds.map(badgeId => {
+        const definition = Progression.CAMPAIGN_DEFINITIONS.find(item => item.badgeId === badgeId);
+        return definition ? definition.id : "";
+      }),
+      summary.activeCampaign ? summary.activeCampaign.id : ""
+    ]);
+    for (const definition of Progression.CAMPAIGN_DEFINITIONS) {
+      if (visibleCampaignIds.has(definition.id)) continue;
+      DOM.careerPlanChoices.appendChild(createCareerInfoCard(
+        t("career.campaign.label") + " · " + t(definition.nameKey),
+        t(definition.descriptionKey),
+        summary.activeCampaign && summary.stampCount >= definition.unlockStamps
+          ? t("career.campaign.status.blocked")
+          : t("career.campaign.unlock", { stamps: definition.unlockStamps })
+      ));
+    }
+    if (summary.activeCampaign) {
+      const definition = getCampaignDefinition(summary.activeCampaign.id);
+      const status = summary.activeCampaign.status;
+      const progress = status && status.objective;
+      DOM.careerPlanChoices.appendChild(createCareerInfoCard(
+        t("career.campaign.label") + " · " + (definition ? t(definition.nameKey) : summary.activeCampaign.id),
+        definition ? t(definition.descriptionKey) : "",
+        t("career.campaign.status.active") + (progress ? " · " + formatCareerCriterion(progress) : ""),
+        "is-selected"
+      ));
+    }
+    for (const badgeId of summary.campaignBadgeIds) {
+      DOM.careerPlanChoices.appendChild(createCareerInfoCard(
+        t("career.campaign.status.completed"),
+        t("career.badge." + badgeId),
+        t("career.status.completed"),
+        "is-selected"
+      ));
+    }
+    if (summary.conclusion && summary.conclusion.unlocked) {
+      const card = createCareerInfoCard(
+        t(summary.conclusion.titleKey),
+        t(summary.conclusion.descriptionKey),
+        t("career.status.completed"),
+        "is-selected"
+      );
+      if (!summary.conclusion.acknowledgedAt) {
+        appendCareerAction(card, t("career.conclusion.acknowledge"), "careerAcknowledge", summary.conclusion.id);
+      }
+      DOM.careerPlanChoices.appendChild(card);
+    }
+
+    DOM.careerPlanStamps.innerHTML = "";
+    const earnedStamps = new Set(summary.stampIds);
+    for (const planId of Progression.PLAN_IDS) {
+      const plan = Progression.getPlanDefinition(planId);
+      for (let rank = 1; rank <= Progression.MAX_RANK; rank += 1) {
+        const stamp = document.createElement("li");
+        stamp.className = "career-plan-stamp";
+        if (earnedStamps.has("stamp:" + planId + ":" + rank)) stamp.classList.add("is-earned");
+        stamp.textContent = (plan ? t(plan.nameKey) : planId) + " · " + t("career.rank", { rank });
+        DOM.careerPlanStamps.appendChild(stamp);
+      }
+    }
+    setHiddenState(DOM.careerPlanStamps, false);
+  }
+
+  function finishCareerAction() {
+    careerUiState.renderSignature = "";
+    contractsState.listRenderSignature = "";
+    queueSave(true);
+    renderAll();
+    requestAnimationFrame(() => {
+      if (DOM.currentObjective) DOM.currentObjective.focus({ preventScroll: true });
+    });
+  }
+
+  function handleCareerAction(event) {
+    if (!Progression || !careerState) return;
+    const planButton = event.target.closest("[data-career-select-plan]");
+    if (planButton) {
+      const result = Progression.selectPlan(careerState, planButton.dataset.careerSelectPlan, { now: Date.now() });
+      if (!result || !result.ok) return;
+      const params = { plan: t(result.plan.nameKey), rank: result.rank };
+      logMessage("log.planSelected", params);
+      setLastAction("feedback.planSelected", params);
+      showEventBanner("feedback.planSelected", "positive", params);
+      updateCareerProgress({ save: false });
+      finishCareerAction();
+      return;
+    }
+
+    const acceptButton = event.target.closest("[data-career-accept-challenge]");
+    if (acceptButton) {
+      const result = Progression.acceptChallenge(careerState, acceptButton.dataset.careerAcceptChallenge, { now: Date.now() });
+      if (!result || !result.ok) return;
+      const name = t(result.challenge.nameKey);
+      logMessage("log.challengeAccepted", { name });
+      showEventBanner("feedback.challengeAccepted", "positive", { name });
+      updateCareerProgress({ save: false });
+      finishCareerAction();
+      return;
+    }
+
+    const declineButton = event.target.closest("[data-career-decline-challenge]");
+    if (declineButton) {
+      const challengeId = declineButton.dataset.careerDeclineChallenge;
+      const definition = getChallengeDefinition(challengeId);
+      const result = Progression.declineChallenge(careerState, challengeId, { now: Date.now() });
+      if (!result || !result.ok) return;
+      logMessage("log.challengeDeclined", { name: definition ? t(definition.nameKey) : challengeId });
+      finishCareerAction();
+      return;
+    }
+
+    const campaignButton = event.target.closest("[data-career-start-campaign]");
+    if (campaignButton) {
+      const result = Progression.startCampaign(careerState, campaignButton.dataset.careerStartCampaign, { now: Date.now() });
+      if (!result || !result.ok) return;
+      const name = t(result.campaign.nameKey);
+      logMessage("log.campaignStarted", { name });
+      showEventBanner("feedback.campaignStarted", "positive", { name });
+      syncCampaignContractPriority();
+      updateCareerProgress({ save: false });
+      finishCareerAction();
+      return;
+    }
+
+    const acknowledgeButton = event.target.closest("[data-career-acknowledge]");
+    if (acknowledgeButton && Progression.acknowledgeConclusion(careerState, { now: Date.now() })) {
+      finishCareerAction();
+    }
   }
 
   /** Updates the compact workshop readout. */
@@ -2510,7 +3636,8 @@
   function renderPrestige() {
     if (!DOM.prestigeButton || !DOM.prestigeInfo) return;
     const can = canPrestige();
-    const gain = computePotentialCultureGain();
+    const careerPreview = getPrestigeCareerPreview();
+    const gain = careerPreview.totalCulture;
     const locale = LOCALE_BY_LANG[currentLang] || "fr-FR";
     const minValue = gameState.config.prestigeRequirement.toLocaleString(locale);
 
@@ -2525,7 +3652,21 @@
     } else {
       DOM.prestigeButton.classList.remove("disabled");
       DOM.prestigeButton.textContent = t("prestige.buttonAvailable", { gain });
-      DOM.prestigeInfo.textContent = t("prestige.infoAvailable", { gain });
+      let information = t("prestige.infoAvailable", { gain });
+      if (careerPreview.assessment && careerPreview.assessment.willRestartPlan) {
+        information += " " + t("career.prestige.planNotValidated");
+      } else if (careerPreview.assessment && careerPreview.assessment.willValidatePlan && careerPreview.activePlan) {
+        information += " " + t("career.prestige.planValidated", {
+          plan: careerPreview.plan ? t(careerPreview.plan.nameKey) : careerPreview.activePlan.id,
+          rank: careerPreview.activePlan.rank,
+          culture: careerPreview.planCulture
+        });
+      }
+      const campaignWarning = prestigeCampaignRestartCopy(careerPreview);
+      if (campaignWarning) information += " " + campaignWarning;
+      const challengeWarning = prestigeChallengeFailureCopy(careerPreview);
+      if (challengeWarning) information += " " + challengeWarning;
+      DOM.prestigeInfo.textContent = information;
     }
   }
 
@@ -2628,7 +3769,42 @@
       eventState.active = null;
       closeEventModal(true);
       hideEventBanner();
+      renderPendingEventControl();
     }
+  }
+
+  function restorePendingEvent(savedState) {
+    if (!eventState.eventsEnabled || !Events || !savedState || !savedState.events) return;
+    const pendingId = savedState.events.pendingId;
+    if (typeof pendingId !== "string" || !Array.isArray(Events.definitions)) return;
+    const definition = Events.definitions.find(item => item.id === pendingId);
+    if (!definition) return;
+    const restored = typeof Events.debugForceEvent === "function"
+      ? Events.debugForceEvent(pendingId)
+      : definition;
+    eventState.active = restored || definition;
+    eventState.modalCanClose = true;
+  }
+
+  function renderPendingEventControl() {
+    const pending = eventState.eventsEnabled ? eventState.active : null;
+    setHiddenState(DOM.pendingEventButton, !pending);
+    if (pending) {
+      setTextIfChanged(DOM.pendingEventLabel, t("events.open"));
+      const name = t(pending.titleKey);
+      setTextIfChanged(DOM.pendingEventHint,
+        t("events.pending.named", { name }) + " " + t("events.pending.hint"));
+      DOM.pendingEventButton.setAttribute("aria-label", t("events.pending.named", { name }));
+    } else {
+      setTextIfChanged(DOM.pendingEventLabel, "");
+      setTextIfChanged(DOM.pendingEventHint, "");
+      if (DOM.pendingEventButton) DOM.pendingEventButton.removeAttribute("aria-label");
+    }
+  }
+
+  function openPendingEvent() {
+    if (!eventState.eventsEnabled || !eventState.active) return;
+    showEventModal(eventState.active);
   }
 
   function disableEventInterruptions() {
@@ -2645,7 +3821,6 @@
         isModalSurfaceOpen(DOM.offlineModal)) return;
     const newEvent = Events.tick(gameState, dt);
     if (newEvent) {
-      logMessage("log.event", { name: t(newEvent.titleKey) });
       handleEventSpawn(newEvent);
     }
   }
@@ -2655,7 +3830,13 @@
     eventState.active = eventDef;
     eventState.modalCanClose = true;
     notifyScene("event", eventDef.id);
-    showEventModal(eventDef);
+    const name = t(eventDef.titleKey);
+    logMessage("log.incidentPending", { name });
+    setLastAction("feedback.incidentPending", { name });
+    renderPendingEventControl();
+    renderWorkOrder();
+    showEventBanner("feedback.incidentPending", "mixed", { name });
+    queueSave(true);
   }
 
   /**
@@ -2680,6 +3861,8 @@
     DOM.eventChoices.innerHTML = "";
     DOM.closeEventModal.disabled = false;
     DOM.closeEventModal.removeAttribute("aria-disabled");
+    DOM.closeEventModal.setAttribute("aria-label", t("events.archive"));
+    DOM.closeEventModal.setAttribute("title", t("events.archive"));
     if (eventDef.type === "choice") {
       DOM.eventChoices.classList.remove("hidden");
       DOM.minigameContainer.classList.add("hidden");
@@ -2688,7 +3871,14 @@
         btn.type = "button";
         btn.className = "event-choice-btn";
         btn.dataset.choice = choice.id;
-        btn.textContent = t(choice.labelKey);
+        const label = document.createElement("span");
+        label.className = "event-choice-label";
+        label.textContent = t(choice.labelKey);
+        const effect = document.createElement("span");
+        effect.className = "event-choice-effect";
+        effect.textContent = t(choice.resultKey);
+        btn.appendChild(label);
+        btn.appendChild(effect);
         DOM.eventChoices.appendChild(btn);
       }
       const first = DOM.eventChoices.querySelector("button");
@@ -2714,7 +3904,8 @@
       return false;
     }
     if (!eventState.modalCanClose && !force) return false;
-    if (eventState.active) {
+    const archivedEvent = eventState.active;
+    if (archivedEvent) {
       if (window.Events && typeof window.Events.cancelActive === "function") {
         window.Events.cancelActive();
       }
@@ -2722,8 +3913,16 @@
     }
     closeModalSurface(DOM.eventModal, DOM.eventDialog);
     DOM.eventModal.setAttribute("aria-hidden", "true");
-    restoreModalFocus(DOM.eventModal);
+    renderPendingEventControl();
+    renderWorkOrder();
+    restoreModalFocus(DOM.eventModal, DOM.currentObjective);
     schedulePendingOfflineReport();
+    if (archivedEvent) {
+      const name = t(archivedEvent.titleKey);
+      logMessage("log.incidentArchived", { name });
+      showEventBanner("feedback.incidentArchived", "mixed", { name });
+      queueSave(true);
+    }
     return true;
   }
 
@@ -2752,13 +3951,86 @@
     recordEventOutcome(before);
     DOM.eventResult.textContent = t(result.resultKey);
     logMessage("log.eventResult", { result: t(result.resultKey) });
-    queueSave(true);
     eventState.active = null;
     eventState.modalCanClose = true;
     DOM.closeEventModal.disabled = false;
     DOM.closeEventModal.removeAttribute("aria-disabled");
+    queueSave(true);
     closeEventModal(true);
+    renderPendingEventControl();
+    renderWorkOrder();
     showEventBanner(result.resultKey, result.tone || "mixed");
+  }
+
+  function contractRequirementKey(requirement) {
+    return requirement.type + (requirement.id ? ":" + requirement.id : "");
+  }
+
+  function formatContractRequirement(requirement) {
+    if (requirement.type === "quality") {
+      return t("contracts.requirementQuality", {
+        current: Math.round(requirement.current * 100),
+        required: Math.round(requirement.required * 100)
+      });
+    }
+    if (requirement.type === "image") {
+      return t("contracts.requirementImage", {
+        current: Math.round(requirement.current * 100),
+        required: Math.round(requirement.required * 100)
+      });
+    }
+    if (requirement.type === "volume") {
+      return t("contracts.requirementVolume", {
+        current: formatNumber(requirement.current),
+        required: formatNumber(requirement.required)
+      });
+    }
+    const building = gameState.buildings.find(item => item.id === requirement.id);
+    return t("contracts.requirementBuilding", {
+      name: building ? getBuildingName(building) : requirement.id,
+      current: formatNumber(requirement.current),
+      required: formatNumber(requirement.required)
+    });
+  }
+
+  function appendContractClause(card, contract, preview) {
+    if (!contract.clause) return null;
+    const clauseId = "contract-clause-" + contract.id;
+    const clause = document.createElement("div");
+    clause.className = "contract-clause is-optional";
+    clause.id = clauseId;
+    clause.dataset.contractClause = contract.id;
+    const head = document.createElement("div");
+    head.className = "contract-clause-head";
+    const label = document.createElement("strong");
+    label.className = "contract-clause-label";
+    label.textContent = t("contracts.clause.label") + " · " + t(contract.clause.nameKey);
+    const status = document.createElement("span");
+    status.className = "contract-clause-status";
+    status.textContent = t("contracts.clause.active");
+    head.appendChild(label);
+    head.appendChild(status);
+    const description = document.createElement("div");
+    description.className = "contract-clause-description";
+    description.textContent = t(contract.clause.descKey, {
+      target: Math.round(contract.clause.target * 100)
+    }) + " " + t("contracts.clause.deliveryGuaranteed");
+    const progress = document.createElement("div");
+    progress.className = "contract-clause-progress";
+    progress.setAttribute("aria-hidden", "true");
+    progress.appendChild(document.createElement("span"));
+    const reward = document.createElement("div");
+    reward.className = "contract-clause-reward";
+    reward.textContent = t("contracts.clause.reward", {
+      doc: formatNumber(preview.clauseReward.doc || 0),
+      cc: formatNumber(preview.clauseReward.cc || 0)
+    });
+    clause.appendChild(head);
+    clause.appendChild(description);
+    clause.appendChild(progress);
+    clause.appendChild(reward);
+    card.appendChild(clause);
+    return clauseId;
   }
 
   function renderContractsPanel() {
@@ -2776,8 +4048,12 @@
     contractsState.available = window.EndgameModule.availableContracts(gameState);
     const runningContract = window.EndgameModule.activeContract && window.EndgameModule.activeContract.current;
     DOM.contractsTab.classList.toggle("has-active-contract", !!runningContract);
+    const contractModifiers = getContractModifiers();
+    const prepressStudio = gameState.buildings.find(building => building.id === "prepressStudio");
     const listSignature = currentLang + "|" + contractsState.available.map(contract => contract.id).join(",") +
-      "|active:" + (runningContract ? runningContract.id : "none");
+      "|active:" + (runningContract ? runningContract.id : "none") +
+      "|prepress:" + (prepressStudio ? prepressStudio.quantity : 0) +
+      "|modifiers:" + JSON.stringify(contractModifiers);
     if (listSignature === contractsState.listRenderSignature) {
       updateContractCards(runningContract);
       return;
@@ -2791,26 +4067,61 @@
       DOM.contractsList.appendChild(empty);
     } else {
       for (const contract of contractsState.available) {
+        const preview = typeof window.EndgameModule.previewContract === "function"
+          ? window.EndgameModule.previewContract(contract, gameState, contractModifiers)
+          : {
+              duration: contract.duration,
+              durationReduction: 0,
+              baseReward: { ...contract.reward },
+              clauseReward: contract.clause ? { ...contract.clause.reward } : { doc: 0, cc: 0 }
+            };
         const card = document.createElement("div");
         card.className = "contract-card";
         card.dataset.contractCard = contract.id;
         const requirementsId = "contract-requirements-" + contract.id;
-        card.innerHTML = `
-          <strong>${t(contract.nameKey)}</strong>
-          <div>${t(contract.descKey)}</div>
-          <ul class="contract-requirements" id="${requirementsId}">
-            <li data-contract-quality><span aria-hidden="true"></span><b></b></li>
-            <li data-contract-image><span aria-hidden="true"></span><b></b></li>
-            <li data-contract-volume><span aria-hidden="true"></span><b></b></li>
-          </ul>
-          <div class="contract-terms">
-            <span>${t("contracts.duration", { seconds: contract.duration })}</span>
-            <span>${t("contracts.reward", {
-              doc: formatNumber(contract.reward.doc || 0),
-              cc: formatNumber(contract.reward.cc || 0)
-            })}</span>
-          </div>
-        `;
+        const title = document.createElement("strong");
+        title.textContent = t(contract.nameKey);
+        const description = document.createElement("div");
+        description.textContent = t(contract.descKey);
+        const requirements = document.createElement("ul");
+        requirements.className = "contract-requirements";
+        requirements.id = requirementsId;
+        const requirementStatus = typeof window.EndgameModule.getRequirementsStatus === "function"
+          ? window.EndgameModule.getRequirementsStatus(contract, gameState)
+          : [];
+        for (const requirement of requirementStatus) {
+          const row = document.createElement("li");
+          row.dataset.contractRequirement = contractRequirementKey(requirement);
+          const mark = document.createElement("span");
+          mark.setAttribute("aria-hidden", "true");
+          const copy = document.createElement("b");
+          row.appendChild(mark);
+          row.appendChild(copy);
+          requirements.appendChild(row);
+        }
+        const terms = document.createElement("div");
+        terms.className = "contract-terms";
+        const duration = document.createElement("span");
+        duration.textContent = t("contracts.effectiveDuration", { seconds: preview.duration });
+        const baseReward = document.createElement("span");
+        baseReward.textContent = t("contracts.reward", {
+          doc: formatNumber(preview.baseReward.doc || 0),
+          cc: formatNumber(preview.baseReward.cc || 0)
+        });
+        terms.appendChild(duration);
+        terms.appendChild(baseReward);
+        if (preview.durationReduction > 0) {
+          const reduction = document.createElement("span");
+          reduction.textContent = t("contracts.prepressReduction", {
+            percent: Math.round(preview.durationReduction * 100)
+          });
+          terms.appendChild(reduction);
+        }
+        card.appendChild(title);
+        card.appendChild(description);
+        card.appendChild(requirements);
+        const clauseId = appendContractClause(card, contract, preview);
+        card.appendChild(terms);
         const actions = document.createElement("div");
         actions.className = "contract-actions";
         const btn = document.createElement("button");
@@ -2818,7 +4129,7 @@
         btn.className = "btn-slim";
         btn.dataset.contract = contract.id;
         btn.textContent = t("contracts.start");
-        btn.setAttribute("aria-describedby", requirementsId);
+        btn.setAttribute("aria-describedby", [requirementsId, clauseId].filter(Boolean).join(" "));
         actions.appendChild(btn);
         card.appendChild(actions);
         DOM.contractsList.appendChild(card);
@@ -2835,41 +4146,30 @@
     for (const contract of contractsState.available) {
       const card = DOM.contractsList.querySelector(`[data-contract-card="${contract.id}"]`);
       if (!card) continue;
-      const requirementRows = [
-        {
-          selector: "[data-contract-quality]",
-          met: gameState.stats.quality >= (contract.requirements.quality || 0),
-          key: "contracts.requirementQuality",
-          params: {
-            current: Math.round(gameState.stats.quality * 100),
-            required: Math.round((contract.requirements.quality || 0) * 100)
-          }
-        },
-        {
-          selector: "[data-contract-image]",
-          met: gameState.stats.brandImage >= (contract.requirements.image || 0),
-          key: "contracts.requirementImage",
-          params: {
-            current: Math.round(gameState.stats.brandImage * 100),
-            required: Math.round((contract.requirements.image || 0) * 100)
-          }
-        },
-        {
-          selector: "[data-contract-volume]",
-          met: gameState.resources.docTotal >= (contract.requirements.volume || 0),
-          key: "contracts.requirementVolume",
-          params: {
-            current: formatNumber(gameState.resources.docTotal),
-            required: formatNumber(contract.requirements.volume || 0)
-          }
-        }
-      ];
+      const requirementRows = typeof window.EndgameModule.getRequirementsStatus === "function"
+        ? window.EndgameModule.getRequirementsStatus(contract, gameState)
+        : [];
       for (const requirement of requirementRows) {
-        const row = card.querySelector(requirement.selector);
+        const key = contractRequirementKey(requirement);
+        const row = Array.from(card.querySelectorAll("[data-contract-requirement]")).find(item => {
+          return item.dataset.contractRequirement === key;
+        });
         if (!row) continue;
         row.classList.toggle("is-met", requirement.met);
         setTextIfChanged(row.querySelector("span"), requirement.met ? "✓" : "×");
-        setTextIfChanged(row.querySelector("b"), t(requirement.key, requirement.params));
+        setTextIfChanged(row.querySelector("b"), formatContractRequirement(requirement));
+      }
+      if (contract.clause && typeof window.EndgameModule.getClauseProgress === "function") {
+        const clauseProgress = window.EndgameModule.getClauseProgress(contract, gameState);
+        const clause = card.querySelector(`[data-contract-clause="${contract.id}"]`);
+        if (clause && clauseProgress) {
+          clause.classList.toggle("is-met", clauseProgress.met);
+          const status = clause.querySelector(".contract-clause-status");
+          setTextIfChanged(status, t(clauseProgress.met
+            ? "contracts.clause.succeeded"
+            : "contracts.clause.active"));
+          clause.style.setProperty("--clause-progress", (clauseProgress.ratio * 100).toFixed(1) + "%");
+        }
       }
       const canStart = typeof window.EndgameModule.meetsRequirements === "function"
         ? window.EndgameModule.meetsRequirements(contract, gameState)
@@ -2892,7 +4192,7 @@
 
   function startContract(contractId) {
     if (!window.EndgameModule) return;
-    const result = window.EndgameModule.startContract(contractId, gameState);
+    const result = window.EndgameModule.startContract(contractId, gameState, getContractModifiers());
     if (!result || !result.ok) {
       const key = result && result.error === "requirements" ? "contracts.requirementsNotMet" : "contracts.alreadyRunning";
       showEventBanner(key, "negative");
@@ -2931,19 +4231,42 @@
       analyticsState.lifetimeObserved.cc += ccGain;
       const contractName = t(result.nameKey);
       const receiptParams = { doc: formatNumber(docGain), cc: formatNumber(ccGain) };
+      const clauseParams = {
+        doc: formatNumber(result.clauseReward && result.clauseReward.doc || 0),
+        cc: formatNumber(result.clauseReward && result.clauseReward.cc || 0)
+      };
+      const clauseKey = result.clauseSucceeded ? "feedback.clauseSucceeded" : "feedback.clauseFailed";
+      const progressionRecord = Progression && careerState && typeof Progression.recordContract === "function"
+        ? Progression.recordContract(careerState, {
+            id: result.id,
+            clauseSucceeded: result.clauseSucceeded,
+            clauseId: result.clause && result.clause.id,
+            quality: gameState.stats.quality,
+            brandImage: gameState.stats.brandImage
+          }, { now: Date.now() })
+        : null;
+      if (progressionRecord && progressionRecord.challengeFailure) {
+        handleChallengeFailure(progressionRecord.challengeFailure);
+      }
+      updateCareerProgress({ save: false });
       uiState.completionReceipt = {
         kind: "delivery",
         name: contractName,
         detailKey: "feedback.deliveryReceipt",
         detailParams: receiptParams,
+        detailText: t(clauseKey, clauseParams),
         expiresAt: Date.now() + 1200
       };
       setLastAction("feedback.contractDelivered", { name: contractName }, "feedback.deliveryReceipt", receiptParams);
       logMessage("log.contractComplete", { name: contractName });
-      showEventBanner("contracts.banner.completed", "positive", { name: t(result.nameKey) });
+      logMessage(result.clauseSucceeded ? "log.clauseSucceeded" : "log.clauseFailed", {
+        name: contractName,
+        ...clauseParams
+      });
+      showEventBanner(clauseKey, result.clauseSucceeded ? "positive" : "mixed", clauseParams);
       announceStatus(
         t("feedback.contractDelivered", { name: contractName }) + ". " +
-        t("feedback.deliveryReceipt", receiptParams)
+        t("feedback.deliveryReceipt", receiptParams) + ". " + t(clauseKey, clauseParams)
       );
       if (UIEffects && typeof UIEffects.playHorn === "function") UIEffects.playHorn();
       queueSave(true);
@@ -3007,13 +4330,81 @@
     recordEventOutcome(before);
     DOM.eventResult.textContent = t(result.resultKey);
     logMessage("log.eventResult", { result: t(result.resultKey) });
-    queueSave(true);
     eventState.active = null;
     eventState.modalCanClose = true;
     DOM.closeEventModal.disabled = false;
     DOM.closeEventModal.removeAttribute("aria-disabled");
+    queueSave(true);
     closeEventModal(true);
+    renderPendingEventControl();
+    renderWorkOrder();
     showEventBanner(result.resultKey, result.tone || "mixed");
+  }
+
+  function formatAchievementReward(definition) {
+    const reward = definition && definition.reward ? definition.reward : {};
+    const parts = [];
+    if (reward.doc) parts.push(t("achievements.rewardDoc", { amount: formatNumber(reward.doc) }));
+    if (reward.cc) parts.push(t("achievements.rewardCc", { amount: formatNumber(reward.cc) }));
+    if (reward.culture) parts.push(t("achievements.rewardCulture", { amount: formatNumber(reward.culture) }));
+    return parts.join(" · ");
+  }
+
+  function buildAchievementContext() {
+    return {
+      resources: gameState.resources,
+      buildings: gameState.buildings,
+      upgrades: gameState.upgrades,
+      stats: gameState.stats,
+      analytics: analyticsState
+    };
+  }
+
+  function applyAchievementReward(definition, unlockedAt) {
+    if (!definition || achievementsState.rewarded[definition.id]) return "";
+    const reward = definition.reward || {};
+    if (Number.isFinite(reward.doc) && reward.doc > 0) {
+      gameState.resources.docBank += reward.doc;
+      gameState.resources.docTotal += reward.doc;
+      analyticsState.currentRun.achievementDocs += reward.doc;
+      analyticsState.lifetimeObserved.docs += reward.doc;
+    }
+    if (Number.isFinite(reward.cc) && reward.cc > 0) {
+      gameState.resources.ccTotal += reward.cc;
+      analyticsState.currentRun.achievementCc += reward.cc;
+      analyticsState.lifetimeObserved.cc += reward.cc;
+    }
+    if (Number.isFinite(reward.culture) && reward.culture > 0) {
+      gameState.resources.culturePoints += reward.culture;
+      analyticsState.currentRun.achievementCulture += reward.culture;
+    }
+    achievementsState.rewarded[definition.id] = unlockedAt || Date.now();
+    return formatAchievementReward(definition);
+  }
+
+  function updateAchievementProgressNodes() {
+    if (!DOM.achievementsList || !window.Achievements || typeof Achievements.getProgress !== "function") return;
+    const achievementContext = buildAchievementContext();
+    for (const definition of Achievements.definitions) {
+      const item = DOM.achievementsList.querySelector(`[data-achievement-id="${definition.id}"]`);
+      if (!item) continue;
+      const progress = Achievements.getProgress(definition, achievementContext);
+      const bar = item.querySelector(".achievement-progress");
+      const text = item.querySelector(".achievement-progress-text");
+      if (bar) {
+        bar.style.setProperty("--achievement-progress", (progress.ratio * 100).toFixed(1) + "%");
+        bar.setAttribute("aria-valuenow", String(progress.current));
+        bar.setAttribute("aria-valuemax", String(progress.target));
+        bar.setAttribute("aria-label", t("achievements.progress", {
+          current: formatNumber(progress.current),
+          target: formatNumber(progress.target)
+        }));
+      }
+      setTextIfChanged(text, t("achievements.progress", {
+        current: formatNumber(progress.current),
+        target: formatNumber(progress.target)
+      }));
+    }
   }
 
   function renderAchievementsPanel() {
@@ -3030,8 +4421,14 @@
     // en boucle et la zone aria-live pourrait ré-annoncer du contenu
     // identique. On ne reconstruit que si succès ou langue changent.
     const signature = document.documentElement.lang + "|" +
-      Achievements.definitions.map(def => def.id + ":" + (achievementsState.unlocked[def.id] ? 1 : 0)).join(",");
-    if (signature === achievementsState.renderSignature) return;
+      Achievements.definitions.map(def => {
+        return def.id + ":" + (achievementsState.unlocked[def.id] ? 1 : 0) +
+          ":" + (achievementsState.rewarded[def.id] ? 1 : 0);
+      }).join(",");
+    if (signature === achievementsState.renderSignature) {
+      updateAchievementProgressNodes();
+      return;
+    }
     achievementsState.renderSignature = signature;
     container.innerHTML = "";
     if (!Achievements.definitions.length) {
@@ -3042,6 +4439,7 @@
       const unlockedAt = achievementsState.unlocked[def.id];
       const item = document.createElement("div");
       item.className = "achievement-item" + (unlockedAt ? " unlocked" : "");
+      item.dataset.achievementId = def.id;
       if (unlockedAt) {
         // Visa tamponné (style.css ::after content: attr(data-stamp)) :
         // texte traduit, jamais en dur dans le CSS.
@@ -3061,33 +4459,95 @@
       item.appendChild(badge);
       const desc = document.createElement("div");
       desc.textContent = t(def.descKey);
+      const progressRow = document.createElement("div");
+      progressRow.className = "achievement-progress-row";
+      progressRow.style.gridColumn = "2";
+      const progressBar = document.createElement("div");
+      progressBar.className = "achievement-progress";
+      progressBar.setAttribute("role", "progressbar");
+      progressBar.setAttribute("aria-valuemin", "0");
+      progressBar.appendChild(document.createElement("span"));
+      const progressText = document.createElement("span");
+      progressText.className = "achievement-progress-text";
+      progressRow.appendChild(progressBar);
+      progressRow.appendChild(progressText);
+      const reward = document.createElement("div");
+      reward.className = "small achievement-reward";
+      reward.style.gridColumn = "2";
+      const rewardText = formatAchievementReward(def);
+      reward.textContent = t("achievements.reward", { reward: rewardText }) +
+        (achievementsState.rewarded[def.id] ? " · " + t("achievements.rewardGranted") : "");
       item.appendChild(title);
       item.appendChild(desc);
+      item.appendChild(progressRow);
+      item.appendChild(reward);
       container.appendChild(item);
     }
+    updateAchievementProgressNodes();
   }
 
-  function checkAchievements() {
+  function checkAchievements(options = {}) {
     if (!window.Achievements) return null;
+    const notify = options.notify !== false;
     const unlockedMap = achievementsState.unlocked;
-    const newly = Achievements.evaluate(gameState, unlockedMap);
-    if (!newly.length) return null;
+    const newly = [];
     const now = Date.now();
     let firstDefinition = null;
-    for (const id of newly) {
-      unlockedMap[id] = now;
-      const def = Achievements.definitions.find(d => d.id === id);
-      if (def) {
-        if (!firstDefinition) firstDefinition = def;
-        logMessage("log.achievement", { name: t(def.nameKey) });
+    const grantedRewards = [];
+    // A reward can itself cross another achievement threshold (for example,
+    // firstPrestige can raise Culture to cultureCollector). Resolve the whole
+    // chain as one atomic batch so receipts, notifications and run analytics
+    // all describe the same player action.
+    while (newly.length < Achievements.definitions.length) {
+      const unlockWave = Achievements.evaluate(buildAchievementContext(), unlockedMap);
+      if (!unlockWave.length) break;
+      for (const id of unlockWave) {
+        unlockedMap[id] = now;
+        newly.push(id);
+        const def = Achievements.definitions.find(d => d.id === id);
+        if (def) {
+          if (!firstDefinition) firstDefinition = def;
+          logMessage("log.achievement", { name: t(def.nameKey) });
+          const reward = applyAchievementReward(def, now);
+          if (reward) {
+            grantedRewards.push({ definition: def, reward });
+            logMessage("log.achievementReward", { name: t(def.nameKey), reward });
+          }
+        }
       }
     }
-    if (firstDefinition) {
-      showEventBanner("log.achievement", "positive", { name: t(firstDefinition.nameKey) });
+    if (!newly.length) return null;
+    if (Array.isArray(options.unlockedDefinitions)) {
+      options.unlockedDefinitions.push(...newly.map(id => {
+        return Achievements.definitions.find(definition => definition.id === id);
+      }).filter(Boolean));
+    }
+    if (Array.isArray(options.grantedRewards)) {
+      options.grantedRewards.push(...grantedRewards);
+    }
+    updateCareerProgress({ save: false });
+    if (firstDefinition && notify) {
+      if (newly.length > 1) {
+        showEventBanner("achievements.batchUnlocked", "positive", { count: newly.length });
+      } else if (grantedRewards[0]) {
+        showEventBanner("feedback.achievementReward", "positive", {
+          name: t(grantedRewards[0].definition.nameKey),
+          reward: grantedRewards[0].reward
+        });
+      } else {
+        showEventBanner("log.achievement", "positive", { name: t(firstDefinition.nameKey) });
+      }
       UIEffects.playAchievementEffect(DOM.eventBanner);
     }
+    achievementsState.renderSignature = "";
     renderAchievementsPanel();
-    queueSave(true);
+    requestAnimationFrame(() => {
+      for (const id of newly) {
+        const item = DOM.achievementsList && DOM.achievementsList.querySelector(`[data-achievement-id="${id}"]`);
+        triggerStamp(item, "is-stamped");
+      }
+    });
+    if (options.save !== false) queueSave(true);
     return firstDefinition;
   }
 
@@ -3221,7 +4681,8 @@
       if (!b.isUnlocked) continue;
       hasVisible = true;
       const cost = buildingCost(b);
-      const totalProd = b.baseProduction * b.quantity;
+      const milestoneMultiplier = getMilestoneMultiplier(b.quantity);
+      const totalProd = b.baseProduction * getEffectiveQuantity(b.quantity);
       const perUnitImpact = formatBuildingImpactText(b, 1);
       const totalImpactText = b.quantity > 0 ? formatBuildingImpactText(b) : "";
 
@@ -3314,7 +4775,8 @@
       const productionMeta = document.createElement("div");
       productionMeta.className = "building-meta";
       productionMeta.textContent = b.baseProduction
-        ? formatNumber(b.baseProduction) + " ×" + b.quantity + " = " +
+        ? formatNumber(b.baseProduction) + " ×" + b.quantity +
+          (milestoneMultiplier > 1 ? " ×" + milestoneMultiplier.toFixed(2) : "") + " = " +
           formatNumber(totalProd || 0) + " DOC/s"
         : t("label.modifierOnly");
       info.appendChild(productionMeta);
@@ -3324,6 +4786,20 @@
       effectPreview.dataset.buildingEffect = b.id;
       effectPreview.id = "building-effect-" + b.id;
       info.appendChild(effectPreview);
+
+      const milestone = document.createElement("div");
+      milestone.className = "building-milestone";
+      milestone.dataset.buildingMilestone = b.id;
+      const nextMilestone = getNextMilestone(b.quantity);
+      if (nextMilestone) {
+        milestone.textContent = t("career.dossier.next", {
+          action: t("building." + b.id + ".milestone" + nextMilestone.quantity)
+        });
+      } else {
+        milestone.classList.add("is-reached");
+        milestone.textContent = t("building." + b.id + ".officeNote");
+      }
+      info.appendChild(milestone);
 
       const purchaseFeedback = document.createElement("div");
       purchaseFeedback.className = "building-feedback hidden";
@@ -3447,6 +4923,7 @@
     syncBuildingUnlocks();
     renderStats();
     renderPrestige();
+    renderCareerPanel(forceFull);
     renderLog();
     renderContractsPanel();
     renderAchievementsPanel();
@@ -3564,7 +5041,16 @@
 
   /** Returns the prestige multiplier contributed by culture points. */
   function prestigeMultiplier() {
-    return 1 + gameState.resources.culturePoints * 0.05;
+    const culture = Math.max(0, gameState.resources.culturePoints || 0);
+    if (EconomyAnalytics && typeof EconomyAnalytics.computePrestigeMultiplier === "function") {
+      try {
+        const sharedMultiplier = EconomyAnalytics.computePrestigeMultiplier(culture);
+        if (Number.isFinite(sharedMultiplier) && sharedMultiplier >= 1) return sharedMultiplier;
+      } catch {
+        // Le moteur de jeu conserve la formule canonique en filet local.
+      }
+    }
+    return 1 + 0.2 * Math.sqrt(culture);
   }
 
   /** Basic clamp helper between 0 and 1. */

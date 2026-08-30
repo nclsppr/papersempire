@@ -1981,6 +1981,26 @@
       box-shadow: none;
     }
 
+    .event-choice-label,
+    .event-choice-effect {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    .event-choice-label {
+      color: var(--ink-strong);
+      font-weight: 850;
+      line-height: 1.3;
+    }
+
+    .event-choice-effect {
+      margin-top: 3px;
+      color: var(--ink-soft);
+      font-family: var(--font-mono);
+      font-size: 0.61rem;
+      line-height: 1.35;
+    }
+
     .event-result {
       margin-top: 12px;
       font-size: var(--text-small);
@@ -5050,13 +5070,16 @@ html.pref-reduce-motion {
   grid-column: 1 / -1;
 }
 
+#gameViewTitle,
 #currentObjective,
 #printStation,
 #buildingsPanel,
 #upgradesPanel,
 #dispatchPanel,
 #progressPanel {
-  scroll-margin-top: 12px;
+  /* Le header reste collé en haut : les ancres doivent déposer leur titre
+     sous le chrome, y compris après un rechargement mobile avec un hash. */
+  scroll-margin-top: 82px;
 }
 
 .work-order {
@@ -5136,6 +5159,110 @@ html.pref-reduce-motion {
   transform: rotate(-1deg);
 }
 
+.work-order-context {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding: 7px 9px;
+  border-block: 1px dashed rgba(40, 81, 106, 0.38);
+  background: rgba(40, 81, 106, 0.07);
+  color: var(--ops-steel);
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  line-height: 1.35;
+}
+
+.work-order-context strong {
+  min-width: 0;
+  color: var(--ink-strong);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
+.work-order-context[hidden],
+.work-order-steps[hidden],
+.work-order-criteria[hidden],
+.work-order-outcome[hidden],
+.work-order-reward[hidden],
+.work-order-incident[hidden],
+.career-plan[hidden],
+.career-plan-stamps[hidden] {
+  display: none;
+}
+
+.work-order-steps,
+.work-order-criteria {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.work-order-step,
+.work-order-criterion {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 7px;
+  border: 1px solid rgba(87, 69, 48, 0.26);
+  background: rgba(224, 205, 166, 0.2);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.59rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.work-order-step-mark,
+.work-order-criterion-mark {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  min-height: 18px;
+  border: 1px solid currentColor;
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.work-order-step.is-current,
+.work-order-criterion.is-current {
+  border-color: rgba(40, 81, 106, 0.58);
+  background: rgba(40, 81, 106, 0.1);
+  color: var(--ops-steel);
+  font-weight: 800;
+}
+
+.work-order-step.is-complete,
+.work-order-criterion.is-met {
+  border-color: rgba(79, 113, 46, 0.58);
+  background: rgba(79, 113, 46, 0.1);
+  color: var(--ops-positive);
+  font-weight: 800;
+}
+
+.work-order-criterion.is-failed {
+  border-color: rgba(179, 37, 30, 0.58);
+  background: rgba(179, 37, 30, 0.08);
+  color: var(--stamp-red);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.work-order-criterion.is-optional {
+  border-style: dashed;
+}
+
 .work-order-name {
   display: block;
   font-family: var(--font-display);
@@ -5204,6 +5331,49 @@ html.pref-reduce-motion {
 .work-order-details [data-work-order-next] {
   margin-left: auto;
   text-align: right;
+}
+
+.work-order-outcome {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(87, 69, 48, 0.34);
+}
+
+.work-order-reward {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border: 1px solid rgba(79, 113, 46, 0.5);
+  background: rgba(79, 113, 46, 0.1);
+  color: var(--ops-positive);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 850;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.work-order-incident {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  border-color: rgba(179, 37, 30, 0.64);
+  color: var(--stamp-red);
+  font-weight: 850;
+}
+
+.work-order-incident .pe-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .work-order.is-contract-stamped {
@@ -5775,6 +5945,36 @@ html.pref-reduce-motion {
   display: none;
 }
 
+.building-milestone {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin: 5px 0 0 69px;
+  padding: 5px 7px;
+  border: 1px dashed rgba(40, 81, 106, 0.46);
+  background: rgba(40, 81, 106, 0.07);
+  color: var(--ops-steel);
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.building-milestone > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.building-milestone.is-reached {
+  border-style: solid;
+  border-color: rgba(79, 113, 46, 0.58);
+  background: rgba(79, 113, 46, 0.1);
+  color: var(--ops-positive);
+}
+
 .operations-deck .building-tooltip {
   grid-column: 1 / -1;
   margin: 8px 0 0 69px;
@@ -5966,6 +6166,193 @@ html.pref-reduce-motion {
   color: var(--stamp-red);
 }
 
+.career-plan {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(179, 37, 30, 0.36);
+  background: rgba(253, 248, 236, 0.68);
+}
+
+.career-plan-head {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+
+.career-plan-head > div {
+  min-width: 0;
+}
+
+.career-plan-kicker {
+  display: block;
+  color: var(--stamp-red);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.prestige-card .career-plan-title {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-strong);
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.career-plan-progress {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border: 1px solid currentColor;
+  color: var(--stamp-red);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.career-plan-intro,
+.career-plan-effect {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.67rem;
+  line-height: 1.4;
+}
+
+.career-plan-choices {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 7px;
+}
+
+.career-plan-option {
+  min-width: 0;
+  position: relative;
+}
+
+.career-plan-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.career-plan-option label,
+.career-plan-choice {
+  min-width: 0;
+  min-height: 44px;
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--card-edge);
+  border-radius: 3px;
+  background: var(--paper-bright);
+  color: var(--ink-strong);
+  font: inherit;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(51, 38, 26, 0.16);
+  transition: border-color 140ms ease, background 140ms ease, transform 100ms ease, box-shadow 100ms ease;
+}
+
+.career-plan-option input:checked + label,
+.career-plan-choice[aria-pressed="true"],
+.career-plan-choice.is-selected {
+  border-width: 2px;
+  border-color: var(--stamp-red);
+  background: rgba(179, 37, 30, 0.08);
+  color: var(--ink-strong);
+  box-shadow: 0 2px 0 rgba(179, 37, 30, 0.24);
+}
+
+.career-plan-option input:focus-visible + label,
+.career-plan-choice:focus-visible {
+  outline: var(--ring-width) solid var(--ring);
+  outline-offset: var(--ring-offset);
+}
+
+.career-plan-choice:active,
+.career-plan-option label:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.career-plan-choice-name {
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.career-plan-choice-benefit,
+.career-plan-choice-tradeoff {
+  font-family: var(--font-mono);
+  font-size: 0.57rem;
+  overflow-wrap: anywhere;
+}
+
+.career-plan-choice-benefit {
+  color: var(--ops-positive);
+}
+
+.career-plan-choice-tradeoff {
+  color: var(--stamp-red);
+}
+
+.career-plan-effect {
+  min-height: 1.4em;
+  padding: 6px 7px;
+  border-left: 3px solid var(--ops-steel);
+  background: rgba(40, 81, 106, 0.07);
+}
+
+.career-plan-effect:empty {
+  display: none;
+}
+
+.career-plan-stamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.career-plan-stamp {
+  padding: 3px 6px;
+  border: 1px dashed rgba(87, 69, 48, 0.44);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.career-plan-stamp.is-earned {
+  border: 2px solid var(--stamp-red);
+  color: var(--stamp-red);
+  transform: rotate(-1deg);
+}
+
 .operations-deck .tabs-card {
   gap: 0;
 }
@@ -6031,6 +6418,94 @@ html.pref-reduce-motion {
   min-width: 0;
   font-weight: 750;
   overflow-wrap: anywhere;
+}
+
+.contract-clause {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  padding: 7px 8px;
+  border: 1px dashed rgba(87, 69, 48, 0.36);
+  background: rgba(224, 205, 166, 0.15);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  line-height: 1.35;
+}
+
+.contract-clause-head {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.contract-clause-label {
+  min-width: 0;
+  color: var(--ink-strong);
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.contract-clause-status {
+  flex: 0 0 auto;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.contract-clause-description,
+.contract-clause-reward {
+  overflow-wrap: anywhere;
+}
+
+.contract-clause-progress {
+  height: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(87, 69, 48, 0.36);
+  background: var(--paper-shade);
+}
+
+.contract-clause-progress > span {
+  display: block;
+  width: var(--clause-progress, 0%);
+  height: 100%;
+  background: var(--ops-steel);
+}
+
+.contract-clause-reward {
+  color: var(--ops-positive);
+  font-weight: 850;
+}
+
+.contract-clause.is-met {
+  border-style: solid;
+  border-color: rgba(79, 113, 46, 0.58);
+  background: rgba(79, 113, 46, 0.1);
+}
+
+.contract-clause.is-met .contract-clause-status {
+  color: var(--ops-positive);
+}
+
+.contract-clause.is-met .contract-clause-progress > span {
+  background: var(--ops-positive);
+}
+
+.contract-clause.is-failed {
+  border-style: solid;
+  border-color: rgba(179, 37, 30, 0.58);
+  background: rgba(179, 37, 30, 0.08);
+}
+
+.contract-clause.is-failed .contract-clause-status {
+  color: var(--stamp-red);
+}
+
+.contract-clause.is-optional {
+  border-style: dotted;
 }
 
 .operations-deck .log-panel {
@@ -6144,6 +6619,59 @@ html.pref-reduce-motion {
 .progress-card .achievement-item.unlocked::after {
   right: 10px;
   font-size: 9px;
+}
+
+.achievement-progress-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.achievement-progress {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(87, 69, 48, 0.38);
+  background: var(--paper-shade);
+}
+
+.achievement-progress > span {
+  display: block;
+  width: var(--achievement-progress, 0%);
+  height: 100%;
+  background: var(--ops-steel);
+}
+
+.achievement-progress-text {
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.achievement-item.unlocked .achievement-progress > span {
+  background: var(--ops-positive);
+}
+
+@keyframes office-stamp-confirm {
+  0%, 100% { transform: none; }
+  42% { transform: scale(0.985) rotate(-0.2deg); }
+  72% { transform: scale(1.006) rotate(0.1deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.pref-reduce-motion) .work-order.is-plan-stamped,
+  html:not(.pref-reduce-motion) .career-plan.is-stamped,
+  html:not(.pref-reduce-motion) .contract-clause.is-stamped,
+  html:not(.pref-reduce-motion) .building-milestone.is-stamped,
+  html:not(.pref-reduce-motion) .achievement-item.is-stamped {
+    animation: office-stamp-confirm 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 /* Indices matériels ponctuels, tous décoratifs et hors flux. */
@@ -6282,7 +6810,12 @@ html.pref-reduce-motion {
 .pref-high-contrast .command-card .stats-main,
 .pref-high-contrast .command-card .gauges,
 .pref-high-contrast .operations-deck .contract-card,
-.pref-high-contrast .operations-deck .log-panel {
+.pref-high-contrast .operations-deck .log-panel,
+.pref-high-contrast .career-plan,
+.pref-high-contrast .career-plan-option label,
+.pref-high-contrast .career-plan-choice,
+.pref-high-contrast .contract-clause,
+.pref-high-contrast .building-milestone {
   border-color: var(--hc-accent);
   background: #1a1230;
   color: #fff;
@@ -6299,18 +6832,71 @@ html.pref-reduce-motion {
 .pref-high-contrast .work-order-instruction,
 .pref-high-contrast .work-order-details,
 .pref-high-contrast .building-effect-preview,
-.pref-high-contrast .building-readiness {
+.pref-high-contrast .building-readiness,
+.pref-high-contrast .career-plan-intro,
+.pref-high-contrast .career-plan-effect,
+.pref-high-contrast .career-plan-choice-name,
+.pref-high-contrast .contract-clause-label,
+.pref-high-contrast .contract-clause-description,
+.pref-high-contrast .achievement-progress-text {
   color: #fff;
 }
 
 .pref-high-contrast .work-order-progress,
-.pref-high-contrast .operations-deck .contract-requirements li {
+.pref-high-contrast .operations-deck .contract-requirements li,
+.pref-high-contrast .work-order-context,
+.pref-high-contrast .work-order-step,
+.pref-high-contrast .work-order-criterion,
+.pref-high-contrast .work-order-reward,
+.pref-high-contrast .career-plan-effect,
+.pref-high-contrast .career-plan-stamp,
+.pref-high-contrast .contract-clause-progress,
+.pref-high-contrast .achievement-progress {
   border-color: var(--hc-accent);
   background: #000;
   color: #fff;
 }
 
+.pref-high-contrast .work-order-step.is-current,
+.pref-high-contrast .work-order-step.is-complete,
+.pref-high-contrast .work-order-criterion.is-current,
+.pref-high-contrast .work-order-criterion.is-met,
+.pref-high-contrast .work-order-criterion.is-failed,
+.pref-high-contrast .career-plan-option input:checked + label,
+.pref-high-contrast .career-plan-choice[aria-pressed="true"],
+.pref-high-contrast .career-plan-choice.is-selected,
+.pref-high-contrast .career-plan-stamp.is-earned,
+.pref-high-contrast .contract-clause.is-met,
+.pref-high-contrast .contract-clause.is-failed,
+.pref-high-contrast .building-milestone.is-reached {
+  border-color: var(--hc-accent);
+  background: #000;
+  color: var(--hc-accent);
+}
+
+.pref-high-contrast .work-order-reward,
+.pref-high-contrast .work-order-incident,
+.pref-high-contrast .career-plan-kicker,
+.pref-high-contrast .career-plan-progress,
+.pref-high-contrast .career-plan-choice-benefit,
+.pref-high-contrast .career-plan-choice-tradeoff,
+.pref-high-contrast .contract-clause-reward,
+.pref-high-contrast .contract-clause-status {
+  border-color: var(--hc-accent);
+  color: var(--hc-accent);
+}
+
+.pref-high-contrast .contract-clause-progress > span,
+.pref-high-contrast .achievement-progress > span {
+  background: var(--hc-accent);
+}
+
 .pref-high-contrast .work-order:focus-visible {
+  outline-color: var(--hc-accent);
+}
+
+.pref-high-contrast .career-plan-option input:focus-visible + label,
+.pref-high-contrast .career-plan-choice:focus-visible {
   outline-color: var(--hc-accent);
 }
 
@@ -6462,8 +7048,40 @@ html.pref-reduce-motion {
 
   .work-order-head,
   .work-order-main,
-  .work-order-details {
+  .work-order-details,
+  .work-order-context,
+  .work-order-outcome,
+  .career-plan-head,
+  .contract-clause-head,
+  .building-milestone {
     flex-wrap: wrap;
+  }
+
+  .work-order-context > *,
+  .career-plan-head > *,
+  .contract-clause-head > * {
+    width: 100%;
+  }
+
+  .work-order-steps,
+  .work-order-criteria,
+  .career-plan-choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .work-order-reward,
+  .work-order-incident {
+    width: 100%;
+  }
+
+  .career-plan {
+    padding: 9px;
+  }
+
+  .career-plan-progress,
+  .contract-clause-status {
+    width: max-content;
+    max-width: 100%;
   }
 
   .work-order-meta,
@@ -6575,7 +7193,8 @@ html.pref-reduce-motion {
   }
 
   .operations-deck .building-effect-preview,
-  .operations-deck .building-feedback {
+  .operations-deck .building-feedback,
+  .building-milestone {
     margin-left: 0;
   }
 
@@ -6668,6 +7287,9 @@ html.pref-reduce-motion {
   .modal-close,
   .icon-button,
   .btn-slim,
+  .work-order-incident,
+  .career-plan-choice,
+  .career-plan-option label,
   .tab-btn,
   .settings-tab,
   .minigame-buttons button,
@@ -6760,6 +7382,15 @@ html.pref-reduce-motion {
   transform: none;
 }
 
+.pref-reduce-motion .work-order.is-plan-stamped,
+.pref-reduce-motion .career-plan.is-stamped,
+.pref-reduce-motion .contract-clause.is-stamped,
+.pref-reduce-motion .building-milestone.is-stamped,
+.pref-reduce-motion .achievement-item.is-stamped {
+  animation: none;
+  transform: none;
+}
+
 .pref-reduce-motion .footer-conveyor span:nth-child(1) { left: 6%; }
 .pref-reduce-motion .footer-conveyor span:nth-child(2) { left: 32%; }
 .pref-reduce-motion .footer-conveyor span:nth-child(3) { left: 58%; }
@@ -6782,5 +7413,14 @@ html.pref-reduce-motion {
   .footer-conveyor span:nth-child(2) { left: 32%; }
   .footer-conveyor span:nth-child(3) { left: 58%; }
   .footer-conveyor span:nth-child(4) { left: 84%; }
+
+  .work-order.is-plan-stamped,
+  .career-plan.is-stamped,
+  .contract-clause.is-stamped,
+  .building-milestone.is-stamped,
+  .achievement-item.is-stamped {
+    animation: none;
+    transform: none;
+  }
 
 }

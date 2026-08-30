@@ -6,7 +6,8 @@
  *
  * World: ground spans x in [-13, +13], z in [-8, +8] (26 x 16), y up.
  * Producers line the front row (z = +5), flux buildings the middle (z = 0),
- * landmarks the back row (z = -5). Roads run at z = +/-2.4.
+ * and specialised / landmark buildings the back row (z = -5). Roads run at
+ * z = +/-2.4.
  */
 (function (root, factory) {
   const api = factory();
@@ -37,6 +38,7 @@
     insertingLine: { x: -4.5, z: 0, w: 2.0, d: 1.2, cap: 2 },
     logistics: { x: 0.5, z: 0, w: 2.4, d: 1.6, cap: 2 },
     comBridge: { x: 5.5, z: 0, w: 1.4, d: 1.4, cap: 2 },
+    prepressStudio: { x: -9.5, z: -5, w: 2.0, d: 1.6, cap: 2 },
     factory40: { x: -4, z: -5, w: 3.0, d: 2.0, cap: 2 },
     pampyAI: { x: 3, z: -5, w: 2.0, d: 2.0, cap: 2 }
   };
@@ -51,6 +53,7 @@
   //   digitalPress   -> offsetPress   :  0.85 vs  1.20 (gap 0.35)
   //   offsetPress    -> clientPortal     :  6.45 vs  6.50 (gap 0.05)
   //   logistics      -> comBridge     :  4.15 vs  4.80 (gap 0.65)
+  //   prepressStudio -> factory40     : -6.45 vs -5.50 (gap 0.95)
   //   factory40      -> pampyAI       :  0.55 vs  2.00 (gap 1.45)
   // Second front row (z + d + 0.25) worst z-edge: reproWorkshop 7.35 < 8.
   const GAP_X = 0.05;

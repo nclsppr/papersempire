@@ -1,5 +1,46 @@
 # Release Notes
 
+## 0.26.0 — Les plans de réorganisation — 2026-08-30
+
+- La réorganisation devient une carrière longue : trois Plans — Cadence,
+  Qualité et Relation client — proposent chacun trois rangs de trois dossiers
+  séquentiels. Un rang terminé rapporte son tampon, un bonus de Culture égal au
+  rang et un petit avantage permanent. Une réorganisation anticipée reste
+  autorisée, mais relance le Plan au premier dossier sans récompense de Plan.
+  La Culture suit désormais une courbe logarithmique à l'acquisition et une
+  racine carrée pour ses bonus, afin que les rangs 3 à 25 unités restent de
+  vrais objectifs plutôt qu'une formalité exponentielle.
+- Trois défis facultatifs prolongent chaque orientation sans nouvelle monnaie
+  ni popup imposée. Les grands dossiers Onboarding de 842 personnes, Saison des
+  rapports annuels et Fusion strictement confidentielle s'ouvrent à 3, 6 et 9
+  tampons ; leur validation attribue un badge et la carrière se conclut après
+  les neuf tampons et les trois badges. Les étapes sont strictement
+  séquentielles : dans l'Onboarding, la clause du Kit ne remplit pas l'étape
+  suivante, qui demande explicitement une autre clause.
+- Les contrats restent au cœur du jeu. Ils appartiennent désormais à une
+  orientation et possèdent une clause facultative de qualité, d'empreinte ou
+  d'image : la livraison et sa récompense de base sont toujours garanties, le
+  bonus n'est attribué que si la clause reste satisfaite. Le nouveau contrat
+  `finalFinalProof` met le Studio prépresse au travail.
+- Le Studio prépresse devient la douzième unité. Chaque exemplaire apporte
+  qualité, production indirecte et 6 % de réduction de délai de contrat, avec
+  un plafond global de 30 %. Toutes les unités gagnent des paliers idempotents
+  à 10 exemplaires (rendement ×1,10) et 25 exemplaires (rendement ×1,25).
+- Les seize succès montrent leur progression et attribuent une récompense une
+  seule fois. Le Dossier du moment réunit Plan, étape, critères facultatifs,
+  récompense et prochaine action ; les confirmations restent locales et les
+  animations de tampon respectent le mouvement réduit.
+- Un incident aléatoire attend désormais dans une seule bannette non bloquante.
+  Le joueur choisit de l'ouvrir ou de le classer sans suite ; l'opt-out durable
+  des interruptions reste disponible.
+- La sauvegarde canonique passe en V3. Elle persiste carrière, tampons, badges,
+  récompenses de succès, durée et clause du contrat actif ainsi que l'incident
+  en attente. Les sauvegardes V1/V2 sont hydratées sans remise à zéro.
+- Les textes joueur, guides et analyses décrivent douze unités en FR, EN, DE
+  et LB. `scripts/validate-i18n.mjs` impose la parité exacte des clés et des
+  placeholders. L'issue [#34](https://github.com/nclsppr/papersempire/issues/34)
+  est la spécification produit de cette release.
+
 ## 0.25.2 — Header global partagé — 2026-08-27
 
 - L’accueil, les hubs et articles des Guides de l’atelier ainsi que la page 404

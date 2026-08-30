@@ -231,10 +231,10 @@
       <div class="data-zone-panel investment-matrix-panel">
         <div class="panel-heading-inline">
           <div>
-            <h3 data-i18n="analytics.matrix.title">Comparer les 11 unités</h3>
+            <h3 data-i18n="analytics.matrix.title">Comparer les unités</h3>
             <p data-i18n="analytics.matrix.hint">Trie les colonnes pour comparer coûts, gains et délais. Le symbole ≈ signale une estimation.</p>
           </div>
-          <span id="investmentCount">0 / 11</span>
+          <span id="investmentCount">0 / …</span>
         </div>
         <div class="data-table-scroll">
           <table class="data-table investment-table" id="investmentTable">
@@ -285,6 +285,17 @@
           <strong id="ccFlowTotal">—</strong>
         </div>
         <div class="flow-list" id="ccFlowList"></div>
+      </article>
+
+      <article class="data-zone-panel flow-panel" aria-labelledby="cultureFlowTitle">
+        <div class="panel-heading-inline">
+          <div>
+            <h3 id="cultureFlowTitle" data-i18n="analytics.flow.cultureTitle">Origine de la culture</h3>
+            <p data-i18n="analytics.flow.observed">Mesures observées, pas une comptabilité monétaire.</p>
+          </div>
+          <strong id="cultureFlowTotal">—</strong>
+        </div>
+        <div class="flow-list" id="cultureFlowList"></div>
       </article>
 
       <article class="data-zone-panel gauge-panel" id="efficiencyPanel" aria-labelledby="efficiencyTitle">
