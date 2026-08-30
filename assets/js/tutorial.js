@@ -14,6 +14,7 @@
     started: false,
     highlightEl: null,
     onComplete: null,
+    onBeforeHighlight: null,
     pendingAutoStart: false,
     returnFocus: null
   };
@@ -49,6 +50,9 @@
     state.translate = typeof options.translate === "function" ? options.translate : key => key;
     state.settings = options.settings || null;
     state.onComplete = options.onComplete || null;
+    state.onBeforeHighlight = typeof options.onBeforeHighlight === "function"
+      ? options.onBeforeHighlight
+      : null;
     if (options.autoStart) {
       if (state.overlay) {
         maybeStart();
@@ -193,6 +197,7 @@
   function highlight(selector) {
     removeHighlight();
     if (!selector) return;
+    if (state.onBeforeHighlight) state.onBeforeHighlight(selector);
     const target = document.querySelector(selector);
     if (!target) return;
     state.highlightEl = target;

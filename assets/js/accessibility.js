@@ -1,5 +1,6 @@
 (function(){
   const PREF_KEY = "pe-accessibility";
+  const COLLAPSIBLE_PANEL_IDS = ["print", "buildings", "strategy", "dispatch", "progress"];
   const defaultPrefs = {
     highContrast: false,
     largeText: false,
@@ -9,15 +10,24 @@
     tutorialEnabled: true,
     tutorialCompleted: false,
     eventsEnabled: true,
-    sceneEnabled: true
+    sceneEnabled: true,
+    collapsedPanels: []
   };
+
+  function sanitizeCollapsedPanels(value) {
+    if (!Array.isArray(value)) return [];
+    return [...new Set(value.filter(panelId => COLLAPSIBLE_PANEL_IDS.includes(panelId)))];
+  }
 
   function loadPrefs() {
     try {
       const raw = window.localStorage.getItem(PREF_KEY);
-      return raw ? { ...defaultPrefs, ...JSON.parse(raw) } : { ...defaultPrefs };
+      const stored = raw ? JSON.parse(raw) : null;
+      return stored
+        ? { ...defaultPrefs, ...stored, collapsedPanels: sanitizeCollapsedPanels(stored.collapsedPanels) }
+        : { ...defaultPrefs, collapsedPanels: [] };
     } catch {
-      return { ...defaultPrefs };
+      return { ...defaultPrefs, collapsedPanels: [] };
     }
   }
 
@@ -31,12 +41,17 @@
 
   function applyPrefs(prefs) {
     const root = document.documentElement;
+    const collapsedPanels = sanitizeCollapsedPanels(prefs.collapsedPanels);
+    prefs.collapsedPanels = collapsedPanels;
     root.classList.toggle("pref-high-contrast", !!prefs.highContrast);
     root.classList.toggle("pref-large-text", !!prefs.largeText);
     root.classList.toggle("pref-reduce-motion", !!prefs.reduceMotion);
     root.dataset.soundsEnabled = prefs.soundsEnabled ? "1" : "0";
     root.dataset.particlesEnabled = prefs.particlesEnabled ? "1" : "0";
     root.dataset.sceneEnabled = prefs.sceneEnabled ? "1" : "0";
+    COLLAPSIBLE_PANEL_IDS.forEach(panelId => {
+      root.classList.toggle("panel-collapsed-" + panelId, collapsedPanels.includes(panelId));
+    });
   }
 
   const toggleWatchers = [];
@@ -93,13 +108,17 @@
   applyPrefs(initialPrefs);
   window.Settings = {
     getPrefs() {
-      return { ...initialPrefs };
+      return { ...initialPrefs, collapsedPanels: [...initialPrefs.collapsedPanels] };
     },
     getPreference(key) {
-      return initialPrefs[key];
+      return key === "collapsedPanels"
+        ? [...initialPrefs.collapsedPanels]
+        : initialPrefs[key];
     },
     setPreference(key, value) {
-      initialPrefs[key] = value;
+      initialPrefs[key] = key === "collapsedPanels"
+        ? sanitizeCollapsedPanels(value)
+        : value;
       applyPrefs(initialPrefs);
       savePrefs(initialPrefs);
       refreshToggles();

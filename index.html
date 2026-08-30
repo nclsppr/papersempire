@@ -30,6 +30,13 @@
       if (prefs.highContrast) root.classList.add("pref-high-contrast");
       if (prefs.largeText) root.classList.add("pref-large-text");
       if (prefs.reduceMotion) root.classList.add("pref-reduce-motion");
+      var allowedPanels = ["print", "buildings", "strategy", "dispatch", "progress"];
+      var collapsedPanels = Array.isArray(prefs.collapsedPanels) ? prefs.collapsedPanels : [];
+      collapsedPanels.forEach(function (panelId) {
+        if (allowedPanels.indexOf(panelId) !== -1) {
+          root.classList.add("panel-collapsed-" + panelId);
+        }
+      });
     } catch (error) {
       // Les réglages par défaut seront appliqués plus tard.
     }
@@ -234,6 +241,9 @@
   </symbol>
   <symbol id="pe-icon-culture" viewBox="0 0 24 24">
     <path d="M4 8l4 3 4-7 4 7 4-3-2 11H6zM7 15h10"/>
+  </symbol>
+  <symbol id="pe-icon-chevron-down" viewBox="0 0 24 24">
+    <path d="m6 9 6 6 6-6"/>
   </symbol>
 </svg>
 <header class="app-header site-header">
@@ -554,7 +564,7 @@
     <progress class="work-order-progress" data-work-order-progress max="15" value="0" aria-label="Progression du dossier" data-i18n-aria-label="objective.progressLabel">0 %</progress>
     <ul class="work-order-criteria" data-work-order-criteria hidden></ul>
     <div class="work-order-details">
-      <span data-work-order-last-action hidden></span>
+      <span data-work-order-last-action aria-hidden="true"></span>
       <span data-work-order-next></span>
     </div>
     <div class="work-order-outcome" data-work-order-outcome hidden>
@@ -568,17 +578,24 @@
   </section>
 
   <div class="layout-column" id="printStation">
-    <section class="card command-card reveal-target" aria-labelledby="printStationTitle">
+    <section class="card command-card reveal-target collapsible-panel" data-collapsible-panel="print" aria-labelledby="printStationTitle">
       <header class="panel-heading">
         <span class="panel-index" aria-hidden="true">01</span>
         <div>
           <p class="panel-kicker" data-i18n="operations.productionKicker">POSTE MANUEL</p>
           <h2 id="printStationTitle" tabindex="-1" data-i18n="operations.productionTitle">Presse de départ</h2>
         </div>
-        <span class="panel-heading-icon" aria-hidden="true">
-          <svg class="pe-icon"><use href="#pe-icon-press"></use></svg>
-        </span>
+        <div class="panel-heading-actions">
+          <span class="panel-heading-icon" aria-hidden="true">
+            <svg class="pe-icon"><use href="#pe-icon-press"></use></svg>
+          </span>
+          <button class="panel-collapse-button" type="button" data-panel-toggle="print" aria-expanded="true" aria-controls="printStationBody">
+            <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-chevron-down"></use></svg>
+            <span class="panel-collapse-label" data-panel-toggle-label></span>
+          </button>
+        </div>
       </header>
+      <div class="collapsible-panel-body" id="printStationBody" data-panel-body="print">
       <div class="stats-main">
         <div class="stat-line stat-line-primary">
           <span class="stat-label">
@@ -664,10 +681,11 @@
         <span class="tag"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-culture"></use></svg><span data-i18n="chips.culture"></span> <span id="culturePoints">0</span></span>
         <span class="tag"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-trophy"></use></svg><span data-i18n="chips.prestige"></span> <span id="prestigeMult">1.00</span></span>
       </div>
+      </div>
     </section>
   </div>
 
-  <section class="card catalog-card reveal-target" id="buildingsPanel" aria-labelledby="buildingsPanelTitle">
+  <section class="card catalog-card reveal-target collapsible-panel" id="buildingsPanel" data-collapsible-panel="buildings" aria-labelledby="buildingsPanelTitle">
     <header class="panel-heading panel-heading-wide">
       <span class="panel-index" aria-hidden="true">02</span>
       <div>
@@ -675,25 +693,50 @@
         <h2 id="buildingsPanelTitle" tabindex="-1" data-i18n="sections.buildingsTitle">Unités de production</h2>
         <p class="panel-intro" data-i18n="sections.buildingsHint">Déploie des unités pour augmenter ta production automatique.</p>
       </div>
-      <span class="panel-heading-icon" aria-hidden="true">
-        <svg class="pe-icon"><use href="#pe-icon-factory"></use></svg>
-      </span>
+      <div class="panel-heading-actions">
+        <span class="panel-heading-icon" aria-hidden="true">
+          <svg class="pe-icon"><use href="#pe-icon-factory"></use></svg>
+        </span>
+        <button class="panel-collapse-button" type="button" data-panel-toggle="buildings" aria-expanded="true" aria-controls="buildingsPanelBody">
+          <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-chevron-down"></use></svg>
+          <span class="panel-collapse-label" data-panel-toggle-label></span>
+        </button>
+      </div>
     </header>
-    <div class="buildings-list" id="buildingsList"></div>
+    <div class="collapsible-panel-body" id="buildingsPanelBody" data-panel-body="buildings">
+      <aside class="building-inspector" id="buildingInspector" aria-labelledby="buildingInspectorTitle">
+        <div class="building-inspector-heading">
+          <span class="building-inspector-kicker" data-i18n="operations.unitInspectorKicker">FICHE UNITÉ · NE PAS AGRAFER</span>
+          <strong id="buildingInspectorTitle" data-building-inspector-title></strong>
+        </div>
+        <div class="building-inspector-copy">
+          <span id="buildingInspectorPrimary" data-building-inspector-primary></span>
+          <span id="buildingInspectorSecondary" data-building-inspector-secondary></span>
+        </div>
+      </aside>
+      <div class="buildings-list" id="buildingsList"></div>
+    </div>
   </section>
 
   <div class="layout-column strategy-column" id="upgradesPanel">
-    <section class="card strategy-card reveal-target" aria-labelledby="upgradesPanelTitle">
+    <section class="card strategy-card reveal-target collapsible-panel" data-collapsible-panel="strategy" aria-labelledby="upgradesPanelTitle">
       <header class="panel-heading">
         <span class="panel-index" aria-hidden="true">03</span>
         <div>
           <p class="panel-kicker" data-i18n="operations.strategyKicker">BUREAU DES MÉTHODES</p>
           <h2 id="upgradesPanelTitle" tabindex="-1" data-i18n="sections.upgradesTitle">Améliorations et prestige</h2>
         </div>
-        <span class="panel-heading-icon" aria-hidden="true">
-          <svg class="pe-icon"><use href="#pe-icon-upgrade"></use></svg>
-        </span>
+        <div class="panel-heading-actions">
+          <span class="panel-heading-icon" aria-hidden="true">
+            <svg class="pe-icon"><use href="#pe-icon-upgrade"></use></svg>
+          </span>
+          <button class="panel-collapse-button" type="button" data-panel-toggle="strategy" aria-expanded="true" aria-controls="strategyPanelBody">
+            <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-chevron-down"></use></svg>
+            <span class="panel-collapse-label" data-panel-toggle-label></span>
+          </button>
+        </div>
       </header>
+      <div class="collapsible-panel-body" id="strategyPanelBody" data-panel-body="strategy">
       <div class="section">
         <div class="upgrades-list" id="upgradesList"></div>
       </div>
@@ -718,19 +761,27 @@
         </div>
         <button class="btn-prestige disabled" id="prestigeButton" type="button" disabled aria-disabled="true" data-i18n="prestige.buttonLocked">Réorg stratégique indisponible</button>
       </div>
+      </div>
     </section>
 
-    <section class="card tabs-card dispatch-card reveal-target" id="dispatchPanel" aria-labelledby="dispatchPanelTitle">
+    <section class="card tabs-card dispatch-card reveal-target collapsible-panel" id="dispatchPanel" data-collapsible-panel="dispatch" aria-labelledby="dispatchPanelTitle">
       <header class="panel-heading panel-heading-compact">
         <span class="panel-index" aria-hidden="true">04</span>
         <div>
           <p class="panel-kicker" data-i18n="operations.dispatchKicker">EXPÉDITIONS &amp; SUIVI</p>
           <h2 id="dispatchPanelTitle" data-i18n="operations.dispatchTitle">Bons de commande</h2>
         </div>
-        <span class="panel-heading-icon" aria-hidden="true">
-          <svg class="pe-icon"><use href="#pe-icon-contract"></use></svg>
-        </span>
+        <div class="panel-heading-actions">
+          <span class="panel-heading-icon" aria-hidden="true">
+            <svg class="pe-icon"><use href="#pe-icon-contract"></use></svg>
+          </span>
+          <button class="panel-collapse-button" type="button" data-panel-toggle="dispatch" aria-expanded="true" aria-controls="dispatchPanelBody">
+            <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-chevron-down"></use></svg>
+            <span class="panel-collapse-label" data-panel-toggle-label></span>
+          </button>
+        </div>
       </header>
+      <div class="collapsible-panel-body" id="dispatchPanelBody" data-panel-body="dispatch">
       <div class="tabs-header" role="tablist">
         <button class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="contractsPanel" data-tab="contracts" id="contractsTab"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-contract"></use></svg><span data-i18n="sections.contractsTitle">Contrats premium</span><span class="tab-active-badge" data-i18n="contracts.runningBadge">EN COURS</span></button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="journalPanel" data-tab="journal" id="journalTab"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-journal"></use></svg><span data-i18n="sections.logTitle">Journal d'activité</span></button>
@@ -741,6 +792,7 @@
       </div>
       <div class="tab-panel hidden" id="journalPanel" role="tabpanel" aria-labelledby="journalTab">
         <div class="log-panel" id="logPanel"></div>
+      </div>
       </div>
     </section>
 
@@ -757,7 +809,7 @@
     </div>
   </div>
 
-  <section class="card progress-card reveal-target" id="progressPanel" aria-labelledby="progressPanelTitle">
+  <section class="card progress-card reveal-target collapsible-panel" id="progressPanel" data-collapsible-panel="progress" aria-labelledby="progressPanelTitle">
     <header class="panel-heading panel-heading-wide">
       <span class="panel-index" aria-hidden="true">05</span>
       <div>
@@ -765,13 +817,21 @@
         <h2 id="progressPanelTitle" tabindex="-1" data-i18n="sections.progressTitle">Progression</h2>
         <p class="panel-intro" data-i18n="operations.archivesHint">Chaque succès débloqué est conservé ici.</p>
       </div>
-      <div class="achievement-counter">
-        <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-trophy"></use></svg>
-        <strong id="achievementUnlockedCount">0</strong><span aria-hidden="true"> / </span><span id="achievementTotalCount">16</span>
-        <span class="sr-only" data-i18n="operations.achievementsUnlocked">succès débloqués</span>
+      <div class="panel-heading-actions panel-heading-actions-progress">
+        <div class="achievement-counter">
+          <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-trophy"></use></svg>
+          <strong id="achievementUnlockedCount">0</strong><span aria-hidden="true"> / </span><span id="achievementTotalCount">16</span>
+          <span class="sr-only" data-i18n="operations.achievementsUnlocked">succès débloqués</span>
+        </div>
+        <button class="panel-collapse-button" type="button" data-panel-toggle="progress" aria-expanded="true" aria-controls="progressPanelBody">
+          <svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-chevron-down"></use></svg>
+          <span class="panel-collapse-label" data-panel-toggle-label></span>
+        </button>
       </div>
     </header>
-    <div class="achievements-list" id="achievementsList"></div>
+    <div class="collapsible-panel-body" id="progressPanelBody" data-panel-body="progress">
+      <div class="achievements-list" id="achievementsList"></div>
+    </div>
   </section>
 
   <div class="sr-only" id="gameStatusAnnouncer" aria-live="polite" aria-atomic="true"></div>
