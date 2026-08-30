@@ -397,8 +397,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 5px 9px;
   border: 1px solid rgba(248, 240, 220, 0.24);
   border-radius: 4px;
