@@ -657,7 +657,10 @@ function validateHub(page, html) {
   assertNoInventedRatings(items, page.url);
   assert.equal(list.numberOfItems, ARTICLES.length);
   assert.equal(list.itemListElement.length, ARTICLES.length);
-  assert.deepEqual(list.itemListElement.map(item => item.position), [1, 2, 3]);
+  assert.deepEqual(
+    list.itemListElement.map(item => item.position),
+    ARTICLES.map((_, index) => index + 1),
+  );
   assert.equal(breadcrumb.itemListElement.at(-1).item, page.url);
 }
 

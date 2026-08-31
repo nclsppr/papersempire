@@ -394,7 +394,8 @@ h2 {
   box-shadow: var(--shadow);
 }
 
-.guide-card:first-child {
+.guide-card:first-child,
+.guide-card:last-child:nth-child(even) {
   grid-column: span 12;
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
@@ -795,7 +796,8 @@ tbody th {
   }
 
   .guide-card,
-  .guide-card:first-child {
+  .guide-card:first-child,
+  .guide-card:last-child:nth-child(even) {
     grid-column: span 12;
     display: block;
   }
