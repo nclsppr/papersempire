@@ -132,7 +132,7 @@ export const HUBS = Object.freeze({
   fr: {
     title: "Guides de l’atelier — Idle games de navigateur",
     h1: "Guides des idle games de navigateur",
-    description: "Définitions, sélections et comparaisons honnêtes pour comprendre les idle games de navigateur et choisir l’expérience qui vous correspond.",
+    description: "Définitions, conseils pratiques, sélections et comparaisons honnêtes pour comprendre les idle games de navigateur et choisir l’expérience qui vous correspond.",
     eyebrow: "REGISTRE ÉDITORIAL · ATELIER 01",
     intro: "L’atelier ne se limite pas à produire des documents. Ici, on démonte les mécaniques des jeux idle, on compare leurs rythmes et on renvoie toujours vers leurs versions officielles.",
     promise: "Pas de notes sur 10, pas de vainqueur arrangé : des différences concrètes, des sources et le contexte nécessaire pour choisir.",
@@ -140,7 +140,7 @@ export const HUBS = Object.freeze({
   en: {
     title: "Workshop Guides — Browser idle games",
     h1: "Guides to Browser Idle Games",
-    description: "Clear definitions, curated selections, and honest comparisons to understand browser idle games and choose the experience that fits you.",
+    description: "Clear definitions, practical advice, curated selections, and honest comparisons to understand browser idle games and choose the experience that fits you.",
     eyebrow: "EDITORIAL REGISTER · WORKSHOP 01",
     intro: "The workshop is about more than producing documents. Here we take idle-game systems apart, compare their rhythms, and always point to official versions.",
     promise: "No scores out of ten and no pre-arranged winner: practical differences, primary sources, and enough context to choose.",
@@ -148,7 +148,7 @@ export const HUBS = Object.freeze({
   de: {
     title: "Werkstatt-Guides — Idle Games im Browser",
     h1: "Werkstatt-Guides für Browser-Idle-Games",
-    description: "Klare Definitionen, ausgewählte Spiele und ehrliche Vergleiche, um Browser-Idle-Games zu verstehen und das passende Erlebnis zu finden.",
+    description: "Klare Definitionen, praktische Tipps, ausgewählte Spiele und ehrliche Vergleiche, um Browser-Idle-Games zu verstehen und das passende Erlebnis zu finden.",
     eyebrow: "REDAKTIONSREGISTER · WERKSTATT 01",
     intro: "In der Werkstatt geht es um mehr als Dokumente. Wir zerlegen Idle-Mechaniken, vergleichen Spielrhythmen und verlinken immer die offiziellen Versionen.",
     promise: "Keine Zehnerwertung und kein abgesprochener Sieger: konkrete Unterschiede, Primärquellen und genug Kontext für eine gute Wahl.",
@@ -156,7 +156,7 @@ export const HUBS = Object.freeze({
   lb: {
     title: "Atelier-Guiden — Idle Games am Browser",
     h1: "Atelier-Guiden iwwer Browser-Idle-Games",
-    description: "Kloer Erklärungen, ausgewielte Spiller an éierlech Vergläicher fir Browser-Idle-Games ze verstoen an dat passend Spill ze fannen.",
+    description: "Kloer Erklärungen, praktesch Tipps, ausgewielte Spiller an éierlech Vergläicher fir Browser-Idle-Games ze verstoen an dat passend Spill ze fannen.",
     eyebrow: "REDAKTIOUNSREGISTER · ATELIER 01",
     intro: "Am Atelier geet et ëm méi wéi Dokumenter. Mir huelen d’Mechanike vun Idle Games auserneen, vergläichen hire Rhythmus a verlinken ëmmer déi offiziell Versiounen.",
     promise: "Keng Punkten op zéng a kee virbestëmmte Gewënner: konkret Ënnerscheeder, Primärquellen a genuch Kontext fir ze wielen.",
@@ -190,6 +190,51 @@ const sharedSources = Object.freeze({
     },
     url: "https://github.com/pmotschmann/Evolve",
   },
+  papersOfflineRuntime: {
+    label: {
+      fr: "Papers Empire — calcul de la progression hors ligne",
+      en: "Papers Empire — offline progress calculation",
+      de: "Papers Empire — Berechnung des Offline-Fortschritts",
+      lb: "Papers Empire — Berechnung vum Offline-Fortschrëtt",
+    },
+    url: "https://github.com/nclsppr/papersempire/blob/main/assets/js/app.js",
+  },
+  papersPersistence: {
+    label: {
+      fr: "Papers Empire — sauvegarde, export et import",
+      en: "Papers Empire — save, export, and import",
+      de: "Papers Empire — Speichern, Export und Import",
+      lb: "Papers Empire — Späicheren, Export an Import",
+    },
+    url: "https://github.com/nclsppr/papersempire/blob/main/assets/js/persistence.js",
+  },
+  webStorageStandard: {
+    label: {
+      fr: "WHATWG — standard Web Storage",
+      en: "WHATWG — Web Storage standard",
+      de: "WHATWG — Web-Storage-Standard",
+      lb: "WHATWG — Web-Storage-Standard",
+    },
+    url: "https://html.spec.whatwg.org/dev/webstorage.html",
+  },
+  chromePageLifecycle: {
+    label: {
+      fr: "Chrome for Developers — cycle de vie d’une page",
+      en: "Chrome for Developers — Page Lifecycle API",
+      de: "Chrome for Developers — Lebenszyklus einer Seite",
+      lb: "Chrome for Developers — Liewenszyklus vun enger Säit",
+    },
+    url: "https://developer.chrome.com/docs/web-platform/page-lifecycle-api",
+  },
+  mdnWebStorage: {
+    label: {
+      fr: "MDN — API Web Storage",
+      en: "MDN — Web Storage API",
+      de: "MDN — Web Storage API",
+      lb: "MDN — Web Storage API",
+    },
+    url: "https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API",
+  },
 });
 
 export const ARTICLES = Object.freeze([
@@ -221,7 +266,7 @@ export const ARTICLES = Object.freeze([
           ] },
           { title: "Idle : l’attention devient une ressource", paragraphs: [
             "Un idle game demande au joueur de configurer un système qui travaille sans action continue. L’intérêt ne vient pas de l’absence totale de décisions, mais de leur cadence : acheter maintenant, attendre un seuil, revenir après une production, puis réorienter la machine.",
-            "Idle ne signifie pas forcément “progression navigateur fermé”. Certains jeux calculent le temps écoulé au retour, d’autres ralentissent ou s’arrêtent. Il faut distinguer l’onglet actif, l’onglet masqué et le navigateur réellement fermé."
+            "Idle ne signifie pas forcément “progression navigateur fermé”. Certains jeux calculent le temps écoulé au retour, d’autres ralentissent ou s’arrêtent. Il faut distinguer l’onglet actif, l’onglet masqué et le navigateur réellement fermé. Notre guide sur la <a href=\"/guides/idle-game-progression-hors-ligne-sauvegarde-locale/\">progression hors ligne et la sauvegarde locale</a> détaille ces trois états et les précautions à prendre."
           ] },
           { title: "Incrémental : le système change d’échelle", paragraphs: [
             "Dans un jeu incrémental, chaque gain alimente le suivant. On ne se contente pas d’accumuler la même ressource : on débloque des producteurs, des multiplicateurs, des monnaies ou des règles qui changent la lecture de la partie.",
@@ -261,7 +306,7 @@ export const ARTICLES = Object.freeze([
           ] },
           { title: "Idle: attention becomes a resource", paragraphs: [
             "An idle game asks you to configure a system that works without constant input. The pleasure is not an absence of decisions; it is their cadence—buy now, wait for a threshold, return to collect production, then redirect the machine.",
-            "Idle does not automatically mean progress with the browser closed. Some games calculate elapsed time on return; others slow down or stop. An active tab, a hidden tab, and a closed browser are different states."
+            "Idle does not automatically mean progress with the browser closed. Some games calculate elapsed time on return; others slow down or stop. An active tab, a hidden tab, and a closed browser are different states. Our guide to <a href=\"/en/guides/browser-idle-game-offline-progress-local-save/\">offline progress and local saves</a> explains those states and the practical safeguards."
           ] },
           { title: "Incremental: the system changes scale", paragraphs: [
             "In an incremental game, each gain funds the next. You do more than accumulate one resource: producers, multipliers, currencies, or rules change how the run is understood.",
@@ -301,7 +346,7 @@ export const ARTICLES = Object.freeze([
           ] },
           { title: "Idle: Aufmerksamkeit wird zur Ressource", paragraphs: [
             "Ein Idle Game lässt ein eingerichtetes System ohne dauernde Eingabe arbeiten. Der Reiz liegt nicht im Fehlen von Entscheidungen, sondern in ihrem Takt: kaufen, auf eine Schwelle warten, zurückkehren und die Produktion neu ausrichten.",
-            "Idle bedeutet nicht automatisch Fortschritt bei geschlossenem Browser. Manche Spiele berechnen die vergangene Zeit beim Zurückkehren, andere bremsen oder stoppen. Aktiver Tab, versteckter Tab und geschlossener Browser sind unterschiedliche Zustände."
+            "Idle bedeutet nicht automatisch Fortschritt bei geschlossenem Browser. Manche Spiele berechnen die vergangene Zeit beim Zurückkehren, andere bremsen oder stoppen. Aktiver Tab, versteckter Tab und geschlossener Browser sind unterschiedliche Zustände. Unser Guide zu <a href=\"/de/guides/browser-idle-game-lokaler-spielstand-offline-fortschritt/\">Offline-Fortschritt und lokalen Spielständen</a> erklärt diese Zustände und die praktischen Schutzmaßnahmen."
           ] },
           { title: "Incremental: Das System wechselt die Größenordnung", paragraphs: [
             "In einem Incremental Game finanziert jeder Gewinn den nächsten. Produzenten, Multiplikatoren, Währungen oder Regeln verändern nach und nach, wie die Partie gelesen wird.",
@@ -341,7 +386,7 @@ export const ARTICLES = Object.freeze([
           ] },
           { title: "Idle: Opmierksamkeet gëtt eng Ressource", paragraphs: [
             "En Idle Game léisst en ageriichte System ouni permanent Aktioun schaffen. De Spaass kënnt net dovun, datt et keng Entscheedunge gëtt, mee aus hirem Rhythmus: kafen, waarden, zeréckkommen an d’Produktioun nei ausriichten.",
-            "Idle bedeit net automatesch Fortschrëtt bei zouenem Browser. Verschidde Spiller rechnen d’Zäit beim Zeréckkommen, anerer bremsen oder stoppen. En aktiven Tab, e verstoppten Tab an e zouene Browser sinn dräi verschidden Zoustänn."
+            "Idle bedeit net automatesch Fortschrëtt bei zouenem Browser. Verschidde Spiller rechnen d’Zäit beim Zeréckkommen, anerer bremsen oder stoppen. En aktiven Tab, e verstoppten Tab an e zouene Browser sinn dräi verschidden Zoustänn. Eise Guide iwwer <a href=\"/lb/guides/browser-idle-game-lokal-spaicherung-offline-fortschrett/\">Offline-Fortschrëtt a lokal Späicherung</a> erkläert dës Zoustänn an déi praktesch Sécherungen."
           ] },
           { title: "Incremental: De System wiesselt d’Gréisst", paragraphs: [
             "An engem Incremental Game finanzéiert all Gewënn deen nächsten. Produzenten, Multiplikatoren, Wärungen oder Regele veränneren no an no, wéi d’Partie funktionéiert.",
@@ -710,6 +755,244 @@ export const ARTICLES = Object.freeze([
           ] },
           { title: "Zwee Spillertypen, zwou Aschränkungen", paragraphs: [
             "Papers Empire passt fir Spiller, déi eng illustréiert Fabrick a Sessioune mat méi laange Pause wëllen; d’Offline-Produktioun leeft no op d’mannst enger Minutt Ofwiesenheet mat 50 Prozent an ass op aacht Stonne limitéiert. Universal Paperclips passt fir Spiller, déi de Fortschrëtt virun allem duerch Entdeckung erliewe wëllen: De Frank Lantz beschreift et als eng Erfarung vu véier bis sechs Stonnen, an déi offiziell Säit weist drop hin, datt d’Webversioun net fir Smartphonen entwéckelt gouf."
+          ] },
+        ],
+      },
+    },
+  },
+  {
+    id: "offline-progress-local-save",
+    image: "/assets/images/guides/offline-progress-local-save.webp",
+    datePublished: "2026-08-31",
+    dateModified: "2026-08-31",
+    sourcesCheckedAt: "2026-08-31",
+    sources: [
+      sharedSources.papersOfflineRuntime,
+      sharedSources.papersPersistence,
+      sharedSources.webStorageStandard,
+      sharedSources.chromePageLifecycle,
+      sharedSources.mdnWebStorage,
+    ],
+    translations: {
+      fr: {
+        slug: "idle-game-progression-hors-ligne-sauvegarde-locale",
+        title: "Un idle game continue-t-il quand l’onglet est fermé ?",
+        description: "Onglet masqué, navigateur fermé, sauvegarde locale et export : comprenez ce que signifie vraiment la progression hors ligne d’un idle game.",
+        eyebrow: "REGISTRE HORS LIGNE · GUIDE 04",
+        lead: "Un onglet masqué peut être ralenti ou gelé ; un onglet fermé n’exécute plus le jeu. La progression dite « hors ligne » vient donc d’une règle prévue par chaque jeu, pas d’une promesse du navigateur. Voici comment la lire et protéger une partie locale.",
+        imageAlt: "Une imprimerie nocturne relie sa chaîne de production à une archive locale lumineuse, entre la lune et l’aube",
+        readingMinutes: 8,
+        card: "Ce qui continue, ce que le navigateur arrête et comment protéger une partie locale.",
+        sections: [
+          { title: "La réponse courte", paragraphs: [
+            "Non : fermer un onglet ne laisse pas sa page continuer à exécuter le jeu. Même lorsqu’un onglet reste ouvert en arrière-plan, le navigateur peut ralentir ses minuteurs, suspendre son affichage, le geler ou le supprimer pour économiser de la mémoire et de l’énergie.",
+            "Un idle game peut pourtant créditer une production au retour. Dans ce cas, il applique une règle prévue par ses créateurs : conserver un état et une heure de référence, mesurer l’absence, puis calculer un gain. Ce crédit ne prouve pas que l’usine a réellement tourné seconde après seconde pendant que la page était fermée.",
+            "Dans ce guide, <strong>progression hors ligne</strong> signifie donc « progression calculée pendant une absence ». Cela ne garantit pas que le jeu lui-même puisse être chargé et joué sans connexion internet."
+          ] },
+          { title: "Onglet visible, masqué ou fermé : trois situations", paragraphs: [
+            "Le cycle de vie d’une page web distingue plusieurs états. Leur détail varie selon le navigateur, l’appareil, la mémoire disponible et les réglages d’économie d’énergie ; un jeu sérieux ne devrait donc pas promettre qu’un simple minuteur JavaScript conservera toujours sa cadence en arrière-plan.",
+            "Pour le joueur, la distinction utile tient en trois lignes : une page visible peut travailler normalement, une page masquée peut être ralentie ou suspendue, et une page fermée ne travaille plus du tout."
+          ], table: {
+            caption: "Ce que permettent réellement les trois états d’un onglet",
+            headers: ["Situation", "Ce que le navigateur peut faire", "Conséquence pour le joueur"],
+            rows: [
+              ["Visible et actif", "Exécuter la boucle du jeu et rafraîchir l’affichage", "La cadence normale reste celle définie par le jeu"],
+              ["Masqué ou en arrière-plan", "Ralentir les minuteurs, arrêter l’animation, puis éventuellement geler ou supprimer la page", "Il ne faut pas supposer une production identique à celle d’un onglet visible"],
+              ["Fermé, terminé ou supprimé", "N’exécuter aucun code de la page", "Un gain au retour doit venir d’un état sauvegardé ou d’un service distant"],
+            ],
+          } },
+          { title: "La production hors ligne est reconstruite au retour", paragraphs: [
+            "Papers Empire utilise un modèle local et vérifiable. La sauvegarde contient l’état principal de la partie et l’heure du dernier enregistrement. Au chargement suivant, le jeu calcule le temps écoulé, restaure la cadence de l’atelier, puis crédite la part d’absence autorisée.",
+            "Après au moins 60 secondes d’absence, la règle est : <strong>gain crédité = cadence nominale × min(durée d’absence, 8 h) × 0,5</strong>. Exemple : avec une cadence de 100 documents par seconde et une absence de deux heures, le retour crédite 100 × 7 200 × 0,5, soit <strong>360 000 documents</strong>.",
+            "Une absence de douze heures resterait limitée aux huit heures prévues par le jeu. Le calcul ajoute uniquement des documents : il ne génère ni point de culture ni dérive de qualité, d’empreinte ou d’image. Les 50 %, la minute minimale et le plafond de huit heures sont des choix de Papers Empire, pas une norme du Web."
+          ] },
+          { title: "Ce que « sauvegarde locale » veut vraiment dire", paragraphs: [
+            "Le stockage local du Web associe les données à l’origine du site. Dans une session normale, <code>localStorage</code> peut conserver une partie lorsque le navigateur est fermé puis rouvert. Il ne s’agit toutefois ni d’un compte joueur ni, à lui seul, d’une sauvegarde cloud.",
+            "Papers Empire ne transfère pas automatiquement la partie vers un autre appareil, un autre profil ou un autre navigateur. Deux profils installés sur le même ordinateur disposent déjà de zones de stockage distinctes ; ouvrir le site sur un téléphone ne récupère donc pas spontanément la partie du portable.",
+            "La navigation privée est temporaire, l’utilisateur peut effacer les données du site et le navigateur peut refuser ou supprimer un stockage non persistant dans certaines situations. Une partie locale importante mérite donc un export avant un nettoyage, une migration ou une longue utilisation en mode privé."
+          ] },
+          { title: "L’export protège la partie principale, pas tout le profil", paragraphs: [
+            "Dans Papers Empire, l’export reprend la sauvegarde principale stockée sous la clé du jeu et la fournit sous forme de texte. L’import replace cette sauvegarde principale dans le navigateur puis recharge la partie. C’est le moyen intégré de déplacer le cœur d’une partie entre deux profils ou appareils.",
+            "Cet export ne doit pas être présenté comme une copie complète du profil navigateur. Les préférences d’accessibilité et l’historique analytique détaillé conservé séparément ne font pas partie de cette sauvegarde principale, même si celle-ci contient les données nécessaires pour reprendre le jeu.",
+            "Conservez le texte exporté sans le modifier, importez-le depuis la version officielle du jeu et vérifiez les ressources, unités et objectifs retrouvés avant d’effacer l’ancienne copie. Cette vérification simple évite de confondre export réussi et migration réellement validée."
+          ] },
+          { title: "Checklist avant de fermer ou de changer d’appareil", paragraphs: [
+            "La mention « progression hors ligne » ne suffit pas à décrire un jeu. Avant d’investir du temps dans une partie longue, cherchez un contrat concret : lieu de sauvegarde, méthode de transfert, calcul de l’absence et limites annoncées.",
+            "Pour Papers Empire, la réponse est explicite : sauvegarde principale locale, export manuel, absence créditée à moitié après une minute et plafond de huit heures. Pour un autre jeu, vérifiez son propre fonctionnement au lieu de lui appliquer ces valeurs."
+          ], bullets: [
+            "<strong>Type de sauvegarde :</strong> locale seulement, compte distant ou véritable synchronisation cloud ?",
+            "<strong>Transfert :</strong> existe-t-il un export et un import documentés ?",
+            "<strong>Règle hors ligne :</strong> quel minimum, quel taux et quel plafond sont appliqués ?",
+            "<strong>État de l’onglet :</strong> le jeu distingue-t-il arrière-plan et navigateur fermé ?",
+            "<strong>Avant migration :</strong> exportez la partie principale, importez-la, puis contrôlez le résultat avant de supprimer l’original.",
+            "<strong>Avant un prestige :</strong> vérifiez séparément ce qui sera réinitialisé et ce qui restera permanent."
+          ] },
+        ],
+      },
+      en: {
+        slug: "browser-idle-game-offline-progress-local-save",
+        title: "Do idle games run when the browser tab is closed?",
+        description: "Hidden tabs, closed browsers, local saves, and exports: learn what offline progress really means in a browser idle game.",
+        eyebrow: "OFFLINE OPERATIONS · GUIDE 04",
+        lead: "A hidden tab may be throttled or frozen; a closed tab no longer runs the game. So-called offline progress comes from a rule implemented by each game, not from a promise made by the browser. Here is how to read that rule and protect a local run.",
+        imageAlt: "A night-time printworks connects its production line to a glowing local archive between moonlight and dawn",
+        readingMinutes: 7,
+        card: "What keeps running, what the browser stops, and how to protect a local save.",
+        sections: [
+          { title: "The short answer", paragraphs: [
+            "No: closing a tab does not leave its page running the game. Even when a tab remains open in the background, the browser may throttle its timers, suspend rendering, freeze the page, or discard it to save memory and power.",
+            "An idle game can still award output when you return. In that case, it follows a rule designed by its creators: preserve a state and a reference time, measure the absence, then calculate a reward. That credit does not prove that the factory literally ran second by second while the page was closed.",
+            "In this guide, <strong>offline progress</strong> means progress calculated for time spent away. It does not necessarily mean that the game itself can load and be played without an internet connection."
+          ] },
+          { title: "Visible, hidden, and closed are different states", paragraphs: [
+            "A web page moves through several lifecycle states. Their exact behavior varies with the browser, device, available memory, and power-saving settings, so a game should not assume that an ordinary JavaScript timer will always maintain its full background rate.",
+            "For a player, the useful distinction fits into three lines: a visible page can run normally, a hidden page may be slowed or suspended, and a closed page no longer runs at all."
+          ], table: {
+            caption: "What the three practical tab states actually allow",
+            headers: ["Situation", "What the browser may do", "What it means for the player"],
+            rows: [
+              ["Visible and active", "Run the game loop and refresh the display", "Normal output remains whatever the game defines"],
+              ["Hidden or in the background", "Throttle timers, stop animation, and eventually freeze or discard the page", "Do not assume output identical to a visible tab"],
+              ["Closed, terminated, or discarded", "Run none of the page’s code", "A return reward must come from saved state or a remote service"],
+            ],
+          } },
+          { title: "Offline output is reconstructed when you return", paragraphs: [
+            "Papers Empire uses a local, inspectable model. Its save contains the main game state and the time of the latest save. On the next load, the game measures the elapsed time, restores the workshop’s production rate, and awards the permitted share of that absence.",
+            "After at least 60 seconds away, the rule is: <strong>credited output = nominal rate × min(time away, 8 hours) × 0.5</strong>. For example, at 100 documents per second and two hours away, the return credit is 100 × 7,200 × 0.5, or <strong>360,000 documents</strong>.",
+            "A twelve-hour absence would still be limited to the game’s eight-hour cap. The calculation adds documents only: it creates no Culture points and does not drift quality, footprint, or brand image. The 50% rate, one-minute minimum, and eight-hour limit are Papers Empire design choices, not web standards."
+          ] },
+          { title: "What a local save really means", paragraphs: [
+            "Web storage associates data with a site’s origin. In a normal browsing session, <code>localStorage</code> can retain a run after the browser is closed and reopened. It is not, by itself, a player account or a cloud save.",
+            "Papers Empire does not automatically transfer a run to another device, browser profile, or browser. Two profiles on the same computer already have separate storage areas, so opening the game on a phone will not spontaneously retrieve the run stored on a laptop.",
+            "Private browsing is temporary, users can clear site data, and a browser may reject or remove non-persistent storage in some conditions. If a local run matters to you, export it before clearing data, moving devices, or relying on a long private-browsing session."
+          ] },
+          { title: "Exporting protects the main run, not the whole profile", paragraphs: [
+            "In Papers Empire, export reads the main save stored under the game’s own key and provides it as text. Import places that main save in the destination browser and reloads the run. It is the built-in way to move the core game state between profiles or devices.",
+            "The export should not be described as a complete browser-profile backup. Accessibility preferences and the detailed analytics history stored separately are not part of that main save, even though it contains the data needed to resume the game.",
+            "Keep the exported text unchanged, import it through the official game, and check the restored resources, units, and objectives before deleting the older copy. That final check separates a successful-looking export from a migration that has actually been verified."
+          ] },
+          { title: "Checklist before closing or changing devices", paragraphs: [
+            "The words “offline progress” do not fully describe a game. Before committing to a long run, look for a concrete contract: where the save lives, how it can be moved, how time away is calculated, and which limits are disclosed.",
+            "Papers Empire states its own answer clearly: a local main save, manual export, half-rate credit after one minute, and an eight-hour cap. Check every other game on its own terms instead of applying those values universally."
+          ], bullets: [
+            "<strong>Save type:</strong> local only, remote account, or genuine cloud synchronization?",
+            "<strong>Transfer:</strong> are documented export and import controls available?",
+            "<strong>Offline rule:</strong> what minimum absence, rate, and cap apply?",
+            "<strong>Tab state:</strong> does the game distinguish a background tab from a closed browser?",
+            "<strong>Before moving:</strong> export the main run, import it, then verify the result before deleting the original.",
+            "<strong>Before prestige:</strong> separately check what resets and what remains permanent."
+          ] },
+        ],
+      },
+      de: {
+        slug: "browser-idle-game-lokaler-spielstand-offline-fortschritt",
+        title: "Browser-Idle-Games: lokaler Spielstand und Offline-Fortschritt",
+        description: "Was lokale Spielstände und Offline-Fortschritt im Browser wirklich bedeuten – mit Risiken, Transfer-Checkliste und dem Beispiel Papers Empire.",
+        eyebrow: "SPEICHERPROTOKOLL · GUIDE 04",
+        lead: "„Lokal gespeichert“ und „läuft offline weiter“ sind zwei verschiedene Versprechen. Dieser Guide erklärt, wo der Spielstand liegt, was während einer Pause berechnet wird und wie du deine Partie vor einem Browser- oder Gerätewechsel sicherst.",
+        imageAlt: "Eine Druckmaschine arbeitet nachts unter einer großen Uhr und befördert Papier in einen leuchtenden lokalen Speicher",
+        readingMinutes: 7,
+        card: "Wo Browser-Spielstände liegen, wie Abwesenheit berechnet wird und wie du deine Partie sicher überträgst.",
+        sections: [
+          { title: "Die kurze Antwort", paragraphs: [
+            "Ein lokaler Spielstand bleibt normalerweise im Browserprofil auf dem Gerät, auf dem du spielst. Er ist nicht automatisch ein Cloud-Spielstand und erscheint nicht von selbst in einem anderen Browser, Profil oder Gerät.",
+            "Offline-Fortschritt ist eine separate Spielregel: Der Spielstand hält einen Zeitpunkt fest, und das Spiel berechnet bei der Rückkehr einen begrenzten Ertrag. Mindestdauer, Rate, Obergrenze und betroffene Ressourcen unterscheiden sich von Spiel zu Spiel."
+          ] },
+          { title: "Sichtbar, verborgen oder geschlossen?", paragraphs: [
+            "Für ein Browser-Spiel sind das drei verschiedene Zustände. Die Bezeichnung „Idle“ garantiert allein nicht, dass eine geschlossene Seite weiterproduziert. Entscheidend ist, ob und wie das Spiel die vergangene Zeit bei der Rückkehr nachberechnet."
+          ], table: {
+            caption: "Drei Browserzustände und die Fragen, die sie aufwerfen",
+            headers: ["Zustand", "Was technisch geschieht", "Was du prüfen solltest"],
+            rows: [
+              ["Tab sichtbar", "Die Seite ist geöffnet und sichtbar; die normale Spielschleife kann laufen.", "Läuft die Produktion mit der angezeigten Rate?"],
+              ["Tab verborgen", "Die Seite bleibt geöffnet, liegt aber im Hintergrund; der Browser kann Timer und Animationen drosseln oder aussetzen.", "Verwendet das Spiel eine Nachberechnung statt der vollen aktiven Rate?"],
+              ["Browser geschlossen", "Der Code der Spielseite läuft nicht weiter. Ein späterer Gewinn wird erst beim nächsten Öffnen aus der gespeicherten Zeit berechnet.", "Gibt es Mindestdauer, Rate, Obergrenze und ausgeschlossene Ressourcen?"],
+            ],
+          } },
+          { title: "Wo der Spielstand liegt", paragraphs: [
+            "Lokaler Browserspeicher ist an eine bestimmte Webadresse und ein bestimmtes Browserprofil gebunden. Ein anderer Browser, ein zweites Profil oder ein neues Gerät teilt diese Daten nicht automatisch.",
+            "In einem Privatfenster oder bei blockiertem Speicher kann der Spielstand nur vorübergehend oder gar nicht verfügbar sein. Auch das Löschen der Websitedaten kann die Partie entfernen. Ein lokaler Spielstand kann ohne Konto funktionieren, ist aber keine automatische Cloud-Synchronisierung."
+          ] },
+          { title: "So berechnet Papers Empire die Abwesenheit", paragraphs: [
+            "Bei der Rückkehr verwendet Papers Empire die automatische DOC/s-Rate der wiederhergestellten Werkstatt. Eine Abwesenheit zählt ab 60 Sekunden, wird auf höchstens acht Stunden begrenzt und mit 50 % dieser Rate vergütet.",
+            "<strong>Beispiel:</strong> Eine Werkstatt mit 40 DOC/s erzeugt nach drei Stunden Abwesenheit 40 × 10.800 × 0,5 = 216.000 DOC. Selbst nach zwölf Stunden würden nur die ersten acht Stunden angerechnet.",
+            "Die Abwesenheit erzeugt ausschließlich DOC: keine Kulturpunkte und keine Veränderung von Qualität, Fußabdruck oder Markenbild. Ab fünf Minuten kann ein Aktivitätsbericht erscheinen; kürzere anrechenbare Pausen werden still gutgeschrieben."
+          ] },
+          { title: "Risiken, Backup und Gerätewechsel", paragraphs: [
+            "Exportiere deine Partie, bevor du Websitedaten löschst, den Browser wechselst oder ein Gerät zurücksetzt. Bewahre die unveränderte Kopie an einem Ort auf, den du später wiederfindest, und prüfe den Import im Zielbrowser, bevor du die alte Speicherung entfernst.",
+            "Papers Empire exportiert den kanonischen Spielstand als Text. Einstellungen für Barrierefreiheit und der vollständige zeitliche Verlauf der Data Science Zone werden dabei nicht als Gesamtpaket übertragen. Nach einem Import kann dieser getrennte Verlauf neu beginnen oder als unvollständig erscheinen."
+          ], bullets: [
+            "Öffne in Papers Empire die Einstellungen und exportiere zuerst den Spielstand.",
+            "Speichere die kopierte Zeichenfolge unverändert und außerhalb der zu löschenden Browserdaten.",
+            "Öffne papersempire.com im Zielbrowser und importiere die Kopie.",
+            "Prüfe Ressourcen, Einheiten, Karriere und einen laufenden Vertrag.",
+            "Lösche die alten Websitedaten erst, wenn die neue Partie korrekt geladen wurde."
+          ] },
+          { title: "Checkliste vor der nächsten Pause", paragraphs: [
+            "Sechs kurze Fragen reichen aus, um das Speicher- und Offline-Versprechen eines Browser-Idle-Games einzuordnen."
+          ], bullets: [
+            "Ist der lokale Speicher verfügbar, oder spielst du in einem Privatfenster?",
+            "Liegt der Spielstand nur lokal, in einem Konto oder zusätzlich in der Cloud?",
+            "Gibt es einen Export und hast du den Import bereits geprüft?",
+            "Ab wann beginnt Offline-Fortschritt, mit welcher Rate und bis zu welcher Grenze?",
+            "Werden ein verborgener Tab und ein geschlossener Browser gleich behandelt?",
+            "Welche Einstellungen oder Verlaufsdaten sind nicht Teil des Exports?"
+          ] },
+        ],
+      },
+      lb: {
+        slug: "browser-idle-game-lokal-spaicherung-offline-fortschrett",
+        title: "Browser-Idle-Games: Lokal Späicherung an Offline-Fortschrëtt",
+        description: "Wat lokal Späicherung an Offline-Fortschrëtt am Browser wierklech bedeiten – mat Risiken, Transfer-Checklëscht an dem Beispill Papers Empire.",
+        eyebrow: "SPÄICHERPROTOKOLL · GUIDE 04",
+        lead: "„Lokal gespäichert“ an „leeft offline weider“ sinn zwou verschidde Verspriechen. Dëse Guide erkläert, wou de Spillstand läit, wat bei enger Paus berechent gëtt a wéi s du deng Partie virun engem Wiessel vum Browser oder Apparat ofséchers.",
+        imageAlt: "Eng Dréckmaschinn schafft nuets ënner enger grousser Auer a féiert Pabeier an e beliichte lokale Späicher",
+        readingMinutes: 7,
+        card: "Wou Browser-Spillstänn leien, wéi eng Ofwiesenheet berechent gëtt a wéi s du deng Partie sécher iwwerdroos.",
+        sections: [
+          { title: "Déi kuerz Äntwert", paragraphs: [
+            "E lokale Spillstand bleift normalerweis am Browser-Profil op deem Apparat, op deem s du spills. Dat mécht en net automatesch zu enger Cloud-Späicherung, an en erschéngt net vum selwen an engem anere Browser, Profil oder Apparat.",
+            "Offline-Fortschrëtt ass eng separat Spillregel: De Spillstand hält en Zäitpunkt fest, an d’Spill berechent beim Zeréckkommen e begrenzte Gewënn. D’Mindestzäit, de Rhythmus, d’Grenz an déi betraffe Ressourcen ënnerscheede sech vu Spill zu Spill."
+          ] },
+          { title: "Siichtbar, verstoppt oder zou?", paragraphs: [
+            "Fir e Browser-Spill sinn dat dräi verschidden Zoustänn. D’Bezeechnung „Idle“ garantéiert eleng net, datt eng zoue Säit weider produzéiert. Entscheedend ass, ob a wéi d’Spill déi vergaangen Zäit beim Zeréckkommen norechent."
+          ], table: {
+            caption: "Dräi Browser-Zoustänn an d’Froen, déi se opwerfen",
+            headers: ["Zoustand", "Wat technesch geschitt", "Wat s du kontrolléiere solls"],
+            rows: [
+              ["Tab siichtbar", "D’Säit ass op a siichtbar; déi normal Spill-Schleef ka lafen.", "Leeft d’Produktioun mam ugewisene Rhythmus?"],
+              ["Tab verstoppt", "D’Säit bleift op, läit awer am Hannergrond; de Browser kann Timer an Animatioune bremsen oder pauséieren.", "Benotzt d’Spill eng Norechnung amplaz vum vollen aktive Rhythmus?"],
+              ["Browser zou", "De Code vun der Spill-Säit leeft net weider. E spéidere Gewënn gëtt eréischt beim nächsten Opmaachen aus der gespäicherter Zäit berechent.", "Ginn et eng Mindestzäit, e Rhythmus, eng Grenz a Ressourcen, déi net matgerechent ginn?"],
+            ],
+          } },
+          { title: "Wou de Spillstand läit", paragraphs: [
+            "De lokale Browser-Späicher ass un eng bestëmmte Webadress an e bestëmmte Browser-Profil gebonnen. En anere Browser, en zweete Profil oder en neien Apparat deelt dës Donnéeën net automatesch.",
+            "Am private Browsermodus oder wann de Späicher blockéiert ass, kann de Spillstand nëmme provisoresch oder guer net disponibel sinn. Wann s du d’Säitendonnéeë läschs, kanns du och d’Partie läschen. Eng lokal Späicherung kann ouni Kont funktionéieren, ass awer keng automatesch Cloud-Synchronisatioun."
+          ] },
+          { title: "Esou berechent Papers Empire d’Ofwiesenheet", paragraphs: [
+            "Beim Zeréckkommen benotzt Papers Empire den automateschen DOC/s-Rhythmus vum restauréierten Atelier. Eng Ofwiesenheet gëtt eréischt ab 60 Sekonnen ugerechent, op maximal aacht Stonne begrenzt a mat 50 % vun dësem Rhythmus vergüt.",
+            "<strong>Beispill:</strong> En Atelier mat 40 DOC/s produzéiert no dräi Stonnen Ofwiesenheet 40 × 10.800 × 0,5 = 216.000 DOC. Och no zwielef Stonne ginn nëmmen déi éischt aacht Stonnen ugerechent.",
+            "D’Ofwiesenheet bréngt just DOC: keng Kulturpunkten a keng Ännerung vu Qualitéit, Foussofdrock oder Markebild. Vu fënnef Minutten un kann en Aktivitéitsrapport erschéngen; méi kuerz ugerechent Pause ginn ouni Rapport guttgeschriwwen."
+          ] },
+          { title: "Risiken, Backup an Apparaterwiessel", paragraphs: [
+            "Exportéier deng Partie, éier s du Säitendonnéeë läschs, de Browser wiessels oder en Apparat zerécksets. Behal déi onverännert Kopie op enger Plaz, déi s du erëmfënns, a kontrolléier den Import am Zilbrowser, éier s du déi al Späicherung läschs.",
+            "Papers Empire exportéiert de kanonesche Spillstand als Text. D’Accessibilitéitsastellungen an de komplette chronologesche Verlaf vun der Data Science Zone ginn dobäi net als ee Gesamtpak iwwerdroen. Nom Import kann dësen getrennte Verlaf nei ufänken oder als onvollstänneg erschéngen."
+          ], bullets: [
+            "Maach an Papers Empire d’Astellungen op an exportéier fir d’éischt de Spillstand.",
+            "Späicher déi kopéiert Zeecheketten onverännert an ausserhalb vun de Browser-Donnéeën, déi s du läsche wëlls.",
+            "Maach papersempire.com am Zilbrowser op an importéier d’Kopie.",
+            "Kontrolléier Ressourcen, Eenheeten, Karriär an e lafende Kontrakt.",
+            "Läsch déi al Säitendonnéeën eréischt, wann déi nei Partie richteg gelueden ass."
+          ] },
+          { title: "Checklëscht virun der nächster Paus", paragraphs: [
+            "Sechs kuerz Froe ginn duer, fir d’Späicher- an Offline-Versprieche vun engem Browser-Idle-Game anzeschätzen."
+          ], bullets: [
+            "Ass de lokale Späicher disponibel, oder spills du am private Browsermodus?",
+            "Läit de Spillstand nëmme lokal, an engem Kont oder zousätzlech an der Cloud?",
+            "Gëtt et en Export, an hues du den Import scho kontrolléiert?",
+            "Wéini fänkt den Offline-Fortschrëtt un, mat wéi engem Rhythmus a bis zu wéi enger Grenz?",
+            "Ginn e verstoppten Tab an e zouene Browser d’selwecht behandelt?",
+            "Wéi eng Astellungen oder Verlafsdonnéeë sinn net Deel vum Export?"
           ] },
         ],
       },

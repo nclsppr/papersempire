@@ -142,7 +142,7 @@ runtime sont résolues.
 
 Les Guides sont une surface statique indexable, séparée de `/docs/` qui reste
 technique et `noindex`. Le catalogue contient les quatre traductions publiées,
-les slugs, les dates, les images et les sources. Le générateur en dérive seize
+les slugs, les dates, les images et les sources. Le générateur en dérive vingt
 pages et le sitemap de production ; il n’existe plus de sitemap manuel à tenir
 en parallèle.
 

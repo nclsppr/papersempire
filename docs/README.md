@@ -111,7 +111,7 @@ When you make notable changes (new features, mechanics, UI improvements), append
 ## SEO & Deployment
 
 - Canonical domain: `https://papersempire.com/`. `index.html` embeds canonical + hreflang links for `/`, `/en/`, `/de/` and `/lb/`, Open Graph/Twitter cards, and a JSON-LD `@graph` (VideoGame + WebSite + Person author).
-- `robots.txt` allows crawling and advertises the generated `sitemap.xml`, which contains the four player pages, four guide hubs and twelve localized articles. `/docs/` remains public but receives `X-Robots-Tag: noindex, follow` from the Worker.
+- `robots.txt` allows crawling and advertises the generated `sitemap.xml`, which contains the four player pages, four guide hubs and sixteen localized articles. `/docs/` remains public but receives `X-Robots-Tag: noindex, follow` from the Worker.
 - The social card is a 1200x630 rendered screenshot of the current landing and live 3D campus, stored at `assets/images/social-card.jpg` and referenced with absolute URLs in Open Graph/Twitter meta tags and JSON-LD.
 - PNG icons (`favicon-32`, `apple-touch-icon` 180, `icon-192`, `icon-512`) are faithful crops and resizes of the painted homepage master `assets/brand/papers-empire-logo-v2.png`; the shared French manifest and the localized `site.en|de|lb.webmanifest` variants make the game installable in the language of the current page while keeping one app identity.
 - `npm run cloudflare:build` builds the Retype documentation and assembles the complete `site/` tree from the current Git revision.
