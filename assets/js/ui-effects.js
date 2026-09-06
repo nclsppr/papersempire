@@ -3,7 +3,9 @@
   let audioUnlocked = false;
   let activePaperCues = 0;
   const MAX_PAPER_CUES = 18;
-  const pressAnimations = new WeakMap();
+  const PRESS_FEED_DURATION = 510;
+  const pressFeedTimers = new WeakMap();
+  const classTimers = new WeakMap();
 
   const SOUND_PRESETS = {
     click: { freq: 360, duration: 0.08 },
@@ -15,10 +17,52 @@
   };
 
   const CELEBRATION_VARIANTS = {
-    finale: { count: 40, classes: ["confetti"], sound: "celebration", lifetime: 2000 },
+    achievement: {
+      count: 14,
+      layout: "burst",
+      classes: ["confetti confetti-paper", "confetti confetti-gold", "confetti confetti-orange"],
+      sound: "achievement",
+      lifetime: 900
+    },
+    milestone: {
+      count: 18,
+      layout: "burst",
+      classes: ["confetti confetti-paper", "confetti confetti-orange", "confetti confetti-steel"],
+      sound: "achievement",
+      lifetime: 1000
+    },
+    career: {
+      count: 20,
+      layout: "burst",
+      classes: [
+        "confetti confetti-paper",
+        "confetti confetti-gold",
+        "confetti confetti-orange",
+        "confetti confetti-steel"
+      ],
+      sound: "celebration",
+      lifetime: 1300
+    },
+    finale: {
+      count: 44,
+      layout: "rain",
+      classes: [
+        "confetti confetti-paper",
+        "confetti confetti-orange",
+        "confetti confetti-gold",
+        "confetti confetti-steel"
+      ],
+      sound: "celebration",
+      lifetime: 2300
+    },
     prestige: {
       count: 48,
-      classes: ["confetti confetti-gold", "confetti confetti-paper"],
+      layout: "rain",
+      classes: [
+        "confetti confetti-gold",
+        "confetti confetti-paper",
+        "confetti confetti-orange"
+      ],
       sound: "celebration",
       lifetime: 2700
     }
@@ -118,12 +162,21 @@
 
   function retriggerClass(target, className, duration) {
     if (!target || !target.isConnected || !canCreateMotion()) return;
+    let timers = classTimers.get(target);
+    if (!timers) {
+      timers = new Map();
+      classTimers.set(target, timers);
+    }
+    const activeTimer = timers.get(className);
+    if (activeTimer) clearTimeout(activeTimer);
     target.classList.remove(className);
     void target.offsetWidth;
     target.classList.add(className);
-    setTimeout(function () {
+    const timer = setTimeout(function () {
       if (target.isConnected) target.classList.remove(className);
+      if (timers.get(className) === timer) timers.delete(className);
     }, duration);
+    timers.set(className, timer);
   }
 
   function emitPaperCues(target, count) {
@@ -149,44 +202,39 @@
     playSound("contract");
   }
 
-  function playAchievementEffect() {
-    playSound("achievement");
+  function playAchievementEffect(target) {
+    playCelebrationEffect("achievement", target);
+  }
+
+  function playMilestoneEffect(target) {
+    playCelebrationEffect("milestone", target);
   }
 
   function animatePressFeed(press) {
     if (!press || !canCreateMotion()) return;
     const sheet = press.querySelector(".paper-sheet");
-    const lip = press.querySelector(".press-slot-in");
-    if (!sheet || typeof sheet.animate !== "function") return;
+    if (!sheet || press.classList.contains("is-feeding")) return;
 
-    const currentAnimations = pressAnimations.get(press);
-    if (currentAnimations) {
-      currentAnimations.forEach(function (animation) { animation.cancel(); });
-    }
+    let timer = null;
+    let finished = false;
+    const cleanup = function () {
+      if (finished) return;
+      finished = true;
+      const activeTimer = timer;
+      if (activeTimer !== null) clearTimeout(activeTimer);
+      if (press.classList.contains("is-feeding")) press.classList.remove("is-feeding");
+      sheet.removeEventListener("animationend", handleAnimationEnd);
+      if (pressFeedTimers.get(press) === activeTimer) pressFeedTimers.delete(press);
+      timer = null;
+    };
+    const handleAnimationEnd = function (event) {
+      if (event.target === sheet && event.animationName === "press-feed") cleanup();
+    };
 
-    const sheetAnimation = sheet.animate([
-      { opacity: 1, transform: "translate3d(-50%, 0, 0)", offset: 0 },
-      { opacity: 1, transform: "translate3d(-50%, 45px, 0) scaleX(0.97) skewX(-0.5deg)", offset: 0.58 },
-      { opacity: 1, transform: "translate3d(-50%, 55px, 0) scaleX(0.91) skewX(-1deg)", offset: 0.70 },
-      { opacity: 0, transform: "translate3d(-50%, 58px, 0) scaleX(0.9) skewX(-1deg)", offset: 0.72 },
-      { opacity: 0, transform: "translate3d(-50%, -5px, 0)", offset: 0.73 },
-      { opacity: 1, transform: "translate3d(-50%, 0, 0)", offset: 1 }
-    ], {
-      duration: 160,
-      easing: "cubic-bezier(0.2, 0.72, 0.2, 1)"
-    });
-    const lipAnimation = lip && typeof lip.animate === "function"
-      ? lip.animate([
-          { filter: "brightness(1)", transform: "translateY(0)" },
-          { filter: "brightness(1.55)", transform: "translateY(1px)", offset: 0.56 },
-          { filter: "brightness(1)", transform: "translateY(0)" }
-        ], { duration: 100, easing: "ease-out" })
-      : null;
-    const animations = lipAnimation ? [sheetAnimation, lipAnimation] : [sheetAnimation];
-    pressAnimations.set(press, animations);
-    sheetAnimation.addEventListener("finish", function () {
-      if (pressAnimations.get(press) === animations) pressAnimations.delete(press);
-    }, { once: true });
+    press.classList.add("is-feeding");
+    sheet.addEventListener("animationend", handleAnimationEnd);
+    timer = setTimeout(cleanup, PRESS_FEED_DURATION + 90);
+    pressFeedTimers.set(press, timer);
   }
 
   function playClickEffect(target) {
@@ -196,17 +244,41 @@
     playSound("click");
   }
 
-  function playCelebrationEffect(variant) {
+  function setRainPieceMotion(piece, lifetime) {
+    piece.style.setProperty("--confetti-x", (Math.random() * 100).toFixed(2) + "%");
+    piece.style.setProperty("--confetti-drift", Math.round((Math.random() - 0.5) * 180) + "px");
+    piece.style.setProperty("--confetti-spin", Math.round(280 + Math.random() * 520) + "deg");
+    piece.style.setProperty("--confetti-delay", Math.round(Math.random() * 240) + "ms");
+    piece.style.setProperty("--confetti-duration", Math.round(lifetime * (0.72 + Math.random() * 0.2)) + "ms");
+  }
+
+  function setBurstPieceMotion(piece, target, index, count, lifetime) {
+    const rect = getUsableRect(target);
+    const originX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const originY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+    const angle = (Math.PI * 2 * index / count) + (Math.random() - 0.5) * 0.34;
+    const distance = 46 + Math.random() * 76;
+    piece.style.left = Math.round(originX) + "px";
+    piece.style.top = Math.round(originY) + "px";
+    piece.style.setProperty("--burst-x", Math.round(Math.cos(angle) * distance) + "px");
+    piece.style.setProperty("--burst-y", Math.round(Math.sin(angle) * distance - 24) + "px");
+    piece.style.setProperty("--confetti-spin", Math.round((Math.random() - 0.5) * 620) + "deg");
+    piece.style.setProperty("--confetti-delay", Math.round(Math.random() * 80) + "ms");
+    piece.style.setProperty("--confetti-duration", Math.round(lifetime * (0.68 + Math.random() * 0.2)) + "ms");
+  }
+
+  function playCelebrationEffect(variant, target) {
     const cfg = CELEBRATION_VARIANTS[variant] || CELEBRATION_VARIANTS.finale;
     if (canCreateParticles()) {
       const container = document.createElement("div");
-      container.className = "celebration";
+      container.className = "celebration celebration-" + cfg.layout;
       container.setAttribute("aria-hidden", "true");
       container.style.animationDuration = cfg.lifetime + "ms";
       for (let i = 0; i < cfg.count; i += 1) {
         const piece = document.createElement("span");
         piece.className = cfg.classes[i % cfg.classes.length];
-        piece.style.setProperty("--rand", Math.random().toString());
+        if (cfg.layout === "burst") setBurstPieceMotion(piece, target, i, cfg.count, cfg.lifetime);
+        else setRainPieceMotion(piece, cfg.lifetime);
         container.appendChild(piece);
       }
       document.body.appendChild(container);
@@ -242,6 +314,7 @@
     playUpgradeEffect,
     playContractEffect,
     playAchievementEffect,
+    playMilestoneEffect,
     playCelebrationEffect,
     playClickEffect,
     playSound,

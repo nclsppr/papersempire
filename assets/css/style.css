@@ -1845,43 +1845,86 @@
     .celebration {
       position: fixed;
       inset: 0;
+      z-index: 100;
+      overflow: hidden;
+      contain: strict;
       pointer-events: none;
-      animation: fadeOut 2s forwards;
+      animation: celebration-fade linear forwards;
     }
 
-    @keyframes fadeOut {
-      from { opacity: 1; }
+    @keyframes celebration-fade {
+      0%, 78% { opacity: 1; }
       to { opacity: 0; }
     }
 
     .confetti {
       position: absolute;
-      top: -20px;
-      left: calc(var(--rand) * 100%);
-      width: 6px;
-      height: 14px;
-      background: hsl(calc(var(--rand) * 360), 80%, 60%);
-      animation: confetti-fall 2s linear forwards;
+      width: 7px;
+      height: 16px;
+      border-radius: 1px;
+      background: var(--ops-steel, #28516a);
+      box-shadow: 0 1px 2px rgba(11, 6, 23, 0.14);
+      will-change: transform, opacity;
     }
 
-    /* Variantes de célébration (voir CELEBRATION_VARIANTS dans
-       ui-effects.js) : or pour le prestige et feuilles de papier. */
+    /* Palette d'atelier : papier, encre acier, orange machine et feuille d'or. */
     .confetti-gold {
-      background: hsl(calc(30 + var(--rand) * 30), 92%, 55%);
+      background: var(--accent, #d49a2a);
+    }
+
+    .confetti-orange {
+      background: var(--ops-signal, #d7521b);
+    }
+
+    .confetti-steel {
+      background: var(--ops-steel, #28516a);
     }
 
     .confetti-paper {
       width: 10px;
       height: 14px;
-      background: var(--paper);
-      border-radius: 1px;
+      background: var(--paper-bright, #fdf8ec);
+      border: 1px solid rgba(51, 38, 26, 0.22);
       box-shadow: inset 0 -3px 0 rgba(11, 6, 23, 0.12);
-      animation-duration: 2.6s;
+    }
+
+    .celebration-rain .confetti {
+      top: -24px;
+      left: var(--confetti-x);
+      animation: confetti-fall var(--confetti-duration) var(--confetti-delay) linear both;
+    }
+
+    .celebration-burst .confetti {
+      animation: confetti-burst var(--confetti-duration) var(--confetti-delay)
+        cubic-bezier(0.16, 0.84, 0.36, 1) both;
     }
 
     @keyframes confetti-fall {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -12px, 0) rotate(0deg);
+      }
+      10%, 82% { opacity: 1; }
       to {
-        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+        transform: translate3d(var(--confetti-drift), calc(100vh + 54px), 0)
+          rotate(var(--confetti-spin));
+      }
+    }
+
+    @keyframes confetti-burst {
+      0% {
+        opacity: 0;
+        transform: translate3d(-50%, -50%, 0) rotate(0deg) scale(0.35);
+      }
+      14%, 68% { opacity: 1; }
+      to {
+        opacity: 0;
+        transform: translate3d(
+          calc(-50% + var(--burst-x)),
+          calc(-50% + var(--burst-y)),
+          0
+        ) rotate(var(--confetti-spin)) scale(0.82);
       }
     }
 
@@ -5717,6 +5760,54 @@ html.pref-reduce-motion {
   transform: translate3d(-50%, 0, 0);
   transform-origin: center bottom;
   will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.pref-reduce-motion) .press-console.is-feeding .paper-sheet {
+    animation: press-feed 510ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  }
+
+  html:not(.pref-reduce-motion) .press-console.is-feeding .press-slot-in {
+    animation: press-slot-pulse 300ms ease-out both;
+  }
+}
+
+@keyframes press-feed {
+  0% {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
+  }
+  58% {
+    opacity: 1;
+    transform: translate3d(-50%, 45px, 0) scaleX(0.97) skewX(-0.5deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(-50%, 55px, 0) scaleX(0.91) skewX(-1deg);
+  }
+  72% {
+    opacity: 0;
+    transform: translate3d(-50%, 58px, 0) scaleX(0.9) skewX(-1deg);
+  }
+  73% {
+    opacity: 0;
+    transform: translate3d(-50%, -5px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes press-slot-pulse {
+  0%, 100% {
+    filter: brightness(1);
+    transform: translateY(0);
+  }
+  56% {
+    filter: brightness(1.55);
+    transform: translateY(1px);
+  }
 }
 
 .paper-sheet i {
