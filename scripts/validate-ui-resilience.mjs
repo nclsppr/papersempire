@@ -65,10 +65,22 @@ function readJpegSize(path) {
 class TestClassList {
   constructor(initial = []) {
     this.values = new Set(initial);
+    this.addCounts = new Map();
   }
 
   contains(value) {
     return this.values.has(value);
+  }
+
+  add(...values) {
+    for (const value of values) {
+      this.values.add(value);
+      this.addCounts.set(value, (this.addCounts.get(value) || 0) + 1);
+    }
+  }
+
+  remove(...values) {
+    for (const value of values) this.values.delete(value);
   }
 
   toggle(value, force) {
@@ -76,6 +88,149 @@ class TestClassList {
     else this.values.delete(value);
     return !!force;
   }
+}
+
+function createUiEffectElement(initialClasses = []) {
+  const listeners = new Map();
+  const element = {
+    isConnected: true,
+    className: "",
+    classList: new TestClassList(initialClasses),
+    children: [],
+    parentNode: null,
+    offsetWidth: 100,
+    style: {
+      setProperty(name, value) {
+        this[name] = value;
+      }
+    },
+    setAttribute() {},
+    querySelector() { return null; },
+    closest() { return null; },
+    getBoundingClientRect() {
+      return { left: 120, top: 80, width: 240, height: 64 };
+    },
+    appendChild(child) {
+      child.parentNode = this;
+      this.children.push(child);
+      return child;
+    },
+    remove() {
+      this.isConnected = false;
+      if (!this.parentNode) return;
+      const index = this.parentNode.children.indexOf(this);
+      if (index >= 0) this.parentNode.children.splice(index, 1);
+      this.parentNode = null;
+    },
+    addEventListener(type, listener) {
+      const bucket = listeners.get(type) || [];
+      bucket.push(listener);
+      listeners.set(type, bucket);
+    },
+    removeEventListener(type, listener) {
+      const bucket = listeners.get(type) || [];
+      listeners.set(type, bucket.filter(candidate => candidate !== listener));
+    },
+    dispatch(type, event = {}) {
+      for (const listener of [...(listeners.get(type) || [])]) {
+        listener({ target: this, ...event });
+      }
+    }
+  };
+  return element;
+}
+
+function verifyUiEffectsContracts() {
+  const timers = [];
+  let nextTimerId = 1;
+  const setTestTimeout = (callback, delay) => {
+    const timer = { id: nextTimerId, callback, delay, cancelled: false };
+    nextTimerId += 1;
+    timers.push(timer);
+    return timer.id;
+  };
+  const clearTestTimeout = id => {
+    const timer = timers.find(candidate => candidate.id === id);
+    if (timer) timer.cancelled = true;
+  };
+
+  const root = createUiEffectElement();
+  root.dataset = { particlesEnabled: "1", soundsEnabled: "0" };
+  const body = createUiEffectElement();
+  const sheet = createUiEffectElement(["paper-sheet"]);
+  const lip = createUiEffectElement(["press-slot-in"]);
+  const press = createUiEffectElement(["press-console"]);
+  press.querySelector = selector => selector === ".paper-sheet" ? sheet : selector === ".press-slot-in" ? lip : null;
+  const button = createUiEffectElement(["click-button"]);
+  button.closest = selector => selector === ".press-console" ? press : null;
+
+  const document = {
+    hidden: false,
+    documentElement: root,
+    body,
+    createElement() { return createUiEffectElement(); },
+    querySelectorAll() { return []; },
+    addEventListener() {}
+  };
+  const window = {
+    document,
+    innerWidth: 1280,
+    innerHeight: 720,
+    matchMedia() { return { matches: false }; },
+    addEventListener() {}
+  };
+  window.window = window;
+
+  const sandbox = {
+    window,
+    document,
+    console,
+    Math,
+    setTimeout: setTestTimeout,
+    clearTimeout: clearTestTimeout
+  };
+  vm.runInNewContext(read("assets/js/ui-effects.js"), sandbox);
+  const effects = window.UIEffects;
+  assert.ok(effects, "UI effects must expose their browser API");
+
+  effects.playClickEffect(button);
+  assert.equal(press.classList.contains("is-feeding"), true,
+    "the press sheet must animate without requiring Element.animate");
+  assert.equal(press.classList.addCounts.get("is-feeding"), 1,
+    "the first document click must start one feed cycle");
+  effects.playClickEffect(button);
+  assert.equal(press.classList.addCounts.get("is-feeding"), 1,
+    "rapid document clicks must not restart the active sheet mid-feed");
+  const firstFallback = timers.find(timer => timer.delay === 600);
+  assert.ok(firstFallback, "the paper feed must retain a defensive 600ms cleanup");
+  sheet.dispatch("animationend", { animationName: "press-feed" });
+  assert.equal(press.classList.contains("is-feeding"), false,
+    "the paper feed class must clear at the end of its CSS animation");
+  assert.equal(firstFallback.cancelled, true,
+    "the completed feed must cancel its fallback before a later click can start");
+  effects.playClickEffect(button);
+  firstFallback.callback();
+  assert.equal(press.classList.contains("is-feeding"), true,
+    "a stale cleanup must never interrupt the next paper feed");
+  sheet.dispatch("animationend", { animationName: "press-feed" });
+
+  const banner = createUiEffectElement(["event-banner"]);
+  effects.playAchievementEffect(banner);
+  const burst = body.children.at(-1);
+  assert.equal(burst.className, "celebration celebration-burst",
+    "achievement feedback must stay local to its UI target");
+  assert.equal(burst.children.length, 14,
+    "achievement feedback must keep its bounded particle budget");
+
+  root.classList.add("pref-reduce-motion");
+  const feedCount = press.classList.addCounts.get("is-feeding");
+  const celebrationCount = body.children.length;
+  effects.playClickEffect(button);
+  effects.playCelebrationEffect("career", banner);
+  assert.equal(press.classList.addCounts.get("is-feeding"), feedCount,
+    "manual reduced motion must disable the paper feed");
+  assert.equal(body.children.length, celebrationCount,
+    "manual reduced motion must disable celebration particles");
 }
 
 function verifyHighContrastDoesNotBootWebGL() {
@@ -221,6 +376,7 @@ function verifyStaticContracts() {
   const loader = read("assets/js/scene/scene-loader.js");
   const city = read("assets/js/scene/city-scene.js");
   const app = read("assets/js/app.js");
+  const uiEffects = read("assets/js/ui-effects.js");
   const accessibility = read("assets/js/accessibility.js");
   const tutorial = read("assets/js/tutorial.js");
   const events = read("assets/js/events.js");
@@ -270,6 +426,26 @@ function verifyStaticContracts() {
     "high contrast must override a previously active scene");
   assert.match(index, /class="press-intake"[\s\S]*class="paper-sheet"[\s\S]*class="press-slot press-slot-in"/,
     "the paper sheet and intake lip must share one clipping viewport");
+  const pressFeedStart = uiEffects.indexOf("function animatePressFeed");
+  const pressFeedEnd = uiEffects.indexOf("function playClickEffect", pressFeedStart);
+  const pressFeedSource = uiEffects.slice(pressFeedStart, pressFeedEnd);
+  assert.match(pressFeedSource, /classList\.contains\("is-feeding"\)[\s\S]*classList\.add\("is-feeding"\)/,
+    "document clicks must guard and start one visible CSS feed cycle");
+  assert.doesNotMatch(pressFeedSource, /\.animate\s*\(/,
+    "the paper feed must not disappear when the Web Animations API is unavailable");
+  assert.match(css, /\.press-console\.is-feeding \.paper-sheet\s*\{[^}]*animation:\s*press-feed 510ms/,
+    "the printer sheet must keep a readable 510ms feed duration");
+  const pressFeedFrames = css.match(/@keyframes press-feed\s*\{([\s\S]*?)\n\}/)?.[1] || "";
+  assert.match(pressFeedFrames, /58%\s*\{[\s\S]*translate3d\(-50%, 45px, 0\)/,
+    "the sheet must remain visible through most of its travel into the slot");
+  assert.doesNotMatch(pressFeedFrames, /\b(?:top|left|right|bottom|width|height|margin|padding)\s*:/,
+    "the printer feed must animate only compositor-friendly properties");
+  assert.match(uiEffects, /achievement:\s*\{[\s\S]*?layout:\s*"burst"/,
+    "achievements must use a bounded local celebration");
+  assert.match(app, /function syncBuildingUnlocks\([\s\S]*playMilestoneEffect\(DOM\.eventBanner\)/,
+    "new production units must celebrate at their notification banner");
+  assert.match(app, /function handleCareerProgressResult\([\s\S]*celebrationVariant = "career"[\s\S]*celebrationVariant = "finale"/,
+    "career campaigns and the final conclusion must use distinct celebration scales");
   assert.match(index, /class="stage-live-copy"[\s\S]*class="stage-status"[\s\S]*class="stage-flavor"/,
     "the live campus status lines must share one non-overlapping stack");
   assert.doesNotMatch(app, /FLAVOR_KEYS|initFlavorTicker|flavor\.paperJam/,
@@ -807,5 +983,6 @@ function verifyStaticContracts() {
 
 verifyHighContrastDoesNotBootWebGL();
 verifyPrepressCampusContracts();
+verifyUiEffectsContracts();
 verifyStaticContracts();
 console.log("UI resilience contracts: ok");

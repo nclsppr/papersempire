@@ -27,6 +27,7 @@
     playUpgradeEffect() {},
     playContractEffect() {},
     playAchievementEffect() {},
+    playMilestoneEffect() {},
     playCelebrationEffect() {},
     playClickEffect() {},
     playSound() {}
@@ -2177,6 +2178,7 @@
         const latest = unlocked[unlocked.length - 1];
         setLastAction("feedback.unitAvailable", { name: getBuildingName(latest) });
         showEventBanner("feedback.unitAvailable", "positive", { name: getBuildingName(latest) });
+        UIEffects.playMilestoneEffect(DOM.eventBanner);
       }
     }
     return unlocked;
@@ -2375,6 +2377,7 @@
     if (!result) return false;
     const notify = options.notify !== false;
     let changed = false;
+    let celebrationVariant = null;
     const completedPlanObjectives = result.planObjectivesCompleted || [];
     const completedChallengeObjectives = result.challengeObjectivesCompleted || [];
     const completedCampaignObjectives = result.campaignObjectivesCompleted || [];
@@ -2399,6 +2402,7 @@
       const culture = applyCareerCultureReward(result.challengeCompleted.reward && result.challengeCompleted.reward.culture);
       logMessage("log.challengeCompleted", { name, culture });
       if (notify) showEventBanner("feedback.challengeCompleted", "positive", { name, culture });
+      celebrationVariant = "achievement";
     }
 
     if (result.campaignCompleted) {
@@ -2408,6 +2412,7 @@
       const badge = t("career.badge." + result.campaignCompleted.badgeId);
       logMessage("log.campaignCompleted", { name, badge });
       if (notify) showEventBanner("feedback.campaignCompleted", "positive", { name, badge });
+      celebrationVariant = "career";
       syncCampaignContractPriority();
     }
 
@@ -2415,12 +2420,16 @@
       changed = true;
       logMessage("log.conclusionUnlocked");
       if (notify) showEventBanner("feedback.conclusionUnlocked", "positive");
+      celebrationVariant = "finale";
     }
 
     if (changed) {
       careerUiState.renderSignature = "";
       contractsState.listRenderSignature = "";
       if (options.save !== false) queueSave(true);
+    }
+    if (notify && celebrationVariant) {
+      UIEffects.playCelebrationEffect(celebrationVariant, DOM.eventBanner);
     }
     return changed;
   }
@@ -3051,7 +3060,11 @@
     };
     setLastAction("objective.prestigeComplete", {}, "feedback.prestigeReceipt", receiptParams);
     logMessage("log.prestige", { amount: prestigeDelta });
-    UIEffects.playCelebrationEffect("prestige");
+    const unlockedConclusion = Boolean(careerResult && (
+      careerResult.conclusionUnlocked ||
+      (careerResult.progress && careerResult.progress.conclusionUnlocked)
+    ));
+    UIEffects.playCelebrationEffect(unlockedConclusion ? "finale" : "prestige");
     showEventBanner("feedback.prestigeReceipt", "positive", receiptParams);
     queueSave(true);
     renderAll(true);
