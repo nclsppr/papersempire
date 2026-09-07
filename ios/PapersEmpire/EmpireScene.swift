@@ -24,7 +24,7 @@ final class EmpireScene: SKScene {
     private let life = SKNode()
     private let viewpoint = SKCameraNode()
     private var lots: [EmpireLot] = []
-    private var drawings: [String: SKNode] = [:]
+    private var drawings: [String: EmpireLotNode] = [:]
     private var textures: [String: SKTexture] = [:]
     private var rendered: [String: EmpireLot] = [:]
     private var layoutColumns = 0
@@ -48,6 +48,8 @@ final class EmpireScene: SKScene {
         addChild(world)
         world.addChild(landscape)
         world.addChild(life)
+        landscape.accessibilityElementsHidden = true
+        life.accessibilityElementsHidden = true
         addChild(viewpoint)
         camera = viewpoint
         isUserInteractionEnabled = false // UIKit recognizers retain native gesture arbitration.
@@ -161,19 +163,45 @@ final class EmpireScene: SKScene {
             return (lot.id, hypot(dx, dy))
         }
         guard let id = candidates.min(by: { $0.1 < $1.1 })?.0 else { return }
-        selectedID = id
-        updateSelection()
-        onSelectLot?(id)
+        _ = activateLot(id)
     }
 
-    fileprivate func accessibilityTargets() -> [(EmpireLot, CGRect)] {
-        lots.compactMap { lot in
-            guard (lot.quantity > 0 || lot.unlocked), let point = lotPosition(lot.id) else { return nil }
-            let centre = convertPoint(toView: CGPoint(x: point.x, y: point.y + (lot.quantity > 0 ? 58 : 0)))
-            let side = max(44, 112 / viewpoint.xScale)
-            let frame = CGRect(x: centre.x - side / 2, y: centre.y - side / 2, width: side, height: side)
-            guard frame.intersects(CGRect(origin: .zero, size: size)) else { return nil }
-            return (lot, frame)
+    private func activateLot(_ id: String) -> Bool {
+        guard lots.contains(where: { $0.id == id && ($0.quantity > 0 || $0.unlocked) }),
+              let onSelectLot else { return false }
+        selectedID = id
+        updateSelection()
+        onSelectLot(id)
+        return true
+    }
+
+    private func accessibilityFrame(for id: String) -> CGRect {
+        guard let view, view.bounds.width >= 44, view.bounds.height >= 44,
+              let lot = lots.first(where: { $0.id == id }), let point = lotPosition(id) else { return .zero }
+        let centre = convertPoint(toView: CGPoint(x: point.x, y: point.y + (lot.quantity > 0 ? 58 : 0)))
+        let side = max(44, 112 / viewpoint.xScale)
+        let proposed = CGRect(x: centre.x - side / 2, y: centre.y - side / 2, width: side, height: side)
+        let visible = proposed.intersection(view.bounds)
+        guard !visible.isNull, !visible.isEmpty else { return .zero }
+        let width = min(view.bounds.width, max(44, visible.width))
+        let height = min(view.bounds.height, max(44, visible.height))
+        let frame = CGRect(
+            x: min(view.bounds.maxX - width, max(view.bounds.minX, visible.midX - width / 2)),
+            y: min(view.bounds.maxY - height, max(view.bounds.minY, visible.midY - height / 2)),
+            width: width, height: height)
+        return UIAccessibility.convertToScreenCoordinates(frame, in: view)
+    }
+
+    fileprivate func updateAccessibility(names: [String: String]) {
+        // Expose the actual parcel nodes through SpriteKit's native traversal,
+        // with no parallel SKView array of UIAccessibilityElement objects.
+        for lot in lots {
+            guard let node = drawings[lot.id] else { continue }
+            node.accessibilityLabel = names[lot.id] ?? lot.id
+            node.accessibilityValue = String(lot.quantity)
+            node.accessibilityTraits = .button
+            node.accessibilityIdentifier = "native.lot." + lot.id
+            node.isAccessibilityElement = !accessibilityFrame(for: lot.id).isEmpty
         }
     }
 
@@ -325,8 +353,10 @@ final class EmpireScene: SKScene {
         updateSelection()
     }
 
-    private func makeLot(_ lot: EmpireLot) -> SKNode {
-        let node = SKNode()
+    private func makeLot(_ lot: EmpireLot) -> EmpireLotNode {
+        let node = EmpireLotNode()
+        node.frameProvider = { [weak self] in self?.accessibilityFrame(for: lot.id) ?? .zero }
+        node.activate = { [weak self] in self?.activateLot(lot.id) ?? false }
         let stage = lot.quantity >= 25 ? 3 : lot.quantity >= 10 ? 2 : 1
         let padPath = diamond(width: 182, height: 88)
         let padShadow = shape(padPath, fill: 0x9F9F89)
@@ -359,6 +389,7 @@ final class EmpireScene: SKScene {
             }
             let plus = SKLabelNode(fontNamed: "AvenirNext-Medium")
             plus.text = "+"
+            plus.isAccessibilityElement = false
             plus.fontSize = 30
             plus.fontColor = Self.color(0xB97638)
             plus.verticalAlignmentMode = .center
@@ -395,6 +426,7 @@ final class EmpireScene: SKScene {
             // never a different building or fabricated factory silhouette.
             let missing = SKLabelNode(fontNamed: "AvenirNext-Medium")
             missing.text = lot.id
+            missing.isAccessibilityElement = false
             missing.fontSize = 12
             missing.fontColor = Self.color(0x334F58)
             missing.position.y = 24
@@ -403,6 +435,7 @@ final class EmpireScene: SKScene {
         let quantity = SKLabelNode(fontNamed: quantityFont.fontName)
         quantity.name = "quantity"
         quantity.text = "×\(lot.quantity)"
+        quantity.isAccessibilityElement = false
         quantity.fontSize = quantityFont.pointSize
         quantity.fontColor = Self.color(0x4C6768)
         quantity.verticalAlignmentMode = .center
@@ -786,7 +819,6 @@ struct NativeEmpireSceneView: UIViewRepresentable {
         var scene: EmpireScene
         weak var view: SKView?
         var names: [String: String] = [:]
-        private var accessibilityLots: [String: EmpireLotAccessibilityElement] = [:]
 
         init(scene: EmpireScene) { self.scene = scene }
 
@@ -818,30 +850,25 @@ struct NativeEmpireSceneView: UIViewRepresentable {
         }
 
         func refreshAccessibility() {
-            guard let view else { return }
-            let targets = scene.accessibilityTargets()
-            let visibleIDs = Set(targets.map { $0.0.id })
-            accessibilityLots = accessibilityLots.filter { visibleIDs.contains($0.key) }
-            view.accessibilityElements = targets.map { lot, frame in
-                let element = accessibilityLots[lot.id] ?? EmpireLotAccessibilityElement(accessibilityContainer: view)
-                accessibilityLots[lot.id] = element
-                element.accessibilityLabel = names[lot.id] ?? lot.id
-                element.accessibilityValue = String(lot.quantity)
-                element.accessibilityTraits = .button
-                element.accessibilityFrameInContainerSpace = frame
-                element.activate = { [weak scene] in scene?.onSelectLot?(lot.id) }
-                return element
-            }
+            scene.updateAccessibility(names: names)
         }
     }
 }
 
 @MainActor
-private final class EmpireLotAccessibilityElement: UIAccessibilityElement {
-    var activate: (() -> Void)?
+private final class EmpireLotNode: SKNode, UIAccessibilityIdentification {
+    var accessibilityIdentifier: String?
+    var activate: (() -> Bool)?
+    var frameProvider: (() -> CGRect)?
+
+    // UIAccessibility uses screen coordinates on iOS. Resolve on demand so
+    // VoiceOver follows camera easing, panning and view/window placement.
+    override var accessibilityFrame: CGRect {
+        get { frameProvider?() ?? .zero }
+        set { super.accessibilityFrame = newValue }
+    }
 
     override func accessibilityActivate() -> Bool {
-        activate?()
-        return activate != nil
+        activate?() ?? false
     }
 }

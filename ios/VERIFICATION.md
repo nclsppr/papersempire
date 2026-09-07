@@ -26,9 +26,11 @@ prototype WebKit antérieur ne valent pas comme validation de cette version.
 
 ## Essais restant à terminer
 
-Le verrouillage du Mac a interrompu le contrôle visuel pendant le sélecteur
-Fichiers. Le fichier synthétique de 300 unités n’a pas encore été confirmé dans
-la nouvelle interface native. L’import/export dans les deux sens est validé
+Une erreur de détection de l’outil CUA a interrompu le contrôle visuel pendant
+le sélecteur Fichiers. Le Mac n’était pas verrouillé ; l’accès au simulateur a
+été rétabli après réinitialisation de CUA. Le fichier synthétique de 300 unités
+n’a pas encore été confirmé dans la nouvelle interface native. L’import/export
+dans les deux sens est validé
 par les tests du codec ; son parcours complet à travers les interfaces reste
 à confirmer pour cette version.
 
