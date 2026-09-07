@@ -412,10 +412,12 @@
     initGame();
     initExperienceMode();
     initGodModeControls();
+    initProductExperience();
     initTutorialGuidance();
     applyTimeOfDaySky();
     setInterval(applyTimeOfDaySky, 10 * 60 * 1000);
     greetConsoleVisitors();
+    window.dispatchEvent(new Event("pe:game-ready"));
   }
 
   function hasMeaningfulProgress(saved) {
@@ -467,6 +469,7 @@
     experienceMode = mode === "playing" ? "playing" : "landing";
     document.documentElement.dataset.experience = experienceMode;
     const playing = experienceMode === "playing";
+    window.PEEngagement?.setPlaying(playing && experienceStarted);
     if (DOM.gameSurface) {
       DOM.gameSurface.inert = !playing;
       DOM.gameSurface.setAttribute("aria-hidden", playing ? "false" : "true");
@@ -527,6 +530,7 @@
     }
     applyExperienceMode("playing");
     if (firstStart) gameState.time.lastUpdate = performance.now();
+    window.PEEngagement?.record("start");
     queueSave(true);
     showOfflineReport();
     const targetSelector = event && event.currentTarget
@@ -561,7 +565,7 @@
         }
       }, settleDelay);
     });
-    if (TutorialEngine && typeof TutorialEngine.maybeStart === "function") {
+    if (!isEmpireMode() && TutorialEngine && typeof TutorialEngine.maybeStart === "function") {
       setTimeout(() => TutorialEngine.maybeStart(), reduceMotionPreferred() ? 0 : 420);
     }
   }
@@ -643,6 +647,8 @@
     DOM.heroCulture = document.getElementById("heroCulture");
     DOM.opsDocBank = document.getElementById("opsDocBank");
     DOM.opsDocPs = document.getElementById("opsDocPs");
+    DOM.mobileDocuments = document.getElementById("mobileDocuments");
+    DOM.mobileCadence = document.getElementById("mobileCadence");
     DOM.opsBuildingCount = document.getElementById("opsBuildingCount");
     DOM.manualGain = document.getElementById("manualGain");
     DOM.currentObjective = document.getElementById("currentObjective");
@@ -1164,42 +1170,12 @@
   }
 
   function handleExportSave() {
-    if (!Persistence.isAvailable || !Persistence.isAvailable()) {
-      alert(t("actions.saveUnavailable"));
-      return;
-    }
     queueSave(true);
-    const data = Persistence.exportData();
-    if (!data) {
-      alert(t("actions.exportError"));
-      return;
-    }
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(data).then(
-        () => alert(t("actions.exportSuccess")),
-        () => prompt(t("actions.exportPrompt"), data)
-      );
-    } else {
-      prompt(t("actions.exportPrompt"), data);
-    }
+    window.PESaveTransfer?.exportSave();
   }
 
   function handleImportSave() {
-    const raw = prompt(t("actions.importPrompt"));
-    if (!raw) return;
-    const ok = Persistence.importData ? Persistence.importData(raw) : false;
-    if (!ok) {
-      alert(t("actions.importError"));
-      return;
-    }
-    try {
-      window.localStorage.removeItem(DASH_SNAPSHOT_KEY);
-      window.localStorage.removeItem(ANALYTICS_HISTORY_KEY);
-    } catch {
-      // The imported save remains the source of truth.
-    }
-    disablePersistence();
-    location.reload();
+    window.PESaveTransfer?.chooseImport();
   }
 
   function handleResetSave() {
@@ -1225,7 +1201,9 @@
     }
     try {
       const path = lang === DEFAULT_LANG ? "/" : `/${lang}/`;
-      const url = new URL(path, window.location.origin);
+      const url = new URL(path, window.location.href);
+      queueSave(true);
+      if (isEmpireMode()) url.searchParams.set("experience", "empire");
       url.hash = window.location.hash;
       window.location.assign(url.href);
       return;
@@ -1359,7 +1337,7 @@
   }
 
   function initTutorialGuidance() {
-    if (!TutorialEngine || !Settings) return;
+    if (!TutorialEngine || !Settings || isEmpireMode()) return;
     const steps = [
       {
         id: "click",
@@ -1376,18 +1354,11 @@
         milestone: "building"
       },
       {
-        id: "journal",
-        titleKey: "tutorial.step.journal.title",
-        bodyKey: "tutorial.step.journal.body",
-        selector: "#journalTab",
-        milestone: "journal"
-      },
-      {
-        id: "settings",
-        titleKey: "tutorial.step.settings.title",
-        bodyKey: "tutorial.step.settings.body",
-        selector: "#settingsGearButton",
-        milestone: "settings"
+        id: "automation",
+        titleKey: "tutorial.step.automation.title",
+        bodyKey: "tutorial.step.automation.body",
+        selector: "#nextPurchaseButton",
+        milestone: "building"
       }
     ];
     TutorialEngine.configure({
@@ -1397,6 +1368,7 @@
       onBeforeHighlight: selector => {
         const target = selector ? document.querySelector(selector) : null;
         expandPanelForTarget(target, { persist: true });
+        window.PEMobileExperience?.revealTarget(target);
       },
       onComplete: () => logMessage("log.tutorialComplete"),
       autoStart: experienceStarted && experienceMode === "playing"
@@ -1788,6 +1760,12 @@
       duration.textContent = text;
     }
     if (docs) docs.textContent = "+" + formatNumber(offlineReport.gain) + " DOC";
+    const returnHint = document.getElementById("offlinePurchaseHint");
+    const advice = gameSnapshot().advice;
+    if (returnHint) {
+      returnHint.hidden = !advice;
+      returnHint.textContent = advice ? t(advice.canBuy ? "offline.purchaseReady" : "offline.purchaseNext", { name: advice.name, cost: formatNumber(advice.cost) }) : "";
+    }
     const listeners = new AbortController();
     const close = (restoreFocus = true) => {
       closeModalSurface(modal, dialog);
@@ -1812,6 +1790,8 @@
       objectiveBtn.addEventListener("click", () => {
         close(false);
         setTimeout(() => {
+          if (isEmpireMode()) { window.PEEmpireView?.openBuilding(gameSnapshot().advice?.id); return; }
+          window.PEMobileExperience?.openPanel("production", { focus: false });
           if (!DOM.currentObjective) return;
           DOM.currentObjective.scrollIntoView({
             block: "center",
@@ -1903,6 +1883,7 @@
         modifiers: { ...careerModifiers }
       },
       career: careerSummary,
+      adviceGoal: adviceGoal(),
       analytics: JSON.parse(JSON.stringify(analyticsState))
     };
   }
@@ -2648,16 +2629,16 @@
     const sourceButton = event && event.currentTarget ? event.currentTarget : DOM.clickButton;
     UIEffects.playClickEffect(sourceButton, { value: docGain });
     if (TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
-      TutorialEngine.markMilestone("click");
+      if (gameState.resources.docBank >= buildingCost(gameState.buildings[0])) TutorialEngine.markMilestone("click");
     }
   }
 
   /** Purchases a building if the player can afford it. */
   function buyBuilding(id, sourceEl) {
     const b = gameState.buildings.find(x => x.id === id);
-    if (!b) return;
+    if (!b || !b.isUnlocked || !experienceStarted) return false;
     const cost = buildingCost(b);
-    if (gameState.resources.docBank < cost) return;
+    if (gameState.resources.docBank < cost) return false;
 
     const shouldRestoreFocus = document.activeElement === sourceEl;
     const beforeRate = computeDocPerSecond();
@@ -2669,6 +2650,7 @@
       ? Progression.recordBuildingMilestones(careerState, b.id, previousQuantity, b.quantity)
       : [];
     const afterRate = computeDocPerSecond();
+    if (beforeRate <= 0 && afterRate > 0) window.PEEngagement?.record("first_automation");
     const primaryParams = { name: getBuildingName(b) };
     const rateChanged = Math.abs(afterRate - beforeRate) > 1e-9;
     const detailKey = rateChanged ? "feedback.cadenceChange" : null;
@@ -2739,20 +2721,22 @@
       UIEffects.playCelebrationEffect("finale");
       logMessage("log.finalBuilding", { name: getBuildingName(b) });
     }
+    return true;
   }
 
   /** Purchases an upgrade if affordable and unlocked. */
   function buyUpgrade(id, sourceEl) {
     const upg = gameState.upgrades.find(x => x.id === id);
-    if (!upg || upg.purchased) return;
-    if (gameState.resources.docBank < upg.cost) return;
-    if (gameState.resources.docTotal < (upg.unlockDocTotal || 0)) return;
+    if (!upg || upg.purchased || !experienceStarted) return false;
+    if (gameState.resources.docBank < upg.cost) return false;
+    if (gameState.resources.docTotal < (upg.unlockDocTotal || 0)) return false;
 
     const shouldRestoreFocus = document.activeElement === sourceEl;
     const beforeRate = computeDocPerSecond();
     gameState.resources.docBank -= upg.cost;
     analyticsState.currentRun.upgradeSpend += upg.cost;
     upg.purchased = true;
+    window.PEEngagement?.record("first_upgrade");
     const progressionRecord = Progression && careerState && typeof Progression.recordUpgradePurchased === "function"
       ? Progression.recordUpgradePurchased(careerState, { now: Date.now() })
       : null;
@@ -2791,6 +2775,7 @@
     }
     announceStatus(upgradeAnnouncement);
     UIEffects.playUpgradeEffect(DOM.upgradesList || sourceEl);
+    return true;
   }
 
   /** Whether the prestige reset is currently available. */
@@ -2899,9 +2884,9 @@
   }
 
   function handlePrestigeClick() {
-    if (!canPrestige()) return;
+    if (!canPrestige()) return false;
     const preview = getPrestigeCareerPreview();
-    if (preview.totalCulture <= 0) return;
+    if (preview.totalCulture <= 0) return false;
     let confirmation = t("prestige.confirm", { gain: preview.totalCulture });
     if (preview.assessment && preview.assessment.willRestartPlan) {
       confirmation += "\n\n" + t("career.prestige.planNotValidated");
@@ -2916,14 +2901,14 @@
     if (campaignWarning) confirmation += "\n\n" + campaignWarning;
     const challengeWarning = prestigeChallengeFailureCopy(preview);
     if (challengeWarning) confirmation += "\n\n" + challengeWarning;
-    if (confirm(confirmation)) doPrestige();
+    return confirm(confirmation) ? doPrestige() : false;
   }
 
   /** Executes the prestige reset flow and reinitialises the run. */
   function doPrestige() {
-    if (!canPrestige()) return;
+    if (!canPrestige()) return false;
     const baseGain = computePotentialCultureGain();
-    if (baseGain <= 0) return;
+    if (baseGain <= 0) return false;
     const multiplierBefore = prestigeMultiplier();
     const cultureBefore = gameState.resources.culturePoints;
     const prestigePreview = getPrestigeCareerPreview();
@@ -2987,6 +2972,7 @@
     contractsState.listRenderSignature = "";
     let prestigeCareerDetail = "";
     if (careerResult && careerResult.planCompleted) {
+      window.PEEngagement?.record("first_plan");
       const plan = Progression.getPlanDefinition(careerResult.planCompleted.id);
       const params = {
         plan: plan ? t(plan.nameKey) : careerResult.planCompleted.id,
@@ -3074,6 +3060,7 @@
         renderWorkOrder();
       }
     }, 2850);
+    return true;
   }
 
   function setTextIfChanged(element, value) {
@@ -3611,10 +3598,27 @@
         appendCareerLine(button, "career-plan-choice-benefit", t("career.plan.cultureReward", {
           culture: available.rank
         }));
+        const objectives = document.createElement("ol");
+        objectives.className = "career-plan-objectives";
+        for (const objective of available.rankDefinition.objectives) {
+          const item = document.createElement("li");
+          item.textContent = t(objective.labelKey);
+          objectives.appendChild(item);
+        }
+        button.appendChild(objectives);
+        appendCareerLine(button, "career-plan-commitment", t("career.choose.commitment"));
         DOM.careerPlanChoices.appendChild(button);
       }
     }
 
+    if (activePlan) {
+      const abandon = document.createElement("button");
+      abandon.type = "button";
+      abandon.className = "btn-slim";
+      abandon.dataset.careerAbandon = "true";
+      abandon.textContent = t("career.abandon.action");
+      DOM.careerPlanChoices.appendChild(abandon);
+    }
     if (summary.activeChallenge) {
       const definition = getChallengeDefinition(summary.activeChallenge.id);
       const status = summary.activeChallenge.status;
@@ -3732,18 +3736,32 @@
     });
   }
 
+  function selectCareerPlan(id) {
+    if (!Progression || !careerState || !experienceStarted) return { ok: false, error: "plan-unavailable" };
+    const result = Progression.selectPlan(careerState, id, { now: Date.now() });
+    if (!result || !result.ok) return result || { ok: false, error: "plan-unavailable" };
+    const params = { plan: t(result.plan.nameKey), rank: result.rank };
+    logMessage("log.planSelected", params);
+    setLastAction("feedback.planSelected", params);
+    showEventBanner("feedback.planSelected", "positive", params);
+    updateCareerProgress({ save: false });
+    finishCareerAction();
+    return { ok: true };
+  }
+
   function handleCareerAction(event) {
     if (!Progression || !careerState) return;
+    const abandon = event.target.closest("[data-career-abandon]");
+    if (abandon) {
+      if (confirm(t("career.abandon.confirm")) && Progression.abandonPlan(careerState).ok) {
+        setLastAction("career.abandon.done");
+        finishCareerAction();
+      }
+      return;
+    }
     const planButton = event.target.closest("[data-career-select-plan]");
     if (planButton) {
-      const result = Progression.selectPlan(careerState, planButton.dataset.careerSelectPlan, { now: Date.now() });
-      if (!result || !result.ok) return;
-      const params = { plan: t(result.plan.nameKey), rank: result.rank };
-      logMessage("log.planSelected", params);
-      setLastAction("feedback.planSelected", params);
-      showEventBanner("feedback.planSelected", "positive", params);
-      updateCareerProgress({ save: false });
-      finishCareerAction();
+      selectCareerPlan(planButton.dataset.careerSelectPlan);
       return;
     }
 
@@ -3813,6 +3831,8 @@
     setTextIfChanged(DOM.heroCulture, gameState.resources.culturePoints);
     setTextIfChanged(DOM.opsDocBank, formattedBank);
     setTextIfChanged(DOM.opsDocPs, formattedDocPs);
+    setTextIfChanged(DOM.mobileDocuments, formattedBank);
+    setTextIfChanged(DOM.mobileCadence, formattedDocPs);
     setTextIfChanged(DOM.manualGain, t("stats.manualGainValue", { amount: formatNumber(manualGain) }));
     renderStageStatus(DOCps);
 
@@ -4452,6 +4472,7 @@
       analyticsState.currentRun.contractDocs += docGain;
       analyticsState.currentRun.contractCc += ccGain;
       analyticsState.currentRun.contractsCompleted += 1;
+      window.PEEngagement?.record("first_contract");
       analyticsState.lifetimeObserved.docs += docGain;
       analyticsState.lifetimeObserved.cc += ccGain;
       const contractName = t(result.nameKey);
@@ -5252,6 +5273,166 @@
    * philosophy as __PE_SCENE__: a fresh plain snapshot per call, so the
    * dashboard can never mutate the simulation.
    */
+  function isEmpireMode() {
+    return Boolean(window.__PE_NATIVE__) || new URLSearchParams(location.search).get("experience") === "empire";
+  }
+
+  function adviceGoal() {
+    if (!Progression || !careerState) return null;
+    const plan = careerState.activePlan;
+    if (plan) { const goal = Progression.getRankDefinition(plan.id, plan.rank)?.objectives[plan.stepIndex]; return goal ? { ...goal } : null; }
+    const campaign = careerState.campaigns?.active;
+    if (campaign) {
+      const definition = Progression.CAMPAIGN_DEFINITIONS.find(item => item.id === campaign.id);
+      if (definition?.objectives[campaign.stepIndex]) return { ...definition.objectives[campaign.stepIndex] };
+    }
+    const objective = getInternalObjective();
+    return objective.building ? { buildingId: objective.building.id } : { resource: "ccTotal" };
+  }
+
+  function gameSnapshot() {
+    const economy = buildDashboardSnapshot();
+    const goal = adviceGoal();
+    const recommended = window.PEInvestmentAdvice?.recommend(economy.economics.investments, "objective", goal);
+    const choice = recommended?.row;
+    const resources = {
+      ...gameState.resources,
+      documents: gameState.resources.docBank,
+      totalDocuments: gameState.resources.docTotal,
+      clientConfidence: gameState.resources.ccTotal
+    };
+    const building = choice && gameState.buildings.find(item => item.id === choice.id);
+    return {
+      started: experienceStarted,
+      language: currentLang,
+      resources,
+      rates: { docPerSecond: economy.current.docPerSecond, ccPerSecond: economy.current.ccPerSecond },
+      stats: { ...gameState.stats },
+      career: economy.career,
+      savedCareer: Progression?.serializeCareer(careerState),
+      buildings: gameState.buildings.map(item => {
+        const row = economy.economics.investments.find(row => row.id === item.id);
+        return {
+          id: item.id, name: getBuildingName(item), description: getBuildingDesc(item),
+          quantity: item.quantity, unlocked: Boolean(item.isUnlocked), cost: buildingCost(item),
+          docPerSecond: row?.currentDirectProduction || 0,
+          marginalDocPerSecond: row?.marginalDocPerSecond || 0,
+          canBuy: Boolean(item.isUnlocked && resources.documents >= buildingCost(item)),
+          milestone: getNextMilestone(item.quantity),
+          impact: formatBuildingImpactText(item, 1)
+        };
+      }),
+      upgrades: gameState.upgrades.map(item => ({ id: item.id, name: getUpgradeName(item), description: getUpgradeDesc(item), cost: item.cost, purchased: item.purchased, unlocked: gameState.resources.docTotal >= (item.unlockDocTotal || 0) })),
+      objective: { title: DOM.workOrderName?.textContent || "", description: DOM.workOrderInstruction?.textContent || "", progress: DOM.workOrderProgress ? DOM.workOrderProgress.value / DOM.workOrderProgress.max : 0, nextAction: DOM.workOrderNext?.textContent || "", goal },
+      advice: choice && building ? { id: choice.id, name: getBuildingName(building), cost: choice.currentCost, docGain: choice.marginalDocPerSecond || 0, ccGain: choice.marginalCcPerSecond || 0, canBuy: resources.documents >= choice.currentCost, reason: recommended.reason } : null,
+      canPrestige: canPrestige()
+    };
+  }
+
+  function gameCommand(name, payload = {}) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) payload = {};
+    if (name === "print") {
+      if (!experienceStarted) startExperience();
+      handleClick();
+    }
+    else if (name === "buyBuilding") {
+      const building = gameState.buildings.find(item => item.id === payload.id);
+      if (!building || !building.isUnlocked || gameState.resources.docBank < buildingCost(building)) return { ok: false, error: "unaffordable-or-locked" };
+      if (!experienceStarted) startExperience();
+      return { ok: buyBuilding(payload.id) };
+    }
+    else if (name === "buyUpgrade") return { ok: buyUpgrade(payload.id) };
+    else if (name === "start") startExperience();
+    else if (name === "prestige") return { ok: handlePrestigeClick() };
+    else if (name === "selectPlan") return selectCareerPlan(payload.id);
+    else if (name === "openPanel") {
+      const id = payload.id || "production";
+      if (isEmpireMode() && window.PEEmpireView) window.PEEmpireView.openPanel(id);
+      else window.PEMobileExperience?.openPanel(id);
+    }
+    else if (name === "exportSave") handleExportSave();
+    else if (name === "openImport") handleImportSave();
+    else if (name === "shareCareer") window.PECareerShare?.open();
+    else if (name === "openSettings") openSettingsModal(payload.section);
+    else if (name === "openIncident") openPendingEvent();
+    else return { ok: false, error: "unknown-command" };
+    return { ok: true };
+  }
+
+  function initOfflineControls() {
+    const section = document.getElementById("offlineSettings");
+    if (!section || !window.PEOffline) return;
+    if (isEmpireMode()) { section.hidden = true; return; }
+    const status = document.getElementById("offlineInstallStatus");
+    const update = document.getElementById("applyOfflineUpdate");
+    const refresh = () => {
+      const state = window.PEOffline.getState();
+      status.textContent = t(!state.supported ? "offlineInstall.unavailable" : state.updateReady ? "offlineInstall.updateReady" : state.phase === "ready" ? "offlineInstall.ready" : state.phase === "preparing" ? "offlineInstall.preparing" : state.phase === "error" ? "offlineInstall.error" : "offlineInstall.hint");
+      update.hidden = !state.updateReady;
+      document.getElementById("prepareOffline").disabled = !state.supported || state.phase === "preparing";
+      document.getElementById("checkOfflineUpdate").disabled = !state.supported || state.phase !== "ready";
+      document.getElementById("installGame").disabled = !state.hasReadableSave || state.standalone;
+    };
+    document.getElementById("prepareOffline").addEventListener("click", () => window.PEOffline.prepare());
+    document.getElementById("checkOfflineUpdate").addEventListener("click", () => window.PEOffline.checkForUpdate());
+    update.addEventListener("click", () => window.PEOffline.applyUpdate(() => {
+      return Persistence.save(buildPersistedState()) === true;
+    }));
+    document.getElementById("installGame").addEventListener("click", async () => {
+      const result = await window.PEOffline.requestInstall();
+      if (result.reason === "manual") document.getElementById("safariInstallHelp").hidden = false;
+    });
+    window.addEventListener("pe:offline-state", refresh);
+    refresh();
+  }
+
+  function initProductExperience() {
+    window.PESaveTransfer?.configure({
+      translate: t, locale: () => currentLang, getSave: buildPersistedState,
+      onReplaced() {
+        disablePersistence();
+        try { localStorage.removeItem(DASH_SNAPSHOT_KEY); localStorage.removeItem(ANALYTICS_HISTORY_KEY); } catch {}
+        location.reload();
+      }
+    });
+    window.PECareerShare?.configure({
+      translate: t, locale: () => currentLang,
+      getSnapshot: () => ({ resources: { ...gameState.resources }, buildings: gameState.buildings.map(item => ({ id: item.id, quantity: item.quantity })), docPerSecond: computeDocPerSecond(), career: Progression?.serializeCareer(careerState), started: experienceStarted })
+    });
+    window.PEMobileExperience?.init({ game: window.__PE_GAME__, translate: t });
+    initOfflineControls();
+    window.PEEngagement?.configure({ locale: () => currentLang });
+    const engagement = document.getElementById("engagementConsent");
+    if (engagement && window.PEEngagement) {
+      engagement.checked = window.PEEngagement.isEnabled();
+      engagement.addEventListener("change", () => { engagement.checked = window.PEEngagement.setEnabled(engagement.checked); });
+    }
+    if (experienceStarted) window.PEEngagement?.record("start");
+    document.getElementById("recoverSaveBtn")?.addEventListener("click", () => window.PESaveTransfer?.previewRecovery());
+    document.getElementById("shareCareerBtn")?.addEventListener("click", () => window.PECareerShare?.open());
+    const params = new URLSearchParams(location.search);
+    if (isEmpireMode() || params.has("guide")) {
+      const target = location.hash;
+      if (!experienceStarted) startExperience();
+      else applyExperienceMode("playing", { updateUrl: false });
+      if (params.has("guide")) {
+        const panel = target === "#upgradesPanel" ? "career" : target === "#buildingsPanel" ? "units" : "production";
+        setTimeout(() => window.PEMobileExperience?.openPanel(panel), 50);
+      }
+    }
+    // Actual destinations are filled from the catalog during the site build.
+    document.querySelectorAll("[data-guide-help]").forEach(link => {
+      const localeRoot = currentLang === "fr" ? "/" : "/" + currentLang + "/";
+      if (!link.hasAttribute("data-guide-ready")) link.href = localeRoot + "guides/";
+    });
+  }
+
+  window.__PE_GAME__ = Object.freeze({
+    getSnapshot: gameSnapshot, getSave: buildPersistedState, command: gameCommand,
+    format: formatNumber, translate: t,
+    expandPanel(id) { expandPanelForTarget(document.getElementById(id), { persist: false }); }
+  });
+
   window.__PE_DASH__ = {
     format: formatNumber,
     getSnapshot: buildDashboardSnapshot,

@@ -16,7 +16,11 @@
     onComplete: null,
     onBeforeHighlight: null,
     pendingAutoStart: false,
-    returnFocus: null
+    returnFocus: null,
+    describedTarget: null,
+    previousDescription: null,
+    positionFrame: 0,
+    focusPending: false
   };
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -28,7 +32,18 @@
     state.nextBtn = document.getElementById("tutorialNext");
     state.prevBtn = document.getElementById("tutorialPrev");
     state.skipBtn = document.getElementById("tutorialSkip");
-    document.addEventListener("keydown", trapTutorialTab, true);
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && state.started && !event.defaultPrevented) {
+        event.preventDefault();
+        skip(false);
+      }
+    });
+    // Browser scroll restoration and late page layout can run after the first
+    // highlight. Reconcile from geometry after those lifecycle events.
+    window.addEventListener("load", () => queuePosition());
+    window.addEventListener("pageshow", () => queuePosition());
+    window.addEventListener("resize", () => queuePosition());
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", () => queuePosition());
 
     if (state.nextBtn) {
       state.nextBtn.addEventListener("click", () => advanceStep(1));
@@ -87,11 +102,6 @@
     state.overlay.setAttribute("aria-hidden", "false");
     state.overlay.classList.remove("hidden");
     goToStep(0);
-    requestAnimationFrame(() => {
-      if (state.started && state.nextBtn && state.nextBtn.isConnected) {
-        state.nextBtn.focus({ preventScroll: true });
-      }
-    });
   }
 
   function restart() {
@@ -119,26 +129,6 @@
     if (!state.started) return;
     const nextIndex = state.activeIndex + direction;
     goToStep(nextIndex);
-  }
-
-  function trapTutorialTab(event) {
-    if (event.key !== "Tab" || !state.started) return;
-    const controls = [state.prevBtn, state.nextBtn, state.skipBtn].filter(element => {
-      return element && !element.disabled && element.getClientRects().length > 0;
-    });
-    if (!controls.length) return;
-    const first = controls[0];
-    const last = controls[controls.length - 1];
-    if (!state.overlay.contains(document.activeElement)) {
-      event.preventDefault();
-      (event.shiftKey ? last : first).focus({ preventScroll: true });
-    } else if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus({ preventScroll: true });
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus({ preventScroll: true });
-    }
   }
 
   function restoreFocus() {
@@ -202,14 +192,79 @@
     if (!target) return;
     state.highlightEl = target;
     target.classList.add("tutorial-highlight");
-    if (typeof target.scrollIntoView === "function") {
-      const reduceMotion = document.documentElement.classList.contains("pref-reduce-motion") ||
-        (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    const control = highlightedControl();
+    if (control) {
+      state.describedTarget = control;
+      state.previousDescription = control.getAttribute("aria-describedby");
+      const ids = new Set((state.previousDescription || "").split(/\s+/).filter(Boolean));
+      ids.add("tutorialBody");
+      control.setAttribute("aria-describedby", [...ids].join(" "));
     }
+    if (typeof target.scrollIntoView === "function") {
+      // Instant positioning avoids a smooth scroll racing with reload/history
+      // restoration. The next frame clamps the action above the coach card.
+      target.scrollIntoView({ behavior: "instant", block: "center" });
+    }
+    queuePosition(true);
+  }
+
+  function highlightedControl() {
+    const target = state.highlightEl;
+    if (!target) return null;
+    const controls = "button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled)";
+    if (target.matches(controls)) return target;
+    return target.querySelector("[data-building-btn]:not(:disabled)") || target.querySelector(controls);
+  }
+
+  function positionHighlightedTarget() {
+    if (!state.started || !state.highlightEl || !state.highlightEl.isConnected) return;
+    const target = highlightedControl() || state.highlightEl;
+    const rect = target.getBoundingClientRect();
+    const card = state.overlay.querySelector(".tutorial-card")?.getBoundingClientRect();
+    const header = document.querySelector(".app-header")?.getBoundingClientRect();
+    const viewport = window.visualViewport;
+    const viewportTop = viewport?.offsetTop || 0;
+    const top = Math.max(viewportTop, header?.bottom || 0) + 12;
+    let bottom = viewportTop + (viewport?.height || window.innerHeight) - 12;
+    if (card && rect.left < card.right && rect.right > card.left) bottom = Math.min(bottom, card.top - 12);
+    const height = Math.max(1, bottom - top);
+    let desiredTop = rect.top;
+    if (rect.top < top || rect.height > height) desiredTop = top;
+    else if (rect.bottom > bottom) desiredTop = bottom - rect.height;
+    if (Math.abs(rect.top - desiredTop) > 1) window.scrollBy({ top: rect.top - desiredTop, left: 0, behavior: "instant" });
+  }
+
+  function queuePosition(focus = false) {
+    if (!state.started || !state.highlightEl) return;
+    state.focusPending = state.focusPending || focus;
+    if (state.positionFrame) return;
+    state.positionFrame = requestAnimationFrame(() => {
+      state.positionFrame = 0;
+      positionHighlightedTarget();
+      if (state.focusPending && state.started) {
+        state.focusPending = false;
+        const control = highlightedControl() || state.nextBtn;
+        if (control?.isConnected) control.focus({ preventScroll: true });
+      }
+      // One layout frame also covers restored scroll and the newly revealed
+      // mobile panel. This is bounded; it never follows ordinary user scrolling.
+      state.positionFrame = requestAnimationFrame(() => {
+        state.positionFrame = 0;
+        positionHighlightedTarget();
+      });
+    });
   }
 
   function removeHighlight() {
+    if (state.positionFrame) cancelAnimationFrame(state.positionFrame);
+    state.positionFrame = 0;
+    state.focusPending = false;
+    if (state.describedTarget) {
+      if (state.previousDescription === null) state.describedTarget.removeAttribute("aria-describedby");
+      else state.describedTarget.setAttribute("aria-describedby", state.previousDescription);
+      state.describedTarget = null;
+      state.previousDescription = null;
+    }
     if (state.highlightEl) {
       state.highlightEl.classList.remove("tutorial-highlight");
       state.highlightEl = null;

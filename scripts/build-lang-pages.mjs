@@ -12,6 +12,7 @@
  */
 import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { join } from "node:path";
+import { ARTICLES, articlePath } from "../content/guides/index.mjs";
 import { loadDictionary } from "./i18n-loader.mjs";
 
 const [siteDir, stamp] = process.argv.slice(2);
@@ -22,7 +23,7 @@ if (!siteDir) {
 
 const CANON = "https://papersempire.com";
 const LANGS = ["en", "de", "lb"];
-const CSS_FILES = ["style.css", "site-header.css", "experience-v4.css", "guides.css"];
+const CSS_FILES = ["style.css", "site-header.css", "experience-v4.css", "guides.css", "mobile-experience.css", "empire-view.css"];
 
 const META = {
   en: {
@@ -203,9 +204,17 @@ function markCurrentHomeLanguage(html, lang) {
   );
 }
 
-const rootHtml = readFileSync(join(siteDir, "index.html"), "utf8");
+function guideLinks(html, lang) {
+  return html.replace(/<a([^>]*?)href="[^"]*"([^>]*?)data-guide-help="([^"]+)"([^>]*)>/g, (match, before, between, id, after) => {
+    const article = ARTICLES.find(article => article.id === id);
+    if (!article) throw new Error("Unknown contextual guide: " + id);
+    return `<a${before}href="${articlePath(article, lang)}"${between}data-guide-help="${id}" data-guide-ready="true"${after.replace(/\sdata-guide-ready="true"/g, "")}>`;
+  });
+}
+const rootHtml = guideLinks(readFileSync(join(siteDir, "index.html"), "utf8"), "fr");
 
 function localize(html, lang) {
+  html = guideLinks(html, lang);
   const m = META[lang];
   const dict = loadDictionary(lang);
 
@@ -258,7 +267,7 @@ function localize(html, lang) {
     '<meta property="og:locale:alternate" content="fr_FR">');
 
   // Textes pré-remplis du body traduits (les crawlers sans JS lisent la bonne langue)
-  for (const key of PREFILLED_KEYS) {
+  for (const key of new Set([...PREFILLED_KEYS, ...Object.keys(dict).filter(key => /^(mobile|help|engagement|offline|offlineInstall|advice)\./.test(key))])) {
     const value = dict[key];
     if (!value) continue;
     const re = new RegExp(`(data-i18n="${key.replaceAll(".", "\\.")}"[^>]*>)[^<]*(<)`, "g");
@@ -336,8 +345,8 @@ for (const lang of LANGS) {
   console.log(`${lang}/index.html ok`);
 }
 
+writeFileSync(join(siteDir, "index.html"), stampAssets(rootHtml));
 if (stamp) {
-  writeFileSync(join(siteDir, "index.html"), stampAssets(rootHtml));
   console.log(`index.html estampillé ?v=${stamp}`);
 
   const dashboardPath = join(siteDir, "dashboard", "index.html");

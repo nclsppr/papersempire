@@ -6,6 +6,11 @@ The UI is now split across dedicated HTML, CSS, and JavaScript assets for easier
 
 For a deeper dive into the architecture, commands, and debugging notes see the [developer guide in the source repository](https://github.com/nclsppr/papersempire/blob/main/docs/DOCUMENTATION.md).
 
+The [mobile and offline guide](mobile-offline.md) documents the current code's
+mobile navigation, portable save files, installation and offline limits, public
+learning guides and separate iOS project. [Gameplay measurement](engagement.md)
+is optional and disabled by default; the game and its save remain local.
+
 ## Versioned Change History
 
 Track meaningful milestones in the project:

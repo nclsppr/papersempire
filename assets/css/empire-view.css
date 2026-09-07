@@ -1,0 +1,83 @@
+/* Graphical empire: the game world fills the screen; controls stay at the edges. */
+html.pe-empire { background: #07111f; overscroll-behavior: none; }
+.pe-empire body { overflow: hidden; height: 100dvh; min-height: 0; margin: 0; }
+.pe-empire body > .app-header, .pe-empire body > .app-footer, .pe-empire body > main:not(#empireApp), .pe-empire .operations-deck, .pe-empire [data-landing-only], .pe-empire .empire-roadmap { display: none !important; }
+.empire-app { --empire-ink: #fdf8ec; --empire-muted: #bcced7; --empire-orange: #ed793a; position: fixed; inset: 0; color: var(--empire-ink); background: #7d9d8b; isolation: isolate; font-family: var(--font-body, "Inter", sans-serif); }
+.empire-map { position: absolute; inset: 0; overflow: hidden; background: #e9dec5; }
+.empire-map::before { content: ""; position: absolute; inset: 0 0 auto; height: 32%; background: url('/assets/images/empire/riverside-campus.webp') center top / auto 400% no-repeat; mask-image: linear-gradient(#000 20%, transparent 100%); pointer-events: none; opacity: 0.62; }
+.pe-empire #sceneStage { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; min-height: 0 !important; max-height: none !important; margin: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; overflow: hidden; transform: none !important; opacity: 1 !important; }
+.pe-empire #sceneStage::before, .pe-empire #sceneStage::after, .pe-empire #sceneStage > :not(#cityCanvas) { display: none !important; }
+.pe-empire #cityCanvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; pointer-events: auto !important; touch-action: none; opacity: 1 !important; }
+.empire-top { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 14px; padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 14px max(16px, env(safe-area-inset-left)); background: #07111ff2; }
+.empire-top > img { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 12px; }
+.empire-resources { display: flex; gap: clamp(16px, 6vw, 48px); flex: 1; min-width: 0; margin: 0; }
+.empire-resources dt { color: #bcced7; font-size: 11px; margin-bottom: 3px; }
+.empire-resources dd { margin: 0; font-size: clamp(19px, 5.3vw, 28px); font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.empire-icon-button { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 10px; flex: 0 0 44px; background: #132a3b; color: #fdf8ec; border: 0; border-radius: 12px; cursor: pointer; }
+.empire-icon-button svg, .empire-dock-button svg { width: 24px; height: 24px; }
+.empire-objective { position: absolute; top: calc(max(12px, env(safe-area-inset-top)) + 74px); left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); width: auto; max-width: 520px; margin-inline: auto; padding: 12px 16px; background: #fdf8ec; color: #211b17; border: 0; border-radius: 14px; text-align: left; box-shadow: 0 4px 16px #07111f20; cursor: pointer; }
+.empire-objective strong { display: block; font-size: 15px; line-height: 1.3; }
+.empire-objective span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.35; }
+.empire-map-tools { position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: calc(140px + env(safe-area-inset-bottom)); display: flex; gap: 6px; }
+.empire-map-tools .empire-icon-button { box-shadow: 0 4px 12px #07111f25; }
+.empire-map-hint { position: absolute; bottom: calc(92px + env(safe-area-inset-bottom)); left: 16px; right: 16px; max-width: 380px; margin: 0 auto; padding: 9px 13px; text-align: center; color: #fff8ec; background: #07111fe8; border-radius: 12px; font-size: 12px; line-height: 1.4; pointer-events: none; }
+.empire-incident { position: absolute; left: max(16px, env(safe-area-inset-left)); bottom: calc(140px + env(safe-area-inset-bottom)); min-height: 44px; max-width: min(calc(100vw - 190px), 320px); padding: 12px 16px; border: 0; border-radius: 12px; background: #f9ce73; color: #25160b; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.empire-incident[hidden] { display: none; }
+.empire-save-alert { position: absolute; top: calc(max(12px, env(safe-area-inset-top)) + 165px); left: 16px; right: 16px; padding: 12px; min-height: 44px; color: #fff8ec; background: #923a25; border: 0; border-radius: 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.empire-save-alert[hidden] { display: none; }
+.empire-dock { position: absolute; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 10px max(10px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: #07111f; }
+.empire-dock-button { min-height: 61px; min-width: 0; padding: 7px 3px; color: #d8e5e8; background: transparent; border: 0; border-radius: 13px; display: flex; align-items: center; justify-content: center; gap: 5px; flex-direction: column; font: inherit; cursor: pointer; }
+.empire-dock-button span { font-size: 11px; font-weight: 650; max-width: 100%; overflow-wrap: anywhere; }
+.empire-dock-print { color: #25160b; background: #ed793a; }
+.empire-dock-print:active { background: #ffb277; transform: translateY(1px); }
+.empire-lot-labels { position: absolute; inset: 0; pointer-events: none; }
+.empire-lot { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; min-width: 44px; min-height: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: transparent; color: white; pointer-events: auto; box-shadow: none; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.empire-lot[hidden] { display: none; }
+.empire-lot strong { display: grid; place-items: center; box-sizing: border-box; min-width: 26px; height: 26px; padding-inline: 5px; border: 1px solid #fff7e6; border-radius: 8px; background: #17384b; box-shadow: 0 2px 5px #07111f26; font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1; }
+.empire-lot-affordable:not(.empire-lot-owned) strong { background: #ed793a; color: #25160b; font-size: 21px; }
+.empire-lot-owned { transform: translate(-50%, -8px); }
+.empire-lot-owned strong { min-width: 24px; height: 24px; border-color: #fff9ed; background: #fff5df; color: #163448; font-size: 12px; }
+.empire-lot:active strong { background: #f9ce73; color: #25160b; }
+.empire-scene-unavailable .empire-lot-labels { inset: 35% 70px 25% 24px; display: flex; align-content: center; justify-content: center; flex-wrap: wrap; gap: 14px; overflow-y: auto; }
+.empire-scene-unavailable .empire-lot { position: static; transform: none; }
+.empire-scene-unavailable .empire-lot::after { content: attr(data-name); display: block; font-size: 12px; margin-top: 3px; }
+.empire-scene-unavailable .empire-lot { height: auto; min-height: 60px; width: 145px; padding: 10px; color: #fff8ec; background: #17384b; }
+.empire-sheet { position: fixed; inset: auto 0 0; box-sizing: border-box; width: min(100%, 660px); max-width: 660px; max-height: min(82dvh, 920px); margin: auto auto 0; padding: 0; color: #fdf8ec; background: #0c1b2d; border: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -12px 50px #07111f50; overflow: hidden; }
+.empire-sheet::backdrop { background: #06111c66; }
+.empire-sheet[open] { display: flex; flex-direction: column; }
+.empire-sheet-heading { display: flex; align-items: center; gap: 12px; padding: 20px 20px 12px; flex: 0 0 auto; }
+.empire-sheet-heading h2 { flex: 1; min-width: 0; margin: 0; font-size: 23px; line-height: 1.2; color: #fdf8ec; }
+.empire-sheet-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 20px max(24px, env(safe-area-inset-bottom)); }
+.empire-building-art { display: block; width: min(100%, 300px); height: 175px; object-fit: contain; margin: 0 auto 8px; }
+.empire-owned { text-align: center; color: #e5bb76; margin: 0 0 20px; font-size: 17px; }
+.empire-building-data { margin: 0 0 20px; }
+.empire-building-data > div { display: flex; gap: 16px; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #35516a; }
+.empire-building-data dt { color: #bcced7; font-size: 14px; }
+.empire-building-data dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.empire-buy { display: block; width: 100%; min-height: 54px; border: 0; border-radius: 12px; background: #ed793a; color: #25160b; font: inherit; font-weight: 750; cursor: pointer; }
+.empire-buy:disabled { color: #bacdd7; background: #253e53; cursor: default; }
+.empire-sheet-hint { color: #bcced7; margin: 16px 0 0; font-size: 12px; line-height: 1.5; }
+.empire-menu-item { display: block; width: 100%; padding: 17px 0; text-align: left; border: 0; border-bottom: 1px solid #35516a; background: none; color: #fdf8ec; font: inherit; cursor: pointer; }
+.empire-language { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 14px; }
+.empire-language select { min-width: 150px; max-width: 65%; border: 1px solid #7494a9; border-radius: 10px; padding: 8px 12px; color: #fdf8ec; background: #132a3b; font: inherit; font-size: 16px; }
+.empire-sheet :is(button, select), .pe-empire :is(.event-modal, .settings-modal) button { min-height: 44px; min-width: 44px; }
+.pe-empire .settings-modal .option-row { min-height: 44px; }
+.pe-native label:has(#engagementConsent), .pe-native [data-i18n="engagement.hint"] { display: none !important; }
+.pe-empire .empire-mounted-panel { display: block !important; opacity: 1 !important; transform: none !important; margin: 0 !important; width: 100% !important; max-width: none !important; padding-inline: 0 !important; border: 0 !important; box-shadow: none !important; }
+.empire-mounted-panel .collapsible-panel-body[hidden] { display: block !important; }
+.empire-mounted-panel .building-inspector { position: static !important; }
+.empire-mounted-panel .buildings-list, .empire-mounted-panel .upgrades-list, .empire-mounted-panel .contracts-list { grid-template-columns: minmax(0, 1fr) !important; }
+.empire-sheet .layout-column { display: block; }
+.empire-sheet .card-heading > .card-num, .empire-sheet .panel-toggle { display: none; }
+.pe-empire .event-modal, .pe-empire .settings-modal { z-index: 10000; }
+.empire-app button:focus-visible, .empire-sheet button:focus-visible { outline: 3px solid #f9ce73; outline-offset: 4px; }
+.empire-sheet select:focus-visible { outline: 3px solid #f9ce73; outline-offset: 4px; }
+.empire-app ::selection, .empire-sheet ::selection { background: #ed793a; color: #07111f; }
+.empire-sheet-body { scrollbar-color: #7494a9 #0c1b2d; }
+.pref-large-text .empire-resources dt, .pref-large-text .empire-dock-button span, .pref-large-text .empire-map-hint { font-size: 14px; }
+.pref-large-text .empire-objective span { font-size: 15px; }
+.pref-high-contrast .empire-app { --empire-muted: white; }
+.pref-high-contrast .empire-icon-button, .pref-high-contrast .empire-lot strong { border: 2px solid white; }
+@media (min-width: 800px) { .empire-top { padding-inline: 28px; } .empire-dock { width: 440px; left: 50%; right: auto; transform: translateX(-50%); bottom: 20px; border-radius: 20px; padding: 12px; } .empire-map-hint { bottom: 116px; } .empire-objective { top: 92px; } }
+@media (max-height: 560px) and (orientation: landscape) { .empire-top { width: 330px; right: auto; border-radius: 0 0 16px 0; padding-top: 10px; } .empire-objective { top: 12px; left: 350px; right: 70px; } .empire-dock { width: 360px; left: 50%; right: auto; transform: translateX(-50%); } .empire-map-hint { display: none; } .empire-map-tools { bottom: 20px; } }
+@media (prefers-reduced-motion: reduce) { .empire-app *, .empire-sheet * { scroll-behavior: auto !important; } }

@@ -24,9 +24,11 @@
  */
 (function (root, factory) {
   const api = factory();
-  if (typeof module !== "undefined" && module.exports) {
-    module.exports = api;
-  } else {
+  const commonJS = typeof module === "object" && module !== null && module.exports;
+  if (commonJS) module.exports = api;
+  if (typeof window !== "undefined") {
+    window.ProgressionModule = api;
+  } else if (!commonJS) {
     root.ProgressionModule = api;
   }
 })(typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : globalThis, function () {
@@ -618,6 +620,14 @@
       attempt: 1
     };
     return { ok: true, plan: available.plan, rank: available.rank };
+  }
+
+  function abandonPlan(career) {
+    if (!career || !career.activePlan) return { ok: false, error: "no-active-plan" };
+    const previousId = career.activePlan.id;
+    if (career.challenges.active) failActiveChallenge(career, "plan-abandoned");
+    career.activePlan = null;
+    return { ok: true, previousId };
   }
 
   function buildingQuantity(context, buildingId) {
@@ -1215,6 +1225,7 @@
     getRankDefinition,
     getAvailablePlans,
     selectPlan,
+    abandonPlan,
     getPlanStatus,
     isPlanReady,
     getAvailableChallenges,
