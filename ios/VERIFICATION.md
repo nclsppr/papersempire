@@ -5,7 +5,9 @@ prototype WebKit antérieur ne valent pas comme validation de cette version.
 
 ## Résultats obtenus
 
-- Compilation du simulateur avec Xcode 26.6 et SDK iOS 26.5 réussie.
+- Compilation du simulateur avec Xcode 26.6 et SDK iOS 26.5 réussie ; signature
+  locale ad hoc vérifiée avec `codesign --verify --deep --strict`, sans équipe
+  Apple. Le script de compilation effectue maintenant cette vérification.
 - 112 assertions exécutées dans le véritable JavaScriptCore : règles communes,
   absence de globals navigateur, sauvegardes portables V3, aperçu/annulation,
   remplacement atomique, récupération des dernières actions, échecs d’écriture,
@@ -26,20 +28,26 @@ prototype WebKit antérieur ne valent pas comme validation de cette version.
 
 ## Essais restant à terminer
 
-Une erreur de détection de l’outil CUA a interrompu le contrôle visuel pendant
-le sélecteur Fichiers. Le Mac n’était pas verrouillé ; l’accès au simulateur a
-été rétabli après réinitialisation de CUA. Le fichier synthétique de 300 unités
-n’a pas encore été confirmé dans la nouvelle interface native. L’import/export
-dans les deux sens est validé
-par les tests du codec ; son parcours complet à travers les interfaces reste
-à confirmer pour cette version.
+Le Mac n’était pas verrouillé : le message initial de l’outil CUA était erroné.
+Le contrôle visuel reste interrompu par un problème de l’environnement du
+simulateur. Un redémarrage de CoreSimulator a permis un lancement du processus
+de l’application sur l’iPad dédié. Après réouverture de Simulator, CUA a de
+nouveau affiché l’écran d’accueil iOS, mais le lancement suivant s’est bloqué.
+Les échantillons de diagnostic situent alors les services iOS dans le chargement
+du cache partagé de bibliothèques (`dyld_sim`/`mmap`) ; cela ne constitue pas
+une validation visuelle du jeu ni une cause racine définitivement établie.
+
+Le fichier synthétique de 300 unités n’a pas encore été confirmé dans la
+nouvelle interface native. L’import/export dans les deux sens est validé par
+les tests du codec ; son parcours complet à travers les interfaces reste à
+confirmer pour cette version.
 
 - Empire avancé sur iPhone et iPad : captures et revue visuelle.
 - Mode sombre, grand texte, gestes et VoiceOver dans les vues natives.
 - Alertes de confirmation depuis une feuille, annulation et erreurs d’import.
 - Partage iOS, réimport du fichier dans le site et récupération via Fichiers.
 - Essais sur iPhone physique : fluidité, température, mémoire et arrière-plan.
-- Signature, archive et distribution TestFlight/App Store.
+- Signature pour appareil, archive et distribution TestFlight/App Store.
 
 Le simulateur n’établit aucune mesure de fluidité sur appareil. Cette branche
 reste un candidat en PR brouillon ; elle n’est ni fusionnée ni publiée.

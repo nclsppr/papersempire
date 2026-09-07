@@ -28,6 +28,11 @@ compilation utilise `/Applications/Xcode.app` par `DEVELOPER_DIR`, sans modifier
 la sélection Xcode du système. Node.js doit être accessible dans le PATH,
 `/opt/homebrew/bin` ou `/usr/local/bin`.
 
+Le paquet du simulateur reçoit une signature locale ad hoc, vérifiée après la
+compilation. Elle ne demande aucune équipe Apple et ne permet pas la distribution
+sur appareil ou dans l’App Store. Compilation et signature ne remplacent pas
+un test de lancement.
+
 `build-ios-assets.mjs` copie uniquement la liste explicite des règles et
 traductions dans `GameAssets`, puis les images PNG dans `NativeAssets`. Les
 fichiers JavaScript restent identiques aux sources du site. `runtime.json`
