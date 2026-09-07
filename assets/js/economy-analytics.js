@@ -1,9 +1,11 @@
 (function (root, factory) {
   const api = factory();
 
-  if (typeof module !== "undefined" && module.exports) {
-    module.exports = api;
-  } else {
+  const commonJS = typeof module === "object" && module !== null && module.exports;
+  if (commonJS) module.exports = api;
+  if (typeof window !== "undefined") {
+    window.EconomyAnalytics = api;
+  } else if (!commonJS) {
     root.EconomyAnalytics = api;
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
@@ -821,7 +823,8 @@
   };
 });
 
-if (typeof module !== "undefined" && module.exports && require.main === module) {
+if (typeof window === "undefined" && typeof module === "object" && module !== null && module.exports &&
+    typeof require === "function" && require.main === module) {
   const assert = require("node:assert/strict");
   const analytics = module.exports;
   const sampleState = {

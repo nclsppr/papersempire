@@ -2,7 +2,8 @@
 
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { resolve } from "node:path";
 import {
   ARTICLES,
   AUTHOR,
@@ -14,11 +15,11 @@ import {
 } from "../content/guides/index.mjs";
 
 const rootDir = new URL("../", import.meta.url);
-const siteDir = new URL("../site/", import.meta.url);
+const siteDir = process.argv[2] ? pathToFileURL(resolve(process.argv[2]) + "/") : new URL("../site/", import.meta.url);
 const readRoot = path => readFileSync(new URL(path, rootDir), "utf8");
 const readSite = path => readFileSync(new URL(path, siteDir), "utf8");
 const localeCodes = Object.keys(LOCALES);
-const HOME_AND_HUB_LASTMOD = "2026-08-31";
+const HOME_AND_HUB_LASTMOD = "2026-09-07";
 const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
 const AUTHOR_ID = `${AUTHOR.url}#person`;
 const SEO_FALLBACK_KEYS = Object.freeze([
@@ -546,7 +547,7 @@ function validateHome(page, html) {
   const dict = loadDictionary(page.lang);
   assert.equal(dict["app.metaTitle"], page.title,
     `${page.lang} runtime title must match the static head`);
-  assertVersionedStyles(html, ["style.css", "site-header.css", "experience-v4.css"], page.url);
+  assertVersionedStyles(html, ["style.css", "site-header.css", "experience-v4.css", "mobile-experience.css", "empire-view.css"], page.url);
   for (const key of ["nav.guides", "nav.guidesShort"]) {
     const renderedGuideLabel = html.match(new RegExp(`data-i18n="${key.replaceAll(".", "\\.")}"[^>]*>([^<]+)<`))?.[1];
     assert.equal(renderedGuideLabel, dict[key],
@@ -676,6 +677,42 @@ function validateArticle(page, html) {
     `${page.url} must visibly credit Nicolas Pieper`);
   assert.ok((html.match(/<section\b/gi) || []).length >= 4,
     `${page.url} must provide substantial structured content`);
+  const play = findTag(html, "a", { "data-guide-play": page.article.id });
+  const playUrl = new URL(play.attrs.href, page.url);
+  assert.equal(playUrl.origin, SITE_ORIGIN, `${page.url} must return to the canonical game`);
+  assert.equal(playUrl.pathname, LOCALES[page.lang].homePath,
+    `${page.url} must return to the same language`);
+  if (page.article.playTarget) {
+    assert.equal(playUrl.searchParams.get("guide"), page.article.id,
+      `${page.url} must retain its guide context`);
+    assert.equal(playUrl.hash, `#${page.article.playTarget}`,
+      `${page.url} must target its relevant game panel`);
+    assert.ok(tags(readRoot("index.html"), "div").concat(tags(readRoot("index.html"), "section"))
+      .some(tag => tag.attrs.id === page.article.playTarget),
+      `${page.url} targets a missing game panel`);
+    assert.ok(page.article.translations[page.lang].playLabel,
+      `${page.url} needs a localized action label`);
+  }
+  // Verify the editorial link graph, including the links between practical guides.
+  for (const anchor of tags(html, "a")) {
+    if (!anchor.attrs.href?.startsWith("/")) continue;
+    const target = new URL(anchor.attrs.href, page.url);
+    if (!target.pathname.includes("/guides/")) continue;
+    assert.ok(PAGES.some(candidate => candidate.url === `${target.origin}${target.pathname}`),
+      `${page.url} references an unknown guide ${target.pathname}`);
+  }
+  if (page.article.id === "investment-example") {
+    assert.equal((html.match(/data-investment-example="synthetic"/g) || []).length, 1,
+      `${page.url} must label exactly one constructed investment example`);
+    const example = html.match(/<div data-investment-example="synthetic">[\s\S]*?<\/table>/)?.[0];
+    assert.ok(example, `${page.url} must render its investment table without JavaScript`);
+    for (const [before, after, cost] of [[1, 2, 17], [9, 10, 52], [24, 25, 429]]) {
+      assert.match(example, new RegExp(`<th scope="row">${before} → ${after}</th><td>${cost}</td>`),
+        `${page.url} must use the shared geometric cost at quantity ${before}`);
+    }
+    assert.equal((example.match(/<th scope="col">/g) || []).length, 5,
+      `${page.url} must distinguish cost, marginal output, waiting and payback`);
+  }
 
   const items = jsonLdItems(html);
   const article = items.find(item => item["@type"] === "Article");

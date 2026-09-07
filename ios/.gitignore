@@ -1,0 +1,4 @@
+WebAssets/
+build/
+**/xcuserdata/
+*.xcuserstate

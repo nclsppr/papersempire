@@ -208,6 +208,8 @@
     ]
   }
 </script>
+  <link rel="stylesheet" href="/assets/css/mobile-experience.css">
+  <link rel="stylesheet" href="/assets/css/empire-view.css">
 </head>
 <body class="experience-shell">
 <a class="skip-link" href="#heroTitle" data-i18n="actions.skipToContent">Aller au contenu principal</a>
@@ -510,6 +512,7 @@
 </section>
 
 <div class="app operations-deck" data-game-surface>
+  <div class="mobile-readout" aria-label="Production"><span><strong id="mobileDocuments">0</strong> DOC</span><span id="mobileCadence">0 DOC/s</span></div>
   <header class="operations-masthead reveal-target">
     <div class="operations-title-block">
       <p class="operations-eyebrow" data-i18n="operations.eyebrow">POSTE DE COMMANDE · ATELIER 01</p>
@@ -588,6 +591,13 @@
         <span data-work-order-incident-label></span>
       </button>
       <span class="sr-only" id="pendingEventHint" data-work-order-incident-hint></span>
+    </div>
+    <div class="next-purchase">
+      <p id="nextPurchaseText" data-i18n="mobile.noPurchase">Imprime tes premiers documents pour mettre ton atelier en route.</p>
+      <div class="next-purchase-actions">
+        <button type="button" class="btn-slim" id="nextPurchaseButton" data-i18n="mobile.buySuggested">Installer cette unité</button>
+        <button type="button" class="btn-slim" id="nextPurchaseDetails" data-i18n="mobile.compare">Comparer les unités</button>
+      </div>
     </div>
   </section>
 
@@ -729,11 +739,12 @@
         </div>
       </aside>
       <div class="buildings-list" id="buildingsList"></div>
+      <a class="context-help" href="/guides/" data-guide-help="first-automation" data-i18n="help.automation">Réussir sa première automatisation</a>
     </div>
   </section>
 
   <div class="layout-column strategy-column" id="upgradesPanel">
-    <section class="card strategy-card reveal-target collapsible-panel" data-collapsible-panel="strategy" aria-labelledby="upgradesPanelTitle">
+    <section id="strategyPanel" class="card strategy-card reveal-target collapsible-panel" data-collapsible-panel="strategy" aria-labelledby="upgradesPanelTitle">
       <header class="panel-heading">
         <span class="panel-index" aria-hidden="true">03</span>
         <div>
@@ -751,6 +762,8 @@
         </div>
       </header>
       <div class="collapsible-panel-body" id="strategyPanelBody" data-panel-body="strategy">
+      <a class="context-help" href="/guides/" data-guide-help="resources-career-plans" data-i18n="help.plans">Comprendre DOC, CC et les Plans</a>
+      <a class="context-help" href="/guides/" data-guide-help="first-reorganization" data-i18n="help.prestige">Quand se réorganiser ?</a>
       <div class="section">
         <div class="upgrades-list" id="upgradesList"></div>
       </div>
@@ -844,6 +857,7 @@
       </div>
     </header>
     <div class="collapsible-panel-body" id="progressPanelBody" data-panel-body="progress">
+      <div class="career-share-actions"><button type="button" id="shareCareerBtn" class="btn-slim" data-i18n="mobile.share">Partager mon empire</button></div>
       <div class="achievements-list" id="achievementsList"></div>
     </div>
   </section>
@@ -897,7 +911,8 @@
 </div>
 </dl>
     <p class="offline-hint" data-i18n="offline.hint">L'équipe de nuit tourne à 50 % du rendement, plafonné à 8 heures.</p>
-    <div class="offline-actions">
+    <p id="offlinePurchaseHint" hidden></p>
+      <div class="offline-actions">
       <button class="click-button" id="offlineResume" type="button" data-i18n="offline.resume">Reprendre le travail</button>
       <button class="btn-slim" id="offlineObjective" type="button" data-i18n="offline.viewObjective">Voir le dossier du moment</button>
     </div>
@@ -959,18 +974,36 @@
         <input type="checkbox" id="toggleScene">
         <span data-i18n="settings.scene"></span>
 </label>
+      <label class="option-row"><input type="checkbox" id="engagementConsent"><span data-i18n="engagement.optIn">Partager des mesures limitées pour améliorer le jeu</span></label>
+      <p class="small" data-i18n="engagement.hint">Facultatif. Étapes de jeu, langue et durées ; aucun contenu de sauvegarde. Tu peux désactiver ce partage à tout moment.</p>
       <button class="btn-slim" type="button" id="restartTutorialBtn" data-i18n="settings.restartTutorial"></button>
 </div>
     <div class="settings-section hidden" id="settingsPanelSave" data-settings-section="save" role="tabpanel" aria-labelledby="settingsTabSave">
       <p class="small" data-i18n="settings.saveHint"></p>
       <button class="btn-slim" type="button" id="exportSaveBtn" data-i18n="actions.exportSave"></button>
       <button class="btn-slim" type="button" id="importSaveBtn" data-i18n="actions.importSave"></button>
+      <button class="btn-slim" type="button" id="recoverSaveBtn" data-i18n="mobile.recover">Récupérer la sauvegarde précédente</button>
+      <p id="saveHealth" class="save-health" role="status" data-i18n="mobile.saveHealthy">Sauvegarde locale disponible.</p>
+      <p id="saveTransferStatus" role="status"></p>
+      <section id="offlineSettings" aria-labelledby="offlineInstallTitle">
+        <h3 id="offlineInstallTitle" data-i18n="offlineInstall.title">Jouer hors ligne</h3>
+        <p id="offlineInstallStatus" role="status" data-i18n="offlineInstall.hint">Prépare le jeu avec une connexion, puis retrouve cet atelier sans réseau.</p>
+        <div class="transfer-actions">
+          <button class="btn-slim" id="prepareOffline" type="button" data-i18n="offlineInstall.prepare">Préparer le jeu hors ligne</button>
+          <button class="btn-slim" id="installGame" type="button" data-i18n="offlineInstall.install">Installer le jeu</button>
+          <button class="btn-slim" id="checkOfflineUpdate" type="button" data-i18n="offlineInstall.checkUpdate">Vérifier les mises à jour</button>
+          <button class="btn-slim" id="applyOfflineUpdate" type="button" data-i18n="offlineInstall.applyUpdate" hidden>Enregistrer et recharger</button>
+        </div>
+        <p id="safariInstallHelp" data-i18n="offlineInstall.safariSteps" hidden>Dans Safari, ouvre Partager, puis « Sur l’écran d’accueil ».</p>
+        <p class="small" data-i18n="offlineInstall.transferWarning">Sur iPhone, exporte ton fichier .papersempire avant d’ajouter le jeu à l’écran d’accueil, puis importe-le dans l’app.</p>
+        <p class="small" data-i18n="offlineInstall.scope">Le cache prépare le jeu mais ne sauvegarde pas ta partie.</p>
+      </section>
       <button class="btn-slim danger" type="button" id="resetSaveBtn" data-i18n="actions.resetSave"></button>
 </div>
 </div>
 </div>
 
-<div class="tutorial-overlay hidden" id="tutorialOverlay" role="dialog" aria-modal="true" aria-live="polite" aria-hidden="true" inert>
+<div class="tutorial-overlay hidden" id="tutorialOverlay" role="region" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody" aria-live="polite" aria-hidden="true" inert>
   <div class="tutorial-card">
     <div class="tutorial-step-label" id="tutorialStep"></div>
     <h3 id="tutorialTitle">Didacticiel</h3>
@@ -983,6 +1016,18 @@
 </div>
 </div>
 
+
+<aside class="save-conflict" id="saveConflict" aria-labelledby="saveConflictTitle" hidden>
+  <div class="save-conflict-copy" role="alert">
+    <strong id="saveConflictTitle" data-i18n="saveConflict.title">La sauvegarde a changé</strong>
+    <p id="saveConflictBody" data-i18n="saveConflict.body">Cette partie ne peut plus être enregistrée. Exporte-la pour la conserver, puis recharge la sauvegarde actuelle. Recharger remplacera la partie affichée.</p>
+  </div>
+  <div class="save-conflict-actions">
+    <button type="button" id="saveConflictExport" data-i18n="saveConflict.export">Exporter cette partie</button>
+    <button type="button" id="saveConflictReload" data-i18n="saveConflict.reload">Recharger</button>
+  </div>
+  <p class="save-conflict-status" id="saveConflictStatus" role="status" hidden></p>
+</aside>
 
 <footer class="app-footer">
   <div class="footer-conveyor" aria-hidden="true">
@@ -1029,9 +1074,21 @@
   </div>
 </footer>
 
+<nav class="mobile-game-nav" aria-label="Navigation du jeu" data-i18n-aria-label="mobile.navigation">
+  <a href="#printStation" data-mobile-panel="production" aria-current="page"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-press"></use></svg><span data-i18n="mobile.factory">Usine</span></a>
+  <a href="#buildingsPanel" data-mobile-panel="units"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-factory"></use></svg><span data-i18n="mobile.units">Unités</span></a>
+  <a href="#dispatchPanel" data-mobile-panel="dossiers"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-journal"></use></svg><span data-i18n="mobile.dossiers">Dossiers</span></a>
+  <a href="#strategyPanel" data-mobile-panel="career"><svg class="pe-icon" aria-hidden="true"><use href="#pe-icon-trophy"></use></svg><span data-i18n="mobile.career">Carrière</span></a>
+</nav>
   <script src="/assets/js/asset-url.js" defer></script>
   <script src="/assets/i18n/fr.js" defer></script>
   <script src="/assets/js/persistence.js" defer></script>
+  <script src="/assets/js/save-transfer.js" defer></script>
+  <script src="/assets/js/career-share.js" defer></script>
+  <script src="/assets/js/investment-advice.js" defer></script>
+  <script src="/assets/js/mobile-experience.js" defer></script>
+  <script src="/assets/js/engagement.js" defer></script>
+  <script src="/assets/js/offline-install.js" defer></script>
   <script src="/assets/js/achievements.js" defer></script>
   <script src="/assets/js/endgame.js" defer></script>
   <script src="/assets/js/events.js" defer></script>
@@ -1050,7 +1107,8 @@
   <script src="/assets/js/scene/building-recipes.js" defer></script>
   <script src="/assets/js/scene/scene-effects.js" defer></script>
   <script src="/assets/js/scene/city-scene.js" defer></script>
-  <script src="/assets/js/scene/scene-loader.js" defer></script>
   <script src="/assets/js/app.js" defer></script>
+  <script src="/assets/js/empire-view.js" defer></script>
+  <script src="/assets/js/scene/scene-loader.js" defer></script>
 </body>
 </html>

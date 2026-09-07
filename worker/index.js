@@ -1,3 +1,5 @@
+import { handleEngagement } from "./engagement.mjs";
+
 const CANONICAL_HOSTNAME = "papersempire.com";
 const WWW_HOSTNAME = `www.${CANONICAL_HOSTNAME}`;
 const HOME_PATH_BY_LANGUAGE = Object.freeze({
@@ -116,6 +118,9 @@ function withSecurityHeaders(response, url, robots = null) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/engagement") {
+      return withSecurityHeaders(await handleEngagement(request, env), url, "noindex, nofollow");
+    }
     const redirectTarget = canonicalTarget(request);
     if (redirectTarget) {
       return withSecurityHeaders(Response.redirect(redirectTarget, 308), url);

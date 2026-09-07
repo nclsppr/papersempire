@@ -1,6 +1,8 @@
 # Repository guidelines
 
-Papers Empire is a static browser game. It has no application bundler or backend.
+Papers Empire is a static browser game without an application bundler. Simulation
+and saves remain local. The Cloudflare Worker serves assets and a separate,
+optional gameplay-measurement endpoint; it does not host game state.
 
 ## Repository map
 
@@ -68,6 +70,8 @@ Test visual changes at desktop and mobile widths. Check normal and reduced motio
 - `docs/RELEASE_NOTES.md` is the canonical changelog.
 - `docs/ROADMAP.md` contains current and planned product work.
 - `docs/architecture.md` documents runtime behavior.
+- `docs/mobile-offline.md` documents mobile views, save-file transfers, installation and offline limits.
+- `docs/engagement.md` documents optional gameplay measurement and its data boundary.
 - `docs/game-design.md` documents mechanics.
 - `docs/balance.md` documents the economy and Data Science Zone assumptions.
 - `docs/design-system.md` documents interface and brand rules.

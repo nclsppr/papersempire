@@ -75,6 +75,41 @@
   let requestedSceneMode = null;
   let firstFrameRendered = false;
   let contextUnavailable = false;
+  const empireMode = !!window.__PE_NATIVE__ || (typeof location !== "undefined" && typeof URLSearchParams !== "undefined" && new URLSearchParams(location.search).get("experience") === "empire");
+  let manualEmpireView = false;
+  let suppressMapClick = false;
+  let empirePadGroups = {};
+  const empireTextures = new Map();
+  const EMPIRE_COLUMN_GAP = 5.2;
+  const EMPIRE_ROW_GAP = 11.8;
+  const EMPIRE_MIN_ZOOM = 0.55;
+  function empireColumns() {
+    if (!stageEl) return 3;
+    const width = stageEl.clientWidth, height = stageEl.clientHeight;
+    if (width > height * 1.1) return 6;
+    return height < 720 || width > 700 ? 4 : 3;
+  }
+  function sceneLot(id) {
+    const lot = window.CityLayout?.LOTS[id];
+    if (!lot || !empireMode) return lot;
+    const ids = window.CityLayout.BUILDING_IDS;
+    const index = ids.indexOf(id), columns = empireColumns();
+    const across = (index % columns - (columns - 1) / 2) * EMPIRE_COLUMN_GAP;
+    const depth = (Math.floor(index / columns) - (Math.ceil(ids.length / columns) - 1) / 2) * EMPIRE_ROW_GAP;
+    // Arrange real lots in the camera's ground-plane axes. A portrait campus
+    // grows down the screen instead of compressing twelve cut-outs into a strip.
+    return { ...lot,
+      x: across * Math.sin(BASE_AZIMUTH) + depth * Math.cos(BASE_AZIMUTH),
+      z: -across * Math.cos(BASE_AZIMUTH) + depth * Math.sin(BASE_AZIMUTH)
+    };
+  }
+  function empireBaseSize(lot) {
+    return Math.min(3.75, Math.max(3.15, lot.w + 0.95));
+  }
+  function empireSpriteSize(lot, quantity) {
+    const stage = quantity >= 25 ? 3 : quantity >= 10 ? 2 : 1;
+    return empireBaseSize(lot) * (1 + (stage - 1) * 0.11 + Math.min(9, Math.max(0, quantity - 1)) * 0.009);
+  }
   const decorativeTextures = new Set();
 
   // Camions de livraison (roadmap 0.18) : InstancedMesh plafonnés, animés
@@ -181,7 +216,7 @@
       y,
       view.z + r * Math.sin(azimuth)
     );
-    const targetY = isMobile && sceneMode === "landing" ? 2.65 : 0.6;
+    const targetY = !empireMode && isMobile && sceneMode === "landing" ? 2.65 : 0.6;
     camera.lookAt(view.x, targetY, view.z);
     if (camera.zoom !== view.zoom) {
       camera.zoom = view.zoom;
@@ -196,6 +231,54 @@
    */
   function updateViewTarget() {
     const layout = window.CityLayout;
+    if (empireMode) {
+      if (manualEmpireView) return;
+      const snapshot = window.__PE_SCENE__?.getSnapshot();
+      const occupied = (snapshot?.buildings || []).filter(b => b.quantity > 0);
+      const next = (snapshot?.buildings || []).find(b => b.unlocked && !b.quantity);
+      const visible = occupied.concat(next ? [next] : []);
+      if (!visible.length) visible.push({ id: "reproOperator", quantity: 0 });
+      const tilt = Math.atan2(CAMERA_DISTANCE * Math.sin(ELEVATION) - 0.6, CAMERA_DISTANCE * Math.cos(ELEVATION));
+      const sin = Math.sin(BASE_AZIMUTH), cos = Math.cos(BASE_AZIMUTH);
+      const sinTilt = Math.sin(tilt), cosTilt = Math.cos(tilt);
+      let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+      function include(x, y, z, size) {
+        const u = x * sin - z * cos;
+        const v = -(x * cos + z * sin) * sinTilt + y * cosTilt;
+        minU = Math.min(minU, u - size / 2); maxU = Math.max(maxU, u + size / 2);
+        minV = Math.min(minV, v - size * 0.13); maxV = Math.max(maxV, v + size * 0.87);
+      }
+      visible.forEach(building => {
+        const lot = sceneLot(building.id); if (!lot) return;
+        include(lot.x, 0.14, lot.z, building.quantity ? empireSpriteSize(lot, building.quantity) : 1.7);
+        const stage = building.quantity >= 25 ? 3 : building.quantity >= 10 ? 2 : 1;
+        for (let i = 1; i < stage; i++) include(lot.x - 0.62 * i, 0.14, lot.z + 0.57 * i, empireBaseSize(lot) * 0.47);
+      });
+      const width = stageEl?.clientWidth || 390, height = stageEl?.clientHeight || 844;
+      const canvasTop = stageEl?.getBoundingClientRect().top || 0;
+      const landscape = width > height * 1.1;
+      let top = landscape ? 96 : 172, bottom = height - (landscape ? 100 : 164);
+      const objective = document.querySelector(".empire-objective")?.getBoundingClientRect();
+      if (objective?.height) top = objective.bottom - canvasTop + 18;
+      const lowerControls = [".empire-map-tools", ".empire-map-hint", ".empire-dock", ".empire-incident"]
+        .map(selector => document.querySelector(selector)?.getBoundingClientRect())
+        .filter(rect => rect?.height);
+      if (lowerControls.length) bottom = Math.min(...lowerControls.map(rect => rect.top - canvasTop)) - 30;
+      // Long translations and accessibility text must retain a usable map.
+      top = Math.max(24, Math.min(top, height * 0.46));
+      bottom = Math.max(top + height * 0.28, Math.min(bottom, height - 72));
+      const spanU = Math.max(4.7, maxU - minU), spanV = Math.max(4.7, maxV - minV);
+      const pixelsAtZoomOne = width / Math.max(1, camera.right - camera.left);
+      const fittedPixels = Math.min((width - 36) / spanU, (bottom - top) / spanV);
+      viewTarget.zoom = Math.max(EMPIRE_MIN_ZOOM, Math.min(3.4, fittedPixels / pixelsAtZoomOne));
+      const pixels = pixelsAtZoomOne * viewTarget.zoom;
+      const centreU = (minU + maxU) / 2;
+      const centreV = (minV + maxV) / 2 - (height / 2 - (top + bottom) / 2) / pixels;
+      const depth = (0.6 * cosTilt - centreV) / sinTilt;
+      viewTarget.x = centreU * sin + depth * cos;
+      viewTarget.z = -centreU * cos + depth * sin;
+      return;
+    }
     let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
     let any = false;
     Object.keys(lotGroups).forEach(id => {
@@ -978,6 +1061,26 @@
   function buildDecorativeWorld(THREE) {
     decorativeWorld = new THREE.Group();
     decorativeWorld.name = "decorative-world";
+    if (empireMode) {
+      // The native world is illustrated 2.5D. Its open ivory ground deliberately
+      // has no finite slab edge or low-poly scenery competing with the artwork.
+      const roadMaterial = new THREE.MeshBasicMaterial({ color: 0xcdbb98 });
+      const insetMaterial = new THREE.MeshBasicMaterial({ color: 0xe8dcc5 });
+      const columns = empireColumns(), rows = Math.ceil(window.CityLayout.BUILDING_IDS.length / columns);
+      const lanes = Array.from({ length: rows - 1 }, (_, row) => ({
+        x: 0, y: 0.005, z: (row + 0.5 - (rows - 1) / 2) * EMPIRE_ROW_GAP,
+        w: (columns - 1) * EMPIRE_COLUMN_GAP + 8, h: 0.015, d: 0.40
+      }));
+      lanes.push({ x: (columns - 1) * EMPIRE_COLUMN_GAP / 2 + 3.2, y: 0.005, z: 0,
+        w: 0.40, h: 0.015, d: (rows - 1) * EMPIRE_ROW_GAP + 12 });
+      addBoxBatch(THREE, decorativeWorld, roadMaterial, lanes, "empire-delivery-lanes");
+      addBoxBatch(THREE, decorativeWorld, insetMaterial,
+        lanes.slice(0, -1).map(lane => ({ ...lane, y: 0.018, h: 0.01, d: 0.30 })), "empire-delivery-inset");
+      decorativeWorld.rotation.y = Math.PI / 2 - BASE_AZIMUTH;
+      decorativeWorld.userData.empireColumns = columns;
+      scene.add(decorativeWorld);
+      return;
+    }
     const theme = worldTheme();
     const palette = theme && theme.createPalette ? theme.createPalette(THREE) : {
       ground: scenicMaterial(THREE, 0x66866c, { roughness: 0.98 }),
@@ -1013,8 +1116,8 @@
       });
     }
     buildGround(THREE, decorativeWorld, palette);
-    buildPrintworksLandmark(THREE, decorativeWorld, palette);
-    if (palette.cloud) {
+    if (!empireMode) buildPrintworksLandmark(THREE, decorativeWorld, palette);
+    if (palette.cloud && !empireMode) {
       buildHorizon(THREE, decorativeWorld, palette);
     }
     scene.add(decorativeWorld);
@@ -1235,6 +1338,7 @@
   }
 
   function truckCountFor(totalBuildings) {
+    if (empireMode && totalBuildings === 0) return 0;
     // Two supplier/service vehicles make the campus feel inhabited before the
     // first purchase without claiming player production. Owned buildings still
     // grow the fleet using the exact same capped progression as before.
@@ -1310,8 +1414,8 @@
     const layout = window.CityLayout;
     const recipes = window.BuildingRecipes;
     layout.BUILDING_IDS.forEach(id => {
-      const lot = layout.LOTS[id];
-      const group = recipes.build(THREE, id);
+      const lot = sceneLot(id);
+      const group = empireMode ? buildEmpireLot(THREE, id, lot) : recipes.build(THREE, id);
       if (!group) return;
       configureBuildingShadows(group);
       group.position.set(lot.x, 0, lot.z);
@@ -1319,7 +1423,57 @@
       scene.add(group);
       lotGroups[id] = group;
       lotCopies[id] = [];
+      if (empireMode) {
+        const pad = new THREE.Mesh(new THREE.RingGeometry(0.65, 0.73, 32), new THREE.MeshBasicMaterial({ color: 0xef873f, side: THREE.DoubleSide, transparent: true, opacity: 0.9, depthWrite: false }));
+        pad.rotation.x = -Math.PI / 2;
+        pad.position.set(lot.x, 0.15, lot.z);
+        pad.userData.buildingId = id;
+        pad.visible = false;
+        scene.add(pad);
+        empirePadGroups[id] = pad;
+      }
     });
+  }
+
+  /** Painted cut-outs share a stable isometric camera and the real lot layout.
+   * Expansion is deterministic at 10/25 units; labels always carry exact counts. */
+  function buildEmpireLot(THREE, id, lot) {
+    const group = new THREE.Group(); group.userData.buildingId = id;
+    const texture = new THREE.TextureLoader().load(assetUrl("/assets/images/building-" + id + "-v4.webp"), () => wakeScene());
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    empireTextures.set(id, texture);
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, alphaTest: 0.025, depthWrite: false, toneMapped: false, fog: false });
+    const sprite = new THREE.Sprite(material);
+    const base = empireBaseSize(lot);
+    sprite.center.set(0.5, 0.13); sprite.position.y = 0.14; sprite.scale.set(base, base, 1);
+    sprite.name = "empire-illustration"; group.add(sprite);
+    const platform = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.3, 0.1, 48), new THREE.MeshBasicMaterial({ color: 0xe0c998 }));
+    platform.scale.set(Math.max(0.8, lot.w / 2), 1, Math.max(0.65, lot.d / 1.8)); platform.position.y = 0.02;
+    platform.name = "empire-platform"; group.add(platform);
+    const growth = new THREE.Group(); growth.name = "growth"; group.add(growth);
+    group.userData.empireBase = base;
+    return group;
+  }
+
+  function applyEmpireQuantity(THREE, group, quantity) {
+    const sprite = group.getObjectByName("empire-illustration");
+    const growth = group.getObjectByName("growth");
+    const base = group.userData.empireBase;
+    const stage = quantity >= 25 ? 3 : quantity >= 10 ? 2 : 1;
+    const size = empireSpriteSize(sceneLot(group.userData.buildingId), quantity);
+    sprite.scale.set(size, size, 1);
+    while (growth.children.length) growth.remove(growth.children[0]);
+    // Small satellite modules read as expanded capacity, not a fabricated
+    // one-to-one count of machines. All game values still come from the bridge.
+    for (let i = 1; i < stage; i++) {
+      const extension = new THREE.Sprite(sprite.material);
+      extension.center.set(0.5, 0.13); extension.scale.set(base * 0.47, base * 0.47, 1);
+      extension.position.set(-0.62 * i, 0.14, 0.57 * i);
+      growth.add(extension);
+    }
+    const platform = group.getObjectByName("empire-platform");
+    platform.material.color.setHex(stage === 3 ? 0xc5a460 : stage === 2 ? 0xd2b67e : 0xe0c998);
   }
 
   function collectAnimated(group) {
@@ -1374,13 +1528,19 @@
     snapshot.buildings.forEach(b => {
       const group = lotGroups[b.id];
       if (!group) return;
+      if (empirePadGroups[b.id]) {
+        const visible = !!b.unlocked && !b.quantity;
+        if (empirePadGroups[b.id].visible !== visible) changed = true;
+        empirePadGroups[b.id].visible = visible;
+      }
       const prev = lastQuantities ? lastQuantities[b.id] || 0 : 0;
       if (b.quantity === prev) return;
       changed = true;
       const firstAppearance = prev === 0 && b.quantity > 0;
       group.visible = b.quantity > 0;
       if (b.quantity > 0) {
-        recipes.applyQuantity(THREE, group, b.quantity);
+        if (empireMode) applyEmpireQuantity(THREE, group, b.quantity);
+        else recipes.applyQuantity(THREE, group, b.quantity);
         configureBuildingShadows(group);
       }
       if (firstAppearance && !initialSync && window.SceneEffects && !reduceMotion()) {
@@ -1390,7 +1550,7 @@
       // stages already communicate progression; extra full recipes would take
       // the scene from ~186 to ~476 draw calls at the visual cap.
       const desktopCopies = layout.copiesFor(b.id, b.quantity);
-      const visualCopies = isMobile ? Math.min(1, desktopCopies) : desktopCopies;
+      const visualCopies = empireMode || isMobile ? Math.min(1, desktopCopies) : desktopCopies;
       const offsets = layout.duplicateOffsets(b.id, visualCopies);
       const copies = lotCopies[b.id];
       while (copies.length > Math.max(0, offsets.length - 1)) {
@@ -1482,7 +1642,7 @@
     // Time-based cap is stable on 60/120/144 Hz panels. Skipping every other
     // rAF would still render 60 fps on an iPhone ProMotion display.
     if (!still) {
-      const frameInterval = 1000 / (isMobile ? 30 : 60);
+      const frameInterval = 1000 / (isMobile && !empireMode ? 30 : 60);
       const sinceLastFrame = timeMs - lastFrameTick;
       if (lastFrameTick && sinceLastFrame < frameInterval) return;
       lastFrameTick = timeMs - (sinceLastFrame % frameInterval);
@@ -1549,7 +1709,7 @@
     } else {
       if (easeView(false)) needsRender = true;
       const t = (timeMs || 0) / 1000;
-      placeCamera(BASE_AZIMUTH + sweepOffset + Math.sin((t * 2 * Math.PI) / DRIFT_PERIOD_S) * DRIFT_AMPLITUDE);
+      placeCamera(empireMode ? BASE_AZIMUTH : BASE_AZIMUTH + sweepOffset + Math.sin((t * 2 * Math.PI) / DRIFT_PERIOD_S) * DRIFT_AMPLITUDE);
       if (cloudLayer) {
         // Translate the whole instanced layer: one object update, no per-cloud
         // matrices in the hot loop. Reduced-motion freezes its current pose.
@@ -1567,7 +1727,9 @@
         ring.rotation.y = t * 0.4;
       });
     }
+    if (empireMode && !needsRender) return;
     renderer.render(scene, camera);
+    if (empireMode) window.dispatchEvent(new CustomEvent("pe:empire-camera"));
     announceFirstFrame();
     markAmbianceRendered();
     needsRender = false;
@@ -1602,6 +1764,7 @@
     const targets = [];
     Object.keys(lotGroups).forEach(id => {
       if (lotGroups[id].visible) targets.push(lotGroups[id]);
+      if (empirePadGroups[id]?.visible) targets.push(empirePadGroups[id]);
       lotCopies[id].forEach(copy => {
         if (copy.visible) targets.push(copy);
       });
@@ -1633,9 +1796,11 @@
     // navigateur l'annule si le geste devient un drag/scroll (tactile).
     canvas.addEventListener("click", event => {
       if (!running || !renderer) return;
+      if (empireMode && suppressMapClick) { suppressMapClick = false; return; }
       if (sceneMode !== "playing" || document.documentElement.dataset.experience !== "playing") return;
       const id = raycastBuilding(THREE, event.clientX, event.clientY);
       if (!id) return;
+      if (empireMode) { window.dispatchEvent(new CustomEvent("pe:empire-select", { detail: { id } })); return; }
       const btn = document.querySelector('[data-building-btn="' + id + '"]');
       // L'inabordabilité est signalée par la classe CSS "disabled"
       // (app.js ne pose pas l'attribut disabled).
@@ -1656,6 +1821,34 @@
       const id = raycastBuilding(THREE, event.clientX, event.clientY);
       canvas.style.cursor = id ? "pointer" : "";
     });
+    if (empireMode) {
+      const pointers = new Map();
+      let previousCenter = null, previousDistance = null, totalTravel = 0;
+      const centre = () => { const points = Array.from(pointers.values()); return { x: points.reduce((sum, p) => sum + p.x, 0) / points.length, y: points.reduce((sum, p) => sum + p.y, 0) / points.length }; };
+      const distance = () => { const points = Array.from(pointers.values()); return points.length === 2 ? Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y) : null; };
+      canvas.addEventListener("pointerdown", event => {
+        if (event.button && event.button !== 0) return;
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY }); canvas.setPointerCapture(event.pointerId);
+        previousCenter = centre(); previousDistance = distance(); totalTravel = 0; suppressMapClick = false;
+      });
+      canvas.addEventListener("pointermove", event => {
+        if (!pointers.has(event.pointerId)) return;
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        const next = centre(), nextDistance = distance();
+        const dx = next.x - previousCenter.x, dy = next.y - previousCenter.y;
+        totalTravel += Math.hypot(dx, dy); if (totalTravel > 6 || pointers.size > 1) suppressMapClick = true;
+        const units = (camera.right - camera.left) / camera.zoom / Math.max(1, canvas.clientWidth);
+        const sin = Math.sin(BASE_AZIMUTH), cos = Math.cos(BASE_AZIMUTH);
+        const slope = Math.sin(Math.atan2(CAMERA_DISTANCE * Math.sin(ELEVATION) - 0.6, CAMERA_DISTANCE * Math.cos(ELEVATION)));
+        viewTarget.x = Math.max(-32, Math.min(32, viewTarget.x - dx * units * sin - dy * units * cos / slope));
+        viewTarget.z = Math.max(-32, Math.min(32, viewTarget.z + dx * units * cos - dy * units * sin / slope));
+        if (previousDistance && nextDistance) viewTarget.zoom = Math.max(EMPIRE_MIN_ZOOM, Math.min(4.5, viewTarget.zoom * nextDistance / previousDistance));
+        manualEmpireView = true; Object.assign(view, viewTarget); previousCenter = next; previousDistance = nextDistance; wakeScene();
+      });
+      const release = event => { pointers.delete(event.pointerId); previousCenter = pointers.size ? centre() : null; previousDistance = distance(); };
+      canvas.addEventListener("pointerup", release); canvas.addEventListener("pointercancel", release);
+      canvas.addEventListener("wheel", event => { event.preventDefault(); window.CityScene.zoomBy(Math.exp(-event.deltaY * 0.001)); }, { passive: false });
+    }
   }
 
   /** Vide la file d'événements poussée par app.js (juice uniquement). */
@@ -1783,7 +1976,7 @@
       }
       // Le DPR fait partie de l'état de taille : glisser la fenêtre vers un
       // écran de densité différente ne change pas les pixels CSS du stage.
-      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : DPR_CAP_DESKTOP);
+      const dpr = Math.min(window.devicePixelRatio || 1, empireMode ? 2 : isMobile ? 1 : DPR_CAP_DESKTOP);
       if (w === sizedW && h === sizedH && dpr === sizedDpr) return;
       sizedW = w;
       sizedH = h;
@@ -1791,6 +1984,21 @@
       renderer.setPixelRatio(dpr);
       renderer.setSize(w, h, false);
       frameWorld(THREE, w, h);
+      if (empireMode) {
+        const changedLayout = decorativeWorld?.userData.empireColumns !== empireColumns();
+        if (changedLayout) {
+          Object.keys(lotGroups).forEach(id => {
+            const lot = sceneLot(id);
+            lotGroups[id].position.set(lot.x, 0, lot.z);
+            empirePadGroups[id]?.position.set(lot.x, 0.15, lot.z);
+          });
+          disposeDecorativeWorld();
+          buildDecorativeWorld(THREE);
+          manualEmpireView = false;
+        }
+        updateViewTarget();
+        if (changedLayout || !firstFrameRendered) Object.assign(view, viewTarget);
+      }
       needsRender = true;
     };
     applySize = apply;
@@ -1869,6 +2077,7 @@
       experienceObserver = null;
     }
     disposeDecorativeWorld();
+    empireTextures.forEach(texture => texture.dispose()); empireTextures.clear();
     if (papers) {
       papers.mesh.geometry.dispose();
       papers.mesh.material.dispose();
@@ -1905,6 +2114,22 @@
   }
 
   window.CityScene = {
+    focusBuilding(id) {
+      const lot = sceneLot(id); if (!lot || !empireMode) return false;
+      manualEmpireView = true; viewTarget.x = lot.x; viewTarget.z = lot.z; viewTarget.zoom = Math.max(2.3, viewTarget.zoom); wakeScene(); return true;
+    },
+    zoomBy(factor) { if (!empireMode) return; manualEmpireView = true; viewTarget.zoom = Math.max(EMPIRE_MIN_ZOOM, Math.min(4.5, viewTarget.zoom * factor)); wakeScene(); },
+    resetView() { if (!empireMode) return; manualEmpireView = false; updateViewTarget(); wakeScene(); },
+    projectLots() {
+      if (!renderer || !camera || !empireMode || disposed) return null;
+      const width = canvas.clientWidth, height = canvas.clientHeight, result = {};
+      Object.keys(window.CityLayout.LOTS).forEach(id => {
+        const lot = sceneLot(id);
+        const point = new THREERef.Vector3(lot.x, -0.20, lot.z).project(camera);
+        result[id] = { x: (point.x + 1) * width / 2, y: (1 - point.y) * height / 2, visible: Math.abs(point.x) < 0.94 && Math.abs(point.y) < 0.90 };
+      });
+      return result;
+    },
     /** Optional pre-init hook for a future full gameplay canvas. */
     setMode(mode) {
       const normalized = normalizeSceneMode(mode);
@@ -1955,9 +2180,11 @@
       placeCamera(BASE_AZIMUTH);
       buildLights(THREE);
       buildDecorativeWorld(THREE);
-      buildTrucks(THREE);
-      buildSmoke(THREE);
-      buildPapers(THREE);
+      if (!empireMode) buildTrucks(THREE);
+      if (!empireMode) {
+        buildSmoke(THREE);
+        buildPapers(THREE);
+      }
       buildLots(THREE);
       updateViewTarget();
       markShadowDirty();

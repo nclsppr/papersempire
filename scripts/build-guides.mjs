@@ -12,6 +12,7 @@ import {
   articlePath,
 } from "../content/guides/index.mjs";
 import { loadDictionary } from "./i18n-loader.mjs";
+import "../assets/js/economy-analytics.js";
 
 const [siteDir, stamp = ""] = process.argv.slice(2);
 if (!siteDir) {
@@ -22,7 +23,7 @@ if (!siteDir) {
 const localeEntries = Object.entries(LOCALES);
 const localeCodes = Object.keys(LOCALES);
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
-const HOME_AND_HUB_LASTMOD = "2026-08-31";
+const HOME_AND_HUB_LASTMOD = "2026-09-07";
 const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
 const AUTHOR_ID = `${AUTHOR.url}#person`;
 
@@ -76,6 +77,9 @@ function assertCatalog() {
     for (const lang of localeCodes) {
       const translation = article.translations[lang];
       if (!translation) throw new Error(`${article.id} is missing ${lang}`);
+      if (article.playTarget && (!translation.playLabel || !["buildingsPanel", "upgradesPanel", "printStation"].includes(article.playTarget))) {
+        throw new Error(`${article.id}:${lang} needs a localized label and a known game destination`);
+      }
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(translation.slug)) {
         throw new Error(`${article.id}:${lang} has an invalid slug`);
       }
@@ -415,7 +419,34 @@ function renderTable(table) {
   </div>`;
 }
 
-function renderSection(section, index) {
+function renderInvestmentExample(lang) {
+  const labels = {
+    fr: ["Exemples fictifs : coût et gain du prochain exemplaire", "Exemplaires avant → après", "Coût DOC", "Gain DOC/s", "Attente avant achat (s)", "Amortissement après achat (s)"],
+    en: ["Fictional examples: cost and gain of the next copy", "Copies before → after", "DOC cost", "Additional DOC/s", "Wait before purchase (s)", "Payback after purchase (s)"],
+    de: ["Fiktive Beispiele: Kosten und Ertrag des nächsten Exemplars", "Exemplare vorher → nachher", "DOC-Kosten", "Zusätzliche DOC/s", "Wartezeit vor Kauf (s)", "Amortisation nach Kauf (s)"],
+    lb: ["Fiktiv Beispiller: Käschten an Ertrag vum nächsten Exemplar", "Exemplare virdrun → duerno", "DOC-Käschten", "Zousätzlech DOC/s", "Waardezäit virum Akaf (s)", "Amortisatioun nom Akaf (s)"],
+  }[lang];
+  const format = new Intl.NumberFormat(lang, { maximumFractionDigits: 2 });
+  const rows = [1, 9, 24].map(quantity => {
+    const state = {
+      buildings: [{ id: "exampleProducer", baseCost: 15, costMultiplier: 1.15,
+        baseProduction: 0.5, quantity, isUnlocked: true }],
+      upgrades: [],
+      resources: { docBank: 0, docTotal: 0, ccTotal: 0, culturePoints: 0 },
+      stats: { quality: 0.5, footprint: 0.5, brandImage: 0.5 },
+      config: { footprintDriftBase: 0.00001, prestigeCcDivisor: 1000, prestigeRequirement: 10000 },
+    };
+    const row = globalThis.EconomyAnalytics.buildInvestmentRows(state)[0];
+    const values = [row.currentCost, row.marginalDocPerSecond, row.affordSeconds, row.paybackSeconds];
+    if (values.some(value => !Number.isFinite(value) || value < 0)) {
+      throw new Error(`Investment example ${quantity} could not be calculated`);
+    }
+    return [`${quantity} → ${quantity + 1}`, ...values.map(value => format.format(value))];
+  });
+  return `<div data-investment-example="synthetic">${renderTable({ caption: labels[0], headers: labels.slice(1), rows })}</div>`;
+}
+
+function renderSection(section, index, lang) {
   const paragraphs = section.paragraphs?.map(paragraph => `<p>${paragraph}</p>`).join("\n") ?? "";
   const bullets = section.bullets?.length
     ? `<ul>${section.bullets.map(item => `<li>${item}</li>`).join("")}</ul>`
@@ -425,6 +456,7 @@ function renderSection(section, index) {
     ${paragraphs}
     ${bullets}
     ${section.table ? renderTable(section.table) : ""}
+    ${section.investmentExample ? renderInvestmentExample(lang) : ""}
   </section>`;
 }
 
@@ -481,6 +513,10 @@ function renderArticle(article, lang) {
   const translation = article.translations[lang];
   const canonical = absolute(articlePath(article, lang));
   const image = absolute(article.image);
+  const playHref = article.playTarget
+    ? `${locale.homePath}?guide=${encodeURIComponent(article.id)}#${article.playTarget}`
+    : locale.homePath;
+  const playLabel = translation.playLabel || locale.ui.play;
   const editorialDateLabel = article.dateModified === article.datePublished
     ? locale.ui.published
     : locale.ui.updated;
@@ -523,15 +559,15 @@ ${shellStart({ lang, article })}
       </header>
       <figure class="article-visual">
         <img src="${versioned(article.image)}" width="1200" height="630" alt="${escapeAttr(translation.imageAlt)}" decoding="async" fetchpriority="high">
-        <figcaption>${escapeHtml(locale.ui.imageCaption)}</figcaption>
+        <figcaption>${escapeHtml(translation.imageCaption || locale.ui.imageCaption)}</figcaption>
       </figure>
       <aside class="disclosure" aria-label="${escapeAttr(locale.ui.disclosureLabel)}">
         <strong>${escapeHtml(locale.ui.disclosureLabel)}</strong>
-        <p>${escapeHtml(locale.ui.disclosure)}</p>
+        <p>${escapeHtml(translation.disclosure || locale.ui.disclosure)}</p>
       </aside>
       <div class="article-layout">
         <div class="article-prose">
-          ${translation.sections.map(renderSection).join("\n")}
+          ${translation.sections.map((section, index) => renderSection(section, index, lang)).join("\n")}
         </div>
         <aside class="article-rail">
           <div class="rail-card">
@@ -539,7 +575,7 @@ ${shellStart({ lang, article })}
             <ul>${sources}</ul>
             <p>${escapeHtml(locale.ui.sourceChecked)} <time datetime="${article.sourcesCheckedAt}">${formatDate(article.sourcesCheckedAt, lang)}</time>.</p>
           </div>
-          <a class="play-cta" href="${locale.homePath}">${escapeHtml(locale.ui.play)}<span aria-hidden="true">→</span></a>
+          <a class="play-cta" href="${escapeAttr(playHref)}" data-guide-play="${escapeAttr(article.id)}">${escapeHtml(playLabel)}<span aria-hidden="true">→</span></a>
         </aside>
       </div>
       <nav class="related-guides" aria-label="${escapeAttr(locale.ui.related)}">
