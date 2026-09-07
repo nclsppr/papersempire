@@ -14,12 +14,17 @@ suivre l’objectif courant, la production DOC, les CC, la qualité ou l’empre
 Elles comparent les gains marginaux d’un achat supplémentaire ; elles ne
 prédisent pas toute la partie et ne changent pas les règles économiques.
 
-La vue d’empire de l’application iOS utilise les mêmes commandes de jeu que les
-contrôles HTML. Les bâtiments possédés et leurs quantités viennent du moteur.
+L’application iOS emploie une interface SwiftUI et une scène SpriteKit rendue
+par Metal. Liquid Glass est utilisé sous iOS 26 ; les contrôles et matériaux
+natifs de repli conservent la compatibilité iOS 17. JavaScriptCore exécute les
+mêmes règles que le site, sans DOM ni navigateur : `window`, `document`,
+`navigator` et `localStorage` sont absents du contexte. Les bâtiments possédés
+et leurs quantités viennent de ce moteur.
 Les variantes aux paliers 10 et 25 donnent une indication visuelle de croissance ;
 le compteur affiche la quantité exacte. Le fond de rivière est décoratif et
-ne représente aucune unité possédée. Les contrôles accessibles restent disponibles
-quand le rendu graphique ne fonctionne pas. Voir le
+ne représente aucune unité possédée. Les fiches et contrôles SwiftUI restent
+disponibles indépendamment de la scène. Aucun HTML, CSS, WebKit ou Three.js
+n’est embarqué dans la cible iOS. Voir le
 [projet iOS](https://github.com/nclsppr/papersempire/tree/main/ios).
 
 Une carte de carrière peut être créée à la demande, puis partagée ou téléchargée.
@@ -30,7 +35,8 @@ une preuve de score vérifiée par un serveur.
 
 `persistence.js` conserve la sauvegarde V3 dans `papersEmpireSave`. Une écriture
 est relue pour vérifier son succès et publie l’état `pe:save-health` pour
-l’interface. `save-transfer.js` porte le même parcours sur le Web et dans iOS :
+l’interface Web. `save-transfer.js` porte le parcours navigateur ; les vues
+SwiftUI et `NativeGameStore` portent le parcours iOS avec le même codec canonique :
 
 1. Exporter crée un fichier `.papersempire` à télécharger ou partager. Son
    enveloppe JSON contient le format, sa version, la date d’export et l’état du
@@ -40,14 +46,29 @@ l’interface. `save-transfer.js` porte le même parcours sur le Web et dans iOS
 3. Un aperçu des ressources, unités et progrès précède la confirmation explicite
    du remplacement. Fermer l’aperçu laisse la partie courante intacte.
 4. Avant remplacement, une sauvegarde courante valide est conservée dans
-   `papersEmpireSave.previous`. La récupération locale utilise aussi un aperçu
+   `papersEmpireSave.previous` sur le Web, ou `save.previous.json` dans le
+   stockage privé de l’app iOS. La récupération locale utilise aussi un aperçu
    et une confirmation. Ce n’est qu’une copie précédente, pas un historique.
 
 Après un import, une récupération ou une remise à zéro dans un autre onglet,
 les anciennes pages refusent de réenregistrer leur état périmé. Un bandeau
 permet d’exporter la partie encore affichée avant de recharger volontairement
-la sauvegarde actuelle. Ce garde utilise une génération locale ; il ne constitue
+la sauvegarde actuelle. Ce garde Web utilise une génération locale ; il ne constitue
 pas une transaction atomique entre processus, que localStorage ne fournit pas.
+
+Sur iOS, les appels au moteur sont sérialisés sur le main actor. La partie
+active est `Application Support/PapersEmpire/save.json` ; sa copie précédente
+est écrite et vérifiée avant le remplacement atomique du fichier principal.
+L’aperçu prépare un moteur candidat avant de remplacer la partie. Un chargement
+endommagé bloque l’autosauvegarde et conserve le fichier jusqu’à une récupération
+ou un import confirmé. L’app enregistre toutes les cinq secondes et à la mise
+en arrière-plan ; le retour applique les règles canoniques de gains d’absence.
+Les exports `.papersempire` restent aussi dans Fichiers → Papers Empire → Saves.
+
+L’ancien prototype navigateur n’a pas été distribué. Pour conserver une partie
+de test de ce prototype, l’exporter avant de le remplacer puis importer le
+fichier dans la version native. Celle-ci ne lit pas les bases privées de
+l’ancien moteur et n’annonce aucune migration automatique.
 
 Le fichier contient la carrière et l’état durable du jeu. Les préférences
 d’accessibilité, l’historique complet de la Data Science Zone et les observations
@@ -78,9 +99,9 @@ le fichier avec aperçu, vérifier la partie puis y préparer le mode hors ligne
 L’installation seule ne transfère pas la sauvegarde.
 
 Les ressources peuvent être évincées par le navigateur. Revenir en ligne et
-relancer la préparation répare un cache incomplet. Le module Web ne s’inscrit
-pas dans l’application native `peapp://`, dont les ressources sont embarquées
-dans le bundle.
+relancer la préparation répare un cache incomplet. Le module Web n’est pas
+embarqué dans l’application iOS : ses règles, traductions et images natives
+sont déjà présentes dans le bundle signé et ne demandent aucune préparation.
 
 ### Mises à jour et retour de version
 

@@ -11,10 +11,14 @@
 - Trois guides pratiques et un exemple d’investissement, chacun en quatre
   langues : le sitemap comprend désormais 40 URL indexables. Préparation hors
   ligne explicite du jeu et du dashboard, mises à jour acceptées par le joueur.
-- App iOS SwiftUI/WebKit embarquée avec moteur de jeu partagé, carte 2,5D
-  représentant le parc réel, croissance aux paliers 10/25, import Fichiers,
-  partage natif et langue conservée. Le projet est compilable localement ;
-  signature, distribution TestFlight et App Store restent distinctes.
+- App iOS native : interface SwiftUI, scène SpriteKit/Metal représentant le
+  parc réel et croissance aux paliers 10/25. Liquid Glass sous iOS 26 et repli
+  natif dès iOS 17 ; règles canoniques exécutées dans JavaScriptCore sans DOM
+  ni globals navigateur. La cible n’embarque ni WebKit, ni HTML/CSS/Three.js.
+- Import Fichiers avec aperçu et validation, sauvegarde atomique et copie
+  précédente, partage natif et langue conservée. Une partie du prototype
+  navigateur doit être exportée puis importée explicitement. Le projet est
+  compilable localement ; signature, TestFlight et App Store restent distincts.
 - Mesure facultative des étapes et retours J1/J7 du Web, désactivée par défaut.
   Les contrôles locaux ne constituent pas des résultats de rétention ou de SEO.
 

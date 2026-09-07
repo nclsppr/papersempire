@@ -291,6 +291,38 @@ de récupération. Il définit aussi les ressources autorisées dans le cache,
 leur vérification, l’activation explicite d’une mise à jour et ses limites.
 Le cache de l’application et le stockage de la partie sont indépendants.
 
+### Application iOS native
+
+SwiftUI porte les écrans et contrôles ; SpriteKit, rendu par Metal, porte la
+scène de l’empire. Les surfaces Liquid Glass sont activées sous iOS 26, avec
+des contrôles et matériaux natifs de repli dès iOS 17. La cible ne contient ni
+WebKit ni ressources HTML/CSS/Three.js. `build-ios-assets.mjs` assemble uniquement
+les règles et traductions canoniques dans `GameAssets`, puis les illustrations
+PNG dans `NativeAssets`.
+
+`headless-runtime.js` expose `PEHeadless` à JavaScriptCore : initialisation,
+commandes, tick, snapshot, sérialisation et validation portable. Les modules
+du site restent la source des prix, gains, contrats et règles de carrière.
+Le contexte n’expose ni `window`, ni `document`, ni `navigator`, ni stockage
+navigateur ; aucun faux DOM n’est créé. `NativeGameEngine` lie les arguments
+comme valeurs, puis décode les snapshots Codable. `NativeGameStore` sérialise
+ces appels sur le main actor et publie l’état aux vues et à SpriteKit.
+
+Le store écrit `Application Support/PapersEmpire/save.json` de façon atomique
+toutes les cinq secondes et à la mise en arrière-plan. Avant un remplacement,
+il valide un moteur candidat et conserve une partie précédente valide dans
+`save.previous.json`. Un chargement endommagé bloque l’autosauvegarde. Fichiers
+fournit l’accès autorisé à un import UTF-8 de 2 Mio maximum ; un aperçu précède
+toujours le remplacement confirmé. Les exports conservent l’enveloppe portable
+du site et restent dans `Documents/Saves`. La langue et l’activation des incidents
+sont stockées séparément dans `interface.json`, sans `UserDefaults`.
+
+Le prototype navigateur antérieur n’a pas été distribué. Une partie de test à
+conserver doit être exportée depuis ce prototype, puis importée explicitement ;
+la cible native ne fouille pas ses anciennes bases de données. Les tests
+JavaScriptCore natifs couvrent les règles réelles, l’absence de globals navigateur,
+le transfert V3, les copies précédentes et les chargements endommagés.
+
 ## Priorités futures
 
 - Extraire la boucle `requestAnimationFrame` dans un module `loop.js` pour faciliter le throttling et les tests.

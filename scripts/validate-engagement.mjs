@@ -48,7 +48,10 @@ assert.equal((await handleEngagement(request(), { ENGAGEMENT: { writeDataPoint()
 assert.equal(points.length, 1, "only a validated whitelisted event reaches Analytics Engine");
 
 const source = readFileSync(new URL("../assets/js/engagement.js", import.meta.url), "utf8");
-function browser(storage = new Map(), origin = ORIGIN, nowValue = Date.now()) {
+// Fixed local noon prevents the earlier hidden-time case from crossing midnight
+// before the separate, deliberate calendar-boundary test below.
+const CLIENT_NOON = new Date(2026, 8, 7, 12, 0, 0, 0).getTime();
+function browser(storage = new Map(), origin = ORIGIN, nowValue = CLIENT_NOON) {
   let now = nowValue;
   const sends = [];
   const intervals = new Map();

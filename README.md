@@ -17,6 +17,12 @@ Current version: **0.26.0**.
 - [Optional gameplay measurement](docs/engagement.md)
 - [Build the iOS application](ios/README.md)
 
+The iOS app uses SwiftUI and SpriteKit/Metal, with Liquid Glass on iOS 26 and
+native controls on iOS 17. JavaScriptCore runs the canonical game rules without
+a browser or DOM; the target bundles no WebKit, HTML, CSS, or Three.js. Native
+saves use atomic files and a previous copy before replacement. Test progress
+from the earlier browser prototype must be exported and explicitly imported.
+
 ## Deploy to Cloudflare Workers
 
 Cloudflare is the only production delivery platform. The Worker serves the generated static
@@ -42,6 +48,7 @@ compatibility. Cloudflare Workers Builds listens to `main`, runs
 - `npm run seo:check` – validate the built multilingual metadata, canonicals, hreflang, sitemap and JSON-LD.
 - `npm run offline:check` – validate the built offline cache, resource integrity, update consent and rollback behavior.
 - `npm run ios:build` – compile the local iOS Simulator application; device signing and App Store publication are separate.
+- `./ios/Tests/run.sh` – exercise the real headless rules through Apple JavaScriptCore, native save files, transfer previews, and packaging/privacy checks without launching Simulator.
 - `npm run docs:build` – build the static docs site with Retype (output in `docs-site/`).
 - `npm run cloudflare:check` – run all release checks and a local Wrangler dry run.
 - `npm run cloudflare:deploy` – build and deploy the current commit with Wrangler.

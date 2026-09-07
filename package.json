@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "docs:build": "node node_modules/retypeapp/retype.js build --output docs-site",
-    "gameplay:check": "node scripts/validate-progression.mjs && node scripts/validate-gameplay-modules.mjs && node scripts/validate-save-transfer.mjs && node scripts/validate-engagement.mjs && node scripts/validate-product-experience.mjs",
+    "gameplay:check": "node scripts/validate-progression.mjs && node scripts/validate-gameplay-modules.mjs && node scripts/validate-save-transfer.mjs && node scripts/validate-engagement.mjs && node scripts/validate-product-experience.mjs && node scripts/validate-headless-runtime.mjs",
     "i18n:check": "node scripts/validate-i18n.mjs",
     "ui:check": "node scripts/validate-ui-resilience.mjs",
     "worker:check": "node scripts/validate-cloudflare-worker.mjs",

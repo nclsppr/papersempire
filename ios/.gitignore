@@ -1,4 +1,6 @@
 WebAssets/
+GameAssets/
+NativeAssets/
 build/
 **/xcuserdata/
 *.xcuserstate

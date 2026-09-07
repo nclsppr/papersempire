@@ -1,5 +1,6 @@
 (function () {
   "use strict";
+  const host = globalThis;
 
   const STORAGE_KEY = "papersEmpireSave";
   const BACKUP_KEY = "papersEmpireSave.previous";
@@ -20,7 +21,7 @@
 
   function report(ok, operation, reason = null, extra = {}) {
     health = { ...health, ok, operation, reason, reloadRequired: reason === "stale", ...extra };
-    try { window.dispatchEvent(new CustomEvent("pe:save-health", { detail: { ...health } })); }
+    try { host.dispatchEvent(new CustomEvent("pe:save-health", { detail: { ...health } })); }
     catch { /* A storage result remains usable without browser events. */ }
     return { ...health };
   }
@@ -34,7 +35,7 @@
   // It guards stale pages; localStorage still has no atomic cross-process CAS.
   function checkGeneration(operation, allowPending = false) {
     try {
-      const current = window.localStorage.getItem(GENERATION_KEY);
+      const current = host.localStorage.getItem(GENERATION_KEY);
       if (!generationCaptured || current !== loadedGeneration || (!allowPending && current?.startsWith("pending:"))) {
         report(false, operation, "stale", { reloadRequired: true });
         return false;
@@ -44,11 +45,21 @@
   }
 
   function newGeneration() {
-    return typeof window.crypto?.randomUUID === "function" ? window.crypto.randomUUID() : Date.now().toString(36) + ":" + Math.random().toString(36).slice(2) + ":" + Math.random().toString(36).slice(2);
+    return typeof host.crypto?.randomUUID === "function" ? host.crypto.randomUUID() : Date.now().toString(36) + ":" + Math.random().toString(36).slice(2) + ":" + Math.random().toString(36).slice(2);
   }
 
   function byteLength(raw) {
-    return typeof TextEncoder === "function" ? new TextEncoder().encode(raw).length : new Blob([raw]).size;
+    if (typeof TextEncoder === "function") return new TextEncoder().encode(raw).length;
+    // UTF-8 length without Web APIs (including unpaired surrogate replacement).
+    let length = 0;
+    for (let i = 0; i < raw.length; i += 1) {
+      const code = raw.charCodeAt(i);
+      if (code < 0x80) length += 1;
+      else if (code < 0x800) length += 2;
+      else if (code >= 0xd800 && code <= 0xdbff && raw.charCodeAt(i + 1) >= 0xdc00 && raw.charCodeAt(i + 1) <= 0xdfff) { length += 4; i += 1; }
+      else length += 3;
+    }
+    return length;
   }
 
   // Inspect nested historical fields before merging. Continuous currency may
@@ -133,19 +144,19 @@
   function isAvailable() {
     try {
       // Reading remains possible at quota; the actual write reports failure.
-      window.localStorage.getItem(STORAGE_KEY);
+      host.localStorage.getItem(STORAGE_KEY);
       return true;
     } catch (error) { report(false, "availability", errorReason(error)); return false; }
   }
 
   function readRaw() {
-    try { return window.localStorage.getItem(STORAGE_KEY); }
+    try { return host.localStorage.getItem(STORAGE_KEY); }
     catch (error) { report(false, "read", errorReason(error)); return null; }
   }
 
   function getBackup() {
     try {
-      const raw = window.localStorage.getItem(BACKUP_KEY);
+      const raw = host.localStorage.getItem(BACKUP_KEY);
       return raw ? parseImport(raw) : { ok: false, reason: "noBackup" };
     } catch (error) { return { ok: false, reason: errorReason(error) }; }
   }
@@ -178,8 +189,8 @@
     try {
       // Recheck immediately before the write, including after serialization.
       if (!checkGeneration("save")) return false;
-      window.localStorage.setItem(STORAGE_KEY, result.raw);
-      if (window.localStorage.getItem(STORAGE_KEY) !== result.raw) throw new Error("Save verification failed");
+      host.localStorage.setItem(STORAGE_KEY, result.raw);
+      if (host.localStorage.getItem(STORAGE_KEY) !== result.raw) throw new Error("Save verification failed");
       if (!checkGeneration("save")) return false;
       report(true, "save", null, { savedAt: result.save.savedAt });
       return true;
@@ -217,7 +228,7 @@
     let primaryWritten = false;
     let generationWritten = false;
     try {
-      const storage = window.localStorage;
+      const storage = host.localStorage;
       previous = storage.getItem(STORAGE_KEY);
       previousBackup = storage.getItem(BACKUP_KEY);
       // Backup must succeed before touching the primary key, also at quota.
@@ -250,7 +261,7 @@
     } catch (error) {
       if (generationWritten) {
         try {
-          const storage = window.localStorage;
+          const storage = host.localStorage;
           // Never roll back over a replacement completed by a different tab.
           if (storage.getItem(GENERATION_KEY) !== pending) {
             replacementPending = true;
@@ -288,15 +299,20 @@
     return replace(backup.raw, "recover");
   }
 
+  // The same bounded import/portable codec serves browser persistence and
+  // native file storage. Loading it in JavaScriptCore performs no storage I/O.
+  host.PESaveCodec = Object.freeze({ parseImport, createPortable, MAX_BYTES, FORMAT, FORMAT_VERSION });
+  if (host.PEPlatform?.headless === true) return;
+
   try {
-    loadedGeneration = window.localStorage.getItem(GENERATION_KEY);
+    loadedGeneration = host.localStorage.getItem(GENERATION_KEY);
     generationCaptured = true;
   } catch (error) { report(false, "availability", errorReason(error)); }
-  window.addEventListener?.("storage", event => {
+  host.addEventListener?.("storage", event => {
     if (event.key === GENERATION_KEY || event.key === null) checkGeneration("sync");
   });
 
-  window.Persistence = {
+  host.Persistence = {
     isAvailable, load, save, clear, exportData, importData,
     parseImport, createPortable, getBackup, recoverPrevious,
     getHealth: () => ({ ...health }),

@@ -42,7 +42,24 @@ covered_symbols = re.compile(
     r"fgetattrlist|getattrlistat|stat|fstat|fstatat|lstat|statfs|statvfs|fstatfs|fstatvfs)\b"
 )
 for swift_file in (ios / "PapersEmpire").rglob("*.swift"):
-    match = covered_symbols.search(swift_file.read_text())
+    swift_source = swift_file.read_text()
+    assert not re.search(r"\bimport\s+WebKit\b|\bWKWebView\b|\bWKURLSchemeHandler\b", swift_source), \
+        f"A browser renderer must not return to the native target: {swift_file}"
+    match = covered_symbols.search(swift_source)
     assert match is None, f"Review the privacy manifest for {match.group()} in {swift_file}"
 
-print("Native privacy: no tracking/collected data, current API declarations and app resource inclusion passed.")
+resource_paths = {ref.get("path") for ref in resource_refs}
+assert "GameAssets" in resource_paths and "NativeAssets" in resource_paths, "Native rule and artwork bundles must be included"
+assert "WebAssets" not in resource_paths, "The website bundle must not be included in the native target"
+assets = ios / "GameAssets"
+runtime = json.loads((assets / "runtime.json").read_text())
+assert runtime["scripts"], "The engine must load a declared set of canonical rules"
+for relative in runtime["scripts"]:
+    file = assets / relative
+    assert file.is_file() and file.suffix == ".js", f"Missing rule script: {relative}"
+    assert "three" not in relative.lower() and "scene" not in relative.lower(), "Browser rendering code must not be bundled"
+for file in assets.rglob("*"):
+    if file.is_file():
+        assert file.suffix in {".js", ".json"}, f"Website resource in native rule bundle: {file}"
+
+print("Native packaging/privacy: no browser renderer or site assets, no tracking/collected data, current API declarations and resource inclusion passed.")

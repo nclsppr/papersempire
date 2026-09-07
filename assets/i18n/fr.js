@@ -1,6 +1,7 @@
 (function(){
-  window.I18N = window.I18N || {};
-  window.I18N.fr = {
+  const root = typeof window !== "undefined" ? window : globalThis;
+  root.I18N = root.I18N || {};
+  root.I18N.fr = {
     "app.browserTitle": "Papers Empire",
     "app.title": "Papers Empire",
     "app.metaTitle": "Papers Empire — Jeu idle gratuit dans le navigateur",

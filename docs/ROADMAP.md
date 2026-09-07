@@ -25,7 +25,11 @@ et les données racontent la même usine : le **production twin**.
 Le chantier courant rassemble la navigation mobile, les recommandations par
 objectif, les sauvegardes portables avec récupération, les cartes de carrière,
 les nouveaux guides, le cache hors ligne et la mesure Web facultative. Le
-projet iOS embarque le même moteur et représente les bâtiments possédés. Voir
+projet iOS utilise SwiftUI et SpriteKit/Metal pour représenter les bâtiments
+possédés. Liquid Glass sous iOS 26 dispose d’un repli natif iOS 17. JavaScriptCore
+exécute les règles canoniques sans navigateur ni DOM ; la sauvegarde native
+est atomique et conserve une copie précédente avant remplacement. Les parties
+du prototype navigateur passent par un export/import explicite. Voir
 [les contrats de livraison](mobile-offline.md) et les notes « En préparation ».
 La signature et la distribution iOS, les tests sur appareil physique et la
 mesure réelle des retours restent des étapes de validation distinctes.
