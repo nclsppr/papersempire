@@ -51,7 +51,7 @@ function application(saved = null) {
   sandbox.self = sandbox;
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
-  for (const file of ["modifier-utils.js", "godmode-utils.js", "economy-analytics.js", "progression.js", "investment-advice.js"]) {
+  for (const file of ["accessibility.js", "modifier-utils.js", "godmode-utils.js", "economy-analytics.js", "progression.js", "investment-advice.js"]) {
     vm.runInContext(readFileSync(new URL("../assets/js/" + file, import.meta.url), "utf8"), sandbox, { filename: file });
   }
   const source = readFileSync(new URL("../assets/js/app.js", import.meta.url), "utf8");
@@ -219,6 +219,34 @@ test("guide links open production, units or career according to their real desti
     model.initProductExperience();
     assert.equal(model.started, true);
     assert.deepEqual(opened, [expected]);
+  }
+});
+
+test("imported automation completes only the beginner tutorial after replacement", () => {
+  const scenarios = [
+    ["new save", null, false],
+    ["documents without units", fundedSave(), false],
+    ["first producer", fundedSave({ buildings: [{ id: "reproOperator", quantity: 1 }] }), false],
+    ["modifiers without production", fundedSave({ buildings: [{ id: "finishingWorkshop", quantity: 2 }] }), false],
+    ["two producers", fundedSave({ buildings: [{ id: "reproOperator", quantity: 2 }] }), true],
+    ["producer and modifier", fundedSave({ buildings: [{ id: "reproOperator", quantity: 1 }, { id: "finishingWorkshop", quantity: 1 }] }), true],
+    ["advanced empire", fundedSave({ buildings: [{ id: "reproOperator", quantity: 25 }, { id: "pampyAI", quantity: 25 }] }), true]
+  ];
+  for (const [name, imported, expected] of scenarios) {
+    const { model, sandbox, game } = application();
+    const initialSave = copy(game.getSave());
+    const initialPrefs = copy(sandbox.Settings.getPrefs());
+    let transfer;
+    let reloadPrefs;
+    sandbox.PESaveTransfer = { configure: options => { transfer = options; } };
+    sandbox.location.reload = () => { reloadPrefs = copy(sandbox.Settings.getPrefs()); };
+    model.initProductExperience();
+    assert.equal(model.started, false, name + ": configuration preserves the first-use introduction");
+    assert.deepEqual(copy(sandbox.Settings.getPrefs()), initialPrefs, name + ": opening transfer does not complete guidance");
+    sandbox.Persistence.load = () => copy(imported);
+    transfer.onReplaced();
+    assert.deepEqual(reloadPrefs, { ...initialPrefs, tutorialCompleted: expected }, name + ": only completed beginner goals suppress the tutorial before reload");
+    assert.deepEqual(copy(game.getSave()), initialSave, name + ": import callback does not mutate the running economy");
   }
 });
 

@@ -19,6 +19,9 @@ final class EmpireScene: SKScene {
         "clientPortal", "finishingWorkshop", "insertingLine", "logistics",
         "comBridge", "prepressStudio", "factory40", "pampyAI"
     ]
+    // Leave room for the rear row's count above a foreground stage-three lot.
+    private static let rowSpacing: CGFloat = 238
+    private static let quantityDepthOffset: CGFloat = 3_000
     private let world = SKNode()
     private let landscape = SKNode()
     private let life = SKNode()
@@ -232,7 +235,7 @@ final class EmpireScene: SKScene {
         let rise: [CGFloat] = [-8, 14, 0, 10, -4, 9]
         return CGPoint(
             x: (CGFloat(column) - CGFloat(count - 1) / 2) * 200 + stagger[row % stagger.count],
-            y: (CGFloat(rows - 1) / 2 - CGFloat(row)) * 214 + rise[column % rise.count]
+            y: (CGFloat(rows - 1) / 2 - CGFloat(row)) * Self.rowSpacing + rise[column % rise.count]
         )
     }
 
@@ -253,7 +256,7 @@ final class EmpireScene: SKScene {
     private func buildTerrain() {
         let rows = Int(ceil(Double(Self.ids.count) / Double(layoutColumns)))
         let width = CGFloat(layoutColumns - 1) * 200 + 348
-        let height = CGFloat(rows - 1) * 214 + 416
+        let height = CGFloat(rows - 1) * Self.rowSpacing + 416
         terrainBounds = CGRect(x: -width / 2, y: -height / 2, width: width, height: height)
         landscape.zPosition = -2000
 
@@ -281,7 +284,7 @@ final class EmpireScene: SKScene {
 
         // Delivery routes sit between rows; a continuous boulevard connects them.
         for row in 0..<max(1, rows - 1) {
-            let y = (CGFloat(rows - 1) / 2 - CGFloat(row) - 0.5) * 214 - 24
+            let y = (CGFloat(rows - 1) / 2 - CGFloat(row) - 0.5) * Self.rowSpacing - 24
             let route = CGMutablePath()
             route.move(to: CGPoint(x: -width / 2 + 26, y: y - 13))
             route.addCurve(to: CGPoint(x: riverX - 66, y: y + 10),
@@ -432,15 +435,15 @@ final class EmpireScene: SKScene {
             missing.position.y = 24
             node.addChild(missing)
         }
-        let quantity = SKLabelNode(fontNamed: quantityFont.fontName)
+        let quantity = SKLabelNode()
         quantity.name = "quantity"
-        quantity.text = "×\(lot.quantity)"
+        quantity.attributedText = quantityText(lot.quantity)
         quantity.isAccessibilityElement = false
-        quantity.fontSize = quantityFont.pointSize
-        quantity.fontColor = Self.color(0x4C6768)
         quantity.verticalAlignmentMode = .center
         quantity.position = CGPoint(x: 0, y: -33)
-        quantity.zPosition = 3
+        // Child depths add to the parcel depth. Reserve a separate band above
+        // every illustration, while retaining parcel motion and text scaling.
+        quantity.zPosition = Self.quantityDepthOffset
         quantity.setScale(viewpoint.xScale)
         node.addChild(quantity)
         return node
@@ -457,15 +460,23 @@ final class EmpireScene: SKScene {
         lastQuantityScale = viewpoint.xScale
     }
 
+    private func quantityText(_ value: Int) -> NSAttributedString {
+        // Pass the system font itself: SpriteKit cannot reliably resolve its
+        // private font name and otherwise falls back to a different typeface.
+        NSAttributedString(string: "×\(value)", attributes: [
+            .font: quantityFont,
+            .foregroundColor: Self.color(0x4C6768)
+        ])
+    }
+
     fileprivate func updateQuantityTypography(compatibleWith traits: UITraitCollection) {
         let font = UIFontMetrics(forTextStyle: .caption1).scaledFont(
             for: UIFont.systemFont(ofSize: 14, weight: .semibold), compatibleWith: traits)
         guard font.fontName != quantityFont.fontName || font.pointSize != quantityFont.pointSize else { return }
         quantityFont = font
-        for node in drawings.values {
-            guard let label = node.childNode(withName: "quantity") as? SKLabelNode else { continue }
-            label.fontName = font.fontName
-            label.fontSize = font.pointSize
+        for lot in lots {
+            guard let label = drawings[lot.id]?.childNode(withName: "quantity") as? SKLabelNode else { continue }
+            label.attributedText = quantityText(lot.quantity)
         }
     }
 
@@ -523,7 +534,7 @@ final class EmpireScene: SKScene {
             let origin = occupied[(index * 3) % occupied.count]
             guard let sourceIndex = Self.ids.firstIndex(of: origin.id) else { continue }
             let row = min(sourceIndex / layoutColumns, max(0, rows - 2))
-            let roadY = (CGFloat(rows - 1) / 2 - CGFloat(row) - 0.5) * 214 - 24
+            let roadY = (CGFloat(rows - 1) / 2 - CGFloat(row) - 0.5) * Self.rowSpacing - 24
             let vehicle = vehicleNode()
             let start = CGPoint(x: terrainBounds.minX + 68, y: roadY - 13)
             let end = CGPoint(x: terrainBounds.maxX - 111, y: roadY + 10)

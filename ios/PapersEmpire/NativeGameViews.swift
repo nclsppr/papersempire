@@ -8,7 +8,14 @@ import UniformTypeIdentifiers
  Printing is a reachable action, separate from the four navigation tabs.
  The same units, costs, career and saves drive the scene and native controls.
  Native phone/tablet evidence and gameplay verification are the finish line. */
-private let empireTint = Color(red: 0.82, green: 0.29, blue: 0.08)
+private let empireTint = Color(uiColor: UIColor { traits in
+    if traits.userInterfaceStyle == .dark {
+        return UIColor(red: 240.0 / 255, green: 126.0 / 255, blue: 65.0 / 255, alpha: 1)
+    }
+    return UIColor(red: 207.0 / 255, green: 72.0 / 255, blue: 18.0 / 255, alpha: 1)
+})
+// Filled actions retain sufficient contrast with their white labels in both modes.
+private let empirePrimaryFill = Color(red: 207.0 / 255, green: 72.0 / 255, blue: 18.0 / 255)
 private enum EmpireTab: String { case empire, workshops, orders, career }
 private enum EmpireSheet: Identifiable, Equatable {
     case settings, building(String), incident, offline, importPreview
@@ -52,10 +59,11 @@ struct NativeGameRootView: View {
     @Bindable var game: NativeGameStore
     @Environment(\.scenePhase) private var phase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var tab = EmpireTab.empire
     @State private var sheet: EmpireSheet?
     @State private var scene = EmpireScene()
+    @State private var empireHeaderHeight: CGFloat = 0
+    @State private var empireFooterHeight: CGFloat = 0
     @State private var importer = false
     @State private var importAfterDismiss = false
     @State private var recoveryAfterDismiss = false
@@ -147,56 +155,66 @@ struct NativeGameRootView: View {
                 NativeEmpireSceneView(scene: scene,
                     lots: snapshot.buildings.map { EmpireLot(id: $0.id, quantity: $0.quantity, unlocked: $0.unlocked) },
                     reducedMotion: reduceMotion, isActive: phase == .active && tab == .empire && sheet == nil,
-                    contentInsets: UIEdgeInsets(top: typeSize.isAccessibilitySize ? 220 : 150, left: 18,
-                        bottom: snapshot.buildings.allSatisfy({ $0.quantity == 0 }) && geometry.size.height > 500 ? 255 : 135, right: 18),
+                    contentInsets: UIEdgeInsets(top: empireHeaderHeight + 12, left: 18,
+                        bottom: empireFooterHeight + 12, right: 18),
                     accessibilityNames: Dictionary(uniqueKeysWithValues: snapshot.buildings.map { ($0.id, $0.name) }),
                     onSelectLot: { sheet = .building($0) })
                 VStack(spacing: 12) {
-                    resourceReadout(snapshot).padding(.horizontal, 16)
-                    if !snapshot.objective.title.isEmpty && geometry.size.height > 430 {
-                        Button { openObjective(snapshot) } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "scope").font(.title3)
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(snapshot.objective.title).font(.subheadline.weight(.semibold))
-                                    ProgressView(value: min(1, max(0, snapshot.objective.progress)))
-                                }
-                                Image(systemName: "chevron.right").font(.caption.weight(.semibold))
-                            }.padding(14).foregroundStyle(.primary)
-                        }.buttonStyle(.plain).nativeGlass().padding(.horizontal, 16)
-                            .accessibilityLabel(snapshot.objective.title + ". " + snapshot.objective.description)
+                    VStack(spacing: 12) {
+                        resourceReadout(snapshot).padding(.horizontal, 16)
+                        if !snapshot.objective.title.isEmpty && geometry.size.height > 430 {
+                            Button { openObjective(snapshot) } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "scope").font(.title3)
+                                    VStack(alignment: .leading, spacing: 5) {
+                                        Text(snapshot.objective.title).font(.subheadline.weight(.semibold))
+                                        ProgressView(value: min(1, max(0, snapshot.objective.progress)))
+                                    }
+                                    Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+                                }.padding(14).foregroundStyle(.primary)
+                            }.buttonStyle(.plain).nativeGlass().padding(.horizontal, 16)
+                                .accessibilityLabel(snapshot.objective.title + ". " + snapshot.objective.description)
+                        }
+                        if game.saveBlocked {
+                            Button(word("saveError"), systemImage: "externaldrive.badge.exclamationmark") { sheet = .settings }
+                                .padding(12).nativeGlass()
+                        }
                     }
-                    if game.saveBlocked {
-                        Button(word("saveError"), systemImage: "externaldrive.badge.exclamationmark") { sheet = .settings }
-                            .padding(12).nativeGlass()
+                    .padding(.top, 8)
+                    .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { height in
+                        if empireHeaderHeight != height { empireHeaderHeight = height }
                     }
                     Spacer(minLength: 8)
-                    if snapshot.buildings.allSatisfy({ $0.quantity == 0 }) && geometry.size.height > 500 {
-                        VStack(spacing: 5) {
-                            Text(word("firstPrint")).font(.headline)
-                            Text(word("firstHint")).font(.subheadline).multilineTextAlignment(.center)
-                        }.padding(14).nativeGlass().padding(.horizontal, 24)
-                    }
-                    HStack(alignment: .bottom) {
-                        if snapshot.incident != nil {
-                            Button { _ = game.command("openIncident"); sheet = .incident } label: {
-                                Label(word("incident"), systemImage: "exclamationmark.bubble").font(.subheadline.weight(.semibold)).padding(12)
-                            }.buttonStyle(.plain).nativeGlass()
+                    VStack(spacing: 12) {
+                        if snapshot.buildings.allSatisfy({ $0.quantity == 0 }) && geometry.size.height > 500 {
+                            VStack(spacing: 5) {
+                                Text(word("firstPrint")).font(.headline)
+                                Text(word("firstHint")).font(.subheadline).multilineTextAlignment(.center)
+                            }.padding(14).nativeGlass().padding(.horizontal, 24)
                         }
-                        Spacer()
-                        HStack(spacing: 4) {
-                            mapButton("zoomOut", symbol: "minus") { scene.zoom(by: 0.8) }
-                            mapButton("zoomIn", symbol: "plus") { scene.zoom(by: 1.2) }
-                            mapButton("recenter", symbol: "scope") { scene.recenter() }
-                        }.nativeGlass().accessibilityElement(children: .contain)
-                    }.padding(.horizontal, 16)
-                    Button {
-                        if game.command("print") { printFeedback += 1 }
-                    } label: {
-                        Label(word("print"), systemImage: "printer.fill").font(.headline).frame(minWidth: 150, minHeight: 44)
-                    }.nativePrimary().disabled(game.saveBlocked).accessibilityIdentifier("native.print").padding(.bottom, 14)
+                        HStack(alignment: .bottom) {
+                            if snapshot.incident != nil {
+                                Button { _ = game.command("openIncident"); sheet = .incident } label: {
+                                    Label(word("incident"), systemImage: "exclamationmark.bubble").font(.subheadline.weight(.semibold)).padding(12)
+                                }.buttonStyle(.plain).nativeGlass()
+                            }
+                            Spacer()
+                            HStack(spacing: 4) {
+                                mapButton("zoomOut", symbol: "minus") { scene.zoom(by: 0.8) }
+                                mapButton("zoomIn", symbol: "plus") { scene.zoom(by: 1.2) }
+                                mapButton("recenter", symbol: "scope") { scene.recenter() }
+                            }.nativeGlass().accessibilityElement(children: .contain)
+                        }.padding(.horizontal, 16)
+                        Button {
+                            if game.command("print") { printFeedback += 1 }
+                        } label: {
+                            Label(word("print"), systemImage: "printer.fill").font(.headline).frame(minWidth: 150, minHeight: 44)
+                        }.nativePrimary().disabled(game.saveBlocked).accessibilityIdentifier("native.print").padding(.bottom, 14)
+                    }
+                    .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { height in
+                        if empireFooterHeight != height { empireFooterHeight = height }
+                    }
                 }
-                .padding(.top, 8)
                 .frame(maxWidth: geometry.size.width > 700 ? 600 : .infinity).frame(maxWidth: .infinity)
             }
         }
@@ -648,8 +666,10 @@ private struct NativeGlass: ViewModifier {
 private extension View {
     func nativeGlass() -> some View { modifier(NativeGlass()) }
     @ViewBuilder func nativePrimary() -> some View {
-        if #available(iOS 26.0, *) { self.buttonStyle(.glassProminent).buttonBorderShape(.capsule).controlSize(.large) }
-        else { self.buttonStyle(.borderedProminent).buttonBorderShape(.capsule).controlSize(.large) }
+        Group {
+            if #available(iOS 26.0, *) { self.buttonStyle(.glassProminent).buttonBorderShape(.capsule).controlSize(.large) }
+            else { self.buttonStyle(.borderedProminent).buttonBorderShape(.capsule).controlSize(.large) }
+        }.tint(empirePrimaryFill).foregroundStyle(.white)
     }
 }
 private struct NativeShareSheet: UIViewControllerRepresentable {

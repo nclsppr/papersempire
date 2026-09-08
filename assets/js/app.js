@@ -5634,6 +5634,15 @@
       translate: t, locale: () => currentLang, getSave: buildPersistedState,
       onReplaced() {
         disablePersistence();
+        const imported = Persistence.load?.();
+        const installed = (imported?.buildings || []).filter(item => item.quantity > 0);
+        // The beginner guide ends after two purchases and established DOC
+        // production. Carry that progress across devices, without importing
+        // unrelated preferences or suppressing guidance for a first unit.
+        if (Settings && installed.reduce((total, item) => total + item.quantity, 0) >= 2 &&
+            installed.some(item => BUILDING_DEFS.some(def => def.id === item.id && def.baseProduction > 0))) {
+          Settings.setPreference("tutorialCompleted", true);
+        }
         try { localStorage.removeItem(DASH_SNAPSHOT_KEY); localStorage.removeItem(ANALYTICS_HISTORY_KEY); } catch {}
         location.reload();
       }
