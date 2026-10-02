@@ -571,7 +571,6 @@
       if (focusTarget && typeof focusTarget.focus === "function") {
         focusTarget.focus({ preventScroll: true });
       }
-      const settleDelay = reduceMotionPreferred() ? 0 : 580;
       scheduleVisual(() => {
         const tutorialActive = TutorialEngine && typeof TutorialEngine.isActive === "function" && TutorialEngine.isActive();
         if (tutorialActive || [DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
@@ -580,7 +579,7 @@
         if (destination && typeof destination.scrollIntoView === "function") {
           destination.scrollIntoView({ behavior: reduceMotionPreferred() ? "auto" : "smooth", block: "start" });
         }
-      }, settleDelay);
+      }, 0);
     });
     if (!isEmpireMode() && TutorialEngine && typeof TutorialEngine.maybeStart === "function") {
       scheduleVisual(() => TutorialEngine.maybeStart(), reduceMotionPreferred() ? 0 : 420);
