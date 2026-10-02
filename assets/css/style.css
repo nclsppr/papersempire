@@ -3516,7 +3516,7 @@ body {
   margin: 0;
   color: var(--navy-900);
   font-family: var(--font-display);
-  font-size: clamp(3rem, 4.65vw, 4.7rem);
+  font-size: clamp(3rem, 4.65vw, 4.25rem);
   font-weight: 400;
   letter-spacing: -0.045em;
   line-height: 0.9;
@@ -3528,6 +3528,13 @@ body {
 
 .hero-title span {
   display: block;
+}
+
+@media (min-width: 701px) {
+  html[lang="de"] .hero-title,
+  html[lang="lb"] .hero-title {
+    font-size: clamp(2.5rem, 3.55vw, 3.4rem);
+  }
 }
 
 .hero-title span:first-child {
@@ -4400,7 +4407,7 @@ body {
   }
 
   .hero-title {
-    font-size: clamp(3rem, 6.6vw, 4.1rem);
+    font-size: clamp(3rem, 6.4vw, 4.1rem);
   }
 
   .empire-roadmap-inner {
@@ -6948,7 +6955,7 @@ html:not(.pref-reduce-motion) .operations-deck .btn-buy.is-stamped {
 
 @media (prefers-reduced-motion: no-preference) {
   html:not(.pref-reduce-motion)[data-experience="landing"] .hero-copy {
-    animation: hero-copy-feed 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: hero-copy-feed 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   html:not(.pref-reduce-motion)[data-experience="landing"] .empire-hud {

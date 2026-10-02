@@ -468,7 +468,7 @@ html[data-experience="playing"] body {
 }
 
 .data-zone-shell .nav-dash-link {
-  min-height: 40px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   color: #fff7e6;
@@ -779,7 +779,7 @@ html[data-experience="playing"] body {
 }
 
 .segmented-control button {
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 16px;
   border: 0;
   border-left: 1px solid var(--world-line);
@@ -1086,7 +1086,7 @@ html[data-experience="playing"] body {
 }
 
 .data-table th button {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   background: transparent;

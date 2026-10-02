@@ -647,6 +647,10 @@
   min-height: 44px;
 }
 
+.site-header .primary-nav a {
+  min-width: 44px;
+}
+
 @media (any-pointer: coarse) {
   .site-header .header-play-link,
   .site-header .header-guides-link,
