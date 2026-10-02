@@ -110,6 +110,25 @@ assert.ok(Math.abs(automatic.docPerSecond - 11) < 1e-12,
   "analytics must include both the x10 milestone and the career modifier");
 const currentCost = EconomyAnalytics.computeNextCost(economyState(), "reproOperator");
 assert.equal(currentCost.value, Math.floor(15 * Math.pow(1.15, 10) * 1.1));
+const dashboardState = economyState(2);
+const invested = EconomyAnalytics.computeCumulativeCost(dashboardState, "reproOperator");
+assert.equal(invested.status, "estimated");
+assert.equal(invested.value, 34);
+const investmentRows = EconomyAnalytics.buildInvestmentRows(dashboardState);
+assert.equal(investmentRows.length, 1);
+assert.equal(investmentRows[0].id, "reproOperator");
+assert.equal(investmentRows[0].currentCost, 21);
+assert.equal(investmentRows[0].totalInvested, 34);
+assert.equal(investmentRows[0].marginalDocPerSecond, 1);
+assert.equal(investmentRows[0].paybackSeconds, 21);
+dashboardState.resources.ccTotal = 10_000;
+dashboardState.resources.culturePoints = 2;
+const prestigeOutlook = EconomyAnalytics.computePrestigeOutlook(dashboardState);
+assert.equal(prestigeOutlook.ready, true);
+assert.equal(prestigeOutlook.actionable, true);
+assert.equal(prestigeOutlook.potentialCultureGain, 3);
+assert.equal(prestigeOutlook.currentCulturePoints, 2);
+assert.equal(prestigeOutlook.prestigeMultiplierAfterReset, EconomyAnalytics.computePrestigeMultiplier(5));
 const thresholdSimulation = EconomyAnalytics.simulateNextBuilding(economyState(9), "reproOperator");
 assert.equal(thresholdSimulation.status, "exact");
 assert.ok(thresholdSimulation.deltaAutomaticDocPerSecond > 1,
