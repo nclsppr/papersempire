@@ -562,12 +562,14 @@
       if ([DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
         return;
       }
-      const destination = target || DOM.gameSurface || DOM.clickButton;
+      const isRendered = element => element && element.getClientRects().length > 0;
+      const gameTarget = isEmpireMode() ? document.getElementById("empireApp") : DOM.currentObjective;
+      const destination = [target, gameTarget, DOM.gameSurface, DOM.clickButton].find(isRendered);
       const focusTarget = destination && destination.matches && destination.matches("button, a, [tabindex]")
         ? destination
         : destination && destination.querySelector
-        ? destination.querySelector("h1[tabindex], h2[tabindex], [tabindex='-1']") || DOM.gameViewTitle
-        : DOM.gameViewTitle || DOM.clickButton;
+        ? [...destination.querySelectorAll("h1[tabindex], h2[tabindex], [tabindex='-1']"), gameTarget, DOM.gameViewTitle, DOM.clickButton].find(isRendered)
+        : [gameTarget, DOM.gameViewTitle, DOM.clickButton].find(isRendered);
       if (focusTarget && typeof focusTarget.focus === "function") {
         focusTarget.focus({ preventScroll: true });
       }
