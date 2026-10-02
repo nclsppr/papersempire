@@ -4,7 +4,6 @@
   let activePaperCues = 0;
   const MAX_PAPER_CUES = 18;
   const PRESS_FEED_DURATION = 510;
-  const pressFeedTimers = new WeakMap();
   const classTimers = new WeakMap();
 
   const SOUND_PRESETS = {
@@ -220,11 +219,9 @@
     const cleanup = function () {
       if (finished) return;
       finished = true;
-      const activeTimer = timer;
-      if (activeTimer !== null) clearTimeout(activeTimer);
-      if (press.classList.contains("is-feeding")) press.classList.remove("is-feeding");
+      if (timer !== null) clearTimeout(timer);
+      press.classList.remove("is-feeding");
       sheet.removeEventListener("animationend", handleAnimationEnd);
-      if (pressFeedTimers.get(press) === activeTimer) pressFeedTimers.delete(press);
       timer = null;
     };
     const handleAnimationEnd = function (event) {
@@ -234,7 +231,6 @@
     press.classList.add("is-feeding");
     sheet.addEventListener("animationend", handleAnimationEnd);
     timer = setTimeout(cleanup, PRESS_FEED_DURATION + 90);
-    pressFeedTimers.set(press, timer);
   }
 
   function playClickEffect(target) {
