@@ -2,6 +2,8 @@
 .mobile-game-nav, .mobile-readout { display: none; }
 .next-purchase { padding: 14px 0 2px; border-top: 1px solid #b8ac91; margin-top: 12px; }
 .next-purchase p { margin: 0 0 10px; color: #332b22; line-height: 1.5; }
+.pref-high-contrast .next-purchase { border-color: #fef08a; }
+.pref-high-contrast .next-purchase p { color: #fff; }
 .next-purchase-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .next-purchase-actions button { min-height: 44px; }
 .context-help { display: inline-block; margin: 12px 0; text-underline-offset: 4px; }

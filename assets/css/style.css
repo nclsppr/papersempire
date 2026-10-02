@@ -1468,7 +1468,7 @@
       color: var(--ink-strong);
       border-radius: var(--radius-sm);
       padding: 0.45em 0.9em;
-      min-height: 36px;
+      min-height: 44px;
       font-size: var(--text-small);
       font-weight: 600;
       cursor: pointer;
@@ -1715,7 +1715,7 @@
       background: var(--control-soft);        /* kraft en retrait */
       color: rgba(51, 38, 26, 0.78);          /* 5,1:1 sur kraft */
       padding: 8px 10px 10px;
-      min-height: 40px;
+      min-height: 44px;
       margin-bottom: -2px;                    /* recouvre la ligne de pliure */
       font-size: var(--text-small);
       font-weight: 600;
@@ -2100,6 +2100,7 @@
     .option-row {
       display: flex;
       align-items: center;
+      min-height: 44px;
       gap: 6px;
       font-size: var(--text-small);
     }
@@ -6993,6 +6994,12 @@ html:not(.pref-reduce-motion) .operations-deck .btn-buy.is-stamped {
 }
 
 /* Mode contraste élevé : la hiérarchie reste, les textures disparaissent. */
+.pref-high-contrast .stage-fallback-text {
+  border-color: var(--hc-accent);
+  background: #000;
+  color: #fff;
+}
+
 .pref-high-contrast .operations-masthead,
 .pref-high-contrast .operations-jump,
 .pref-high-contrast .work-order,

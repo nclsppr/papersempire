@@ -492,7 +492,9 @@
       DOM.sceneStage.setAttribute("aria-labelledby", playing ? "empireHudTitle" : "heroTitle");
     }
     if (DOM.skipLink) {
-      DOM.skipLink.setAttribute("href", playing ? "#gameViewTitle" : "#heroTitle");
+      DOM.skipLink.setAttribute("href", playing
+        ? isEmpireMode() ? "#empireApp" : "#currentObjective"
+        : "#heroTitle");
     }
     document.querySelectorAll("[data-landing-only]").forEach(element => {
       element.inert = playing;

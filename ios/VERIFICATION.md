@@ -84,8 +84,10 @@ performances sur appareil.
 - Fluidité, température, mémoire et arrière-plan sur iPhone physique.
 - Signature pour appareil, archive et distribution TestFlight/App Store.
 
-Le simulateur n’établit aucune mesure de fluidité sur appareil. Cette branche
-reste un candidat en PR brouillon ; elle n’est ni fusionnée ni publiée.
+Le simulateur n’établit aucune mesure de fluidité sur appareil. Le candidat a
+été fusionné dans `main` via la PR #43 le 2 octobre 2026 après une nouvelle
+validation du runtime et de la compilation simulateur. La distribution
+TestFlight et App Store reste à effectuer.
 
 ## Incident d’environnement résolu pour ces parcours
 

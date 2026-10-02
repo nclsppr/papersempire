@@ -287,7 +287,8 @@
 
 .site-header .lang-select {
   min-width: 72px;
-  min-height: 37px;
+  min-height: 44px;
+  height: 44px;
   margin: 0;
   padding: 4px 8px;
   border: 1px solid rgba(217, 194, 154, 0.45);
@@ -310,9 +311,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  min-height: 37px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   border: 1px solid rgba(217, 194, 154, 0.45);
   border-radius: 999px;
@@ -637,6 +639,12 @@
   .site-header--editorial .header-actions {
     grid-template-columns: minmax(0, 1fr) 58px;
   }
+}
+
+.site-header .header-play-link,
+.site-header .header-guides-link,
+.site-header .nav-dash-link {
+  min-height: 44px;
 }
 
 @media (any-pointer: coarse) {

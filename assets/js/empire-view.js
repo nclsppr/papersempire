@@ -145,7 +145,7 @@
       if (consent) { consent.checked = false; consent.disabled = true; const row = consent.closest("label"); if (row) { row.hidden = true; row.setAttribute("aria-hidden", "true"); } }
       document.querySelectorAll('[data-i18n="engagement.hint"]').forEach(hint => { hint.hidden = true; });
     }
-    shell = document.createElement("main"); shell.id = "empireApp"; shell.className = "empire-app"; shell.setAttribute("aria-label", word("empire"));
+    shell = document.createElement("main"); shell.id = "empireApp"; shell.className = "empire-app"; shell.tabIndex = -1; shell.setAttribute("aria-label", word("empire"));
     const top = document.createElement("header"); top.className = "empire-top";
     const brand = document.createElement("img"); brand.src = "/assets/images/icon-192.png"; brand.width = 46; brand.height = 46; brand.alt = "Papers Empire";
     const resources = document.createElement("dl"); resources.className = "empire-resources";

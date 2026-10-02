@@ -53,6 +53,14 @@ html[data-experience="landing"] .stage {
   min-height: 500px;
 }
 
+@media (min-width: 1441px) {
+  html[data-experience="landing"] .stage::before {
+    /* Follow the centered copy inset; keep its 505px column inside the
+       paper's fade and torn edge, including the 1920px stage cap. */
+    width: calc(max(28px, calc((100% - 1340px) / 2)) + 505px + 160px);
+  }
+}
+
 .stage {
   transition: height 560ms cubic-bezier(0.22, 0.8, 0.22, 1), box-shadow 360ms ease;
 }
