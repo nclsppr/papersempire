@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "assets/css/experience-v4.css"
+        ],
+        "createdAt": "2026-10-02T16:35:37.044Z",
+        "reason": "Agent review: building-row border is a live purchase-affordability indicator; app.js computes is-affordable from bank and cost, and style.css colors that border with ops-positive. Preserve this gameplay state cue."
+      }
+    ]
+  }
+}

@@ -562,16 +562,17 @@
       if ([DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
         return;
       }
-      const destination = target || DOM.gameSurface || DOM.clickButton;
+      const isRendered = element => element && element.getClientRects().length > 0;
+      const gameTarget = isEmpireMode() ? document.getElementById("empireApp") : DOM.currentObjective;
+      const destination = [target, gameTarget, DOM.gameSurface, DOM.clickButton].find(isRendered);
       const focusTarget = destination && destination.matches && destination.matches("button, a, [tabindex]")
         ? destination
         : destination && destination.querySelector
-        ? destination.querySelector("h1[tabindex], h2[tabindex], [tabindex='-1']") || DOM.gameViewTitle
-        : DOM.gameViewTitle || DOM.clickButton;
+        ? [...destination.querySelectorAll("h1[tabindex], h2[tabindex], [tabindex='-1']"), gameTarget, DOM.gameViewTitle, DOM.clickButton].find(isRendered)
+        : [gameTarget, DOM.gameViewTitle, DOM.clickButton].find(isRendered);
       if (focusTarget && typeof focusTarget.focus === "function") {
         focusTarget.focus({ preventScroll: true });
       }
-      const settleDelay = reduceMotionPreferred() ? 0 : 580;
       scheduleVisual(() => {
         const tutorialActive = TutorialEngine && typeof TutorialEngine.isActive === "function" && TutorialEngine.isActive();
         if (tutorialActive || [DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
@@ -580,7 +581,7 @@
         if (destination && typeof destination.scrollIntoView === "function") {
           destination.scrollIntoView({ behavior: reduceMotionPreferred() ? "auto" : "smooth", block: "start" });
         }
-      }, settleDelay);
+      }, 0);
     });
     if (!isEmpireMode() && TutorialEngine && typeof TutorialEngine.maybeStart === "function") {
       scheduleVisual(() => TutorialEngine.maybeStart(), reduceMotionPreferred() ? 0 : 420);
