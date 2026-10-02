@@ -47,3 +47,8 @@ node "$REPOSITORY_ROOT/scripts/build-lang-pages.mjs" \
 node "$REPOSITORY_ROOT/scripts/build-guides.mjs" \
   "$output_directory" \
   "${revision:0:8}"
+
+# Hash the final bytes, after locale generation and every asset URL rewrite.
+node "$REPOSITORY_ROOT/scripts/build-offline.mjs" \
+  "$output_directory" \
+  "${revision:0:8}"

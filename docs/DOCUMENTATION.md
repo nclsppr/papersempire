@@ -6,13 +6,17 @@ the toolchain, and the modules you’ll touch most often. GitHub issue
 specification for the career rules.
 
 ## 1. Runtime Overview
-- **Client only:** everything runs in the browser. `index.html` loads plain JS modules in the order listed in the markup.
+- **Local game:** simulation and saves run in the browser. `index.html` loads
+  plain JS modules in the order listed in the markup. The separate, optional
+  [engagement endpoint](engagement.md) does not host game state.
 - **Stateful loop:** `app.js` owns orchestration, rendering, localisation and
   saves. `progression.js`, `endgame.js`, `events.js` and `modifier-utils.js`
   expose the career, contract, incident and modifier rules without owning UI.
   A cached `DOM` map avoids repeated query selectors during frames.
 - **Settings & tutorial:** `accessibility.js` exposes a `Settings` API that other modules (tutorial, UI effects, app) consume to apply preferences instantly.
 - **Effects:** `ui-effects.js` centralises particles + audio beeps; `tutorial.js` manages the guided tour overlay and exposes `markMilestone()` for app integration.
+- **Mobile and offline:** see [the integration contract](mobile-offline.md) for
+  panel navigation, portable save previews, installation, cache updates and iOS.
 
 ## 2. File Structure (simplified)
 ```

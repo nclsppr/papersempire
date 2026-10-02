@@ -240,6 +240,7 @@ const sharedSources = Object.freeze({
 export const ARTICLES = Object.freeze([
   {
     id: "idle-clicker-incremental",
+    playTarget: "printStation",
     image: "/assets/images/guides/idle-clicker-incremental.webp",
     datePublished: "2026-08-26",
     dateModified: "2026-08-31",
@@ -253,6 +254,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "LEXIQUE DE PRODUCTION · GUIDE 01",
         lead: "Il n’existe pas de frontière normalisée unique entre ces trois étiquettes. Cette grille éditoriale distingue surtout le geste du clicker, le rapport au temps de l’idle et la croissance du système incrémental.",
         imageAlt: "Une presse manuelle reliée à une chaîne automatisée où des piles de papier grandissent, dans le style industriel de Papers Empire",
+        playLabel: "Essayer la presse",
         readingMinutes: 7,
         card: "Un repère simple pour distinguer le clic, l’automatisation et les couches de progression.",
         sections: [
@@ -293,6 +295,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "PRODUCTION GLOSSARY · GUIDE 01",
         lead: "There is no single standardized boundary between these three labels. This editorial framework separates the clicker’s input, idle design’s relationship with time, and the incremental system’s growth into new layers.",
         imageAlt: "A manual press feeding an automated conveyor where stacks of paper grow, in the industrial Papers Empire style",
+        playLabel: "Try the printing press",
         readingMinutes: 6,
         card: "A practical way to separate clicking, automation, and layered progression.",
         sections: [
@@ -333,6 +336,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "PRODUKTIONSLEXIKON · GUIDE 01",
         lead: "Für diese drei Begriffe gibt es keine einheitlich normierte Grenze. Diese redaktionelle Einteilung trennt vor allem die Clicker-Eingabe, den Umgang von Idle Design mit Zeit und das Wachsen des Incremental-Systems.",
         imageAlt: "Eine manuelle Presse führt zu einem automatisierten Förderband mit wachsenden Papierstapeln im Industriestil von Papers Empire",
+        playLabel: "Die Presse ausprobieren",
         readingMinutes: 7,
         card: "Eine praktische Abgrenzung von Klicken, Automatisierung und wachsender Spieltiefe.",
         sections: [
@@ -373,6 +377,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "PRODUKTIOUNSLEXIKON · GUIDE 01",
         lead: "Et gëtt keng eenzeg norméiert Grenz tëscht dësen dräi Begrëffer. Dës redaktionell Andeelung ënnerscheet virun allem d’Clicker-Aktioun, d’Relatioun vun Idle Design mat der Zäit an de Wuesstem vum Incremental-System.",
         imageAlt: "Eng manuell Press, déi an eng automatiséiert Linn mat wuessende Pabeierstapele féiert, am industrielle Stil vu Papers Empire",
+        playLabel: "D’Press ausprobéieren",
         readingMinutes: 7,
         card: "Eng praktesch Erklärung vu Klicken, Automatiséierung an neie Spillschichten.",
         sections: [
@@ -410,6 +415,7 @@ export const ARTICLES = Object.freeze([
   },
   {
     id: "browser-idle-selection",
+    playTarget: "buildingsPanel",
     image: "/assets/images/guides/browser-idle-games.webp",
     datePublished: "2026-08-26",
     dateModified: "2026-08-31",
@@ -423,6 +429,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "CATALOGUE DE L’ATELIER · GUIDE 02",
         lead: "Cette sélection n’est pas un classement. Elle réunit sept jeux officiels accessibles dans le navigateur, chacun avec une façon différente de transformer l’attente en décisions.",
         imageAlt: "Plusieurs ateliers industriels reliés représentant différentes façons de gérer une production idle dans l’univers de Papers Empire",
+        playLabel: "Explorer mes unités",
         readingMinutes: 8,
         card: "Sept expériences officielles où l’organisation compte davantage que la vitesse du clic.",
         sections: [
@@ -464,6 +471,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "WORKSHOP CATALOGUE · GUIDE 02",
         lead: "This is a selection, not a ranking. These seven official browser games turn waiting into different kinds of decisions—from production lines and markets to settlements and expeditions.",
         imageAlt: "Connected industrial workshops representing different ways to manage idle production in the Papers Empire visual world",
+        playLabel: "Explore my production units",
         readingMinutes: 7,
         card: "Seven official experiences where organization matters more than clicking fast.",
         sections: [
@@ -505,6 +513,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "WERKSTATTKATALOG · GUIDE 02",
         lead: "Das ist eine Auswahl, keine Rangliste. Sieben offizielle Browser-Spiele verwandeln Wartezeit in ganz unterschiedliche Entscheidungen – von Produktionslinien bis zu Siedlungen.",
         imageAlt: "Verbundene industrielle Werkstätten für unterschiedliche Arten von Idle-Management in der Bildwelt von Papers Empire",
+        playLabel: "Meine Einheiten entdecken",
         readingMinutes: 8,
         card: "Sieben offizielle Spiele, in denen Organisation wichtiger ist als schnelles Klicken.",
         sections: [
@@ -546,6 +555,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "ATELIER-KATALOG · GUIDE 02",
         lead: "Dat hei ass eng Auswiel, kee Klassement. Siwen offiziell Browser-Spiller maachen aus Waardezäit ganz verschidden Entscheedungen – vu Produktiounslinne bis zu Siedlungen.",
         imageAlt: "Verbonnen industriell Atelieren, déi verschidden Aarte vun Idle-Management an der Bildwelt vu Papers Empire weisen",
+        playLabel: "Meng Eenheeten entdecken",
         readingMinutes: 8,
         card: "Siwen offiziell Spiller, bei deenen Organisatioun méi wichteg ass wéi séier klicken.",
         sections: [
@@ -584,6 +594,7 @@ export const ARTICLES = Object.freeze([
   },
   {
     id: "papers-vs-paperclips",
+    playTarget: "upgradesPanel",
     image: "/assets/images/guides/papers-empire-vs-paperclips.webp",
     datePublished: "2026-08-26",
     dateModified: "2026-08-31",
@@ -597,6 +608,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "FACE-À-FACE INDUSTRIEL · GUIDE 03",
         lead: "Les deux jeux partent d’un objet de bureau et d’une action simple. Papers Empire développe une imprimerie illustrée ; Universal Paperclips révèle progressivement de nouveaux systèmes dans une interface textuelle minimale.",
         imageAlt: "Deux empires de papier opposés, une imprimerie chaleureuse et une machine abstraite à trombones, dans une composition industrielle",
+        playLabel: "Découvrir ma progression",
         readingMinutes: 7,
         card: "Un comparatif sans score pour choisir entre atelier industriel et surprise systémique.",
         sections: [
@@ -639,6 +651,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "INDUSTRIAL HEAD-TO-HEAD · GUIDE 03",
         lead: "Both games begin with an office object and a simple action. Papers Empire develops an illustrated print shop; Universal Paperclips gradually reveals new systems through a minimal text interface.",
         imageAlt: "Two opposing paper empires, a warm print factory and an abstract paperclip machine, in an industrial composition",
+        playLabel: "Explore my progression",
         readingMinutes: 6,
         card: "A score-free comparison between an industrial workshop and systemic surprise.",
         sections: [
@@ -681,6 +694,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "INDUSTRIELLES DUELL · GUIDE 03",
         lead: "Beide Spiele beginnen mit einem Bürogegenstand und einer einfachen Handlung. Papers Empire entwickelt eine illustrierte Druckerei; Universal Paperclips zeigt nach und nach neue Systeme in einer reduzierten Textoberfläche.",
         imageAlt: "Zwei gegensätzliche Papierimperien, eine warme Druckfabrik und eine abstrakte Büroklammermaschine in industrieller Komposition",
+        playLabel: "Meinen Fortschritt entdecken",
         readingMinutes: 7,
         card: "Ein Vergleich ohne Punktzahl: Industriewerkstatt oder systemische Überraschung.",
         sections: [
@@ -723,6 +737,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "INDUSTRIELLEN DUELL · GUIDE 03",
         lead: "Béid Spiller fänke mat Büromaterial an enger einfacher Aktioun un. Papers Empire entwéckelt eng illustréiert Dréckerei; Universal Paperclips weist no an no nei Systemer an enger minimalistescher Text-Uewerfläch.",
         imageAlt: "Zwee géigesätzlech Pabeiersräicher, eng waarm Dréckerei an eng abstrakt Büroklamer-Maschinn an enger industrieller Kompositioun",
+        playLabel: "Mäi Fortschrëtt entdecken",
         readingMinutes: 7,
         card: "E Verglach ouni Punkten: Industrieatelier oder systemesch Iwwerraschung.",
         sections: [
@@ -762,16 +777,18 @@ export const ARTICLES = Object.freeze([
   },
   {
     id: "offline-progress-local-save",
+    playTarget: "printStation",
     image: "/assets/images/guides/offline-progress-local-save.webp",
     datePublished: "2026-08-31",
-    dateModified: "2026-08-31",
-    sourcesCheckedAt: "2026-08-31",
+    dateModified: "2026-09-07",
+    sourcesCheckedAt: "2026-09-07",
     sources: [
       sharedSources.papersOfflineRuntime,
       sharedSources.papersPersistence,
       sharedSources.webStorageStandard,
       sharedSources.chromePageLifecycle,
       sharedSources.mdnWebStorage,
+      { label: "WebKit — Home Screen web apps", url: "https://webkit.org/blog/14787/webkit-features-in-safari-17-2/" },
     ],
     translations: {
       fr: {
@@ -781,6 +798,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "REGISTRE HORS LIGNE · GUIDE 04",
         lead: "Un onglet masqué peut être ralenti ou gelé ; un onglet fermé n’exécute plus le jeu. La progression dite « hors ligne » vient donc d’une règle prévue par chaque jeu, pas d’une promesse du navigateur. Voici comment la lire et protéger une partie locale.",
         imageAlt: "Une imprimerie nocturne relie sa chaîne de production à une archive locale lumineuse, entre la lune et l’aube",
+        playLabel: "Retrouver mon atelier",
         readingMinutes: 8,
         card: "Ce qui continue, ce que le navigateur arrête et comment protéger une partie locale.",
         sections: [
@@ -812,10 +830,18 @@ export const ARTICLES = Object.freeze([
             "La navigation privée est temporaire, l’utilisateur peut effacer les données du site et le navigateur peut refuser ou supprimer un stockage non persistant dans certaines situations. Une partie locale importante mérite donc un export avant un nettoyage, une migration ou une longue utilisation en mode privé."
           ] },
           { title: "L’export protège la partie principale, pas tout le profil", paragraphs: [
-            "Dans Papers Empire, l’export reprend la sauvegarde principale stockée sous la clé du jeu et la fournit sous forme de texte. L’import replace cette sauvegarde principale dans le navigateur puis recharge la partie. C’est le moyen intégré de déplacer le cœur d’une partie entre deux profils ou appareils.",
+            "Dans Papers Empire, l’export télécharge ou partage un fichier <code>.papersempire</code> contenant la partie principale. L’import ouvre un sélecteur de fichier, accepte ce format et les anciennes sauvegardes JSON compatibles, puis affiche un aperçu avant toute modification. Vérifie ses ressources, sa carrière et sa date, puis confirme explicitement le remplacement.",
             "Cet export ne doit pas être présenté comme une copie complète du profil navigateur. Les préférences d’accessibilité et l’historique analytique détaillé conservé séparément ne font pas partie de cette sauvegarde principale, même si celle-ci contient les données nécessaires pour reprendre le jeu.",
-            "Conservez le texte exporté sans le modifier, importez-le depuis la version officielle du jeu et vérifiez les ressources, unités et objectifs retrouvés avant d’effacer l’ancienne copie. Cette vérification simple évite de confondre export réussi et migration réellement validée."
+            "Conserve le fichier exporté sans le modifier. Après l’import, contrôle les ressources, unités et objectifs retrouvés avant d’effacer l’ancienne copie. Une précédente sauvegarde valide est conservée localement avant le remplacement et peut être restaurée depuis les réglages. Cette copie de récupération ne remplace pas un fichier conservé hors du navigateur : effacer les données du site peut supprimer les deux."
           ] },
+          {
+            "title": "Préparer le jeu hors ligne et l’installer sur iPhone",
+            "paragraphs": [
+              "Dans les réglages, prépare le jeu hors ligne pendant que la connexion fonctionne et attends le statut « Jeu prêt hors ligne ». Le jeu, ses quatre langues et la Data Science Zone peuvent alors être rouverts dans ce navigateur sans réseau. Les guides et le manuel demandent encore une connexion. Cette préparation stocke les fichiers du jeu ; elle ne constitue pas une copie de ta sauvegarde.",
+              "Sur iPhone, ajouter le jeu à l’écran d’accueil crée un espace séparé de Safari. Exporte d’abord ton fichier .papersempire. Dans Safari, utilise Partager puis « Sur l’écran d’accueil ». Ouvre la nouvelle icône avec une connexion, importe le fichier, contrôle l’aperçu et confirme avant de vérifier la partie retrouvée. Prépare aussi le mode hors ligne dans cette nouvelle app : l’installation ne copie pas automatiquement la partie ni la préparation de Safari.",
+              "Quand une mise à jour est prête, le jeu reste sur la version actuelle jusqu’à ton choix d’enregistrer et de recharger, ou à la fermeture de tous ses onglets. Le navigateur peut effacer des données pour libérer de l’espace : conserve une copie exportée des parties importantes."
+            ]
+          },
           { title: "Checklist avant de fermer ou de changer d’appareil", paragraphs: [
             "La mention « progression hors ligne » ne suffit pas à décrire un jeu. Avant d’investir du temps dans une partie longue, cherchez un contrat concret : lieu de sauvegarde, méthode de transfert, calcul de l’absence et limites annoncées.",
             "Pour Papers Empire, la réponse est explicite : sauvegarde principale locale, export manuel, absence créditée à moitié après une minute et plafond de huit heures. Pour un autre jeu, vérifiez son propre fonctionnement au lieu de lui appliquer ces valeurs."
@@ -836,6 +862,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "OFFLINE OPERATIONS · GUIDE 04",
         lead: "A hidden tab may be throttled or frozen; a closed tab no longer runs the game. So-called offline progress comes from a rule implemented by each game, not from a promise made by the browser. Here is how to read that rule and protect a local run.",
         imageAlt: "A night-time printworks connects its production line to a glowing local archive between moonlight and dawn",
+        playLabel: "Return to my workshop",
         readingMinutes: 7,
         card: "What keeps running, what the browser stops, and how to protect a local save.",
         sections: [
@@ -867,10 +894,18 @@ export const ARTICLES = Object.freeze([
             "Private browsing is temporary, users can clear site data, and a browser may reject or remove non-persistent storage in some conditions. If a local run matters to you, export it before clearing data, moving devices, or relying on a long private-browsing session."
           ] },
           { title: "Exporting protects the main run, not the whole profile", paragraphs: [
-            "In Papers Empire, export reads the main save stored under the game’s own key and provides it as text. Import places that main save in the destination browser and reloads the run. It is the built-in way to move the core game state between profiles or devices.",
+            "In Papers Empire, export downloads or shares a <code>.papersempire</code> file containing the main run. Import opens a file picker, accepts this format and compatible older JSON saves, then displays a preview without changing the run. Check its resources, career, and date before explicitly confirming replacement.",
             "The export should not be described as a complete browser-profile backup. Accessibility preferences and the detailed analytics history stored separately are not part of that main save, even though it contains the data needed to resume the game.",
-            "Keep the exported text unchanged, import it through the official game, and check the restored resources, units, and objectives before deleting the older copy. That final check separates a successful-looking export from a migration that has actually been verified."
+            "Keep the exported file unchanged. After import, check the restored resources, units, and objectives before deleting the old copy. A previous valid save is kept locally before replacement and can be restored in settings. This recovery copy does not replace a file kept outside the browser: clearing site data can delete both local copies."
           ] },
+          {
+            "title": "Prepare offline play and install on iPhone",
+            "paragraphs": [
+              "In settings, prepare offline play while connected and wait for “Game ready offline”. The game, its four languages, and the Data Science Zone can then reopen in this browser without a network. Guides and the manual still need a connection. Preparation stores the game files; it is not a backup of your run.",
+              "On iPhone, adding the game to the Home Screen creates storage separate from Safari. Export your .papersempire file first. In Safari, use Share and “Add to Home Screen”. Open the new icon while connected, import the file, check the preview, and confirm before verifying the restored run. Prepare offline play inside this new app too: installation does not automatically copy Safari’s run or offline preparation.",
+              "When an update is ready, the game keeps the current version until you choose to save and reload, or close all its tabs. Browsers may remove data to free storage, so keep an exported copy of important runs."
+            ]
+          },
           { title: "Checklist before closing or changing devices", paragraphs: [
             "The words “offline progress” do not fully describe a game. Before committing to a long run, look for a concrete contract: where the save lives, how it can be moved, how time away is calculated, and which limits are disclosed.",
             "Papers Empire states its own answer clearly: a local main save, manual export, half-rate credit after one minute, and an eight-hour cap. Check every other game on its own terms instead of applying those values universally."
@@ -891,6 +926,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "SPEICHERPROTOKOLL · GUIDE 04",
         lead: "„Lokal gespeichert“ und „läuft offline weiter“ sind zwei verschiedene Versprechen. Dieser Guide erklärt, wo der Spielstand liegt, was während einer Pause berechnet wird und wie du deine Partie vor einem Browser- oder Gerätewechsel sicherst.",
         imageAlt: "Eine Druckmaschine arbeitet nachts unter einer großen Uhr und befördert Papier in einen leuchtenden lokalen Speicher",
+        playLabel: "Zu meiner Werkstatt zurück",
         readingMinutes: 7,
         card: "Wo Browser-Spielstände liegen, wie Abwesenheit berechnet wird und wie du deine Partie sicher überträgst.",
         sections: [
@@ -920,14 +956,23 @@ export const ARTICLES = Object.freeze([
           ] },
           { title: "Risiken, Backup und Gerätewechsel", paragraphs: [
             "Exportiere deine Partie, bevor du Websitedaten löschst, den Browser wechselst oder ein Gerät zurücksetzt. Bewahre die unveränderte Kopie an einem Ort auf, den du später wiederfindest, und prüfe den Import im Zielbrowser, bevor du die alte Speicherung entfernst.",
-            "Papers Empire exportiert den kanonischen Spielstand als Text. Einstellungen für Barrierefreiheit und der vollständige zeitliche Verlauf der Data Science Zone werden dabei nicht als Gesamtpaket übertragen. Nach einem Import kann dieser getrennte Verlauf neu beginnen oder als unvollständig erscheinen."
+            "Papers Empire lädt den Hauptspielstand als <code>.papersempire</code>-Datei herunter oder teilt ihn. Der Dateiimport akzeptiert dieses Format und kompatible ältere JSON-Spielstände. Eine Vorschau zeigt Ressourcen, Karriere und Datum, bevor du den Ersatz ausdrücklich bestätigst. Einstellungen für Barrierefreiheit und der vollständige Verlauf der Data Science Zone gehören weiterhin nicht zu diesem Export.",
+            "Vor dem Ersetzen bleibt ein vorheriger gültiger Spielstand als lokale Wiederherstellungskopie erhalten. Du kannst ihn in den Einstellungen wiederherstellen. Sichere zusätzlich eine Datei außerhalb des Browsers: Das Löschen der Websitedaten kann beide lokalen Kopien entfernen."
           ], bullets: [
             "Öffne in Papers Empire die Einstellungen und exportiere zuerst den Spielstand.",
-            "Speichere die kopierte Zeichenfolge unverändert und außerhalb der zu löschenden Browserdaten.",
-            "Öffne papersempire.com im Zielbrowser und importiere die Kopie.",
+            "Bewahre die exportierte Datei unverändert außerhalb der zu löschenden Browserdaten auf.",
+            "Öffne papersempire.com im Zielbrowser, wähle die Datei und prüfe die Vorschau, bevor du den Ersatz bestätigst.",
             "Prüfe Ressourcen, Einheiten, Karriere und einen laufenden Vertrag.",
             "Lösche die alten Websitedaten erst, wenn die neue Partie korrekt geladen wurde."
           ] },
+          {
+            "title": "Offline-Spiel vorbereiten und auf dem iPhone installieren",
+            "paragraphs": [
+              "Bereite das Offline-Spiel in den Einstellungen bei bestehender Verbindung vor und warte auf „Spiel offline bereit“. Das Spiel, seine vier Sprachen und die Data Science Zone lassen sich danach in diesem Browser ohne Netz öffnen. Guides und Handbuch brauchen weiterhin eine Verbindung. Die Vorbereitung speichert Spieldateien und ist keine Sicherung deines Spielstands.",
+              "Auf dem iPhone hat die Home-Bildschirm-App einen von Safari getrennten Speicher. Exportiere zuerst deine .papersempire-Datei. Wähle in Safari „Teilen“ und „Zum Home-Bildschirm“. Öffne das neue Symbol mit einer Verbindung, importiere die Datei, prüfe die Vorschau und bestätige den Ersatz. Kontrolliere danach den Spielstand und bereite das Offline-Spiel auch in der neuen App vor: Safaris Partie und Offline-Vorbereitung werden nicht automatisch kopiert.",
+              "Bei einem verfügbaren Update läuft die aktuelle Version weiter, bis du Speichern und Neuladen wählst oder alle Spieltabs schließt. Browser können Daten entfernen, um Platz freizugeben. Bewahre daher eine exportierte Kopie wichtiger Spielstände auf."
+            ]
+          },
           { title: "Checkliste vor der nächsten Pause", paragraphs: [
             "Sechs kurze Fragen reichen aus, um das Speicher- und Offline-Versprechen eines Browser-Idle-Games einzuordnen."
           ], bullets: [
@@ -947,6 +992,7 @@ export const ARTICLES = Object.freeze([
         eyebrow: "SPÄICHERPROTOKOLL · GUIDE 04",
         lead: "„Lokal gespäichert“ an „leeft offline weider“ sinn zwou verschidde Verspriechen. Dëse Guide erkläert, wou de Spillstand läit, wat bei enger Paus berechent gëtt a wéi s du deng Partie virun engem Wiessel vum Browser oder Apparat ofséchers.",
         imageAlt: "Eng Dréckmaschinn schafft nuets ënner enger grousser Auer a féiert Pabeier an e beliichte lokale Späicher",
+        playLabel: "Zeréck a mäin Atelier",
         readingMinutes: 7,
         card: "Wou Browser-Spillstänn leien, wéi eng Ofwiesenheet berechent gëtt a wéi s du deng Partie sécher iwwerdroos.",
         sections: [
@@ -976,14 +1022,23 @@ export const ARTICLES = Object.freeze([
           ] },
           { title: "Risiken, Backup an Apparaterwiessel", paragraphs: [
             "Exportéier deng Partie, éier s du Säitendonnéeë läschs, de Browser wiessels oder en Apparat zerécksets. Behal déi onverännert Kopie op enger Plaz, déi s du erëmfënns, a kontrolléier den Import am Zilbrowser, éier s du déi al Späicherung läschs.",
-            "Papers Empire exportéiert de kanonesche Spillstand als Text. D’Accessibilitéitsastellungen an de komplette chronologesche Verlaf vun der Data Science Zone ginn dobäi net als ee Gesamtpak iwwerdroen. Nom Import kann dësen getrennte Verlaf nei ufänken oder als onvollstänneg erschéngen."
+            "Papers Empire luet den Haaptspillstand als <code>.papersempire</code>-Fichier erof oder deelt en. Den Import iwwer e Fichier akzeptéiert dëst Format a kompatibel al JSON-Spillstänn. Eng Virschau weist Ressourcen, Karriär an Datum, éier s du den Ersatz ausdrécklech confirméiers. D’Accessibilitéitsastellungen an de komplette Verlaf vun der Data Science Zone sinn och weider net Deel vum Export.",
+            "Virum Ersetze bleift e viregte gültege Spillstand als lokal Restauratiounskopie erhalen. Du kanns en an den Astellunge restauréieren. Späicher zousätzlech e Fichier ausserhalb vum Browser: Wann s du d’Säitendonnéeë läschs, kënne béid lokal Kopie verschwannen."
           ], bullets: [
             "Maach an Papers Empire d’Astellungen op an exportéier fir d’éischt de Spillstand.",
-            "Späicher déi kopéiert Zeecheketten onverännert an ausserhalb vun de Browser-Donnéeën, déi s du läsche wëlls.",
-            "Maach papersempire.com am Zilbrowser op an importéier d’Kopie.",
+            "Späicher den exportéierte Fichier onverännert an ausserhalb vun de Browser-Donnéeën, déi s du läsche wëlls.",
+            "Maach papersempire.com am Zilbrowser op, wielt de Fichier a kontrolléier d’Virschau, éier s du den Ersatz confirméiers.",
             "Kontrolléier Ressourcen, Eenheeten, Karriär an e lafende Kontrakt.",
             "Läsch déi al Säitendonnéeën eréischt, wann déi nei Partie richteg gelueden ass."
           ] },
+          {
+            "title": "Offline-Spill preparéieren an um iPhone installéieren",
+            "paragraphs": [
+              "Preparéier d’Offline-Spill an den Astellunge mat enger Verbindung a waart op „D’Spill ass offline prett“. D’Spill, seng véier Sproochen an d’Data Science Zone kënnen duerno an dësem Browser ouni Netz opgoen. Guiden an Handbuch brauchen nach eng Verbindung. D’Virbereedung späichert Spillfichieren an ass kee Backup vun denger Partie.",
+              "Um iPhone huet d’App um Heembildschierm e Späicher getrennt vu Safari. Exportéier fir d’éischt däi .papersempire-Fichier. Wielt a Safari „Deelen“ an „Op den Heembildschierm“. Maach déi nei Ikon mat enger Verbindung op, importéier de Fichier, kontrolléier d’Virschau a confirméier den Ersatz. Kontrolléier duerno d’Partie a preparéier och d’Offline-Spill an der neier App: D’Partie an d’Virbereedung vu Safari ginn net automatesch kopéiert.",
+              "Wann en Update prett ass, leeft déi aktuell Versioun weider, bis s du Späicheren an Neiluede wiels oder all Spilltabs zouméchs. Browser kënnen Donnéeë läschen, fir Plaz fräizemaachen. Behal dofir eng exportéiert Kopie vu wichtege Spillstänn."
+            ]
+          },
           { title: "Checklëscht virun der nächster Paus", paragraphs: [
             "Sechs kuerz Froe ginn duer, fir d’Späicher- an Offline-Versprieche vun engem Browser-Idle-Game anzeschätzen."
           ], bullets: [
@@ -997,6 +1052,886 @@ export const ARTICLES = Object.freeze([
         ],
       },
     },
+  },
+  {
+    "id": "first-automation",
+    "image": "/assets/images/guides/idle-clicker-incremental.webp",
+    "datePublished": "2026-09-07",
+    "dateModified": "2026-09-07",
+    "sourcesCheckedAt": "2026-09-07",
+    "playTarget": "buildingsPanel",
+    "sources": [
+      {
+        "label": {
+          "fr": "Papers Empire — règles du jeu",
+          "en": "Papers Empire — game rules",
+          "de": "Papers Empire — Spielregeln",
+          "lb": "Papers Empire — Spillreegelen"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/app.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — Plans et carrière",
+          "en": "Papers Empire — Plans and career",
+          "de": "Papers Empire — Pläne und Karriere",
+          "lb": "Papers Empire — Pläng a Karriär"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/progression.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — calculs de production",
+          "en": "Papers Empire — production calculations",
+          "de": "Papers Empire — Produktionsberechnung",
+          "lb": "Papers Empire — Produktiounsberechnung"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/economy-analytics.js"
+      }
+    ],
+    "translations": {
+      "fr": {
+        "slug": "papers-empire-debuter-premiere-automatisation",
+        "title": "Papers Empire : réussir sa première automatisation",
+        "description": "Du premier document à la production automatique : comprends tes achats, le prochain objectif et la sauvegarde de ton atelier Papers Empire.",
+        "eyebrow": "GUIDE DE JEU",
+        "lead": "Le premier objectif est simple : obtenir une production qui ne dépend plus de chaque clic. Voici comment lire une partie neuve, investir ses premiers DOC et partir avec un prochain objectif clair.",
+        "imageAlt": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "imageCaption": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "disclosure": "Règles de Papers Empire vérifiées dans le code source. Les exemples servent à expliquer les décisions ; ils ne décrivent pas une session de test chronométrée.",
+        "readingMinutes": 4,
+        "card": "Du premier document à la production automatique : comprends tes achats, le prochain objectif et la sauvegarde de ton atelier Papers Empire.",
+        "playLabel": "Ouvrir mes unités",
+        "sections": [
+          {
+            "title": "Produire ses premiers documents",
+            "paragraphs": [
+              "Entre dans l’atelier, puis utilise la presse. Au départ, un clic produit un DOC avant bonus. Le compteur <strong>DOC disponibles</strong> représente ce que tu peux dépenser ; le cumul produit raconte le cycle, même après un achat. Une baisse du disponible après un achat ne signifie donc pas que ta production a été perdue."
+            ]
+          },
+          {
+            "title": "Acheter sa première unité",
+            "paragraphs": [
+              "L’opérateur repro coûte initialement <strong>15 DOC</strong> et fournit <strong>0,5 DOC/s de base</strong>. Les bonus peuvent modifier la cadence réellement affichée. Réunis le coût, ouvre les unités et achète un exemplaire : la production automatique devient positive. Tu peux encore imprimer manuellement, mais tu disposes maintenant d’une chaîne qui produit sans cliquer sans arrêt."
+            ]
+          },
+          {
+            "title": "Comparer avant de réinvestir",
+            "paragraphs": [
+              "Le prix du prochain exemplaire augmente avec la quantité déjà possédée. L’atelier repro a une base de 100 DOC pour 3 DOC/s avant bonus : cela ne veut pas dire qu’il faut toujours attendre ce prix. Compare le coût actuel, le gain supplémentaire et le délai jusqu’à l’achat. Atteindre dix exemplaires d’une unité active un palier de rendement sur cette unité. Notre <a href=\"/guides/papers-empire-comparer-investissements-doc/\">exemple d’investissement</a> montre pourquoi un simple prix divisé par la production de base peut tromper."
+            ]
+          },
+          {
+            "title": "Suivre un dossier, puis faire une pause",
+            "paragraphs": [
+              "Le Dossier du moment donne une prochaine action. Commence par son blocage concret : unité manquante, cadence ou confiance client. Tu n’as pas besoin de comprendre toute la carrière dès le premier achat. Si une jauge te manque, le guide <a href=\"/guides/papers-empire-doc-cc-plans/\">DOC, CC et Plans</a> distingue production, confiance et progression permanente."
+            ]
+          },
+          {
+            "title": "Retrouver son atelier",
+            "paragraphs": [
+              "La partie reste dans ce navigateur. Après au moins une minute d’absence, Papers Empire crédite 50 % de la cadence nominale, avec un plafond de huit heures et uniquement en DOC. Ce gain ne remplace pas les objectifs de confiance. Avant un changement de navigateur ou d’appareil, utilise la sauvegarde et vérifie sa restauration. Le <a href=\"/guides/idle-game-progression-hors-ligne-sauvegarde-locale/\">guide du hors-ligne</a> précise les limites."
+            ]
+          }
+        ]
+      },
+      "en": {
+        "slug": "papers-empire-first-automation-guide",
+        "title": "Papers Empire: build your first automated workshop",
+        "description": "Go from your first document to automatic production: understand early purchases, your next objective, and your Papers Empire local save.",
+        "eyebrow": "PLAYING GUIDE",
+        "lead": "Your first goal is straightforward: establish production that does not depend on every click. Learn to read a new run, invest the first DOC, and leave with one clear next objective.",
+        "imageAlt": "Papers Empire workshop illustration, reused for this practical guide.",
+        "imageCaption": "Papers Empire workshop illustration, reused for this practical guide.",
+        "disclosure": "Papers Empire rules checked against the source code. The examples explain decisions; they are not measurements from a timed playtest.",
+        "readingMinutes": 4,
+        "card": "Go from your first document to automatic production: understand early purchases, your next objective, and your Papers Empire local save.",
+        "playLabel": "Open my production units",
+        "sections": [
+          {
+            "title": "Print your first documents",
+            "paragraphs": [
+              "Enter the workshop and use the press. Initially, one click produces one DOC before bonuses. <strong>Available DOC</strong> is the amount you can spend; total output describes the current run even after purchases. A lower available balance after buying a unit does not mean your recorded production disappeared."
+            ]
+          },
+          {
+            "title": "Buy your first unit",
+            "paragraphs": [
+              "The repro operator initially costs <strong>15 DOC</strong> and supplies <strong>0.5 base DOC/s</strong>. Bonuses can change the actual displayed rate. Reach the price, open the units, and buy one: automatic production becomes positive. Manual printing still works, but the workshop now produces without constant clicking."
+            ]
+          },
+          {
+            "title": "Compare before reinvesting",
+            "paragraphs": [
+              "The next copy becomes more expensive as your owned quantity grows. The repro workshop starts at 100 DOC for 3 base DOC/s; that does not make saving for it the best decision in every situation. Compare the current price, additional output, and time until purchase. Owning ten copies activates a yield milestone for that unit. The <a href=\"/en/guides/papers-empire-compare-doc-investments/\">investment example</a> explains why price divided by base output can mislead."
+            ]
+          },
+          {
+            "title": "Follow one dossier, then take a break",
+            "paragraphs": [
+              "The Current Dossier gives you a next action. Address its actual blocker: a missing unit, production rate, or customer trust. You do not need to understand the whole career before your first purchase. The <a href=\"/en/guides/papers-empire-doc-cc-career-plans/\">DOC, CC, and Plans guide</a> separates production, trust, and permanent progress."
+            ]
+          },
+          {
+            "title": "Return to your workshop",
+            "paragraphs": [
+              "The run stays in this browser. After at least one minute away, Papers Empire credits 50% of the nominal rate for up to eight hours, in DOC only. This does not complete customer-trust objectives for you. Before changing browser or device, save a copy and check its restoration. The <a href=\"/en/guides/browser-idle-game-offline-progress-local-save/\">offline guide</a> explains the limits."
+            ]
+          }
+        ]
+      },
+      "de": {
+        "slug": "papers-empire-erste-automatisierung",
+        "title": "Papers Empire: die erste Produktion automatisieren",
+        "description": "Vom ersten Dokument zur automatischen Produktion: Verstehe frühe Käufe, dein nächstes Ziel und den lokalen Spielstand in Papers Empire.",
+        "eyebrow": "SPIELANLEITUNG",
+        "lead": "Dein erstes Ziel ist eine Produktion, die nicht mehr von jedem einzelnen Klick abhängt. Hier lernst du, einen neuen Durchlauf zu lesen und deine ersten DOC gezielt einzusetzen.",
+        "imageAlt": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "imageCaption": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "disclosure": "Die Regeln von Papers Empire wurden mit dem Quellcode abgeglichen. Die Beispiele erklären Entscheidungen; sie sind keine Messungen eines zeitlich erfassten Spieltests.",
+        "readingMinutes": 4,
+        "card": "Vom ersten Dokument zur automatischen Produktion: Verstehe frühe Käufe, dein nächstes Ziel und den lokalen Spielstand in Papers Empire.",
+        "playLabel": "Meine Einheiten öffnen",
+        "sections": [
+          {
+            "title": "Die ersten Dokumente drucken",
+            "paragraphs": [
+              "Betritt die Werkstatt und nutze die Presse. Zu Beginn bringt ein Klick vor Boni ein DOC. <strong>Verfügbare DOC</strong> kannst du ausgeben; die Gesamtproduktion zählt den Durchlauf auch nach Käufen weiter. Ein kleinerer Kontostand nach einem Kauf bedeutet daher nicht, dass deine bisherige Produktion verschwunden ist."
+            ]
+          },
+          {
+            "title": "Die erste Einheit kaufen",
+            "paragraphs": [
+              "Der Repro-Operator kostet anfangs <strong>15 DOC</strong> und erzeugt <strong>0,5 Basis-DOC/s</strong>. Boni können die tatsächlich angezeigte Rate verändern. Sammle den Preis, öffne die Einheiten und kaufe ein Exemplar: Jetzt gibt es automatische Produktion. Manuelles Drucken bleibt möglich, doch die Werkstatt produziert bereits ohne ständige Klicks."
+            ]
+          },
+          {
+            "title": "Vor dem nächsten Kauf vergleichen",
+            "paragraphs": [
+              "Weitere Exemplare werden mit der vorhandenen Anzahl teurer. Die Repro-Werkstatt beginnt bei 100 DOC und 3 Basis-DOC/s. Deshalb immer darauf zu sparen, ist aber keine allgemeine Regel. Vergleiche aktuellen Preis, zusätzliche Produktion und Wartezeit bis zum Kauf. Zehn Exemplare aktivieren einen Ertragsmeilenstein dieser Einheit. Das <a href=\"/de/guides/papers-empire-doc-investitionen-vergleichen/\">Investitionsbeispiel</a> zeigt, warum der Basis-Ertrag allein nicht genügt."
+            ]
+          },
+          {
+            "title": "Einem Dossier folgen",
+            "paragraphs": [
+              "Das aktuelle Dossier nennt die nächste Aktion. Suche nach dem konkreten Hindernis: fehlende Einheit, Produktionsrate oder Kundenvertrauen. Du musst nicht die gesamte Karriere vor dem ersten Kauf verstehen. Die Anleitung zu <a href=\"/de/guides/papers-empire-doc-cc-karriereplaene/\">DOC, CC und Plänen</a> erklärt die Unterschiede zwischen Produktion, Vertrauen und dauerhaften Fortschritten."
+            ]
+          },
+          {
+            "title": "Die Werkstatt wiederfinden",
+            "paragraphs": [
+              "Der Spielstand bleibt in diesem Browser. Ab einer Minute Abwesenheit schreibt Papers Empire 50 % der nominalen Rate für höchstens acht Stunden gut, ausschließlich in DOC. Das erfüllt keine Vertrauensziele. Sichere vor einem Browser- oder Gerätewechsel eine Kopie und kontrolliere die Wiederherstellung. Die <a href=\"/de/guides/browser-idle-game-lokaler-spielstand-offline-fortschritt/\">Offline-Anleitung</a> erklärt die Grenzen."
+            ]
+          }
+        ]
+      },
+      "lb": {
+        "slug": "papers-empire-eischt-automatisatioun",
+        "title": "Papers Empire: deng éischt Produktioun automatiséieren",
+        "description": "Vum éischten Dokument zur automatescher Produktioun: verstéi déi éischt Akeef, dat nächst Zil an de lokale Spillstand vu Papers Empire.",
+        "eyebrow": "SPILLGUIDE",
+        "lead": "Däin éischt Zil ass eng Produktioun, déi net méi vun all eenzele Klick ofhänkt. Hei léiers du eng nei Partie liesen an déi éischt DOC bewosst asetzen.",
+        "imageAlt": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "imageCaption": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "disclosure": "D’Reegele vu Papers Empire goufe mam Quellcode verglach. D’Beispiller erklären Entscheedungen; si si keng Miessunge vun engem gestoppte Spilltest.",
+        "readingMinutes": 4,
+        "card": "Vum éischten Dokument zur automatescher Produktioun: verstéi déi éischt Akeef, dat nächst Zil an de lokale Spillstand vu Papers Empire.",
+        "playLabel": "Meng Eenheeten opmaachen",
+        "sections": [
+          {
+            "title": "Déi éischt Dokumenter drécken",
+            "paragraphs": [
+              "Géi an den Atelier a benotz d’Press. Am Ufank bréngt ee Klick viru Bonussen een DOC. <strong>Disponibel DOC</strong> kanns du ausginn; d’Gesamtproduktioun zielt de ganzen aktuelle Cycle, och no engem Akaf. Wann däi Kontostand no engem Akaf fällt, ass déi virdrun erfaasste Produktioun net verluer."
+            ]
+          },
+          {
+            "title": "Déi éischt Eenheet kafen",
+            "paragraphs": [
+              "De Repro-Operateur kascht am Ufank <strong>15 DOC</strong> a liwwert <strong>0,5 Basis-DOC/s</strong>. Bonussen kënnen den ugewisene Rhythmus änneren. Sammel de Präis, maach d’Eenheeten op a kaf een Exemplar: Elo gëtt et automatesch Produktioun. Du kanns nach manuell drécken, mee den Atelier produzéiert schonn ouni dauernd ze klicken."
+            ]
+          },
+          {
+            "title": "Virum nächsten Akaf vergläichen",
+            "paragraphs": [
+              "De Präis vum nächsten Exemplar klëmmt mat der Zuel, déi s du besëtz. De Repro-Atelier fänkt bei 100 DOC fir 3 Basis-DOC/s un. Dat heescht awer net, datt een ëmmer dorop waarde soll. Vergläich de Präis, déi zousätzlech Produktioun an d’Waardezäit. Zéng Exemplare aktivéieren en Ertragspalier fir déi Eenheet. D’<a href=\"/lb/guides/papers-empire-doc-investitioune-verglaichen/\">Investitiounsbeispill</a> erkläert, firwat de Basis-Ertrag eleng net duergeet."
+            ]
+          },
+          {
+            "title": "Een Dossier verfollegen",
+            "paragraphs": [
+              "Den aktuellen Dossier weist déi nächst Aktioun. Kuck op dat konkret Hindernis: eng feelend Eenheet, de Produktiounsrhythmus oder d’Clientevertrauen. Du muss net déi ganz Karriär virum éischten Akaf verstoen. De Guide iwwer <a href=\"/lb/guides/papers-empire-doc-cc-karriarplaeng/\">DOC, CC a Pläng</a> trennt Produktioun, Vertrauen a permanente Fortschrëtt."
+            ]
+          },
+          {
+            "title": "Den Atelier erëmfannen",
+            "paragraphs": [
+              "D’Partie bleift an dësem Browser. Ab enger Minutt Ofwiesenheet schreift Papers Empire 50 % vum nominelle Rhythmus fir maximal aacht Stonne gutt, nëmmen an DOC. Dat erfëllt keng Vertrauensziler. Späicher virun engem Browser- oder Apparaterwiessel eng Kopie a kontrolléier d’Restauratioun. De <a href=\"/lb/guides/browser-idle-game-lokal-spaicherung-offline-fortschrett/\">Guide iwwer Offline-Fortschrëtt</a> erkläert d’Grenzen."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "resources-career-plans",
+    "image": "/assets/images/guides/browser-idle-games.webp",
+    "datePublished": "2026-09-07",
+    "dateModified": "2026-09-07",
+    "sourcesCheckedAt": "2026-09-07",
+    "playTarget": "upgradesPanel",
+    "sources": [
+      {
+        "label": {
+          "fr": "Papers Empire — règles du jeu",
+          "en": "Papers Empire — game rules",
+          "de": "Papers Empire — Spielregeln",
+          "lb": "Papers Empire — Spillreegelen"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/app.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — Plans et carrière",
+          "en": "Papers Empire — Plans and career",
+          "de": "Papers Empire — Pläne und Karriere",
+          "lb": "Papers Empire — Pläng a Karriär"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/progression.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — calculs de production",
+          "en": "Papers Empire — production calculations",
+          "de": "Papers Empire — Produktionsberechnung",
+          "lb": "Papers Empire — Produktiounsberechnung"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/economy-analytics.js"
+      }
+    ],
+    "translations": {
+      "fr": {
+        "slug": "papers-empire-doc-cc-plans",
+        "title": "Papers Empire : comprendre DOC, CC et les Plans",
+        "description": "DOC disponibles, confiance client, Culture et Plans : découvre ce que chaque valeur change et comment choisir une direction dans Papers Empire.",
+        "eyebrow": "GUIDE DE JEU",
+        "lead": "Un achat qui produit plus de documents ne résout pas forcément un manque de confiance. Avant de changer tout ton atelier, identifie la valeur demandée par ton Dossier du moment.",
+        "imageAlt": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "imageCaption": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "disclosure": "Règles de Papers Empire vérifiées dans le code source. Les exemples servent à expliquer les décisions ; ils ne décrivent pas une session de test chronométrée.",
+        "readingMinutes": 4,
+        "card": "DOC disponibles, confiance client, Culture et Plans : découvre ce que chaque valeur change et comment choisir une direction dans Papers Empire.",
+        "playLabel": "Ouvrir mes Plans",
+        "sections": [
+          {
+            "title": "DOC disponibles et DOC produits",
+            "paragraphs": [
+              "Les DOC disponibles financent les achats. Les DOC produits sont le cumul du cycle ; dépenser ne le fait pas redescendre. Certains déblocages regardent ce cumul, tandis qu’un achat exige un solde suffisant. Une réorganisation remet ces deux valeurs à zéro."
+            ]
+          },
+          {
+            "title": "Les CC mesurent la confiance client",
+            "paragraphs": [
+              "Les CC accompagnent la production active et les récompenses prévues par le jeu. Leur cadence dépend notamment de la qualité, de l’image et des multiplicateurs de confiance. Une unité qui favorise les CC peut donc servir ton objectif même si son gain DOC/s est faible. Les gains d’absence ajoutent seulement des DOC : attendre hors ligne ne remplit pas directement un seuil de CC."
+            ]
+          },
+          {
+            "title": "La Culture traverse les cycles",
+            "paragraphs": [
+              "La Culture est une progression permanente. La réorganisation transforme une partie de la confiance cumulée en Culture ; certains succès et défis en attribuent aussi. Son bonus de production suit un rendement décroissant. C’est un avantage pour le cycle suivant, pas un stock de DOC que tu peux immédiatement dépenser."
+            ]
+          },
+          {
+            "title": "Choisir une direction",
+            "paragraphs": [
+              "<strong>Cadence</strong> privilégie le volume et les unités de production. <strong>Qualité</strong> demande de travailler les jauges et les clauses. <strong>Relation client</strong> se concentre sur la confiance et les contrats. Chaque Plan possède trois rangs et chaque rang trois dossiers successifs : une condition future ne se valide pas nécessairement avec une action faite avant son étape. Lis le dossier actif et l’effet annoncé avant de choisir."
+            ]
+          },
+          {
+            "title": "Relier le Plan au prochain achat",
+            "paragraphs": [
+              "Compare le gain DOC, le gain CC et la condition encore manquante. Un meilleur remboursement en DOC ne prouve pas qu’un achat sert mieux ton Plan. La Data Science Zone aide à examiner ces différences, mais une projection reste une estimation à règles et cadence supposées stables. Pour valider un Plan terminé, consulte le guide de la <a href=\"/guides/papers-empire-premiere-reorganisation/\">première réorganisation</a>."
+            ]
+          }
+        ]
+      },
+      "en": {
+        "slug": "papers-empire-doc-cc-career-plans",
+        "title": "Papers Empire: understand DOC, CC, and career Plans",
+        "description": "Available DOC, customer trust, Culture, and career Plans: learn what each value changes and how to choose a direction in Papers Empire.",
+        "eyebrow": "PLAYING GUIDE",
+        "lead": "A purchase that produces more documents will not necessarily solve a shortage of trust. Before rebuilding your strategy, identify the exact value requested by your Current Dossier.",
+        "imageAlt": "Papers Empire workshop illustration, reused for this practical guide.",
+        "imageCaption": "Papers Empire workshop illustration, reused for this practical guide.",
+        "disclosure": "Papers Empire rules checked against the source code. The examples explain decisions; they are not measurements from a timed playtest.",
+        "readingMinutes": 4,
+        "card": "Available DOC, customer trust, Culture, and career Plans: learn what each value changes and how to choose a direction in Papers Empire.",
+        "playLabel": "Open my career Plans",
+        "sections": [
+          {
+            "title": "Available DOC and total output",
+            "paragraphs": [
+              "Available DOC pays for purchases. Total DOC is the cumulative output of the current run; spending does not reduce it. Some unlocks use that cumulative figure, while buying requires enough available DOC. Reorganization resets both values to zero."
+            ]
+          },
+          {
+            "title": "CC measures customer trust",
+            "paragraphs": [
+              "CC comes from active production and the rewards defined by the game. Its rate depends on factors including quality, brand image, and trust multipliers. A unit that helps CC can therefore serve your objective even with a small DOC/s gain. Away rewards add only DOC: waiting offline does not directly fill a CC requirement."
+            ]
+          },
+          {
+            "title": "Culture survives each run",
+            "paragraphs": [
+              "Culture is permanent progress. Reorganization turns some cumulative trust into Culture; certain achievements and challenges also award it. Its production benefit has diminishing returns. It helps your next run rather than giving you an immediately spendable DOC balance."
+            ]
+          },
+          {
+            "title": "Choose a direction",
+            "paragraphs": [
+              "<strong>Throughput Plan</strong> emphasizes output and production units. <strong>Quality</strong> focuses on gauges and clauses. <strong>Client Relations</strong> focuses on trust and contracts. Each Plan has three ranks, each with three sequential dossiers: an action performed before a later stage is not necessarily credited to that stage. Read the active dossier and the stated effect before choosing."
+            ]
+          },
+          {
+            "title": "Connect the Plan to your next purchase",
+            "paragraphs": [
+              "Compare additional DOC, additional CC, and the remaining requirement. A faster DOC payback does not prove a purchase is better for your Plan. The Data Science Zone helps inspect the differences, but a projection still assumes stable rules and output. To validate a completed Plan, read the <a href=\"/en/guides/papers-empire-first-reorganization/\">first reorganization guide</a>."
+            ]
+          }
+        ]
+      },
+      "de": {
+        "slug": "papers-empire-doc-cc-karriereplaene",
+        "title": "Papers Empire: DOC, CC und Karrierepläne verstehen",
+        "description": "Verfügbare DOC, Kundenvertrauen, Kultur und Karrierepläne: Erfahre, was die Werte bewirken und wie du in Papers Empire eine Richtung wählst.",
+        "eyebrow": "SPIELANLEITUNG",
+        "lead": "Mehr Dokumente lösen nicht automatisch einen Mangel an Vertrauen. Prüfe zuerst, welchen Wert dein aktuelles Dossier verlangt, bevor du deine ganze Strategie änderst.",
+        "imageAlt": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "imageCaption": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "disclosure": "Die Regeln von Papers Empire wurden mit dem Quellcode abgeglichen. Die Beispiele erklären Entscheidungen; sie sind keine Messungen eines zeitlich erfassten Spieltests.",
+        "readingMinutes": 4,
+        "card": "Verfügbare DOC, Kundenvertrauen, Kultur und Karrierepläne: Erfahre, was die Werte bewirken und wie du in Papers Empire eine Richtung wählst.",
+        "playLabel": "Meine Pläne öffnen",
+        "sections": [
+          {
+            "title": "Verfügbare DOC und Gesamtproduktion",
+            "paragraphs": [
+              "Verfügbare DOC bezahlen Käufe. Die Gesamtproduktion zählt die DOC des aktuellen Durchlaufs; Ausgaben senken diesen Zähler nicht. Manche Freischaltungen verwenden den Gesamtwert, während Käufe ein ausreichendes Guthaben verlangen. Eine Reorganisation setzt beide Werte auf null zurück."
+            ]
+          },
+          {
+            "title": "CC steht für Kundenvertrauen",
+            "paragraphs": [
+              "CC entsteht durch aktive Produktion und die vom Spiel vorgesehenen Belohnungen. Die Rate hängt unter anderem von Qualität, Markenimage und Vertrauensmultiplikatoren ab. Eine Einheit mit geringem DOC/s-Zuwachs kann deshalb deinem Vertrauensziel dienen. Abwesenheitsgewinne bringen nur DOC: Offline-Warten erfüllt eine CC-Anforderung nicht direkt."
+            ]
+          },
+          {
+            "title": "Kultur bleibt über Durchläufe erhalten",
+            "paragraphs": [
+              "Kultur bedeutet dauerhaften Fortschritt. Eine Reorganisation wandelt einen Teil des gesammelten Vertrauens in Kultur um; bestimmte Erfolge und Herausforderungen vergeben ebenfalls Kultur. Ihr Produktionsbonus hat einen abnehmenden Grenznutzen. Er hilft im nächsten Durchlauf und ist kein sofort ausgebbares DOC-Guthaben."
+            ]
+          },
+          {
+            "title": "Eine Richtung wählen",
+            "paragraphs": [
+              "<strong>Durchsatzplan</strong> konzentriert sich auf Volumen und Produktionseinheiten. <strong>Qualität</strong> richtet den Blick auf Kennwerte und Klauseln. <strong>Kundenbeziehung</strong> setzt auf Vertrauen und Aufträge. Jeder Plan hat drei Ränge mit jeweils drei aufeinanderfolgenden Dossiers. Eine Aktion vor einer späteren Stufe wird dort nicht automatisch angerechnet. Lies das aktive Dossier und den angegebenen Effekt vor deiner Wahl."
+            ]
+          },
+          {
+            "title": "Den nächsten Kauf am Plan ausrichten",
+            "paragraphs": [
+              "Vergleiche zusätzliche DOC, zusätzliche CC und die noch fehlende Bedingung. Eine kürzere DOC-Amortisation bedeutet nicht automatisch mehr Nutzen für deinen Plan. Die Data Science Zone macht Unterschiede sichtbar, doch Projektionen setzen stabile Regeln und Raten voraus. Wie du einen fertigen Plan bestätigst, erklärt die <a href=\"/de/guides/papers-empire-erste-reorganisation/\">Anleitung zur ersten Reorganisation</a>."
+            ]
+          }
+        ]
+      },
+      "lb": {
+        "slug": "papers-empire-doc-cc-karriarplaeng",
+        "title": "Papers Empire: DOC, CC a Karriärpläng verstoen",
+        "description": "Disponibel DOC, Clientevertrauen, Kultur a Karriärpläng: léier wat déi Wäerter änneren a wéi s du a Papers Empire eng Richtung auswiels.",
+        "eyebrow": "SPILLGUIDE",
+        "lead": "Méi Dokumenter léisen net automatesch e Manktem u Vertrauen. Kuck fir d’éischt, wéi ee Wäert den aktuellen Dossier verlaangt, éier s du deng ganz Strategie ëmbaus.",
+        "imageAlt": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "imageCaption": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "disclosure": "D’Reegele vu Papers Empire goufe mam Quellcode verglach. D’Beispiller erklären Entscheedungen; si si keng Miessunge vun engem gestoppte Spilltest.",
+        "readingMinutes": 4,
+        "card": "Disponibel DOC, Clientevertrauen, Kultur a Karriärpläng: léier wat déi Wäerter änneren a wéi s du a Papers Empire eng Richtung auswiels.",
+        "playLabel": "Meng Karriärpläng opmaachen",
+        "sections": [
+          {
+            "title": "Disponibel DOC a Gesamtproduktioun",
+            "paragraphs": [
+              "Mat disponibelen DOC bezils du Akeef. D’Gesamtproduktioun zielt d’DOC vum aktuelle Cycle; Ausgaben drécken deen Zähler net erof. Verschidde Fräischaltunge benotzen dëse Gesamtwäert, mee fir ze kafe brauchs du genuch disponibel DOC. Eng Reorganisatioun setzt béid Wäerter op null."
+            ]
+          },
+          {
+            "title": "CC ass Clientevertrauen",
+            "paragraphs": [
+              "CC kënnt aus aktiver Produktioun an de virgesi Belounungen. De Rhythmus hänkt ënner anerem vu Qualitéit, Markebild a Vertrauensmultiplikatoren of. Eng Eenheet mat wéineg zousätzlechen DOC/s kann dofir fir däi Vertrauenszil nëtzlech sinn. Ofwiesenheetsgewënner bréngen nëmmen DOC: Offline waarden erfëllt keng CC-Ufuerderung direkt."
+            ]
+          },
+          {
+            "title": "Kultur bleift iwwer d’Cyclen erhalen",
+            "paragraphs": [
+              "Kultur ass permanente Fortschrëtt. Eng Reorganisatioun verwandelt en Deel vum gesammelte Vertrauen a Kultur; verschidde Succèsen an Erausfuerderunge ginn och Kultur. De Produktiounsbonus huet en ofhuelende Grenzertrag. En hëlleft am nächste Cycle an ass kee Kontostand vun direkt ausginnbare DOC."
+            ]
+          },
+          {
+            "title": "Eng Richtung wielen",
+            "paragraphs": [
+              "<strong>Plang Produktiounstakt</strong> setzt op Volumen a Produktiounseenheeten. <strong>Qualitéit</strong> konzentréiert sech op Jaugen a Klauselen. <strong>Plang Client-Relatioun</strong> setzt op Vertrauen a Kontrakter. All Plang huet dräi Räng mat jee dräi Dossieren hannerteneen. Eng Aktioun virun enger spéiderer Etapp zielt do net automatesch. Lies den aktuellen Dossier an den ugewisenen Effekt virun denger Wiel."
+            ]
+          },
+          {
+            "title": "Den nächsten Akaf mam Plang verbannen",
+            "paragraphs": [
+              "Vergläich déi zousätzlech DOC, déi zousätzlech CC an déi nach feelend Bedingung. Eng méi kuerz DOC-Amortisatioun ass net automatesch besser fir däi Plang. D’Data Science Zone weist d’Ënnerscheeder, mee Projektioune setzen stabil Reegelen a Rhythme viraus. Wéi s du e fäerdege Plang validéiers, weist de <a href=\"/lb/guides/papers-empire-eischt-reorganisatioun/\">Guide fir déi éischt Reorganisatioun</a>."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "first-reorganization",
+    "image": "/assets/images/guides/idle-clicker-incremental.webp",
+    "datePublished": "2026-09-07",
+    "dateModified": "2026-09-07",
+    "sourcesCheckedAt": "2026-09-07",
+    "playTarget": "upgradesPanel",
+    "sources": [
+      {
+        "label": {
+          "fr": "Papers Empire — règles du jeu",
+          "en": "Papers Empire — game rules",
+          "de": "Papers Empire — Spielregeln",
+          "lb": "Papers Empire — Spillreegelen"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/app.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — Plans et carrière",
+          "en": "Papers Empire — Plans and career",
+          "de": "Papers Empire — Pläne und Karriere",
+          "lb": "Papers Empire — Pläng a Karriär"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/progression.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — calculs de production",
+          "en": "Papers Empire — production calculations",
+          "de": "Papers Empire — Produktionsberechnung",
+          "lb": "Papers Empire — Produktiounsberechnung"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/economy-analytics.js"
+      }
+    ],
+    "translations": {
+      "fr": {
+        "slug": "papers-empire-premiere-reorganisation",
+        "title": "Papers Empire : quand faire sa première réorganisation ?",
+        "description": "Seuil de confiance, Culture, Plan terminé et éléments réinitialisés : prépare ta première réorganisation dans Papers Empire sans perdre le fil.",
+        "eyebrow": "GUIDE DE JEU",
+        "lead": "La réorganisation ouvre un nouveau cycle avec un avantage permanent. Le bouton disponible signifie que tu peux repartir ; il ne signifie pas que tous les dossiers de ton Plan sont terminés.",
+        "imageAlt": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "imageCaption": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "disclosure": "Règles de Papers Empire vérifiées dans le code source. Les exemples servent à expliquer les décisions ; ils ne décrivent pas une session de test chronométrée.",
+        "readingMinutes": 4,
+        "card": "Seuil de confiance, Culture, Plan terminé et éléments réinitialisés : prépare ta première réorganisation dans Papers Empire sans perdre le fil.",
+        "playLabel": "Examiner ma réorganisation",
+        "sections": [
+          {
+            "title": "Le seuil et le gain de base",
+            "paragraphs": [
+              "La réorganisation devient disponible à <strong>10 000 CC</strong>. Le gain de base est la partie entière de 3 × log10(1 + CC / 1 000). À 10 000 CC, cela représente <strong>3 points de Culture de base</strong>. L’aperçu du jeu peut annoncer davantage si un Plan achevé ajoute son bonus ; compare le total affiché et son détail."
+            ]
+          },
+          {
+            "title": "Ce qui repart à zéro",
+            "paragraphs": [
+              "Les DOC disponibles, les DOC du cycle et les CC reviennent à zéro. Les quantités d’unités et les améliorations achetées repartent aussi ; les jauges reviennent à leur état initial. Tu conserves la Culture et la progression permanente enregistrée. Cette opération demande donc de reconstruire une production, même si le nouveau cycle profite de bonus."
+            ]
+          },
+          {
+            "title": "Terminer le Plan ou repartir tôt",
+            "paragraphs": [
+              "Un Plan terminé est validé lors de la réorganisation : son tampon, son avantage permanent et un bonus de Culture égal à son rang sont accordés. Un Plan incomplet peut être redémarré, mais sans tampon ni bonus de Plan. Par exemple, la disponibilité à 10 000 CC ne suffit pas au dernier dossier du premier rang Cadence, qui demande 15 000 CC. Le Dossier du moment reste la référence pour les étapes précédentes."
+            ]
+          },
+          {
+            "title": "Lire les conséquences avant de confirmer",
+            "paragraphs": [
+              "Une réorganisation peut redémarrer un grand dossier en cours ou faire échouer un défi actif. Lis les avertissements et décide si terminer l’étape est plus intéressant que repartir maintenant. Il n’existe pas de minute universelle optimale : l’état des dossiers, la cadence et la Culture supplémentaire comptent ensemble."
+            ]
+          },
+          {
+            "title": "Repartir avec un objectif concret",
+            "paragraphs": [
+              "Avant de confirmer, garde une sauvegarde si tu veux une copie du cycle. Après la réorganisation, vérifie le gain, puis reconstruis la première automatisation. Le multiplicateur de Culture suit 1 + 0,2 × √Culture : les gains augmentent, mais chaque point supplémentaire apporte moins que le précédent. Le guide <a href=\"/guides/papers-empire-debuter-premiere-automatisation/\">première automatisation</a> aide à relancer l’atelier."
+            ]
+          }
+        ]
+      },
+      "en": {
+        "slug": "papers-empire-first-reorganization",
+        "title": "Papers Empire: when should you first reorganize?",
+        "description": "Trust requirement, Culture, completed Plans, and reset items: prepare your first Papers Empire reorganization and understand the next run.",
+        "eyebrow": "PLAYING GUIDE",
+        "lead": "Reorganization starts a new run with a permanent benefit. An available button means you may restart; it does not mean every dossier in your Plan is finished.",
+        "imageAlt": "Papers Empire workshop illustration, reused for this practical guide.",
+        "imageCaption": "Papers Empire workshop illustration, reused for this practical guide.",
+        "disclosure": "Papers Empire rules checked against the source code. The examples explain decisions; they are not measurements from a timed playtest.",
+        "readingMinutes": 4,
+        "card": "Trust requirement, Culture, completed Plans, and reset items: prepare your first Papers Empire reorganization and understand the next run.",
+        "playLabel": "Review my reorganization",
+        "sections": [
+          {
+            "title": "The requirement and base reward",
+            "paragraphs": [
+              "Reorganization unlocks at <strong>10,000 CC</strong>. Base Culture is the integer part of 3 × log10(1 + CC / 1,000). At 10,000 CC, that is <strong>3 base Culture points</strong>. The preview may show more when a completed Plan adds its bonus; compare the displayed total and its breakdown."
+            ]
+          },
+          {
+            "title": "What resets",
+            "paragraphs": [
+              "Available DOC, run DOC, and CC return to zero. Owned unit quantities and purchased upgrades reset too, while gauges return to their initial state. Culture and recorded permanent progression survive. You therefore rebuild production even though the next run benefits from bonuses."
+            ]
+          },
+          {
+            "title": "Complete the Plan or restart early",
+            "paragraphs": [
+              "A finished Plan is validated during reorganization: you receive its stamp, permanent benefit, and a Culture bonus equal to its rank. An unfinished Plan can restart, but earns no stamp or Plan bonus. For example, availability at 10,000 CC does not satisfy the final dossier of Throughput rank one, which requires 15,000 CC. The Current Dossier remains the reference for earlier stages."
+            ]
+          },
+          {
+            "title": "Read the consequences before confirming",
+            "paragraphs": [
+              "Reorganization may restart a major dossier in progress or fail an active challenge. Read the warnings and decide whether finishing the stage is more useful than restarting now. There is no universally optimal minute: dossier progress, production rate, and extra Culture matter together."
+            ]
+          },
+          {
+            "title": "Begin again with one clear goal",
+            "paragraphs": [
+              "Before confirming, save a copy if you want to keep a record of the run. Afterwards, check the reward and rebuild automatic production. The Culture multiplier is 1 + 0.2 × √Culture: benefits increase, but each additional point adds less than the last. The <a href=\"/en/guides/papers-empire-first-automation-guide/\">first automation guide</a> helps restart the workshop."
+            ]
+          }
+        ]
+      },
+      "de": {
+        "slug": "papers-empire-erste-reorganisation",
+        "title": "Papers Empire: Wann lohnt die erste Reorganisation?",
+        "description": "Vertrauensschwelle, Kultur, fertige Pläne und zurückgesetzte Werte: Bereite deine erste Reorganisation in Papers Empire bewusst vor.",
+        "eyebrow": "SPIELANLEITUNG",
+        "lead": "Eine Reorganisation beginnt einen neuen Durchlauf mit einem dauerhaften Vorteil. Ein verfügbarer Button bedeutet, dass du neu starten darfst, nicht dass alle Dossiers deines Plans fertig sind.",
+        "imageAlt": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "imageCaption": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "disclosure": "Die Regeln von Papers Empire wurden mit dem Quellcode abgeglichen. Die Beispiele erklären Entscheidungen; sie sind keine Messungen eines zeitlich erfassten Spieltests.",
+        "readingMinutes": 4,
+        "card": "Vertrauensschwelle, Kultur, fertige Pläne und zurückgesetzte Werte: Bereite deine erste Reorganisation in Papers Empire bewusst vor.",
+        "playLabel": "Meine Reorganisation prüfen",
+        "sections": [
+          {
+            "title": "Schwelle und Grundbelohnung",
+            "paragraphs": [
+              "Die Reorganisation wird bei <strong>10.000 CC</strong> verfügbar. Der Grundgewinn ist der ganzzahlige Anteil von 3 × log10(1 + CC / 1.000). Bei 10.000 CC sind das <strong>3 grundlegende Kulturpunkte</strong>. Ein fertiger Plan kann einen Bonus hinzufügen; vergleiche deshalb die angezeigte Summe mit ihrer Aufschlüsselung."
+            ]
+          },
+          {
+            "title": "Was zurückgesetzt wird",
+            "paragraphs": [
+              "Verfügbare DOC, DOC des Durchlaufs und CC gehen auf null zurück. Auch Einheitenzahlen und gekaufte Verbesserungen werden zurückgesetzt; die Kennwerte kehren zum Ausgangszustand zurück. Kultur und gespeicherte dauerhafte Fortschritte bleiben erhalten. Du baust die Produktion also neu auf, obwohl der nächste Durchlauf bereits von Boni profitiert."
+            ]
+          },
+          {
+            "title": "Den Plan beenden oder früh neu starten",
+            "paragraphs": [
+              "Ein fertiger Plan wird bei der Reorganisation bestätigt: Du erhältst Stempel, dauerhaften Vorteil und einen Kulturbonus in Höhe seines Rangs. Ein unfertiger Plan kann neu beginnen, bringt aber weder Stempel noch Planbonus. Die Verfügbarkeit bei 10.000 CC erfüllt beispielsweise nicht das letzte Dossier im ersten Durchsatzrang: Dieses verlangt 15.000 CC. Für vorherige Stufen ist das aktuelle Dossier maßgeblich."
+            ]
+          },
+          {
+            "title": "Die Folgen vor der Bestätigung lesen",
+            "paragraphs": [
+              "Eine Reorganisation kann ein laufendes Großdossier neu starten oder eine aktive Herausforderung scheitern lassen. Lies die Warnungen und wäge ab, ob der Abschluss der Stufe mehr bringt als ein sofortiger Neustart. Es gibt keine allgemein optimale Minute: Dossierfortschritt, Produktionsrate und zusätzliche Kultur gehören zusammen."
+            ]
+          },
+          {
+            "title": "Mit einem klaren Ziel neu beginnen",
+            "paragraphs": [
+              "Sichere vor der Bestätigung eine Kopie, wenn du den Durchlauf aufbewahren möchtest. Prüfe danach die Belohnung und baue die automatische Produktion wieder auf. Der Kulturmultiplikator lautet 1 + 0,2 × √Kultur. Der Vorteil wächst, doch jeder weitere Punkt bringt weniger als der vorige. Die <a href=\"/de/guides/papers-empire-erste-automatisierung/\">Anleitung zur ersten Automatisierung</a> hilft beim Neustart."
+            ]
+          }
+        ]
+      },
+      "lb": {
+        "slug": "papers-empire-eischt-reorganisatioun",
+        "title": "Papers Empire: wéini déi éischt Reorganisatioun maachen?",
+        "description": "Vertrauensschwell, Kultur, fäerdeg Pläng a Wäerter déi zeréckgesat ginn: preparéier deng éischt Reorganisatioun a Papers Empire bewosst.",
+        "eyebrow": "SPILLGUIDE",
+        "lead": "Eng Reorganisatioun start en neie Cycle mat engem permanente Virdeel. En disponibele Knäppchen heescht, datt s du nei ufänke kanns, net datt all Dossiere vum Plang fäerdeg sinn.",
+        "imageAlt": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "imageCaption": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "disclosure": "D’Reegele vu Papers Empire goufe mam Quellcode verglach. D’Beispiller erklären Entscheedungen; si si keng Miessunge vun engem gestoppte Spilltest.",
+        "readingMinutes": 4,
+        "card": "Vertrauensschwell, Kultur, fäerdeg Pläng a Wäerter déi zeréckgesat ginn: preparéier deng éischt Reorganisatioun a Papers Empire bewosst.",
+        "playLabel": "Meng Reorganisatioun iwwerpréiwen",
+        "sections": [
+          {
+            "title": "D’Schwell an d’Basisbelounung",
+            "paragraphs": [
+              "D’Reorganisatioun gëtt bei <strong>10.000 CC</strong> disponibel. De Basisgewënn ass de ganzzuelegen Deel vun 3 × log10(1 + CC / 1.000). Bei 10.000 CC sinn dat <strong>3 Basis-Kulturpunkten</strong>. E fäerdege Plang kann e Bonus derbäiginn; vergläich dofir déi ugewisen Zomm mat hirem Detail."
+            ]
+          },
+          {
+            "title": "Wat op null zeréckgeet",
+            "paragraphs": [
+              "Disponibel DOC, DOC vum Cycle an CC ginn op null. Och d’Zuel vun den Eenheeten an déi kaaft Verbesserunge ginn zeréckgesat; d’Jaugen huelen hiren Ufankszoustand un. Kultur a gespäicherte permanente Fortschrëtt bleiwen erhalen. Du baus d’Produktioun also nees op, och wann de nächste Cycle vu Bonusse profitéiert."
+            ]
+          },
+          {
+            "title": "De Plang fäerdeg maachen oder fréi nei ufänken",
+            "paragraphs": [
+              "E fäerdege Plang gëtt bei der Reorganisatioun validéiert: Du kriss säin Tampon, säi permanente Virdeel an e Kulturbonus gläich sengem Rang. En onfäerdege Plang kann nei ufänken, mee ouni Tampon a Plangbonus. D’Disponibilitéit bei 10.000 CC erfëllt zum Beispill net de leschten Dossier vum éischte Produktiounstakt-Rang: Deen erfuerdert 15.000 CC. Fir fréier Etappen ass den aktuellen Dossier d’Referenz."
+            ]
+          },
+          {
+            "title": "D’Konsequenze virum Confirméiere liesen",
+            "paragraphs": [
+              "Eng Reorganisatioun kann e lafende groussen Dossier nei starten oder eng aktiv Erausfuerderung scheitere loossen. Lies d’Warnungen a weeg of, ob d’Etapp ofschléisse méi bréngt wéi direkt nei ufänken. Et gëtt keng allgemeng optimal Minutt: Dossierfortschrëtt, Produktiounsrhythmus an zousätzlech Kultur spillen zesummen."
+            ]
+          },
+          {
+            "title": "Mat engem kloren Zil nei ufänken",
+            "paragraphs": [
+              "Späicher virum Confirméieren eng Kopie, wann s du de Cycle behale wëlls. Kontrolléier duerno d’Belounung a bau d’automatesch Produktioun nees op. De Kulturmultiplikator ass 1 + 0,2 × √Kultur. De Virdeel klëmmt, mee all weidere Punkt bréngt manner wéi dee virdrun. De <a href=\"/lb/guides/papers-empire-eischt-automatisatioun/\">Guide fir déi éischt Automatisatioun</a> hëlleft beim Neistart."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "investment-example",
+    "image": "/assets/images/guides/browser-idle-games.webp",
+    "datePublished": "2026-09-07",
+    "dateModified": "2026-09-07",
+    "sourcesCheckedAt": "2026-09-07",
+    "playTarget": "buildingsPanel",
+    "sources": [
+      {
+        "label": {
+          "fr": "Papers Empire — règles du jeu",
+          "en": "Papers Empire — game rules",
+          "de": "Papers Empire — Spielregeln",
+          "lb": "Papers Empire — Spillreegelen"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/app.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — Plans et carrière",
+          "en": "Papers Empire — Plans and career",
+          "de": "Papers Empire — Pläne und Karriere",
+          "lb": "Papers Empire — Pläng a Karriär"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/progression.js"
+      },
+      {
+        "label": {
+          "fr": "Papers Empire — calculs de production",
+          "en": "Papers Empire — production calculations",
+          "de": "Papers Empire — Produktionsberechnung",
+          "lb": "Papers Empire — Produktiounsberechnung"
+        },
+        "url": "https://github.com/nclsppr/papersempire/blob/main/assets/js/economy-analytics.js"
+      }
+    ],
+    "translations": {
+      "fr": {
+        "slug": "papers-empire-comparer-investissements-doc",
+        "title": "Papers Empire : comparer deux investissements en DOC",
+        "description": "Prix, gain marginal, délai et palier de rendement : un exemple public calculé avec les règles de Papers Empire pour mieux lire tes investissements.",
+        "eyebrow": "GUIDE DE JEU",
+        "lead": "Un prix bas n’est qu’une partie de la décision. Cet exemple compare le prochain exemplaire d’un producteur fictif dans trois ateliers indépendants, sans lire ni modifier ta sauvegarde.",
+        "imageAlt": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "imageCaption": "Illustration de l’atelier Papers Empire, réutilisée pour ce guide pratique.",
+        "disclosure": "Règles de Papers Empire vérifiées dans le code source. Les exemples servent à expliquer les décisions ; ils ne décrivent pas une session de test chronométrée.",
+        "readingMinutes": 4,
+        "card": "Prix, gain marginal, délai et palier de rendement : un exemple public calculé avec les règles de Papers Empire pour mieux lire tes investissements.",
+        "playLabel": "Comparer dans mon atelier",
+        "sections": [
+          {
+            "title": "Un exemple construit, pas une partie mesurée",
+            "paragraphs": [
+              "Le producteur fictif possède les paramètres de base suivants : 15 DOC, un prix multiplié par 1,15 à chaque exemplaire et 0,5 DOC/s avant bonus. Chaque atelier démarre ici sans Culture, amélioration ni modificateur de Plan, avec zéro DOC en banque. Les résultats sont recalculés à la génération de cette page avec le moteur économique partagé du jeu."
+            ]
+          },
+          {
+            "title": "Trois situations, le même prochain achat",
+            "paragraphs": [
+              "Les trois lignes sont des situations indépendantes. Le délai d’achat suppose une cadence constante, aucun clic, aucune récompense et aucune dépense intermédiaire. L’amortissement mesure seulement le temps nécessaire au supplément de DOC pour couvrir le prix, après l’achat."
+            ],
+            "investmentExample": true
+          },
+          {
+            "title": "Pourquoi le dixième exemplaire compte davantage",
+            "paragraphs": [
+              "À dix exemplaires, le rendement de cette unité devient ×1,10 ; à vingt-cinq, il devient ×1,25. Le gain marginal inclut donc aussi le changement de rendement des exemplaires déjà possédés. Les paliers ne se multiplient pas entre eux : vingt-cinq utilise ×1,25, pas ×1,10 ×1,25."
+            ]
+          },
+          {
+            "title": "Ce que ce tableau ne décide pas",
+            "paragraphs": [
+              "Un achat rentable en DOC peut manquer l’objectif de confiance, de qualité ou de contrat de ton Plan. Cet exemple n’optimise ni une carrière complète, ni des récompenses futures, ni une durée de partie. Pour ta situation réelle, compare les valeurs de la Data Science Zone et le blocage du Dossier du moment."
+            ]
+          },
+          {
+            "title": "Choisir sa prochaine question",
+            "paragraphs": [
+              "Si tu débutes, commence par la <a href=\"/guides/papers-empire-debuter-premiere-automatisation/\">première automatisation</a>. Si tu produis déjà mais que le dossier n’avance pas, distingue <a href=\"/guides/papers-empire-doc-cc-plans/\">DOC, CC et Plans</a>. Un indicateur aide à décider quand son périmètre correspond à ton objectif."
+            ]
+          }
+        ]
+      },
+      "en": {
+        "slug": "papers-empire-compare-doc-investments",
+        "title": "Papers Empire: compare production investments in DOC",
+        "description": "Price, marginal output, waiting time, and yield milestones: a public example calculated with Papers Empire rules to explain your investments.",
+        "eyebrow": "PLAYING GUIDE",
+        "lead": "A low price is only part of the decision. This example compares the next copy of a fictional producer in three independent workshops without reading or changing your save.",
+        "imageAlt": "Papers Empire workshop illustration, reused for this practical guide.",
+        "imageCaption": "Papers Empire workshop illustration, reused for this practical guide.",
+        "disclosure": "Papers Empire rules checked against the source code. The examples explain decisions; they are not measurements from a timed playtest.",
+        "readingMinutes": 4,
+        "card": "Price, marginal output, waiting time, and yield milestones: a public example calculated with Papers Empire rules to explain your investments.",
+        "playLabel": "Compare in my workshop",
+        "sections": [
+          {
+            "title": "A constructed example, not a measured run",
+            "paragraphs": [
+              "The fictional producer uses these base parameters: 15 DOC, a price multiplied by 1.15 per owned copy, and 0.5 DOC/s before bonuses. Each workshop has no Culture, upgrades, or Plan modifiers, and starts with zero DOC in the bank. Results are recalculated when this page is generated using the game’s shared economic engine."
+            ]
+          },
+          {
+            "title": "Three situations, the same next purchase",
+            "paragraphs": [
+              "The rows are independent situations. Purchase waiting time assumes constant output, no clicking, no rewards, and no intervening spending. Payback measures only how long the additional DOC takes to cover the price after purchase."
+            ],
+            "investmentExample": true
+          },
+          {
+            "title": "Why the tenth copy matters more",
+            "paragraphs": [
+              "At ten copies, that unit’s yield becomes ×1.10; at twenty-five, it becomes ×1.25. Marginal output therefore includes the improved yield of copies already owned. Milestones do not multiply together: twenty-five uses ×1.25, not ×1.10 ×1.25."
+            ]
+          },
+          {
+            "title": "What the table does not decide",
+            "paragraphs": [
+              "A purchase with good DOC payback may miss your Plan’s trust, quality, or contract objective. This example does not optimize a whole career, future rewards, or session length. For your real situation, compare the Data Science Zone with the actual blocker in your Current Dossier."
+            ]
+          },
+          {
+            "title": "Choose your next question",
+            "paragraphs": [
+              "New to the game? Begin with <a href=\"/en/guides/papers-empire-first-automation-guide/\">first automation</a>. Already producing but stuck on a dossier? Separate <a href=\"/en/guides/papers-empire-doc-cc-career-plans/\">DOC, CC, and Plans</a>. A metric helps you decide when its scope matches your objective."
+            ]
+          }
+        ]
+      },
+      "de": {
+        "slug": "papers-empire-doc-investitionen-vergleichen",
+        "title": "Papers Empire: Produktionsinvestitionen vergleichen",
+        "description": "Preis, Mehrproduktion, Wartezeit und Ertragsmeilensteine: Ein öffentliches Beispiel mit den Regeln von Papers Empire erklärt Investitionen.",
+        "eyebrow": "SPIELANLEITUNG",
+        "lead": "Ein niedriger Preis ist nur ein Teil der Entscheidung. Dieses Beispiel vergleicht das nächste Exemplar eines fiktiven Produzenten in drei unabhängigen Werkstätten, ohne deinen Spielstand zu lesen oder zu ändern.",
+        "imageAlt": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "imageCaption": "Illustration der Papers-Empire-Werkstatt, für diese Anleitung wiederverwendet.",
+        "disclosure": "Die Regeln von Papers Empire wurden mit dem Quellcode abgeglichen. Die Beispiele erklären Entscheidungen; sie sind keine Messungen eines zeitlich erfassten Spieltests.",
+        "readingMinutes": 4,
+        "card": "Preis, Mehrproduktion, Wartezeit und Ertragsmeilensteine: Ein öffentliches Beispiel mit den Regeln von Papers Empire erklärt Investitionen.",
+        "playLabel": "In meiner Werkstatt vergleichen",
+        "sections": [
+          {
+            "title": "Ein konstruiertes Beispiel, kein gemessener Durchlauf",
+            "paragraphs": [
+              "Der fiktive Produzent hat diese Basiswerte: 15 DOC, einen Preisfaktor von 1,15 je vorhandenem Exemplar und 0,5 DOC/s vor Boni. Jede Werkstatt besitzt weder Kultur noch Verbesserungen oder Planmodifikatoren und startet mit null DOC. Die Werte werden beim Erzeugen dieser Seite mit dem gemeinsamen Wirtschaftsmodell des Spiels neu berechnet."
+            ]
+          },
+          {
+            "title": "Drei Situationen, derselbe nächste Kauf",
+            "paragraphs": [
+              "Die Zeilen beschreiben unabhängige Situationen. Die Wartezeit setzt konstante Produktion ohne Klicks, Belohnungen und zwischenzeitliche Ausgaben voraus. Die Amortisation misst nur, wann zusätzliche DOC nach dem Kauf dessen Preis decken."
+            ],
+            "investmentExample": true
+          },
+          {
+            "title": "Warum das zehnte Exemplar mehr bringt",
+            "paragraphs": [
+              "Bei zehn Exemplaren steigt der Ertrag dieser Einheit auf ×1,10, bei fünfundzwanzig auf ×1,25. Die Mehrproduktion enthält deshalb auch den besseren Ertrag bereits vorhandener Exemplare. Die Meilensteine werden nicht miteinander multipliziert: Bei fünfundzwanzig gilt ×1,25, nicht ×1,10 ×1,25."
+            ]
+          },
+          {
+            "title": "Was diese Tabelle nicht entscheidet",
+            "paragraphs": [
+              "Ein in DOC gut amortisierter Kauf kann am Vertrauens-, Qualitäts- oder Auftragsziel deines Plans vorbeigehen. Dieses Beispiel optimiert weder die gesamte Karriere noch künftige Belohnungen oder die Spieldauer. Vergleiche für deinen echten Spielstand die Data Science Zone mit dem Hindernis im aktuellen Dossier."
+            ]
+          },
+          {
+            "title": "Die nächste Frage wählen",
+            "paragraphs": [
+              "Beginne als Neuling mit der <a href=\"/de/guides/papers-empire-erste-automatisierung/\">ersten Automatisierung</a>. Wenn die Produktion läuft, ein Dossier aber stockt, unterscheide <a href=\"/de/guides/papers-empire-doc-cc-karriereplaene/\">DOC, CC und Pläne</a>. Ein Kennwert hilft dann, wenn seine Aussage zu deinem Ziel passt."
+            ]
+          }
+        ]
+      },
+      "lb": {
+        "slug": "papers-empire-doc-investitioune-verglaichen",
+        "title": "Papers Empire: Produktiounsinvestitioune vergläichen",
+        "description": "Präis, zousätzlech Produktioun, Waardezäit an Ertragspalieren: e publikt Beispill mat de Reegele vu Papers Empire erkläert Investitiounen.",
+        "eyebrow": "SPILLGUIDE",
+        "lead": "En niddrege Präis ass nëmmen en Deel vun der Entscheedung. Dëst Beispill vergläicht dat nächst Exemplar vun engem fiktive Produzent an dräi onofhängegen Atelieren, ouni däi Spillstand ze liesen oder z’änneren.",
+        "imageAlt": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "imageCaption": "Illustratioun vum Papers-Empire-Atelier, fir dëse praktesche Guide nees benotzt.",
+        "disclosure": "D’Reegele vu Papers Empire goufe mam Quellcode verglach. D’Beispiller erklären Entscheedungen; si si keng Miessunge vun engem gestoppte Spilltest.",
+        "readingMinutes": 4,
+        "card": "Präis, zousätzlech Produktioun, Waardezäit an Ertragspalieren: e publikt Beispill mat de Reegele vu Papers Empire erkläert Investitiounen.",
+        "playLabel": "A mengem Atelier vergläichen",
+        "sections": [
+          {
+            "title": "E konstruéiert Beispill, keng gemoosse Partie",
+            "paragraphs": [
+              "De fiktive Produzent huet dës Basiswäerter: 15 DOC, e Präisfaktor vun 1,15 pro disponibelt Exemplar an 0,5 DOC/s viru Bonussen. All Atelier huet keng Kultur, Verbesserungen oder Plangmodifikatoren a start mat null DOC. D’Wäerter ginn beim Erstelle vun dëser Säit mam gemeinsame Wirtschaftsmodell vum Spill nei berechent."
+            ]
+          },
+          {
+            "title": "Dräi Situatiounen, dee selwechten nächsten Akaf",
+            "paragraphs": [
+              "D’Zeile sinn onofhängeg Situatiounen. D’Waardezäit setzt e konstante Rhythmus ouni Klicks, Belounungen an tëschenzäitlech Ausgaben viraus. D’Amortisatioun moosst nëmmen, wéini zousätzlech DOC nom Akaf säi Präis decken."
+            ],
+            "investmentExample": true
+          },
+          {
+            "title": "Firwat dat zéngt Exemplar méi bréngt",
+            "paragraphs": [
+              "Bei zéng Exemplare klëmmt den Ertrag vun där Eenheet op ×1,10, bei fënnefanzwanzeg op ×1,25. De marginale Gewënn enthält dofir och de besseren Ertrag vun de schonn existente Exemplaren. D’Paliere ginn net matenee multiplizéiert: Bei fënnefanzwanzeg gëllt ×1,25, net ×1,10 ×1,25."
+            ]
+          },
+          {
+            "title": "Wat d’Tabell net entscheet",
+            "paragraphs": [
+              "En Akaf mat gudder DOC-Amortisatioun kann um Vertrauens-, Qualitéits- oder Kontraktzil vun dengem Plang laanschtgoen. Dëst Beispill optiméiert weder déi ganz Karriär nach zukünfteg Belounungen oder d’Spilldauer. Vergläich fir deng richteg Partie d’Data Science Zone mam Hindernis am aktuellen Dossier."
+            ]
+          },
+          {
+            "title": "Déi nächst Fro wielen",
+            "paragraphs": [
+              "Fänk als neie Spiller mat der <a href=\"/lb/guides/papers-empire-eischt-automatisatioun/\">éischter Automatisatioun</a> un. Wann d’Produktioun leeft, mee en Dossier stoe bleift, ënnerscheed <a href=\"/lb/guides/papers-empire-doc-cc-karriarplaeng/\">DOC, CC a Pläng</a>. E Kennwäert hëlleft, wann seng Ausso zu dengem Zil passt."
+            ]
+          }
+        ]
+      }
+    }
   },
 ]);
 

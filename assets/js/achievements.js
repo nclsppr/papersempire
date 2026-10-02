@@ -1,8 +1,10 @@
 (function (root, factory) {
   const api = factory();
-  if (typeof module === "object" && module.exports) {
-    module.exports = api;
-  } else {
+  const commonJS = typeof module === "object" && module !== null && module.exports;
+  if (commonJS) module.exports = api;
+  if (typeof window !== "undefined") {
+    window.Achievements = api;
+  } else if (!commonJS) {
     root.Achievements = api;
   }
 })(typeof window !== "undefined" ? window : globalThis, function () {

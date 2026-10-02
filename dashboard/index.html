@@ -35,6 +35,7 @@
     if (event.persisted) window.location.reload();
   });
   </script>
+<link rel="stylesheet" href="/assets/css/mobile-experience.css">
 </head>
 <body class="dash-standalone data-zone-shell">
   <a class="skip-link" href="#dataZoneTitle" data-i18n="analytics.skipToContent">Aller aux analyses</a>
@@ -190,14 +191,23 @@
       </div>
 
       <article class="data-zone-panel recommendation-panel" id="recommendationPanel" aria-labelledby="recommendationTitle">
+        <label class="advice-focus" for="adviceFocus"><span data-i18n="advice.focus">Priorité de l’achat</span>
+          <select id="adviceFocus">
+            <option value="objective" data-i18n="advice.objective">Mon dossier</option>
+            <option value="docs" data-i18n="advice.docs">Production DOC</option>
+            <option value="cc" data-i18n="advice.cc">Confiance CC</option>
+            <option value="quality" data-i18n="advice.quality">Qualité</option>
+            <option value="footprint" data-i18n="advice.footprint">Empreinte papier</option>
+          </select>
+        </label>
         <div class="recommendation-visual" aria-hidden="true">
           <img id="recommendationImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" decoding="async" hidden>
           <span class="recommendation-placeholder" id="recommendationPlaceholder">PE</span>
         </div>
         <div class="recommendation-copy">
-          <span class="recommendation-label" data-i18n="analytics.recommendation.label">Meilleur retour DOC estimé</span>
+          <span class="recommendation-label" data-i18n="analytics.recommendation.label">Achat conseillé pour ta priorité</span>
           <h3 id="recommendationTitle" data-i18n="analytics.recommendation.waiting">Aucun achat à comparer</h3>
-          <p id="recommendationReason" data-i18n="analytics.recommendation.method">Classement des unités débloquées selon leur temps de retour estimé.</p>
+          <p id="recommendationReason" data-i18n="analytics.recommendation.method">Compare les unités débloquées selon la priorité choisie.</p>
           <dl class="recommendation-metrics">
             <div>
               <dt data-i18n="analytics.investment.cost">Coût du prochain</dt>
@@ -435,6 +445,7 @@
   <script src="/assets/i18n/de.js" defer></script>
   <script src="/assets/i18n/lb.js" defer></script>
   <script src="/assets/js/accessibility.js" defer></script>
+  <script src="/assets/js/investment-advice.js" defer></script>
   <script src="/assets/js/dashboard.js" defer></script>
 </body>
 </html>

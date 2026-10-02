@@ -6,9 +6,20 @@
    * Filled once during initialization.
    */
   const DOM = {};
-  const assetUrl = window.PEAssetUrl || function (path) { return path; };
+  // A native host supplies only this explicit platform flag. No browser globals
+  // or DOM are emulated in JavaScriptCore; presentation stays on the web path.
+  const host = globalThis;
+  const HEADLESS = host.PEPlatform?.headless === true;
+  let headlessElapsedMs = 1;
+  let headlessInitialized = false;
+  let headlessEventsEnabled = true;
+  function monotonicNow() { return HEADLESS ? headlessElapsedMs : performance.now(); }
+  function requestVisualFrame(callback) { if (!HEADLESS) return requestAnimationFrame(callback); }
+  function scheduleVisual(callback, delay) { if (!HEADLESS) return setTimeout(callback, delay); }
 
-  const GAME_TITLE = window.GAME_TITLE || "Papers Empire";
+  const assetUrl = host.PEAssetUrl || function (path) { return path; };
+
+  const GAME_TITLE = host.GAME_TITLE || "Papers Empire";
   const {
     computeBuildingEffects,
     getBuildingImpact,
@@ -16,13 +27,13 @@
     getMilestoneMultiplier,
     getNextMilestone
   } = ModifierUtils;
-  const EconomyAnalytics = window.EconomyAnalytics || null;
-  const Progression = window.ProgressionModule || null;
+  const EconomyAnalytics = host.EconomyAnalytics || null;
+  const Progression = host.ProgressionModule || null;
   const { sanitizeTimeScale, updateCheatProgress } = GodModeUtils;
-  const Events = window.Events;
-  const Settings = window.Settings;
-  const TutorialEngine = window.Tutorial;
-  const UIEffects = window.UIEffects || {
+  const Events = host.Events;
+  const Settings = host.Settings;
+  const TutorialEngine = host.Tutorial;
+  const UIEffects = host.UIEffects || {
     playPurchaseEffect() {},
     playUpgradeEffect() {},
     playContractEffect() {},
@@ -61,13 +72,14 @@
   // doit être déterministe par URL (Googlebot rend en en-US, ce qui ferait
   // de / un duplicat anglais de /en/ alors qu'elle est déclarée hreflang fr).
   const urlLang = (() => {
+    if (HEADLESS) return null;
     try {
-      return new URLSearchParams(window.location.search).get("lang");
+      return new URLSearchParams(host.location.search).get("lang");
     } catch {
       return null;
     }
   })();
-  const pathLang = (window.location.pathname.match(/^\/(en|de|lb)\//) || [])[1] || null;
+  const pathLang = HEADLESS ? null : (host.location.pathname.match(/^\/(en|de|lb)\//) || [])[1] || null;
   let currentLang = (pathLang || urlLang || DEFAULT_LANG).slice(0, 2).toLowerCase();
   if (!SUPPORTED_LANGS.includes(currentLang)) {
     currentLang = DEFAULT_LANG;
@@ -113,7 +125,7 @@
       offlineModalMinSeconds: 300
     },
     time: {
-      lastUpdate: performance.now()
+      lastUpdate: monotonicNow()
     },
     buildings: [],
     upgrades: [],
@@ -131,6 +143,7 @@
   const eventState = {
     active: null,
     modalCanClose: false,
+    minigameCode: null,
     bannerTone: "mixed",
     bannerKey: null,
     bannerParams: null,
@@ -400,7 +413,7 @@
     dirty: false
   };
 
-  document.addEventListener("DOMContentLoaded", initApp);
+  if (!HEADLESS) document.addEventListener("DOMContentLoaded", initApp);
 
   /** Entry point that wires DOM, localisation and gameplay. */
   function initApp() {
@@ -412,10 +425,12 @@
     initGame();
     initExperienceMode();
     initGodModeControls();
+    initProductExperience();
     initTutorialGuidance();
     applyTimeOfDaySky();
     setInterval(applyTimeOfDaySky, 10 * 60 * 1000);
     greetConsoleVisitors();
+    host.dispatchEvent(new Event("pe:game-ready"));
   }
 
   function hasMeaningfulProgress(saved) {
@@ -445,8 +460,8 @@
 
   function wantsLandingView() {
     try {
-      return new URLSearchParams(window.location.search).get("welcome") === "1" ||
-        LANDING_HASHES.includes(window.location.hash);
+      return new URLSearchParams(host.location.search).get("welcome") === "1" ||
+        LANDING_HASHES.includes(host.location.hash);
     } catch {
       return false;
     }
@@ -454,10 +469,10 @@
 
   function updateExperienceUrl(hash) {
     try {
-      const url = new URL(window.location.href);
+      const url = new URL(host.location.href);
       url.searchParams.delete("welcome");
       if (typeof hash === "string" && hash) url.hash = hash;
-      window.history.replaceState(null, "", url);
+      host.history.replaceState(null, "", url);
     } catch {
       // file:// and privacy-hardened contexts may reject History mutations.
     }
@@ -465,8 +480,10 @@
 
   function applyExperienceMode(mode, options = {}) {
     experienceMode = mode === "playing" ? "playing" : "landing";
+    if (HEADLESS) return;
     document.documentElement.dataset.experience = experienceMode;
     const playing = experienceMode === "playing";
+    host.PEEngagement?.setPlaying(playing && experienceStarted);
     if (DOM.gameSurface) {
       DOM.gameSurface.inert = !playing;
       DOM.gameSurface.setAttribute("aria-hidden", playing ? "false" : "true");
@@ -481,33 +498,33 @@
       element.inert = playing;
       element.setAttribute("aria-hidden", playing ? "true" : "false");
     });
-    window.__PE_SCENE_MODE__ = experienceMode;
+    host.__PE_SCENE_MODE__ = experienceMode;
     if (options.updateUrl !== false) updateExperienceUrl();
   }
 
   function initExperienceMode() {
     const showLanding = wantsLandingView();
     try {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(host.location.search);
       if (params.has("welcome")) {
-        const canonicalLandingHash = LANDING_HASHES.includes(window.location.hash)
-          ? window.location.hash
+        const canonicalLandingHash = LANDING_HASHES.includes(host.location.hash)
+          ? host.location.hash
           : params.get("welcome") === "1"
             ? "#sceneStage"
-            : window.location.hash;
+            : host.location.hash;
         updateExperienceUrl(canonicalLandingHash);
       }
     } catch {
       // The current URL already remains usable if query parsing is unavailable.
     }
     applyExperienceMode(showLanding || !experienceStarted ? "landing" : "playing", { updateUrl: false });
-    window.addEventListener("hashchange", () => {
-      if (LANDING_HASHES.includes(window.location.hash)) {
+    host.addEventListener("hashchange", () => {
+      if (LANDING_HASHES.includes(host.location.hash)) {
         applyExperienceMode("landing", { updateUrl: false });
       }
     });
     if (experienceMode === "playing") {
-      requestAnimationFrame(showOfflineReport);
+      requestVisualFrame(showOfflineReport);
     }
   }
 
@@ -526,9 +543,11 @@
       lastAnalyticsSampleAt = 0;
     }
     applyExperienceMode("playing");
-    if (firstStart) gameState.time.lastUpdate = performance.now();
+    if (firstStart) gameState.time.lastUpdate = monotonicNow();
+    host.PEEngagement?.record("start");
     queueSave(true);
     showOfflineReport();
+    if (HEADLESS) return;
     const targetSelector = event && event.currentTarget
       ? event.currentTarget.getAttribute("href")
       : null;
@@ -537,7 +556,7 @@
       : DOM.gameSurface;
     if (targetSelector) expandPanelForTarget(target, { persist: true });
     updateExperienceUrl(targetSelector || "#gameViewTitle");
-    requestAnimationFrame(() => {
+    requestVisualFrame(() => {
       if ([DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
         return;
       }
@@ -551,7 +570,7 @@
         focusTarget.focus({ preventScroll: true });
       }
       const settleDelay = reduceMotionPreferred() ? 0 : 580;
-      setTimeout(() => {
+      scheduleVisual(() => {
         const tutorialActive = TutorialEngine && typeof TutorialEngine.isActive === "function" && TutorialEngine.isActive();
         if (tutorialActive || [DOM.offlineModal, DOM.eventModal, DOM.settingsModal].some(isModalSurfaceOpen)) {
           return;
@@ -561,8 +580,8 @@
         }
       }, settleDelay);
     });
-    if (TutorialEngine && typeof TutorialEngine.maybeStart === "function") {
-      setTimeout(() => TutorialEngine.maybeStart(), reduceMotionPreferred() ? 0 : 420);
+    if (!isEmpireMode() && TutorialEngine && typeof TutorialEngine.maybeStart === "function") {
+      scheduleVisual(() => TutorialEngine.maybeStart(), reduceMotionPreferred() ? 0 : 420);
     }
   }
 
@@ -573,7 +592,7 @@
     }
     applyExperienceMode("landing");
     updateExperienceUrl("#sceneStage");
-    requestAnimationFrame(() => {
+    requestVisualFrame(() => {
       if (DOM.sceneStage && typeof DOM.sceneStage.scrollIntoView === "function") {
         DOM.sceneStage.scrollIntoView({ behavior: reduceMotionPreferred() ? "auto" : "smooth", block: "start" });
       }
@@ -583,7 +602,7 @@
 
   function reduceMotionPreferred() {
     return document.documentElement.classList.contains("pref-reduce-motion") ||
-      !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      !!(host.matchMedia && host.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
 
   /* Ciel selon l'heure locale : ne décale que la teinte du dégradé
@@ -643,6 +662,8 @@
     DOM.heroCulture = document.getElementById("heroCulture");
     DOM.opsDocBank = document.getElementById("opsDocBank");
     DOM.opsDocPs = document.getElementById("opsDocPs");
+    DOM.mobileDocuments = document.getElementById("mobileDocuments");
+    DOM.mobileCadence = document.getElementById("mobileCadence");
     DOM.opsBuildingCount = document.getElementById("opsBuildingCount");
     DOM.manualGain = document.getElementById("manualGain");
     DOM.currentObjective = document.getElementById("currentObjective");
@@ -743,7 +764,7 @@
     const flushOnLifecycleBoundary = () => {
       if (experienceStarted) queueSave(true);
     };
-    window.addEventListener("pagehide", flushOnLifecycleBoundary);
+    host.addEventListener("pagehide", flushOnLifecycleBoundary);
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") flushOnLifecycleBoundary();
     });
@@ -867,7 +888,7 @@
   function modalCloseMs() {
     const root = document.documentElement;
     if (root.classList.contains("pref-reduce-motion")) return 0;
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
+    if (host.matchMedia && host.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
     const value = parseFloat(getComputedStyle(root).getPropertyValue("--modal-close-dur"));
     return Number.isFinite(value) ? value : 150;
   }
@@ -940,7 +961,7 @@
       dialog.classList.remove("is-open");
       dialog.classList.add("is-closing");
     }
-    overlay.__peCloseTimer = setTimeout(() => {
+    overlay.__peCloseTimer = scheduleVisual(() => {
       overlay.classList.add("hidden");
       overlay.classList.remove("is-closing");
       if (dialog) dialog.classList.remove("is-closing");
@@ -970,7 +991,7 @@
 
   function schedulePendingOfflineReport() {
     if (!offlineReport) return;
-    setTimeout(() => showOfflineReport(), modalCloseMs() + 20);
+    scheduleVisual(() => showOfflineReport(), modalCloseMs() + 20);
   }
 
   function openSettingsModal(section) {
@@ -1080,7 +1101,7 @@
     if (typeof TutorialEngine.restart !== "function") return;
     const didCloseSettings = closeSettingsModal();
     if (didCloseSettings) {
-      setTimeout(() => TutorialEngine.restart(), modalCloseMs() + 20);
+      scheduleVisual(() => TutorialEngine.restart(), modalCloseMs() + 20);
     } else {
       TutorialEngine.restart();
     }
@@ -1088,7 +1109,7 @@
 
   /** Simple translation helper that handles string interpolation. */
   function getI18nDict(lang) {
-    const dicts = window.I18N || {};
+    const dicts = host.I18N || {};
     return dicts[lang] || dicts[DEFAULT_LANG] || {};
   }
 
@@ -1164,42 +1185,12 @@
   }
 
   function handleExportSave() {
-    if (!Persistence.isAvailable || !Persistence.isAvailable()) {
-      alert(t("actions.saveUnavailable"));
-      return;
-    }
     queueSave(true);
-    const data = Persistence.exportData();
-    if (!data) {
-      alert(t("actions.exportError"));
-      return;
-    }
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(data).then(
-        () => alert(t("actions.exportSuccess")),
-        () => prompt(t("actions.exportPrompt"), data)
-      );
-    } else {
-      prompt(t("actions.exportPrompt"), data);
-    }
+    host.PESaveTransfer?.exportSave();
   }
 
   function handleImportSave() {
-    const raw = prompt(t("actions.importPrompt"));
-    if (!raw) return;
-    const ok = Persistence.importData ? Persistence.importData(raw) : false;
-    if (!ok) {
-      alert(t("actions.importError"));
-      return;
-    }
-    try {
-      window.localStorage.removeItem(DASH_SNAPSHOT_KEY);
-      window.localStorage.removeItem(ANALYTICS_HISTORY_KEY);
-    } catch {
-      // The imported save remains the source of truth.
-    }
-    disablePersistence();
-    location.reload();
+    host.PESaveTransfer?.chooseImport();
   }
 
   function handleResetSave() {
@@ -1209,9 +1200,9 @@
       Persistence.clear();
     }
     try {
-      window.localStorage.removeItem("pe-accessibility");
-      window.localStorage.removeItem(DASH_SNAPSHOT_KEY);
-      window.localStorage.removeItem(ANALYTICS_HISTORY_KEY);
+      host.localStorage.removeItem("pe-accessibility");
+      host.localStorage.removeItem(DASH_SNAPSHOT_KEY);
+      host.localStorage.removeItem(ANALYTICS_HISTORY_KEY);
     } catch {
       // ignore storage errors
     }
@@ -1225,8 +1216,10 @@
     }
     try {
       const path = lang === DEFAULT_LANG ? "/" : `/${lang}/`;
-      const url = new URL(path, window.location.origin);
-      url.hash = window.location.hash;
+      const url = new URL(path, host.location.href);
+      queueSave(true);
+      if (isEmpireMode()) url.searchParams.set("experience", "empire");
+      url.hash = host.location.hash;
       window.location.assign(url.href);
       return;
     } catch {
@@ -1353,13 +1346,13 @@
       });
     });
     window.addEventListener("hashchange", () => {
-      expandPanelForTarget(targetFromHash(window.location.hash), { persist: true });
+      expandPanelForTarget(targetFromHash(host.location.hash), { persist: true });
     });
-    expandPanelForTarget(targetFromHash(window.location.hash), { persist: true });
+    expandPanelForTarget(targetFromHash(host.location.hash), { persist: true });
   }
 
   function initTutorialGuidance() {
-    if (!TutorialEngine || !Settings) return;
+    if (!TutorialEngine || !Settings || isEmpireMode()) return;
     const steps = [
       {
         id: "click",
@@ -1376,18 +1369,11 @@
         milestone: "building"
       },
       {
-        id: "journal",
-        titleKey: "tutorial.step.journal.title",
-        bodyKey: "tutorial.step.journal.body",
-        selector: "#journalTab",
-        milestone: "journal"
-      },
-      {
-        id: "settings",
-        titleKey: "tutorial.step.settings.title",
-        bodyKey: "tutorial.step.settings.body",
-        selector: "#settingsGearButton",
-        milestone: "settings"
+        id: "automation",
+        titleKey: "tutorial.step.automation.title",
+        bodyKey: "tutorial.step.automation.body",
+        selector: "#nextPurchaseButton",
+        milestone: "building"
       }
     ];
     TutorialEngine.configure({
@@ -1397,6 +1383,7 @@
       onBeforeHighlight: selector => {
         const target = selector ? document.querySelector(selector) : null;
         expandPanelForTarget(target, { persist: true });
+        host.PEMobileExperience?.revealTarget(target);
       },
       onComplete: () => logMessage("log.tutorialComplete"),
       autoStart: experienceStarted && experienceMode === "playing"
@@ -1451,7 +1438,7 @@
 
   function loadAnalyticsHistory() {
     try {
-      const raw = JSON.parse(window.localStorage.getItem(ANALYTICS_HISTORY_KEY) || "null");
+      const raw = JSON.parse(host.localStorage.getItem(ANALYTICS_HISTORY_KEY) || "null");
       if (!raw || raw.schemaVersion !== 1 || !Array.isArray(raw.samples)) return [];
       return raw.samples
         .filter(sample => sample && isValidTimestamp(sample.generatedAt))
@@ -1462,7 +1449,7 @@
   }
 
   /** Initialises the building deck, upgrades and kicks off the loop. */
-  function initGame() {
+  function initGame(savedOverride) {
     gameState.buildings = BUILDING_DEFS.map((def, index) => ({
       ...def,
       quantity: 0,
@@ -1507,7 +1494,7 @@
       }
     ];
 
-    const savedState = Persistence.load ? Persistence.load() : null;
+    const savedState = HEADLESS ? savedOverride : Persistence.load ? Persistence.load() : null;
     experienceStartedAt = savedState && savedState.meta && isValidTimestamp(savedState.meta.startedAt)
       ? savedState.meta.startedAt
       : null;
@@ -1529,7 +1516,7 @@
       // pour les sauvegardes V3, où défis et succès donnent aussi de la Culture.
       analyticsState.lifetimeObserved.prestiges = 1;
     }
-    analyticsHistory = loadAnalyticsHistory();
+    analyticsHistory = HEADLESS ? [] : loadAnalyticsHistory();
     if (savedState && savedState.analytics && analyticsHistory.length === 0) {
       // An imported/cleared profile may retain aggregate counters without the
       // separate time-series key. Never present that situation as complete.
@@ -1557,11 +1544,13 @@
       loadProgress.conclusionUnlocked
     ));
 
-    if (window.EndgameModule) {
+    if (host.EndgameModule) {
       const savedContract = savedState && savedState.endgame
         ? savedState.endgame.activeContract
         : null;
-      window.EndgameModule.loadData(gameState, savedContract).then(() => {
+      const loading = host.EndgameModule.loadData(gameState, savedContract);
+      if (HEADLESS) syncCampaignContractPriority();
+      else loading.then(() => {
         syncCampaignContractPriority();
         renderContractsPanel();
         renderWorkOrder();
@@ -1582,8 +1571,9 @@
     renderAll(true);
     uiState.initialRenderComplete = true;
     showOfflineReport();
-    gameState.time.lastUpdate = performance.now();
-    requestAnimationFrame(gameLoop);
+    gameState.time.lastUpdate = monotonicNow();
+    if (HEADLESS) return;
+    requestVisualFrame(gameLoop);
     // Autosave périodique seulement après l'entrée dans le jeu : la landing
     // ne crée plus une fausse sauvegarde ni une fausse session analytique.
     setInterval(() => {
@@ -1611,8 +1601,8 @@
         ? Progression.serializeCareer(careerState)
         : null,
       endgame: {
-        activeContract: window.EndgameModule && typeof window.EndgameModule.exportActiveContract === "function"
-          ? window.EndgameModule.exportActiveContract()
+        activeContract: host.EndgameModule && typeof host.EndgameModule.exportActiveContract === "function"
+          ? host.EndgameModule.exportActiveContract()
           : null
       },
       events: {
@@ -1682,8 +1672,8 @@
     }
     if (isStateRecord(saved.achievements)) {
       const achievementIds = new Set(
-        window.Achievements && Array.isArray(window.Achievements.definitions)
-          ? window.Achievements.definitions.map(definition => definition.id)
+        host.Achievements && Array.isArray(host.Achievements.definitions)
+          ? host.Achievements.definitions.map(definition => definition.id)
           : []
       );
       const rawUnlocked = isStateRecord(saved.achievements.unlocked)
@@ -1750,7 +1740,7 @@
 
   function showOfflineReport() {
     if (!offlineReport) return;
-    if (experienceMode !== "playing") return;
+    if (!HEADLESS && experienceMode !== "playing") return;
     // Sous ~5 min d'absence : crédit silencieux, pas de modale plein écran
     // à chaque pause café (fatigue de modale).
     if (offlineReport.elapsedSeconds < gameState.config.offlineModalMinSeconds) {
@@ -1758,12 +1748,15 @@
       queueSave(true);
       return;
     }
+    // Native presents longer reports itself; the silent-credit policy above
+    // remains shared with the browser and never depends on a Swift threshold.
+    if (HEADLESS) return;
     if (isModalSurfaceOpen(DOM.settingsModal) || isModalSurfaceOpen(DOM.eventModal)) {
       return;
     }
     // Ne pas concurrencer le tutoriel : le rapport attendra la prochaine
     // visite (les documents sont crédités dans tous les cas).
-    if (window.Settings && Settings.getPreference("tutorialEnabled") &&
+    if (host.Settings && Settings.getPreference("tutorialEnabled") &&
         !Settings.getPreference("tutorialCompleted")) {
       offlineReport = null;
       queueSave(true);
@@ -1788,6 +1781,12 @@
       duration.textContent = text;
     }
     if (docs) docs.textContent = "+" + formatNumber(offlineReport.gain) + " DOC";
+    const returnHint = document.getElementById("offlinePurchaseHint");
+    const advice = gameSnapshot().advice;
+    if (returnHint) {
+      returnHint.hidden = !advice;
+      returnHint.textContent = advice ? t(advice.canBuy ? "offline.purchaseReady" : "offline.purchaseNext", { name: advice.name, cost: formatNumber(advice.cost) }) : "";
+    }
     const listeners = new AbortController();
     const close = (restoreFocus = true) => {
       closeModalSurface(modal, dialog);
@@ -1811,7 +1810,9 @@
     if (objectiveBtn) {
       objectiveBtn.addEventListener("click", () => {
         close(false);
-        setTimeout(() => {
+        scheduleVisual(() => {
+          if (isEmpireMode()) { host.PEEmpireView?.openBuilding(gameSnapshot().advice?.id); return; }
+          host.PEMobileExperience?.openPanel("production", { focus: false });
           if (!DOM.currentObjective) return;
           DOM.currentObjective.scrollIntoView({
             block: "center",
@@ -1903,6 +1904,7 @@
         modifiers: { ...careerModifiers }
       },
       career: careerSummary,
+      adviceGoal: adviceGoal(),
       analytics: JSON.parse(JSON.stringify(analyticsState))
     };
   }
@@ -1938,7 +1940,7 @@
       if (snapshot.analytics) snapshot.analytics.partialHistory = true;
     }
     lastAnalyticsSampleAt = snapshot.generatedAt;
-    window.localStorage.setItem(ANALYTICS_HISTORY_KEY, JSON.stringify(analyticsHistoryEnvelope()));
+    host.localStorage.setItem(ANALYTICS_HISTORY_KEY, JSON.stringify(analyticsHistoryEnvelope()));
   }
 
   /** Écrit la sauvegarde et publie un snapshot analytique borné. La page
@@ -1949,7 +1951,7 @@
       if (forceDashboard || now - lastDashboardPersistAt >= DASH_SNAPSHOT_INTERVAL_MS) {
         const snapshot = buildDashboardSnapshot();
         recordAnalyticsSample(snapshot);
-        window.localStorage.setItem(DASH_SNAPSHOT_KEY, JSON.stringify(snapshot));
+        host.localStorage.setItem(DASH_SNAPSHOT_KEY, JSON.stringify(snapshot));
         lastDashboardPersistAt = snapshot.generatedAt;
       }
     } catch {
@@ -1961,6 +1963,7 @@
   }
 
   function queueSave(force = false) {
+    if (HEADLESS) return;
     if (!experienceStarted) return;
     if (persistenceDisabled) return;
     if (!Persistence.isAvailable || !Persistence.isAvailable()) return;
@@ -1971,7 +1974,7 @@
       return;
     }
     if (saveTimer) return;
-    saveTimer = setTimeout(() => {
+    saveTimer = scheduleVisual(() => {
       persistNow(false);
       saveTimer = null;
     }, 500);
@@ -2054,8 +2057,8 @@
       const rawQuantity = typeof quantityOverride === "number"
         ? Math.max(0, quantityOverride)
         : Math.max(0, building.quantity || 0);
-      const durationCap = window.EndgameModule && Number.isFinite(window.EndgameModule.MAX_PREPRESS_DURATION_REDUCTION)
-        ? window.EndgameModule.MAX_PREPRESS_DURATION_REDUCTION
+      const durationCap = host.EndgameModule && Number.isFinite(host.EndgameModule.MAX_PREPRESS_DURATION_REDUCTION)
+        ? host.EndgameModule.MAX_PREPRESS_DURATION_REDUCTION
         : 0.3;
       const durationReduction = Math.min(
         durationCap,
@@ -2279,7 +2282,7 @@
     if (!DOM.gameStatusAnnouncer) return;
     const token = ++statusAnnouncementToken;
     DOM.gameStatusAnnouncer.textContent = "";
-    requestAnimationFrame(() => {
+    requestVisualFrame(() => {
       if (token === statusAnnouncementToken && DOM.gameStatusAnnouncer) {
         DOM.gameStatusAnnouncer.textContent = message;
       }
@@ -2343,7 +2346,7 @@
     element.classList.remove(className);
     void element.offsetWidth;
     element.classList.add(className);
-    setTimeout(() => {
+    scheduleVisual(() => {
       if (element.isConnected) element.classList.remove(className);
     }, 240);
   }
@@ -2442,7 +2445,7 @@
   }
 
   function syncCampaignContractPriority() {
-    if (!window.EndgameModule || typeof window.EndgameModule.setPriorityContracts !== "function") return;
+    if (!host.EndgameModule || typeof host.EndgameModule.setPriorityContracts !== "function") return;
     const campaignId = careerState && careerState.campaigns && careerState.campaigns.active
       ? careerState.campaigns.active.id
       : null;
@@ -2451,7 +2454,7 @@
       : campaignId === "annualReportSeason"
         ? ["annualReports"]
         : [];
-    window.EndgameModule.setPriorityContracts(priorities, gameState);
+    host.EndgameModule.setPriorityContracts(priorities, gameState);
     contractsState.listRenderSignature = "";
   }
 
@@ -2512,7 +2515,7 @@
     const dt = (timestamp - gameState.time.lastUpdate) / 1000;
     if (dt <= 0) {
       gameState.time.lastUpdate = timestamp;
-      requestAnimationFrame(gameLoop);
+      requestVisualFrame(gameLoop);
       return;
     }
 
@@ -2521,32 +2524,29 @@
       if (timestamp - uiState.lastFrameRender >= DOM_RENDER_INTERVAL_MS) {
         renderAll();
       }
-      requestAnimationFrame(gameLoop);
+      requestVisualFrame(gameLoop);
       return;
     }
 
-    // Onglet resté masqué (rAF suspendu) : la longue absence passe par le
-    // barème hors-ligne (rendement réduit, plafond, sans confiance) au lieu
-    // d'être rejouée à 100 % dans update() — sinon « ne jamais fermer
-    // l'onglet » dominerait strictement le jeu. Et dt reste borné en jeu
-    // normal : aucune frame ne rejoue plus de quelques secondes.
+    advanceSimulation(dt);
+    if (timestamp - uiState.lastFrameRender >= DOM_RENDER_INTERVAL_MS) renderAll();
+    gameState.time.lastUpdate = timestamp;
+    requestVisualFrame(gameLoop);
+  }
+
+  // Both display hosts use the historical frame/offline policy: an absence
+  // beyond one minute earns capped half-rate DOC, without replaying contracts.
+  function advanceSimulation(dt) {
+    if (!experienceStarted || !Number.isFinite(dt) || dt <= 0) return;
     if (dt > gameState.config.offlineMinSeconds) {
       offlineReport = applyAwayGain(dt);
-      gameState.time.lastUpdate = timestamp;
       showOfflineReport();
       queueSave(true);
-      requestAnimationFrame(gameLoop);
       return;
     }
-
     const frameDt = Math.min(dt, 5);
     const scaledDt = frameDt * currentTimeScale();
     update(scaledDt, frameDt);
-    if (timestamp - uiState.lastFrameRender >= DOM_RENDER_INTERVAL_MS) {
-      renderAll();
-    }
-    gameState.time.lastUpdate = timestamp;
-    requestAnimationFrame(gameLoop);
   }
 
   /** Applies resource gains, drifts and unlock checks for a time delta. */
@@ -2648,18 +2648,18 @@
     const sourceButton = event && event.currentTarget ? event.currentTarget : DOM.clickButton;
     UIEffects.playClickEffect(sourceButton, { value: docGain });
     if (TutorialEngine && typeof TutorialEngine.markMilestone === "function") {
-      TutorialEngine.markMilestone("click");
+      if (gameState.resources.docBank >= buildingCost(gameState.buildings[0])) TutorialEngine.markMilestone("click");
     }
   }
 
   /** Purchases a building if the player can afford it. */
   function buyBuilding(id, sourceEl) {
     const b = gameState.buildings.find(x => x.id === id);
-    if (!b) return;
+    if (!b || !b.isUnlocked || !experienceStarted) return false;
     const cost = buildingCost(b);
-    if (gameState.resources.docBank < cost) return;
+    if (gameState.resources.docBank < cost) return false;
 
-    const shouldRestoreFocus = document.activeElement === sourceEl;
+    const shouldRestoreFocus = !HEADLESS && document.activeElement === sourceEl;
     const beforeRate = computeDocPerSecond();
     gameState.resources.docBank -= cost;
     analyticsState.currentRun.buildingSpend += cost;
@@ -2669,6 +2669,7 @@
       ? Progression.recordBuildingMilestones(careerState, b.id, previousQuantity, b.quantity)
       : [];
     const afterRate = computeDocPerSecond();
+    if (beforeRate <= 0 && afterRate > 0) host.PEEngagement?.record("first_automation");
     const primaryParams = { name: getBuildingName(b) };
     const rateChanged = Math.abs(afterRate - beforeRate) > 1e-9;
     const detailKey = rateChanged ? "feedback.cadenceChange" : null;
@@ -2739,20 +2740,22 @@
       UIEffects.playCelebrationEffect("finale");
       logMessage("log.finalBuilding", { name: getBuildingName(b) });
     }
+    return true;
   }
 
   /** Purchases an upgrade if affordable and unlocked. */
   function buyUpgrade(id, sourceEl) {
     const upg = gameState.upgrades.find(x => x.id === id);
-    if (!upg || upg.purchased) return;
-    if (gameState.resources.docBank < upg.cost) return;
-    if (gameState.resources.docTotal < (upg.unlockDocTotal || 0)) return;
+    if (!upg || upg.purchased || !experienceStarted) return false;
+    if (gameState.resources.docBank < upg.cost) return false;
+    if (gameState.resources.docTotal < (upg.unlockDocTotal || 0)) return false;
 
-    const shouldRestoreFocus = document.activeElement === sourceEl;
+    const shouldRestoreFocus = !HEADLESS && document.activeElement === sourceEl;
     const beforeRate = computeDocPerSecond();
     gameState.resources.docBank -= upg.cost;
     analyticsState.currentRun.upgradeSpend += upg.cost;
     upg.purchased = true;
+    host.PEEngagement?.record("first_upgrade");
     const progressionRecord = Progression && careerState && typeof Progression.recordUpgradePurchased === "function"
       ? Progression.recordUpgradePurchased(careerState, { now: Date.now() })
       : null;
@@ -2791,6 +2794,7 @@
     }
     announceStatus(upgradeAnnouncement);
     UIEffects.playUpgradeEffect(DOM.upgradesList || sourceEl);
+    return true;
   }
 
   /** Whether the prestige reset is currently available. */
@@ -2898,10 +2902,10 @@
     });
   }
 
-  function handlePrestigeClick() {
-    if (!canPrestige()) return;
+  function prestigeConfirmation() {
+    if (!canPrestige()) return "";
     const preview = getPrestigeCareerPreview();
-    if (preview.totalCulture <= 0) return;
+    if (preview.totalCulture <= 0) return false;
     let confirmation = t("prestige.confirm", { gain: preview.totalCulture });
     if (preview.assessment && preview.assessment.willRestartPlan) {
       confirmation += "\n\n" + t("career.prestige.planNotValidated");
@@ -2916,14 +2920,19 @@
     if (campaignWarning) confirmation += "\n\n" + campaignWarning;
     const challengeWarning = prestigeChallengeFailureCopy(preview);
     if (challengeWarning) confirmation += "\n\n" + challengeWarning;
-    if (confirm(confirmation)) doPrestige();
+    return confirmation;
+  }
+
+  function handlePrestigeClick() {
+    const confirmation = prestigeConfirmation();
+    return confirmation && confirm(confirmation) ? doPrestige() : false;
   }
 
   /** Executes the prestige reset flow and reinitialises the run. */
   function doPrestige() {
-    if (!canPrestige()) return;
+    if (!canPrestige()) return false;
     const baseGain = computePotentialCultureGain();
-    if (baseGain <= 0) return;
+    if (baseGain <= 0) return false;
     const multiplierBefore = prestigeMultiplier();
     const cultureBefore = gameState.resources.culturePoints;
     const prestigePreview = getPrestigeCareerPreview();
@@ -2976,8 +2985,8 @@
     gameState.stats.quality = 0.5;
     gameState.stats.footprint = 0.5;
     gameState.stats.brandImage = 0.5;
-    if (window.EndgameModule && typeof window.EndgameModule.resetForPrestige === "function") {
-      window.EndgameModule.resetForPrestige(gameState);
+    if (host.EndgameModule && typeof host.EndgameModule.resetForPrestige === "function") {
+      host.EndgameModule.resetForPrestige(gameState);
     }
     syncCampaignContractPriority();
 
@@ -2987,6 +2996,7 @@
     contractsState.listRenderSignature = "";
     let prestigeCareerDetail = "";
     if (careerResult && careerResult.planCompleted) {
+      host.PEEngagement?.record("first_plan");
       const plan = Progression.getPlanDefinition(careerResult.planCompleted.id);
       const params = {
         plan: plan ? t(plan.nameKey) : careerResult.planCompleted.id,
@@ -3068,12 +3078,13 @@
     showEventBanner("feedback.prestigeReceipt", "positive", receiptParams);
     queueSave(true);
     renderAll(true);
-    setTimeout(() => {
+    scheduleVisual(() => {
       if (uiState.completionReceipt && uiState.completionReceipt.expiresAt <= Date.now()) {
         uiState.completionReceipt = null;
         renderWorkOrder();
       }
     }, 2850);
+    return true;
   }
 
   function setTextIfChanged(element, value) {
@@ -3217,9 +3228,9 @@
       });
       criterionCount += 1;
     }
-    const activeContract = window.EndgameModule && window.EndgameModule.activeContract;
-    if (activeContract && activeContract.current && typeof window.EndgameModule.getClauseProgress === "function") {
-      const clause = window.EndgameModule.getClauseProgress(activeContract.current, gameState);
+    const activeContract = host.EndgameModule && host.EndgameModule.activeContract;
+    if (activeContract && activeContract.current && typeof host.EndgameModule.getClauseProgress === "function") {
+      const clause = host.EndgameModule.getClauseProgress(activeContract.current, gameState);
       if (clause) {
         const values = careerProgressValues({
           type: clause.id === "footprint" ? "statAtMost" : "statAtLeast",
@@ -3298,7 +3309,11 @@
 
   /** Renders one persistent job, with client work taking priority. */
   function renderWorkOrder() {
-    if (!DOM.currentObjective) return;
+    if (HEADLESS || !DOM.currentObjective) return;
+    renderWorkOrderState(buildWorkOrderState());
+  }
+
+  function buildWorkOrderState() {
     const receipt = uiState.completionReceipt;
     if (receipt && receipt.expiresAt <= Date.now()) {
       uiState.completionReceipt = null;
@@ -3306,7 +3321,7 @@
     if (uiState.completionReceipt) {
       const completed = uiState.completionReceipt;
       const nextObjective = getInternalObjective();
-      renderWorkOrderState({
+      return {
         kind: completed.kind,
         type: t(completed.kind === "delivery" ? "objective.client" : "objective.internal"),
         status: t(completed.kind === "delivery" ? "objective.status.delivered" : "objective.status.validated"),
@@ -3317,12 +3332,11 @@
         progressMax: 100,
         progressValue: 100,
         next: internalObjectiveName(nextObjective)
-      });
-      return;
+      };
     }
 
-    const activeContract = window.EndgameModule && window.EndgameModule.activeContract
-      ? window.EndgameModule.activeContract
+    const activeContract = host.EndgameModule && host.EndgameModule.activeContract
+      ? host.EndgameModule.activeContract
       : null;
     if (activeContract && activeContract.current) {
       const duration = Math.max(1, activeContract.duration || activeContract.current.duration || 1);
@@ -3333,7 +3347,7 @@
         doc: Math.round((activeContract.current.reward.doc || 0) * (terms.docRewardMultiplier || 1)),
         cc: Math.round((activeContract.current.reward.cc || 0) * (terms.ccRewardMultiplier || 1))
       };
-      renderWorkOrderState({
+      return {
         kind: "client",
         type: t("objective.client"),
         status: t("contracts.runningBadge"),
@@ -3346,8 +3360,7 @@
           doc: formatNumber(baseReward.doc),
           cc: formatNumber(baseReward.cc)
         })
-      });
-      return;
+      };
     }
 
     if (Progression && careerState && careerState.activePlan) {
@@ -3359,7 +3372,7 @@
       const nextDefinition = status && !status.complete
         ? rankDefinition.objectives[status.stepIndex + 1] || null
         : null;
-      renderWorkOrderState({
+      return {
         kind: "career",
         type: t("career.kicker"),
         status: t(status && status.complete ? "career.status.ready" : "career.status.active"),
@@ -3371,8 +3384,7 @@
         next: status && status.complete
           ? t("career.dossier.ready")
           : nextDefinition ? t(nextDefinition.labelKey) : t("objective.nextPrestige")
-      });
-      return;
+      };
     }
 
     if (Progression && careerState && careerState.campaigns && careerState.campaigns.active) {
@@ -3382,7 +3394,7 @@
       const nextDefinition = campaign && status && !status.complete
         ? campaign.objectives[status.stepIndex + 1] || null
         : null;
-      renderWorkOrderState({
+      return {
         kind: "campaign",
         type: t("career.campaign.label"),
         status: t(status && status.complete ? "career.status.ready" : "career.status.active"),
@@ -3394,15 +3406,14 @@
         next: status && status.complete
           ? t("career.campaign.status.completed")
           : nextDefinition ? t(nextDefinition.labelKey) : t("career.campaign.status.active")
-      });
-      return;
+      };
     }
 
     const objective = getInternalObjective();
     if (objective.kind === "prestige") {
       const current = gameState.resources.ccTotal;
       const target = objective.target;
-      renderWorkOrderState({
+      return {
         kind: "internal",
         type: t("objective.internal"),
         status: t(canPrestige() ? "objective.status.available" : "objective.status.inProgress"),
@@ -3414,8 +3425,7 @@
         next: t(canPrestige() ? "objective.nextPrestige" : "objective.missingTrust", {
           amount: formatNumber(Math.max(0, target - current))
         })
-      });
-      return;
+      };
     }
 
     const current = gameState.resources.docBank;
@@ -3428,7 +3438,7 @@
     if (missing > 0 && rate > 0) {
       next += " · " + t("feedback.affordEta", { seconds: Math.max(1, Math.ceil(missing / rate)) });
     }
-    renderWorkOrderState({
+    return {
       kind: "internal",
       type: t("objective.internal"),
       status: t(missing <= 0 ? "objective.status.available" : "objective.status.inProgress"),
@@ -3443,7 +3453,7 @@
       progressMax: objective.target,
       progressValue: current,
       next
-    });
+    };
   }
 
   function formatCareerPercent(value) {
@@ -3611,10 +3621,27 @@
         appendCareerLine(button, "career-plan-choice-benefit", t("career.plan.cultureReward", {
           culture: available.rank
         }));
+        const objectives = document.createElement("ol");
+        objectives.className = "career-plan-objectives";
+        for (const objective of available.rankDefinition.objectives) {
+          const item = document.createElement("li");
+          item.textContent = t(objective.labelKey);
+          objectives.appendChild(item);
+        }
+        button.appendChild(objectives);
+        appendCareerLine(button, "career-plan-commitment", t("career.choose.commitment"));
         DOM.careerPlanChoices.appendChild(button);
       }
     }
 
+    if (activePlan) {
+      const abandon = document.createElement("button");
+      abandon.type = "button";
+      abandon.className = "btn-slim";
+      abandon.dataset.careerAbandon = "true";
+      abandon.textContent = t("career.abandon.action");
+      DOM.careerPlanChoices.appendChild(abandon);
+    }
     if (summary.activeChallenge) {
       const definition = getChallengeDefinition(summary.activeChallenge.id);
       const status = summary.activeChallenge.status;
@@ -3727,65 +3754,76 @@
     contractsState.listRenderSignature = "";
     queueSave(true);
     renderAll();
-    requestAnimationFrame(() => {
+    requestVisualFrame(() => {
       if (DOM.currentObjective) DOM.currentObjective.focus({ preventScroll: true });
     });
   }
 
-  function handleCareerAction(event) {
-    if (!Progression || !careerState) return;
-    const planButton = event.target.closest("[data-career-select-plan]");
-    if (planButton) {
-      const result = Progression.selectPlan(careerState, planButton.dataset.careerSelectPlan, { now: Date.now() });
-      if (!result || !result.ok) return;
-      const params = { plan: t(result.plan.nameKey), rank: result.rank };
-      logMessage("log.planSelected", params);
-      setLastAction("feedback.planSelected", params);
-      showEventBanner("feedback.planSelected", "positive", params);
-      updateCareerProgress({ save: false });
-      finishCareerAction();
-      return;
-    }
+  function selectCareerPlan(id) {
+    if (!Progression || !careerState || !experienceStarted) return { ok: false, error: "plan-unavailable" };
+    const result = Progression.selectPlan(careerState, id, { now: Date.now() });
+    if (!result || !result.ok) return result || { ok: false, error: "plan-unavailable" };
+    const params = { plan: t(result.plan.nameKey), rank: result.rank };
+    logMessage("log.planSelected", params);
+    setLastAction("feedback.planSelected", params);
+    showEventBanner("feedback.planSelected", "positive", params);
+    updateCareerProgress({ save: false });
+    finishCareerAction();
+    return { ok: true };
+  }
 
-    const acceptButton = event.target.closest("[data-career-accept-challenge]");
-    if (acceptButton) {
-      const result = Progression.acceptChallenge(careerState, acceptButton.dataset.careerAcceptChallenge, { now: Date.now() });
-      if (!result || !result.ok) return;
+  function careerCommand(action, payload = {}) {
+    if (!Progression || !careerState || !experienceStarted) return { ok: false, error: "career-unavailable" };
+    if (action === "selectPlan") return selectCareerPlan(payload.id);
+    if (action === "abandonPlan") {
+      if (!careerState.activePlan) return { ok: false, error: "no-active-plan" };
+      if (payload.confirmed !== true) return { ok: false, error: "confirmation-required", confirmation: t("career.abandon.confirm") };
+      const result = Progression.abandonPlan(careerState);
+      if (!result.ok) return result;
+      setLastAction("career.abandon.done");
+      finishCareerAction();
+      return { ok: true };
+    }
+    if (action === "acceptChallenge") {
+      const result = Progression.acceptChallenge(careerState, payload.id, { now: Date.now() });
+      if (!result || !result.ok) return result || { ok: false };
       const name = t(result.challenge.nameKey);
       logMessage("log.challengeAccepted", { name });
       showEventBanner("feedback.challengeAccepted", "positive", { name });
       updateCareerProgress({ save: false });
-      finishCareerAction();
-      return;
-    }
-
-    const declineButton = event.target.closest("[data-career-decline-challenge]");
-    if (declineButton) {
-      const challengeId = declineButton.dataset.careerDeclineChallenge;
-      const definition = getChallengeDefinition(challengeId);
-      const result = Progression.declineChallenge(careerState, challengeId, { now: Date.now() });
-      if (!result || !result.ok) return;
-      logMessage("log.challengeDeclined", { name: definition ? t(definition.nameKey) : challengeId });
-      finishCareerAction();
-      return;
-    }
-
-    const campaignButton = event.target.closest("[data-career-start-campaign]");
-    if (campaignButton) {
-      const result = Progression.startCampaign(careerState, campaignButton.dataset.careerStartCampaign, { now: Date.now() });
-      if (!result || !result.ok) return;
+    } else if (action === "declineChallenge") {
+      const definition = getChallengeDefinition(payload.id);
+      const result = Progression.declineChallenge(careerState, payload.id, { now: Date.now() });
+      if (!result || !result.ok) return result || { ok: false };
+      logMessage("log.challengeDeclined", { name: definition ? t(definition.nameKey) : payload.id });
+    } else if (action === "startCampaign") {
+      const result = Progression.startCampaign(careerState, payload.id, { now: Date.now() });
+      if (!result || !result.ok) return result || { ok: false };
       const name = t(result.campaign.nameKey);
       logMessage("log.campaignStarted", { name });
       showEventBanner("feedback.campaignStarted", "positive", { name });
       syncCampaignContractPriority();
       updateCareerProgress({ save: false });
-      finishCareerAction();
-      return;
-    }
+    } else if (action === "acknowledgeConclusion") {
+      if (!Progression.acknowledgeConclusion(careerState, { now: Date.now() })) return { ok: false, error: "conclusion-locked" };
+    } else return { ok: false, error: "unknown-command" };
+    finishCareerAction();
+    return { ok: true };
+  }
 
-    const acknowledgeButton = event.target.closest("[data-career-acknowledge]");
-    if (acknowledgeButton && Progression.acknowledgeConclusion(careerState, { now: Date.now() })) {
-      finishCareerAction();
+  function handleCareerAction(event) {
+    const bindings = [
+      ["career-abandon", "abandonPlan"], ["career-select-plan", "selectPlan"],
+      ["career-accept-challenge", "acceptChallenge"], ["career-decline-challenge", "declineChallenge"],
+      ["career-start-campaign", "startCampaign"], ["career-acknowledge", "acknowledgeConclusion"]
+    ];
+    for (const [attribute, action] of bindings) {
+      const button = event.target.closest("[data-" + attribute + "]");
+      if (!button) continue;
+      const datasetKey = attribute.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+      const confirmed = action === "abandonPlan" ? confirm(t("career.abandon.confirm")) : false;
+      careerCommand(action, { id: button.dataset?.[datasetKey], confirmed });
+      return;
     }
   }
 
@@ -3813,6 +3851,8 @@
     setTextIfChanged(DOM.heroCulture, gameState.resources.culturePoints);
     setTextIfChanged(DOM.opsDocBank, formattedBank);
     setTextIfChanged(DOM.opsDocPs, formattedDocPs);
+    setTextIfChanged(DOM.mobileDocuments, formattedBank);
+    setTextIfChanged(DOM.mobileCadence, formattedDocPs);
     setTextIfChanged(DOM.manualGain, t("stats.manualGainValue", { amount: formatNumber(manualGain) }));
     renderStageStatus(DOCps);
 
@@ -3942,7 +3982,7 @@
     if (bannerHideTimer) {
       clearTimeout(bannerHideTimer);
     }
-    bannerHideTimer = setTimeout(() => {
+    bannerHideTimer = scheduleVisual(() => {
       bannerHideTimer = null;
       DOM.eventBanner.classList.add("hidden");
       eventState.bannerKey = null;
@@ -3977,6 +4017,7 @@
   }
 
   function areEventsAllowed() {
+    if (HEADLESS) return headlessEventsEnabled;
     if (!Settings || typeof Settings.getPreference !== "function") {
       return true;
     }
@@ -3988,8 +4029,8 @@
     if (eventState.eventsEnabled === allowed) return;
     eventState.eventsEnabled = allowed;
     if (!allowed) {
-      if (window.Events && typeof window.Events.cancelActive === "function") {
-        window.Events.cancelActive();
+      if (host.Events && typeof host.Events.cancelActive === "function") {
+        host.Events.cancelActive();
       }
       eventState.active = null;
       closeEventModal(true);
@@ -4012,6 +4053,7 @@
   }
 
   function renderPendingEventControl() {
+    if (HEADLESS) return;
     const pending = eventState.eventsEnabled ? eventState.active : null;
     setHiddenState(DOM.pendingEventButton, !pending);
     if (pending) {
@@ -4040,7 +4082,7 @@
 
   function checkDynamicEvents(dt) {
     if (!eventState.eventsEnabled) return;
-    if (!window.Events) return;
+    if (!host.Events) return;
     if (TutorialEngine && typeof TutorialEngine.isActive === "function" && TutorialEngine.isActive()) return;
     if (offlineReport || isModalSurfaceOpen(DOM.settingsModal) ||
         isModalSurfaceOpen(DOM.offlineModal)) return;
@@ -4070,13 +4112,19 @@
    * by the scene; when the 3D layer is absent this is a no-op.
    */
   function notifyScene(type, id) {
-    const queue = window.__PE_SCENE_EVENTS__;
+    const queue = host.__PE_SCENE_EVENTS__;
     if (queue && typeof queue.push === "function") {
       queue.push({ type, id });
     }
   }
 
   function showEventModal(eventDef) {
+    if (HEADLESS) {
+      if (eventDef.type === "minigame" && !eventState.minigameCode) {
+        eventState.minigameCode = Events.startMinigame()?.code || null;
+      }
+      return;
+    }
     if (!DOM.eventModal) return;
     openModalSurface(DOM.eventModal, DOM.eventDialog);
     DOM.eventModal.setAttribute("aria-hidden", "false");
@@ -4115,12 +4163,27 @@
       DOM.minigameContainer.classList.remove("hidden");
       const info = Events.startMinigame();
       const code = info ? info.code : 1;
+      eventState.minigameCode = code;
       DOM.minigamePrompt.textContent = t("events.calibration.prompt", { code });
       DOM.minigameContainer.querySelector("button").focus();
     }
   }
 
+  function archivePendingEvent() {
+    const archived = eventState.active;
+    if (!archived) return false;
+    Events?.cancelActive();
+    eventState.active = null;
+    eventState.minigameCode = null;
+    const name = t(archived.titleKey);
+    logMessage("log.incidentArchived", { name });
+    showEventBanner("feedback.incidentArchived", "mixed", { name });
+    queueSave(true);
+    return true;
+  }
+
   function closeEventModal(force = false) {
+    if (HEADLESS) return archivePendingEvent();
     if (
       !DOM.eventModal ||
       DOM.eventModal.classList.contains("hidden") ||
@@ -4131,8 +4194,8 @@
     if (!eventState.modalCanClose && !force) return false;
     const archivedEvent = eventState.active;
     if (archivedEvent) {
-      if (window.Events && typeof window.Events.cancelActive === "function") {
-        window.Events.cancelActive();
+      if (host.Events && typeof host.Events.cancelActive === "function") {
+        host.Events.cancelActive();
       }
       eventState.active = null;
     }
@@ -4166,25 +4229,35 @@
     analyticsState.currentRun.eventsResolved += 1;
   }
 
-  function handleEventChoiceClick(event) {
-    const btn = event.target.closest("[data-choice]");
-    if (!btn) return;
-    const choiceId = btn.dataset.choice;
+  function resolveIncident(kind, value) {
+    if (!eventState.eventsEnabled || !eventState.active || !Events) return { ok: false, error: "no-incident" };
+    if (kind === "minigame" && (!eventState.minigameCode || ![1, 2, 3].includes(Number(value)))) {
+      return { ok: false, error: "invalid-answer" };
+    }
     const before = captureResourceTotals();
-    const result = Events.resolveChoice(choiceId, gameState);
-    if (!result) return;
+    const result = kind === "choice" ? Events.resolveChoice(value, gameState) : Events.resolveMinigame(value, gameState);
+    if (!result) return { ok: false, error: "invalid-choice" };
     recordEventOutcome(before);
-    DOM.eventResult.textContent = t(result.resultKey);
+    if (DOM.eventResult) DOM.eventResult.textContent = t(result.resultKey);
     logMessage("log.eventResult", { result: t(result.resultKey) });
     eventState.active = null;
+    eventState.minigameCode = null;
     eventState.modalCanClose = true;
-    DOM.closeEventModal.disabled = false;
-    DOM.closeEventModal.removeAttribute("aria-disabled");
+    if (DOM.closeEventModal) {
+      DOM.closeEventModal.disabled = false;
+      DOM.closeEventModal.removeAttribute("aria-disabled");
+    }
     queueSave(true);
     closeEventModal(true);
     renderPendingEventControl();
     renderWorkOrder();
     showEventBanner(result.resultKey, result.tone || "mixed");
+    return { ok: true, ...result, message: t(result.resultKey) };
+  }
+
+  function handleEventChoiceClick(event) {
+    const btn = event.target.closest("[data-choice]");
+    if (btn) resolveIncident("choice", btn.dataset.choice);
   }
 
   function contractRequirementKey(requirement) {
@@ -4260,7 +4333,7 @@
 
   function renderContractsPanel() {
     updateRerollButton();
-    if (!window.EndgameModule) return;
+    if (!host.EndgameModule) return;
     if (!DOM.contractsList) return;
     if (!contractsState.unlocked) {
       DOM.contractsTab.classList.remove("has-active-contract");
@@ -4270,8 +4343,8 @@
       }
       return;
     }
-    contractsState.available = window.EndgameModule.availableContracts(gameState);
-    const runningContract = window.EndgameModule.activeContract && window.EndgameModule.activeContract.current;
+    contractsState.available = host.EndgameModule.availableContracts(gameState);
+    const runningContract = host.EndgameModule.activeContract && host.EndgameModule.activeContract.current;
     DOM.contractsTab.classList.toggle("has-active-contract", !!runningContract);
     const contractModifiers = getContractModifiers();
     const prepressStudio = gameState.buildings.find(building => building.id === "prepressStudio");
@@ -4292,8 +4365,8 @@
       DOM.contractsList.appendChild(empty);
     } else {
       for (const contract of contractsState.available) {
-        const preview = typeof window.EndgameModule.previewContract === "function"
-          ? window.EndgameModule.previewContract(contract, gameState, contractModifiers)
+        const preview = typeof host.EndgameModule.previewContract === "function"
+          ? host.EndgameModule.previewContract(contract, gameState, contractModifiers)
           : {
               duration: contract.duration,
               durationReduction: 0,
@@ -4311,8 +4384,8 @@
         const requirements = document.createElement("ul");
         requirements.className = "contract-requirements";
         requirements.id = requirementsId;
-        const requirementStatus = typeof window.EndgameModule.getRequirementsStatus === "function"
-          ? window.EndgameModule.getRequirementsStatus(contract, gameState)
+        const requirementStatus = typeof host.EndgameModule.getRequirementsStatus === "function"
+          ? host.EndgameModule.getRequirementsStatus(contract, gameState)
           : [];
         for (const requirement of requirementStatus) {
           const row = document.createElement("li");
@@ -4367,12 +4440,12 @@
   }
 
   function updateContractCards(runningContract) {
-    if (!DOM.contractsList || !window.EndgameModule) return;
+    if (!DOM.contractsList || !host.EndgameModule) return;
     for (const contract of contractsState.available) {
       const card = DOM.contractsList.querySelector(`[data-contract-card="${contract.id}"]`);
       if (!card) continue;
-      const requirementRows = typeof window.EndgameModule.getRequirementsStatus === "function"
-        ? window.EndgameModule.getRequirementsStatus(contract, gameState)
+      const requirementRows = typeof host.EndgameModule.getRequirementsStatus === "function"
+        ? host.EndgameModule.getRequirementsStatus(contract, gameState)
         : [];
       for (const requirement of requirementRows) {
         const key = contractRequirementKey(requirement);
@@ -4384,8 +4457,8 @@
         setTextIfChanged(row.querySelector("span"), requirement.met ? "✓" : "×");
         setTextIfChanged(row.querySelector("b"), formatContractRequirement(requirement));
       }
-      if (contract.clause && typeof window.EndgameModule.getClauseProgress === "function") {
-        const clauseProgress = window.EndgameModule.getClauseProgress(contract, gameState);
+      if (contract.clause && typeof host.EndgameModule.getClauseProgress === "function") {
+        const clauseProgress = host.EndgameModule.getClauseProgress(contract, gameState);
         const clause = card.querySelector(`[data-contract-clause="${contract.id}"]`);
         if (clause && clauseProgress) {
           clause.classList.toggle("is-met", clauseProgress.met);
@@ -4396,8 +4469,8 @@
           clause.style.setProperty("--clause-progress", (clauseProgress.ratio * 100).toFixed(1) + "%");
         }
       }
-      const canStart = typeof window.EndgameModule.meetsRequirements === "function"
-        ? window.EndgameModule.meetsRequirements(contract, gameState)
+      const canStart = typeof host.EndgameModule.meetsRequirements === "function"
+        ? host.EndgameModule.meetsRequirements(contract, gameState)
         : requirementRows.every(requirement => requirement.met);
       const btn = card.querySelector(`[data-contract="${contract.id}"]`);
       if (!btn) continue;
@@ -4416,12 +4489,13 @@
   }
 
   function startContract(contractId) {
-    if (!window.EndgameModule) return;
-    const result = window.EndgameModule.startContract(contractId, gameState, getContractModifiers());
+    if (!host.EndgameModule || !experienceStarted || !areContractsUnlocked()) return { ok: false, error: "contracts-locked" };
+    if (!host.EndgameModule.availableContracts(gameState).some(contract => contract.id === contractId)) return { ok: false, error: "contract-unavailable" };
+    const result = host.EndgameModule.startContract(contractId, gameState, getContractModifiers());
     if (!result || !result.ok) {
       const key = result && result.error === "requirements" ? "contracts.requirementsNotMet" : "contracts.alreadyRunning";
       showEventBanner(key, "negative");
-      return;
+      return result || { ok: false, error: "contract-unavailable" };
     }
     logMessage("log.contractStart", { name: t(result.contract.nameKey) });
     setLastAction("contracts.banner.started", { name: t(result.contract.nameKey) });
@@ -4438,13 +4512,14 @@
       });
     }
     showEventBanner("contracts.banner.started", "positive", { name: t(result.contract.nameKey) });
-    requestAnimationFrame(() => UIEffects.playContractEffect(DOM.currentObjective));
+    requestVisualFrame(() => UIEffects.playContractEffect(DOM.currentObjective));
+    return { ok: true };
   }
 
   function tickContracts(dt) {
-    if (!window.EndgameModule) return;
+    if (!host.EndgameModule) return;
     const before = captureResourceTotals();
-    const result = window.EndgameModule.tickContract(dt, gameState);
+    const result = host.EndgameModule.tickContract(dt, gameState);
     if (result) {
       const restoreContractFocus = DOM.currentObjective && document.activeElement === DOM.currentObjective;
       const docGain = Math.max(0, gameState.resources.docTotal - before.docTotal);
@@ -4452,6 +4527,7 @@
       analyticsState.currentRun.contractDocs += docGain;
       analyticsState.currentRun.contractCc += ccGain;
       analyticsState.currentRun.contractsCompleted += 1;
+      host.PEEngagement?.record("first_contract");
       analyticsState.lifetimeObserved.docs += docGain;
       analyticsState.lifetimeObserved.cc += ccGain;
       const contractName = t(result.nameKey);
@@ -4498,8 +4574,8 @@
       contractsState.listRenderSignature = "";
       renderContractsPanel();
       renderWorkOrder();
-      requestAnimationFrame(() => UIEffects.playContractEffect(DOM.currentObjective));
-      setTimeout(() => {
+      requestVisualFrame(() => UIEffects.playContractEffect(DOM.currentObjective));
+      scheduleVisual(() => {
         if (uiState.completionReceipt && uiState.completionReceipt.expiresAt <= Date.now()) {
           uiState.completionReceipt = null;
           renderWorkOrder();
@@ -4513,22 +4589,23 @@
   }
 
   function handleContractsReroll() {
-    if (!window.EndgameModule || !canRerollContracts()) return;
-    window.EndgameModule.rerollContracts(gameState);
-    contractsState.lastReroll = performance.now();
+    if (!host.EndgameModule || !experienceStarted || !areContractsUnlocked() || !canRerollContracts()) return { ok: false, error: "reroll-unavailable" };
+    host.EndgameModule.rerollContracts(gameState);
+    contractsState.lastReroll = monotonicNow();
     contractsState.rerollCount += 1;
     contractsState.listRenderSignature = "";
     renderContractsPanel();
+    return { ok: true };
   }
 
   function canRerollContracts() {
     if (!contractsState.lastReroll) return true;
-    return performance.now() - contractsState.lastReroll >= CONTRACT_REROLL_COOLDOWN;
+    return monotonicNow() - contractsState.lastReroll >= CONTRACT_REROLL_COOLDOWN;
   }
 
   function updateRerollButton() {
     if (!DOM.rerollContractsBtn) return;
-    if (!window.EndgameModule) {
+    if (!host.EndgameModule) {
       if (!DOM.rerollContractsBtn.disabled) DOM.rerollContractsBtn.disabled = true;
       return;
     }
@@ -4537,7 +4614,7 @@
       setTextIfChanged(DOM.rerollContractsBtn, t("actions.rerollContracts"));
       return;
     }
-    const elapsed = performance.now() - contractsState.lastReroll;
+    const elapsed = monotonicNow() - contractsState.lastReroll;
     const remaining = Math.max(0, CONTRACT_REROLL_COOLDOWN - elapsed);
     if (!DOM.rerollContractsBtn.disabled) DOM.rerollContractsBtn.disabled = true;
     setTextIfChanged(DOM.rerollContractsBtn, t("contracts.rerollCountdown", {
@@ -4547,23 +4624,7 @@
 
   function handleMinigameResponse(event) {
     const btn = event.target.closest("[data-minigame-response]");
-    if (!btn) return;
-    const answer = btn.getAttribute("data-minigame-response");
-    const before = captureResourceTotals();
-    const result = Events.resolveMinigame(answer, gameState);
-    if (!result) return;
-    recordEventOutcome(before);
-    DOM.eventResult.textContent = t(result.resultKey);
-    logMessage("log.eventResult", { result: t(result.resultKey) });
-    eventState.active = null;
-    eventState.modalCanClose = true;
-    DOM.closeEventModal.disabled = false;
-    DOM.closeEventModal.removeAttribute("aria-disabled");
-    queueSave(true);
-    closeEventModal(true);
-    renderPendingEventControl();
-    renderWorkOrder();
-    showEventBanner(result.resultKey, result.tone || "mixed");
+    if (btn) resolveIncident("minigame", btn.getAttribute("data-minigame-response"));
   }
 
   function formatAchievementReward(definition) {
@@ -4608,7 +4669,7 @@
   }
 
   function updateAchievementProgressNodes() {
-    if (!DOM.achievementsList || !window.Achievements || typeof Achievements.getProgress !== "function") return;
+    if (!DOM.achievementsList || !host.Achievements || typeof Achievements.getProgress !== "function") return;
     const achievementContext = buildAchievementContext();
     for (const definition of Achievements.definitions) {
       const item = DOM.achievementsList.querySelector(`[data-achievement-id="${definition.id}"]`);
@@ -4634,7 +4695,7 @@
 
   function renderAchievementsPanel() {
     const container = DOM.achievementsList;
-    if (!container || !window.Achievements) return;
+    if (!container || !host.Achievements) return;
     const unlockedCount = Achievements.definitions.reduce((count, definition) => {
       return count + (achievementsState.unlocked[definition.id] ? 1 : 0);
     }, 0);
@@ -4712,7 +4773,7 @@
   }
 
   function checkAchievements(options = {}) {
-    if (!window.Achievements) return null;
+    if (!host.Achievements) return null;
     const notify = options.notify !== false;
     const unlockedMap = achievementsState.unlocked;
     const newly = [];
@@ -4766,7 +4827,7 @@
     }
     achievementsState.renderSignature = "";
     renderAchievementsPanel();
-    requestAnimationFrame(() => {
+    requestVisualFrame(() => {
       for (const id of newly) {
         const item = DOM.achievementsList && DOM.achievementsList.querySelector(`[data-achievement-id="${id}"]`);
         triggerStamp(item, "is-stamped");
@@ -4837,7 +4898,7 @@
     buildingInspectorState.selectedId = id;
     buildingInspectorState.feedback = { id, primary, detail: detail || "" };
     renderBuildingInspector();
-    buildingInspectorState.feedbackTimer = setTimeout(() => {
+    buildingInspectorState.feedbackTimer = scheduleVisual(() => {
       buildingInspectorState.feedback = null;
       buildingInspectorState.feedbackTimer = null;
       renderBuildingInspector();
@@ -5093,6 +5154,11 @@
 
   /** Draws all UI sections, honouring the dirty flags for heavy lists. */
   function renderAll(forceFull = false) {
+    if (HEADLESS) {
+      contractsState.unlocked = areContractsUnlocked();
+      syncBuildingUnlocks();
+      return;
+    }
     ensureContractsUnlockState();
     syncBuildingUnlocks();
     renderStats();
@@ -5114,7 +5180,7 @@
       uiState.upgradesDirty = false;
     }
     updateUpgradeButtons();
-    uiState.lastFrameRender = performance.now();
+    uiState.lastFrameRender = monotonicNow();
   }
 
   function ensureContractsUnlockState() {
@@ -5152,7 +5218,7 @@
         });
       });
     }
-    window.addEventListener("keydown", handleGodModeKey);
+    host.addEventListener("keydown", handleGodModeKey);
   }
 
   /** Updates the faux time multiplier when the player chooses a new speed. */
@@ -5232,10 +5298,10 @@
     return Math.max(0, Math.min(1, x));
   }
 
-  window.__PE_DEBUG = window.__PE_DEBUG || {};
-  window.__PE_DEBUG.spawnEvent = id => {
-    if (!window.Events) return;
-    const ev = window.Events.debugForceEvent(id);
+  host.__PE_DEBUG = host.__PE_DEBUG || {};
+  host.__PE_DEBUG.spawnEvent = id => {
+    if (!host.Events) return;
+    const ev = host.Events.debugForceEvent(id);
     if (ev) {
       handleEventSpawn(ev);
     }
@@ -5252,13 +5318,380 @@
    * philosophy as __PE_SCENE__: a fresh plain snapshot per call, so the
    * dashboard can never mutate the simulation.
    */
-  window.__PE_DASH__ = {
+  function isEmpireMode() {
+    return HEADLESS || Boolean(host.__PE_NATIVE__) || new URLSearchParams(location.search).get("experience") === "empire";
+  }
+
+  function adviceGoal() {
+    if (!Progression || !careerState) return null;
+    const plan = careerState.activePlan;
+    if (plan) { const goal = Progression.getRankDefinition(plan.id, plan.rank)?.objectives[plan.stepIndex]; return goal ? { ...goal } : null; }
+    const campaign = careerState.campaigns?.active;
+    if (campaign) {
+      const definition = Progression.CAMPAIGN_DEFINITIONS.find(item => item.id === campaign.id);
+      if (definition?.objectives[campaign.stepIndex]) return { ...definition.objectives[campaign.stepIndex] };
+    }
+    const objective = getInternalObjective();
+    return objective.building ? { buildingId: objective.building.id } : { resource: "ccTotal" };
+  }
+
+  function gameSnapshot() {
+    const economy = buildDashboardSnapshot();
+    const goal = adviceGoal();
+    const objective = buildWorkOrderState();
+    const recommended = host.PEInvestmentAdvice?.recommend(economy.economics.investments, "objective", goal);
+    const choice = recommended?.row;
+    const resources = {
+      ...gameState.resources,
+      documents: gameState.resources.docBank,
+      totalDocuments: gameState.resources.docTotal,
+      clientConfidence: gameState.resources.ccTotal
+    };
+    const building = choice && gameState.buildings.find(item => item.id === choice.id);
+    return {
+      started: experienceStarted,
+      language: currentLang,
+      resources,
+      rates: { docPerSecond: economy.current.docPerSecond, ccPerSecond: economy.current.ccPerSecond },
+      stats: { ...gameState.stats },
+      career: economy.career,
+      savedCareer: Progression?.serializeCareer(careerState),
+      buildings: gameState.buildings.map(item => {
+        const row = economy.economics.investments.find(row => row.id === item.id);
+        return {
+          id: item.id, name: getBuildingName(item), description: getBuildingDesc(item),
+          quantity: item.quantity, unlocked: Boolean(item.isUnlocked), cost: buildingCost(item),
+          docPerSecond: row?.currentDirectProduction || 0,
+          marginalDocPerSecond: row?.marginalDocPerSecond || 0,
+          canBuy: Boolean(experienceStarted && item.isUnlocked && resources.documents >= buildingCost(item)),
+          milestone: getNextMilestone(item.quantity),
+          impact: formatBuildingImpactText(item, 1)
+        };
+      }),
+      upgrades: gameState.upgrades.map(item => ({ id: item.id, name: getUpgradeName(item), description: getUpgradeDesc(item), cost: item.cost, purchased: item.purchased, unlocked: gameState.resources.docTotal >= (item.unlockDocTotal || 0), canBuy: experienceStarted && !item.purchased && resources.documents >= item.cost && gameState.resources.docTotal >= (item.unlockDocTotal || 0) })),
+      objective: { ...objective, title: objective.name, description: objective.instruction, progress: Math.max(0, Math.min(1, objective.progressValue / Math.max(1, objective.progressMax))), nextAction: t("objective.next", { next: objective.next }), goal },
+      advice: choice && building ? { id: choice.id, name: getBuildingName(building), cost: choice.currentCost, docGain: choice.marginalDocPerSecond || 0, ccGain: choice.marginalCcPerSecond || 0, canBuy: resources.documents >= choice.currentCost, reason: recommended.reason } : null,
+      canPrestige: canPrestige()
+    };
+  }
+
+  function gameCommand(name, payload = {}) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) payload = {};
+    if (name === "print") {
+      if (!experienceStarted) startExperience();
+      handleClick();
+    }
+    else if (name === "buyBuilding") {
+      const building = gameState.buildings.find(item => item.id === payload.id);
+      if (!building || !building.isUnlocked || gameState.resources.docBank < buildingCost(building)) return { ok: false, error: "unaffordable-or-locked" };
+      if (!experienceStarted) startExperience();
+      return { ok: buyBuilding(payload.id) };
+    }
+    else if (name === "buyUpgrade") return { ok: buyUpgrade(payload.id) };
+    else if (name === "start") startExperience();
+    else if (name === "prestige") {
+      if (!HEADLESS) return { ok: handlePrestigeClick() };
+      const confirmation = prestigeConfirmation();
+      if (!confirmation) return { ok: false, error: "prestige-locked" };
+      if (payload.confirmed !== true) return { ok: false, error: "confirmation-required", confirmation };
+      return { ok: doPrestige() };
+    }
+    else if (["selectPlan", "abandonPlan", "acceptChallenge", "declineChallenge", "startCampaign", "acknowledgeConclusion"].includes(name)) return careerCommand(name, payload);
+    else if (name === "startContract") return startContract(payload.id);
+    else if (name === "rerollContracts") return handleContractsReroll();
+    else if (name === "chooseIncident" || name === "eventChoice") return resolveIncident("choice", payload.id);
+    else if (name === "answerMinigame" || name === "minigameResponse") return resolveIncident("minigame", payload.answer);
+    else if (name === "archiveIncident") return { ok: HEADLESS ? archivePendingEvent() : closeEventModal(true) };
+    else if (name === "dismissOfflineReport") { offlineReport = null; return { ok: true }; }
+    else if (name === "setLanguage" && HEADLESS) {
+      if (!SUPPORTED_LANGS.includes(payload.language)) return { ok: false, error: "language" };
+      currentLang = payload.language;
+      return { ok: true };
+    }
+    else if (name === "setEventsEnabled" && HEADLESS) {
+      if (typeof payload.enabled !== "boolean") return { ok: false, error: "invalid-preference" };
+      headlessEventsEnabled = payload.enabled;
+      syncEventsPreference();
+      return { ok: true };
+    }
+    else if (HEADLESS && name !== "openIncident") return { ok: false, error: "unknown-command" };
+    else if (name === "openPanel") {
+      const id = payload.id || "production";
+      if (isEmpireMode() && host.PEEmpireView) host.PEEmpireView.openPanel(id);
+      else host.PEMobileExperience?.openPanel(id);
+    }
+    else if (name === "exportSave") handleExportSave();
+    else if (name === "openImport") handleImportSave();
+    else if (name === "shareCareer") host.PECareerShare?.open();
+    else if (name === "openSettings") openSettingsModal(payload.section);
+    else if (name === "openIncident") {
+      if (!eventState.eventsEnabled || !eventState.active) return { ok: false, error: "no-incident" };
+      openPendingEvent();
+    }
+    else return { ok: false, error: "unknown-command" };
+    return { ok: true };
+  }
+
+  function headlessSnapshot() {
+    const snapshot = gameSnapshot();
+    const context = buildCareerContext();
+    const summary = Progression.getSummary(careerState, context);
+    const availablePlans = Progression.getAvailablePlans(careerState);
+    const availableChallenges = Progression.getAvailableChallenges(careerState);
+    const availableCampaigns = Progression.getAvailableCampaigns(careerState);
+    function objectives(definitions, runtime, completed = false) {
+      return definitions.map((definition, index) => {
+        const progress = Progression.objectiveProgress(definition, careerState, context, runtime);
+        return { ...progress, id: definition.id, title: t(definition.labelKey),
+          completed: completed || Boolean(runtime && index < runtime.stepIndex),
+          currentStep: Boolean(runtime && index === runtime.stepIndex),
+          criterion: formatCareerCriterion(progress) };
+      });
+    }
+    const plans = Progression.PLAN_DEFINITIONS.map(definition => {
+      const active = careerState.activePlan?.id === definition.id ? careerState.activePlan : null;
+      const available = availablePlans.find(item => item.plan.id === definition.id);
+      const completedRank = careerState.completedRanks[definition.id] || 0;
+      const rank = active?.rank || available?.rank || Math.min(Progression.MAX_RANK, completedRank + 1);
+      const rankDefinition = Progression.getRankDefinition(definition.id, rank);
+      const copy = careerPlanCopy(definition, rankDefinition);
+      const complete = completedRank >= Progression.MAX_RANK;
+      const ready = Boolean(active && Progression.getPlanStatus(careerState, context)?.complete);
+      return { id: definition.id, name: t(definition.nameKey), description: t(definition.descriptionKey), rank, completedRank,
+        state: active ? ready ? "ready" : "active" : complete ? "completed" : available ? "available" : "locked",
+        status: t(active ? ready ? "career.status.ready" : "career.status.active" : complete ? "career.status.completed" : available ? "career.status.available" : "career.choose.commitment"),
+        active: Boolean(active), canSelect: experienceStarted && Boolean(available), ...copy,
+        permanent: t("career.plan." + definition.id + ".permanent"),
+        rewardText: t("career.plan.cultureReward", { culture: rank }),
+        objectives: objectives(rankDefinition.objectives, active, complete) };
+    });
+    const challenges = Progression.CHALLENGE_DEFINITIONS.map(definition => {
+      const active = careerState.challenges.active?.id === definition.id ? careerState.challenges.active : null;
+      const available = availableChallenges.some(item => item.id === definition.id);
+      const completed = careerState.challenges.completedIds.includes(definition.id);
+      const failed = careerState.challenges.failedThisCycleIds.includes(definition.id);
+      const declined = careerState.challenges.declinedThisCycleIds.includes(definition.id);
+      const state = active ? "active" : completed ? "completed" : failed ? "failed" : declined ? "declined" : available ? "available" : "locked";
+      const plan = Progression.getPlanDefinition(definition.planId);
+      return { id: definition.id, name: t(definition.nameKey), description: t(definition.descriptionKey), state,
+        status: state === "locked" ? t("career.choose.action", { plan: t(plan.nameKey) }) : t("career.challenge.status." + state),
+        canAccept: experienceStarted && available, canDecline: experienceStarted && available,
+        rewardText: t("career.challenge.reward", { culture: definition.reward.culture }),
+        objectives: objectives(definition.objectives, active, completed) };
+    });
+    const campaigns = Progression.CAMPAIGN_DEFINITIONS.map(definition => {
+      const active = careerState.campaigns.active?.id === definition.id ? careerState.campaigns.active : null;
+      const available = availableCampaigns.some(item => item.id === definition.id);
+      const completed = careerState.campaigns.completedIds.includes(definition.id);
+      const state = active ? "active" : completed ? "completed" : available ? "available" : "locked";
+      return { id: definition.id, name: t(definition.nameKey), description: t(definition.descriptionKey), state,
+        status: state === "locked" ? summary.stampCount < definition.unlockStamps
+          ? t("career.campaign.unlock", { stamps: definition.unlockStamps }) : t("career.campaign.status.blocked")
+          : t("career.campaign.status." + state),
+        canStart: experienceStarted && available, unlockStamps: definition.unlockStamps,
+        rewardText: t("career.dossier.campaignReward", { badge: t("career.badge." + definition.badgeId) }),
+        objectives: objectives(definition.objectives, active, completed) };
+    });
+    const prestige = getPrestigeCareerPreview();
+    const contracts = host.EndgameModule;
+    const running = contracts.activeContract;
+    function clauseSnapshot(contract, reward) {
+      const clause = contracts.getClauseProgress(contract, gameState);
+      if (!clause) return null;
+      return { ...clause, name: t(clause.nameKey),
+        description: t(contract.clause.descKey, { target: Math.round(contract.clause.target * 100) }),
+        rewardText: t("contracts.clause.reward", { doc: formatNumber(reward.doc), cc: formatNumber(reward.cc) }),
+        status: t(clause.failed ? "contracts.clause.failed" : "contracts.clause.active") };
+    }
+    const available = contracts.availableContracts(gameState).map(contract => {
+      const preview = contracts.previewContract(contract, gameState, getContractModifiers());
+      const requirements = contracts.getRequirementsStatus(contract, gameState).map(item => ({ ...item, text: formatContractRequirement(item) }));
+      const clause = clauseSnapshot(contract, preview.clauseReward);
+      return { id: contract.id, name: t(contract.nameKey), description: t(contract.descKey),
+        duration: preview.duration, reward: preview.baseReward,
+        rewardText: t("contracts.reward", { doc: formatNumber(preview.baseReward.doc), cc: formatNumber(preview.baseReward.cc) }),
+        requirements, requirementsText: requirements.map(item => item.text).join(" · "),
+        canStart: experienceStarted && areContractsUnlocked() && !running.current && requirements.every(item => item.met),
+        clauses: clause ? [clause] : [] };
+    });
+    let active = null;
+    if (running.current) {
+      const definition = running.current;
+      const clause = clauseSnapshot(definition, {
+        doc: Math.round((definition.clause?.reward.doc || 0) * (running.terms.docRewardMultiplier || 1) * (running.terms.clauseRewardMultiplier || 1)),
+        cc: Math.round((definition.clause?.reward.cc || 0) * (running.terms.ccRewardMultiplier || 1) * (running.terms.clauseRewardMultiplier || 1))
+      });
+      active = { id: definition.id, name: t(definition.nameKey), description: t(definition.descKey),
+        remaining: running.timer, duration: running.duration,
+        progress: Math.max(0, Math.min(1, 1 - running.timer / Math.max(1, running.duration))),
+        clause, clauseText: clause ? clause.description + " · " + clause.status : "",
+        rewardText: t("contracts.reward", {
+          doc: formatNumber(Math.round(definition.reward.doc * (running.terms.docRewardMultiplier || 1))),
+          cc: formatNumber(Math.round(definition.reward.cc * (running.terms.ccRewardMultiplier || 1)))
+        }) };
+    }
+    const rerollSeconds = contractsState.lastReroll
+      ? Math.max(0, Math.ceil((CONTRACT_REROLL_COOLDOWN - (monotonicNow() - contractsState.lastReroll)) / 1000)) : 0;
+    const event = eventState.eventsEnabled ? eventState.active : null;
+    return { ...snapshot, schemaVersion: 1,
+      manualGain: gameState.config.docPerClickBase * computeMultipliers().clickMult * prestigeMultiplier(),
+      prestigeMultiplier: prestigeMultiplier(),
+      contracts: { unlocked: areContractsUnlocked(), unlockDocTotal: CONTRACTS_UNLOCK_DOC_TOTAL, available, active,
+        canReroll: experienceStarted && areContractsUnlocked() && canRerollContracts(), rerollSeconds },
+      progression: { plans, challenges, campaigns, canAbandonPlan: Boolean(careerState.activePlan),
+        abandonConfirmationText: t("career.abandon.confirm"),
+        prestige: { canPrestige: canPrestige() && prestige.totalCulture > 0, gain: prestige.totalCulture,
+          baseGain: prestige.baseCulture, planGain: prestige.planCulture, confirmationText: prestigeConfirmation() || "",
+          assessment: prestige.assessment },
+        conclusion: summary.conclusion ? { ...summary.conclusion,
+          title: t(summary.conclusion.unlocked ? summary.conclusion.titleKey : "career.conclusion.pendingTitle"),
+          description: t(summary.conclusion.unlocked ? summary.conclusion.descriptionKey : "career.conclusion.pendingDescription"),
+          canAcknowledge: Boolean(summary.conclusion.unlocked && !summary.conclusion.acknowledgedAt) } : null },
+      incident: event ? { id: event.id, title: t(event.titleKey), description: t(event.descriptionKey), type: event.type,
+        choices: (event.choices || []).map(choice => ({ id: choice.id, label: t(choice.labelKey), description: t(choice.resultKey) })),
+        minigame: event.type === "minigame" ? { code: eventState.minigameCode,
+          prompt: eventState.minigameCode ? t("events.calibration.prompt", { code: eventState.minigameCode }) : "",
+          answers: [1, 2, 3] } : null } : null,
+      achievements: host.Achievements.definitions.map(definition => ({ id: definition.id,
+        name: t(definition.nameKey), description: t(definition.descKey),
+        unlocked: Boolean(achievementsState.unlocked[definition.id]),
+        progress: host.Achievements.getProgress(definition, buildAchievementContext()).ratio,
+        rewardText: formatAchievementReward(definition) })),
+      offlineReport: offlineReport ? { ...offlineReport, title: t("offline.title"),
+        body: t("offline.subtitle") + " " + t("offline.hint"), durationText: formatOfflineDuration(offlineReport.elapsedSeconds), earnedDocs: offlineReport.gain } : null,
+      eventsEnabled: eventState.eventsEnabled,
+      lastAction: describeLastAction(),
+      log: gameState.log.map((entry, index) => ({ id: String(entry.time.getTime()) + ":" + index,
+        date: entry.time.getTime(), text: entry.key ? t(entry.key, entry.params || {}) : entry.text }))
+    };
+  }
+
+  if (HEADLESS) host.__PE_HEADLESS_ENGINE__ = Object.freeze({
+    init(saved, language) {
+      if (headlessInitialized) return { ok: false, reason: "already-initialized" };
+      let payload = null;
+      if (saved !== null && saved !== undefined) {
+        let raw;
+        try { raw = typeof saved === "string" ? saved : JSON.stringify(saved); }
+        catch { return { ok: false, reason: "invalid" }; }
+        const parsed = host.PESaveCodec.parseImport(raw);
+        if (!parsed.ok) return parsed;
+        payload = parsed.save;
+      }
+      currentLang = SUPPORTED_LANGS.includes(language) ? language : DEFAULT_LANG;
+      initGame(payload);
+      experienceMode = "playing";
+      headlessInitialized = true;
+      return { ok: true, snapshot: headlessSnapshot() };
+    },
+    tick(dt) {
+      if (!headlessInitialized) return { ok: false, reason: "not-initialized" };
+      if (!Number.isFinite(dt) || dt < 0) return { ok: false, reason: "invalid-delta" };
+      headlessElapsedMs = Math.min(Number.MAX_SAFE_INTEGER, headlessElapsedMs + dt * 1000);
+      advanceSimulation(dt);
+      renderAll();
+      return headlessSnapshot();
+    },
+    command(name, payload) {
+      if (!headlessInitialized) return { ok: false, error: "not-initialized" };
+      return gameCommand(name, payload);
+    },
+    snapshot: headlessSnapshot,
+    save: buildPersistedState,
+    translate: t,
+    format: formatNumber
+  });
+
+  function initOfflineControls() {
+    const section = document.getElementById("offlineSettings");
+    if (!section || !host.PEOffline) return;
+    if (isEmpireMode()) { section.hidden = true; return; }
+    const status = document.getElementById("offlineInstallStatus");
+    const update = document.getElementById("applyOfflineUpdate");
+    const refresh = () => {
+      const state = host.PEOffline.getState();
+      status.textContent = t(!state.supported ? "offlineInstall.unavailable" : state.updateReady ? "offlineInstall.updateReady" : state.phase === "ready" ? "offlineInstall.ready" : state.phase === "preparing" ? "offlineInstall.preparing" : state.phase === "error" ? "offlineInstall.error" : "offlineInstall.hint");
+      update.hidden = !state.updateReady;
+      document.getElementById("prepareOffline").disabled = !state.supported || state.phase === "preparing";
+      document.getElementById("checkOfflineUpdate").disabled = !state.supported || state.phase !== "ready";
+      document.getElementById("installGame").disabled = !state.hasReadableSave || state.standalone;
+    };
+    document.getElementById("prepareOffline").addEventListener("click", () => host.PEOffline.prepare());
+    document.getElementById("checkOfflineUpdate").addEventListener("click", () => host.PEOffline.checkForUpdate());
+    update.addEventListener("click", () => host.PEOffline.applyUpdate(() => {
+      return Persistence.save(buildPersistedState()) === true;
+    }));
+    document.getElementById("installGame").addEventListener("click", async () => {
+      const result = await host.PEOffline.requestInstall();
+      if (result.reason === "manual") document.getElementById("safariInstallHelp").hidden = false;
+    });
+    host.addEventListener("pe:offline-state", refresh);
+    refresh();
+  }
+
+  function initProductExperience() {
+    host.PESaveTransfer?.configure({
+      translate: t, locale: () => currentLang, getSave: buildPersistedState,
+      onReplaced() {
+        disablePersistence();
+        const imported = Persistence.load?.();
+        const installed = (imported?.buildings || []).filter(item => item.quantity > 0);
+        // The beginner guide ends after two purchases and established DOC
+        // production. Carry that progress across devices, without importing
+        // unrelated preferences or suppressing guidance for a first unit.
+        if (Settings && installed.reduce((total, item) => total + item.quantity, 0) >= 2 &&
+            installed.some(item => BUILDING_DEFS.some(def => def.id === item.id && def.baseProduction > 0))) {
+          Settings.setPreference("tutorialCompleted", true);
+        }
+        try { localStorage.removeItem(DASH_SNAPSHOT_KEY); localStorage.removeItem(ANALYTICS_HISTORY_KEY); } catch {}
+        location.reload();
+      }
+    });
+    host.PECareerShare?.configure({
+      translate: t, locale: () => currentLang,
+      getSnapshot: () => ({ resources: { ...gameState.resources }, buildings: gameState.buildings.map(item => ({ id: item.id, quantity: item.quantity })), docPerSecond: computeDocPerSecond(), career: Progression?.serializeCareer(careerState), started: experienceStarted })
+    });
+    host.PEMobileExperience?.init({ game: host.__PE_GAME__, translate: t });
+    initOfflineControls();
+    host.PEEngagement?.configure({ locale: () => currentLang });
+    const engagement = document.getElementById("engagementConsent");
+    if (engagement && host.PEEngagement) {
+      engagement.checked = host.PEEngagement.isEnabled();
+      engagement.addEventListener("change", () => { engagement.checked = host.PEEngagement.setEnabled(engagement.checked); });
+    }
+    if (experienceStarted) host.PEEngagement?.record("start");
+    document.getElementById("recoverSaveBtn")?.addEventListener("click", () => host.PESaveTransfer?.previewRecovery());
+    document.getElementById("shareCareerBtn")?.addEventListener("click", () => host.PECareerShare?.open());
+    const params = new URLSearchParams(location.search);
+    if (isEmpireMode() || params.has("guide")) {
+      const target = location.hash;
+      if (!experienceStarted) startExperience();
+      else applyExperienceMode("playing", { updateUrl: false });
+      if (params.has("guide")) {
+        const panel = target === "#upgradesPanel" ? "career" : target === "#buildingsPanel" ? "units" : "production";
+        scheduleVisual(() => host.PEMobileExperience?.openPanel(panel), 50);
+      }
+    }
+    // Actual destinations are filled from the catalog during the site build.
+    document.querySelectorAll("[data-guide-help]").forEach(link => {
+      const localeRoot = currentLang === "fr" ? "/" : "/" + currentLang + "/";
+      if (!link.hasAttribute("data-guide-ready")) link.href = localeRoot + "guides/";
+    });
+  }
+
+  host.__PE_GAME__ = Object.freeze({
+    getSnapshot: gameSnapshot, getSave: buildPersistedState, command: gameCommand,
+    format: formatNumber, translate: t,
+    expandPanel(id) { expandPanelForTarget(document.getElementById(id), { persist: false }); }
+  });
+
+  host.__PE_DASH__ = {
     format: formatNumber,
     getSnapshot: buildDashboardSnapshot,
     getHistory: analyticsHistoryEnvelope
   };
 
-  window.__PE_SCENE__ = {
+  host.__PE_SCENE__ = {
     getSnapshot() {
       return {
         buildings: gameState.buildings.map(b => ({

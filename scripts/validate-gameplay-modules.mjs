@@ -20,6 +20,39 @@ function copy(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+// Embedded browsers may expose CommonJS markers while still loading ordinary
+// deferred scripts. The app must receive the same API as module.exports.
+const hybridModules = [
+  ["modifier-utils.js", "ModifierUtils", "computeBuildingEffects"],
+  ["godmode-utils.js", "GodModeUtils", "sanitizeTimeScale"],
+  ["achievements.js", "Achievements", "evaluate"],
+  ["endgame.js", "EndgameModule", "availableContracts"],
+  ["progression.js", "ProgressionModule", "serializeCareer"],
+  ["economy-analytics.js", "EconomyAnalytics", "buildInvestmentRows"]
+];
+for (const [file, globalName, method] of hybridModules) {
+  const source = readFileSync(new URL("../assets/js/" + file, import.meta.url), "utf8");
+  for (const [browser, requireMarker] of [[true, false], [true, true], [false, false]]) {
+    const sandbox = { console, Date, Math, Promise, setTimeout, clearTimeout, module: { exports: {} } };
+    if (browser) { sandbox.window = sandbox; sandbox.self = sandbox; }
+    if (requireMarker) {
+      sandbox.require = () => { throw new Error("Browser loading must not execute a CLI self-test"); };
+      sandbox.require.main = sandbox.module;
+    }
+    vm.createContext(sandbox);
+    vm.runInContext(source, sandbox, { filename: file });
+    assert.equal(typeof sandbox.module.exports[method], "function", `${file} must retain its CommonJS API`);
+    if (browser) {
+      assert.strictEqual(sandbox[globalName], sandbox.module.exports,
+        `${file} must expose the same API to the browser and CommonJS`);
+      assert.equal(vm.runInContext(`typeof ${globalName}.${method}`, sandbox), "function",
+        `${file} must support the app's ordinary global binding`);
+    } else {
+      assert.equal(sandbox[globalName], undefined, `${file} must not pollute a pure CommonJS global`);
+    }
+  }
+}
+
 const ModifierUtils = loadBrowserModule("../assets/js/modifier-utils.js", "ModifierUtils");
 assert.equal(ModifierUtils.getMilestoneMultiplier(9), 1);
 assert.equal(ModifierUtils.getMilestoneMultiplier(10), 1.1);

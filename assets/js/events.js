@@ -311,7 +311,7 @@
     return activeEvent;
   }
 
-  window.Events = {
+  globalThis.Events = {
     definitions,
     tick,
     resolveChoice,

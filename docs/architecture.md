@@ -1,6 +1,6 @@
 # Architecture
 
-Cette page décrit le contrat technique de Papers Empire 0.26.0. Elle résume les
+Cette page décrit le contrat technique du code de Papers Empire. Elle résume les
 modules clés, les deux états de l'expérience, les flux locaux de données et les
 limites de la Data Science Zone.
 
@@ -35,6 +35,13 @@ contrat d'intégration, pas un second jeu de règles.
   - `dashboard.js` : rendu local et autonome de la Data Science Zone ;
   - `persistence.js`, `achievements.js`, `accessibility.js`,
     `modifier-utils.js` : modules spécialisés ;
+  - `save-transfer.js` : fichiers portables, aperçu d’import et récupération ;
+  - `mobile-experience.js`, `empire-view.js` : navigation mobile et projection
+    de l’empire, sans seconde simulation ;
+  - `investment-advice.js` : classement des achats selon l’objectif choisi ;
+  - `offline-install.js`, `sw.js` : préparation du jeu Web hors ligne et
+    activation explicite des mises à jour ;
+  - `engagement.js` : observations d’étapes facultatives, séparées des sauvegardes ;
   - I18n : `assets/i18n/*.js` se chargent via `<script>` et exposent `window.I18N`.
 
 ## Flux général
@@ -48,7 +55,8 @@ contrat d'intégration, pas un second jeu de règles.
    est considérée comme déjà démarrée sans perdre ses données.
 4. Une partie vierge reste inerte dans la landing. L'entrée explicite démarre la
    simulation, l'autosauvegarde et, si nécessaire, le tutoriel.
-5. `persistence.js` encapsule `localStorage` (`save/load/clear/export/import`).
+5. `persistence.js` encapsule `localStorage`, valide les fichiers importés et
+   vérifie les écritures. `save-transfer.js` ajoute aperçu et confirmation.
    `accessibility.js` applique les préférences avant rendu.
 
 ## Diagramme : Autosauvegarde
@@ -122,6 +130,14 @@ sequenceDiagram
 | `assets/js/economy-analytics.js` | Simulation pure quantité +1, coûts, gains marginaux et prestige |
 | `assets/js/dashboard.js` | Data Science Zone, graphiques et tableaux à partir du stockage local |
 | `assets/js/persistence.js` | Sauvegarde locale, export/import |
+| `assets/js/save-transfer.js` | Fichier portable partagé Web/iOS, aperçu et récupération de la partie précédente |
+| `assets/js/mobile-experience.js` | Navigation par panneaux, achat suggéré et état de sauvegarde sur mobile |
+| `assets/js/empire-view.js` | Projection graphique et contrôles accessibles de l’empire |
+| `assets/js/investment-advice.js` | Recommandations DOC, CC, qualité, empreinte ou objectif courant |
+| `assets/js/career-share.js` | Création locale d’une carte de carrière à partager à la demande |
+| `assets/js/offline-install.js` | Préparation, état et actions explicites d’installation/mise à jour Web |
+| `sw.js`, `scripts/build-offline.mjs` | Cache des ressources publiques, intégrité et empreinte des octets finaux |
+| `assets/js/engagement.js`, `worker/engagement.mjs` | Mesure facultative et endpoint borné, sans état de jeu |
 | `assets/js/achievements.js` | Définition / évaluation des succès |
 | `assets/js/accessibility.js` | Préférences high contrast / texte / motion |
 | `assets/js/asset-url.js` | Propage la révision du build aux assets dont le nom est assemblé au runtime |
@@ -142,8 +158,8 @@ runtime sont résolues.
 
 Les Guides sont une surface statique indexable, séparée de `/docs/` qui reste
 technique et `noindex`. Le catalogue contient les quatre traductions publiées,
-les slugs, les dates, les images et les sources. Le générateur en dérive vingt
-pages et le sitemap de production ; il n’existe plus de sitemap manuel à tenir
+les slugs, les dates, les images et les sources. Le générateur en dérive
+trente-six pages de guides et le sitemap de production ; il n’existe plus de sitemap manuel à tenir
 en parallèle.
 
 Chaque famille de pages possède des alternates `fr`/`en`/`de`/`lb` réciproques
@@ -153,6 +169,13 @@ header global, ses actions localisées et l’état actif de l’Atelier sur le 
 comme sur les articles. Les guides ne chargent ni `app.js`, ni les catalogues
 i18n du navigateur, ni Three.js : le contenu principal, les langues et les
 destinations de navigation sont rendus au build.
+
+Les huit articles couvrent aussi le démarrage pratique, DOC/CC/Plans, la
+première réorganisation et un exemple d’investissement synthétique. Ce dernier
+utilise le helper économique canonique au build sans lire les données d’un
+joueur. Les liens d’action portent l’identifiant du guide et une ancre du jeu ;
+les liens d’aide sont générés depuis le catalogue. Les quatre pages d’accueil
+et trente-six pages de guides forment quarante URLs canoniques dans le sitemap.
 
 ### Scène 3D partagée (`assets/js/scene/`)
 
@@ -255,8 +278,50 @@ Les calculs sont explicables et déterministes : coût suivant, gain marginal
 DOC/s et CC/s, temps d'accès et retour en DOC à cadence constante. Ils ne sont
 pas une simulation prédictive complète. L'historique ne commence qu'après
 l'installation de la V4, reste dans le navigateur courant et peut être partiel
-après migration, import ou effacement du stockage. Aucune télémétrie distante
-n'est envoyée et aucune synchronisation entre appareils n'est promise.
+après migration, import ou effacement du stockage. Le snapshot et l’historique
+ne sont pas transmis et aucune synchronisation entre appareils n’est promise.
+La [mesure facultative des étapes](engagement.md) possède un consentement et un
+schéma distincts, sans sauvegarde ni identifiant de joueur.
+
+### Mobile, transferts et ressources hors ligne
+
+Le [contrat mobile et hors ligne](mobile-offline.md) décrit les projections
+Web/iOS, le fichier `.papersempire`, l’aperçu avant remplacement et la copie
+de récupération. Il définit aussi les ressources autorisées dans le cache,
+leur vérification, l’activation explicite d’une mise à jour et ses limites.
+Le cache de l’application et le stockage de la partie sont indépendants.
+
+### Application iOS native
+
+SwiftUI porte les écrans et contrôles ; SpriteKit, rendu par Metal, porte la
+scène de l’empire. Les surfaces Liquid Glass sont activées sous iOS 26, avec
+des contrôles et matériaux natifs de repli dès iOS 17. La cible ne contient ni
+WebKit ni ressources HTML/CSS/Three.js. `build-ios-assets.mjs` assemble uniquement
+les règles et traductions canoniques dans `GameAssets`, puis les illustrations
+PNG dans `NativeAssets`.
+
+`headless-runtime.js` expose `PEHeadless` à JavaScriptCore : initialisation,
+commandes, tick, snapshot, sérialisation et validation portable. Les modules
+du site restent la source des prix, gains, contrats et règles de carrière.
+Le contexte n’expose ni `window`, ni `document`, ni `navigator`, ni stockage
+navigateur ; aucun faux DOM n’est créé. `NativeGameEngine` lie les arguments
+comme valeurs, puis décode les snapshots Codable. `NativeGameStore` sérialise
+ces appels sur le main actor et publie l’état aux vues et à SpriteKit.
+
+Le store écrit `Application Support/PapersEmpire/save.json` de façon atomique
+toutes les cinq secondes et à la mise en arrière-plan. Avant un remplacement,
+il valide un moteur candidat et conserve une partie précédente valide dans
+`save.previous.json`. Un chargement endommagé bloque l’autosauvegarde. Fichiers
+fournit l’accès autorisé à un import UTF-8 de 2 Mio maximum ; un aperçu précède
+toujours le remplacement confirmé. Les exports conservent l’enveloppe portable
+du site et restent dans `Documents/Saves`. La langue et l’activation des incidents
+sont stockées séparément dans `interface.json`, sans `UserDefaults`.
+
+Le prototype navigateur antérieur n’a pas été distribué. Une partie de test à
+conserver doit être exportée depuis ce prototype, puis importée explicitement ;
+la cible native ne fouille pas ses anciennes bases de données. Les tests
+JavaScriptCore natifs couvrent les règles réelles, l’absence de globals navigateur,
+le transfert V3, les copies précédentes et les chargements endommagés.
 
 ## Priorités futures
 

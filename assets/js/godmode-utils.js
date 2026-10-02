@@ -35,15 +35,18 @@
     };
   };
 
-  if (typeof module !== "undefined" && module.exports) {
-    module.exports = factory();
-  } else {
+  const api = factory();
+  const commonJS = typeof module === "object" && module !== null && module.exports;
+  if (commonJS) module.exports = api;
+  if (typeof window !== "undefined") {
+    window.GodModeUtils = api;
+  } else if (!commonJS) {
     const globalObject =
       typeof self !== "undefined"
         ? self
         : typeof window !== "undefined"
         ? window
         : globalThis;
-    globalObject.GodModeUtils = factory();
+    globalObject.GodModeUtils = api;
   }
 })();

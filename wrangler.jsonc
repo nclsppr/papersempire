@@ -23,6 +23,12 @@
     "html_handling": "auto-trailing-slash",
     "run_worker_first": true
   },
+  "analytics_engine_datasets": [
+    {
+      "binding": "ENGAGEMENT",
+      "dataset": "papers_empire_engagement"
+    }
+  ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1

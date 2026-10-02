@@ -65,7 +65,7 @@
     "analytics.trend.gaps": "Interruptions visibles : {count}",
     "analytics.recommendation.reason": "Retour DOC estimé le plus court parmi les unités débloquées.",
     "analytics.recommendation.saving": "Meilleur retour estimé ; il reste des DOC à produire avant l'achat.",
-    "analytics.recommendation.none": "Aucune unité débloquée ne produit encore un gain DOC comparable.",
+    "analytics.recommendation.none": "Aucune unité disponible ne fournit de gain positif pour cette priorité.",
     "analytics.recommendation.waiting": "Aucun achat à comparer",
     "analytics.projection.base": "{value} DOC automatiques estimés",
     "analytics.projection.delta": "+{value} DOC si l'actif était ajouté maintenant",
@@ -424,6 +424,11 @@
 
     return {
       schemaVersion: schemaVersion,
+      adviceGoal: raw.adviceGoal && typeof raw.adviceGoal === "object" ? {
+        buildingId: BUILDING_IDS.has(raw.adviceGoal.buildingId) ? raw.adviceGoal.buildingId : null,
+        resource: raw.adviceGoal.resource === "ccTotal" ? "ccTotal" : null,
+        stat: ["quality", "footprint", "brandImage"].includes(raw.adviceGoal.stat) ? raw.adviceGoal.stat : null
+      } : null,
       modelVersion: finiteOrNull(raw.modelVersion) || finiteOrNull(automatic.formulaVersion),
       generatedAt: timestampOrNull(raw.generatedAt),
       runId: typeof raw.runId === "string" ? raw.runId : analytics && analytics.currentRun && analytics.currentRun.id,
@@ -881,14 +886,8 @@
   }
 
   function recommendation(rows) {
-    return rows
-      .filter(function (row) {
-        return row.isUnlocked !== false && row.status !== "unavailable" && Number.isFinite(row.paybackSeconds) && row.paybackSeconds >= 0 && Number.isFinite(row.marginalDocPerSecond) && row.marginalDocPerSecond > 0;
-      })
-      .sort(function (a, b) {
-        if (a.paybackSeconds !== b.paybackSeconds) return a.paybackSeconds - b.paybackSeconds;
-        return finite(a.currentCost, Infinity) - finite(b.currentCost, Infinity);
-      })[0] || null;
+    const mode = document.getElementById("adviceFocus")?.value || "objective";
+    return window.PEInvestmentAdvice?.recommend(rows, mode, state.snapshot?.adviceGoal)?.row || null;
   }
 
   function updateRecommendationImage(row) {
@@ -956,9 +955,15 @@
     els.recommendationPanel.classList.remove("is-empty");
     setText(els.recommendationTitle, investmentName(best));
     const affordable = state.snapshot && Number.isFinite(state.snapshot.current.docBank) && Number.isFinite(best.currentCost) && state.snapshot.current.docBank >= best.currentCost;
-    setText(els.recommendationReason, t(affordable ? "analytics.recommendation.reason" : "analytics.recommendation.saving"));
+    const selectedMode = document.getElementById("adviceFocus")?.value || "objective";
+    const advice = window.PEInvestmentAdvice?.recommend(rows, selectedMode, state.snapshot?.adviceGoal);
+    setText(els.recommendationReason, t("advice.reason." + (advice?.reason || "docs")) + (affordable ? "" : " " + t("advice.saving")));
     setText(els.recommendationCost, Number.isFinite(best.currentCost) ? formatNumber(best.currentCost) + " DOC" : "—");
-    setText(els.recommendationDocGain, Number.isFinite(best.marginalDocPerSecond) ? "+" + formatNumber(best.marginalDocPerSecond) + " DOC/s" : "—");
+    const benefitMode = advice?.reason || "docs";
+    const benefitField = { cc: "marginalCcPerSecond", quality: "qualityDelta", footprint: "footprintDelta", brand: "brandDelta" }[benefitMode] || "marginalDocPerSecond";
+    const benefit = best[benefitField];
+    const benefitUnit = benefitMode === "cc" ? "CC/s" : ["quality", "footprint", "brand"].includes(benefitMode) ? t("advice.points") : "DOC/s";
+    setText(els.recommendationDocGain, Number.isFinite(benefit) ? (benefit >= 0 ? "+" : "") + formatNumber(benefit) + " " + benefitUnit : "—");
     setText(els.recommendationPayback, Number.isFinite(best.paybackSeconds) ? "≈ " + formatDuration(best.paybackSeconds) : "—");
     setText(els.recommendationAfford, Number.isFinite(best.affordSeconds) ? (best.affordSeconds === 0 ? t("analytics.common.now") : "≈ " + formatDuration(best.affordSeconds)) : "—");
     renderProjection(best);
@@ -1356,6 +1361,7 @@
     els.analyticsTrendChart.addEventListener("pointerleave", hideChartTip);
     els.historyTableDetails.addEventListener("toggle", renderHistoryTable);
     els.rawDataDetails.addEventListener("toggle", renderRawData);
+    document.getElementById("adviceFocus")?.addEventListener("change", renderRecommendation);
     els.projectionHorizon.addEventListener("change", function () {
       renderProjection(recommendation(investmentRows()));
     });

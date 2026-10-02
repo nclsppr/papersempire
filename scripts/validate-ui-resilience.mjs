@@ -687,8 +687,10 @@ function verifyStaticContracts() {
     "the final job title must stay hidden until all major campaigns are archived");
   assert.match(app, /function careerStatusSignature\([\s\S]*current: formatNumber\(progress\.current\)[\s\S]*activeCampaign:[\s\S]*status: careerStatusSignature/,
     "career cards must invalidate their render cache when an active objective advances");
-  assert.match(app, /function handlePrestigeClick\([\s\S]*prestigeCampaignRestartCopy\(preview\)[\s\S]*prestigeChallengeFailureCopy\(preview\)/,
+  assert.match(app, /function prestigeConfirmation\([\s\S]*prestigeCampaignRestartCopy\(preview\)[\s\S]*prestigeChallengeFailureCopy\(preview\)/,
     "reorganisation confirmation must disclose restarted campaigns and abandoned challenges");
+  assert.match(app, /function handlePrestigeClick\([\s\S]*prestigeConfirmation\(\)[\s\S]*confirm\(confirmation\)/,
+    "web reorganisation must confirm the shared canonical disclosure before committing");
   assert.match(app, /const runCultureEarned =[\s\S]*const prestigeDelta = Math\.max\(0, gameState\.resources\.culturePoints - cultureBefore\)[\s\S]*gain: prestigeDelta/,
     "the archive's run culture and the reorganisation receipt delta must stay distinct");
   assert.match(app, /unlockedDefinitions: prestigeUnlockedDefinitions[\s\S]*grantedRewards: prestigeGrantedRewards[\s\S]*prestigeUnlockedDefinitions\.map/,
@@ -758,10 +760,12 @@ function verifyStaticContracts() {
     "dismissing an interruption must cancel it without applying a choice");
   assert.match(app, /function closeEventModal\([\s\S]*renderPendingEventControl\(\)[\s\S]*restoreModalFocus\(DOM\.eventModal, DOM\.currentObjective\)/,
     "closing an interruption must hide its pending trigger before restoring focus to the dossier");
-  assert.match(app, /function handleEventChoiceClick\([\s\S]*eventState\.active = null[\s\S]*queueSave\(true\)/,
-    "a resolved event choice must clear the pending incident before persisting");
-  assert.match(app, /function handleMinigameResponse\([\s\S]*eventState\.active = null[\s\S]*queueSave\(true\)/,
-    "a resolved calibration must clear the pending incident before persisting");
+  assert.match(app, /function resolveIncident\([\s\S]*eventState\.active = null[\s\S]*queueSave\(true\)/,
+    "the shared incident action must clear the pending incident before persisting");
+  assert.match(app, /function handleEventChoiceClick\([\s\S]*resolveIncident\("choice"/,
+    "web incident choices must call the shared resolution action");
+  assert.match(app, /function handleMinigameResponse\([\s\S]*resolveIncident\("minigame"/,
+    "web calibration responses must call the shared resolution action");
   assert.match(app, /function showEventBanner\([\s\S]*setTimeout\([\s\S]*hideEventBanner\(\)[\s\S]*6000/,
     "event result banners must leave the screen automatically");
   assert.match(events, /BASE_INTERVAL = 90[\s\S]*MIN_COOLDOWN = 180[\s\S]*spawnChancePerSecond[\s\S]*Math\.pow/,

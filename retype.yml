@@ -19,6 +19,8 @@ branding:
 navigation:
   - Overview: README.md
   - Architecture: architecture.md
+  - Mobile and Offline: mobile-offline.md
+  - Optional Measurement: engagement.md
   - Events: events.md
   - Accessibility: accessibility.md
   - Game Design: game-design.md

@@ -1,5 +1,30 @@
 # Release Notes
 
+## En préparation — Empire mobile et découverte — 2026-09-07
+
+- Navigation mobile en quatre vues, tutoriel centré sur les premières actions,
+  aperçu des objectifs des Plans, abandon volontaire et conseil d’achat aligné
+  sur l’objectif ou la priorité choisie dans la Data Science Zone.
+- Fichiers de sauvegarde communs au Web et à iOS, aperçu avant remplacement,
+  copie précédente récupérable, détection des échecs et protection contre les
+  anciens onglets après un import. Carte PNG factuelle à partager sur demande.
+- Trois guides pratiques et un exemple d’investissement, chacun en quatre
+  langues : le sitemap comprend désormais 40 URL indexables. Préparation hors
+  ligne explicite du jeu et du dashboard, mises à jour acceptées par le joueur.
+- App iOS native : interface SwiftUI, scène SpriteKit/Metal représentant le
+  parc réel et croissance aux paliers 10/25. Liquid Glass sous iOS 26 et repli
+  natif dès iOS 17 ; règles canoniques exécutées dans JavaScriptCore sans DOM
+  ni globals navigateur. La cible n’embarque ni WebKit, ni HTML/CSS/Three.js.
+- Import Fichiers avec aperçu et validation, sauvegarde atomique et copie
+  précédente, partage natif et langue conservée. Une partie du prototype
+  navigateur doit être exportée puis importée explicitement. Le projet est
+  compilable localement ; signature, TestFlight et App Store restent distincts.
+- Mesure facultative des étapes et retours J1/J7 du Web, désactivée par défaut.
+  Les contrôles locaux ne constituent pas des résultats de rétention ou de SEO.
+
+Cette entrée décrit le candidat de développement. Elle ne vaut pas preuve de
+publication sur le domaine public ni de validation App Review.
+
 ## 0.26.1 — Un poste de commande qui reste en place — 2026-08-30
 
 - Les fiches d'unités conservent désormais leur hauteur pendant les achats. Un
